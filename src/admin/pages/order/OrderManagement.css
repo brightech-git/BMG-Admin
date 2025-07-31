@@ -1,33 +1,58 @@
-/* OrderManagement.css */
+/* OrderManagement.css - Upgraded with Brand Colors */
 
 /* Main container */
 .order-management-container {
-    padding: 20px;
+    padding: 24px;
+    background-color: #F8F9FA;
 }
 
 /* Table styles */
 .MuiTableContainer-root {
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(30, 30, 44, 0.1);
+    box-shadow: 0 4px 20px rgba(30, 30, 44, 0.08);
+    overflow: hidden;
 }
 
 .MuiTableHead-root {
-    background-color: #f5f5f5;
+    background-color: #1E1E2C !important; /* Dark navy for header */
 }
 
 .MuiTableCell-head {
     font-weight: 600;
-    color: #333;
+    color: #FFFFFF !important; /* White text on dark header */
+    font-size: 0.875rem;
+}
+
+/* Modal table header override */
+.modal-table .MuiTableCell-head {
+    color: #000000 !important; /* Black text for modal headers */
+    background-color: transparent !important;
+}
+
+.modal-table .MuiTableHead-root {
+    background-color: transparent !important;
+}
+
+.MuiTableCell-body {
+    color: #1E1E2C; /* Dark navy for text */
+    border-bottom: 1px solid rgba(30, 30, 44, 0.05);
+}
+
+.MuiTableRow-root:hover {
+    background-color: rgba(242, 159, 103, 0.05) !important; /* Subtle orange tint on hover */
 }
 
 /* Pagination styles */
 .MuiTablePagination-root {
-    overflow: hidden;
+    background-color: #FFFFFF;
+    border-radius: 0 0 12px 12px;
+    border-top: 1px solid rgba(30, 30, 44, 0.1);
 }
 
 .MuiTablePagination-toolbar {
-    min-height: 52px;
-    padding-right: 2px;
+    min-height: 56px;
+    padding: 0 16px;
 }
 
 .MuiTablePagination-selectRoot {
@@ -36,18 +61,53 @@
 }
 
 .MuiTablePagination-actions {
-    flex-shrink: 0;
-    margin-left: 20px;
+    margin-left: 16px;
+}
+
+.MuiTablePagination-selectIcon {
+    color: #368FF3; /* Blue for dropdown icon */
+}
+
+/* Button styles */
+.MuiButton-contained {
+    background-color: #F29F67 !important; /* Orange primary button */
+    color: #FFFFFF !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    box-shadow: none !important;
+    padding: 8px 16px !important;
+}
+
+.MuiButton-contained:hover {
+    background-color: #e08f5a !important; /* Darker orange on hover */
+}
+
+.MuiButton-outlined {
+    border-color: #368FF3 !important; /* Blue border */
+    color: #368FF3 !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    padding: 6px 12px !important;
+}
+
+.MuiButton-outlined:hover {
+    background-color: rgba(54, 143, 243, 0.08) !important;
 }
 
 /* Modal styles */
 .MuiDialog-paper {
     border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(30, 30, 44, 0.2) !important;
 }
 
 .MuiDialogTitle-root {
-    padding: 16px 24px;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 20px 24px !important;
+    border-bottom: 1px solid rgba(30, 30, 44, 0.1) !important;
+    background-color: #1E1E2C !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
 }
 
 .MuiDialogContent-root {
@@ -55,14 +115,47 @@
 }
 
 .MuiDialogActions-root {
-    padding: 16px 24px;
-    border-top: 1px solid #e0e0e0;
+    padding: 16px 24px !important;
+    border-top: 1px solid rgba(30, 30, 44, 0.1) !important;
+    background-color: #F8F9FA !important;
+}
+
+/* Chip styles */
+.MuiChip-filled {
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 0.7rem !important;
+}
+
+.MuiChip-filledSuccess {
+    background-color: #34B1AA !important; /* Teal for success */
+    color: #FFFFFF !important;
+}
+
+.MuiChip-filledWarning {
+    background-color: #E0B50F !important; /* Yellow for warnings */
+    color: #1E1E2C !important;
+}
+
+.MuiChip-filledError {
+    background-color: #F36868 !important; /* Red for errors */
+    color: #FFFFFF !important;
+}
+
+/* TextField styles */
+.MuiOutlinedInput-root {
+    border-radius: 8px !important;
+}
+
+.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #368FF3 !important; /* Blue focus */
+    border-width: 1px !important;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .order-management-container {
-        padding: 10px;
+        padding: 16px;
     }
 
     .MuiTablePagination-root {
@@ -91,11 +184,18 @@
 @media (max-width: 600px) {
     .MuiTableCell-root {
         padding: 8px !important;
+        font-size: 0.75rem !important;
     }
 
     .MuiButton-root {
         min-width: auto !important;
         padding: 4px 8px !important;
+        font-size: 0.75rem !important;
+    }
+
+    .MuiDialog-paper {
+        margin: 16px !important;
+        width: calc(100% - 32px) !important;
     }
 }
 
@@ -112,9 +212,37 @@
     .MuiTableCell-root {
         display: table-cell !important;
         padding: 8px !important;
+        color: #000000 !important;
+    }
+
+    .MuiTableHead-root {
+        background-color: #EEEEEE !important;
+    }
+
+    .MuiTableCell-head {
+        color: #000000 !important;
     }
 
     .no-print {
         display: none !important;
     }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(30, 30, 44, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(30, 30, 44, 0.2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(30, 30, 44, 0.3);
 }

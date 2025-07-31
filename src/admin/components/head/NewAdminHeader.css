@@ -1,674 +1,383 @@
-:root {
-    --header-height: 70px;
-    --mobile-header-height: 60px;
-    --primary-color: #2563eb;
-    --primary-hover: #1d4ed8;
-    --active-color: #f97316;
-    --hover-color: #ffffff;
-    --primary-hover-bg: rgba(37, 99, 235, 0.1);
-    --active-bg: rgba(249, 115, 22, 0.15);
-    --text-lights: #ffffff;
-    --text-dark: #1e293b;
-    --text-light-dark: #d1d5db;
-    --bg-light: #f8fafc;
-    --bg-dark: #1a2238;
-    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    --border-color: #e2e8f0;
-    --border-dark: #4b5563;
-    --light-gray: #94a3b8;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --focus-outline: 2px solid var(--primary-color);
-}
-
-.new-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--header-height);
-    display: flex;
-    align-items: center;
-    padding: 0 1.5rem;
-    z-index: 1000;
-    box-shadow: var(--shadow);
-    background-color: var(--bg-light);
-    color: var(--text-dark);
-    transition: var(--transition);
-}
-
-.new-header.dark {
-    background-color: var(--bg-dark);
-    color: var(--text-lights);
-}
-
-.new-header.scrolled {
-    background-color: rgba(248, 250, 252, 0.98);
-    backdrop-filter: blur(8px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.new-header.dark.scrolled {
-    background-color: rgba(26, 34, 56, 0.98);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.new-header-container {
-    width: 100%;
-    max-width: 1600px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    height: 100%;
-}
-
-.new-header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-shrink: 0;
-    min-width: 0;
-}
-
-.new-menu-toggle {
-    background: none;
-    border: none;
-    color: var(--text-dark);
-    font-size: 1.6rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: var(--transition);
-    flex-shrink: 0;
-}
-
-.new-menu-toggle:hover {
-    background-color: var(--primary-hover-bg);
-}
-
-.new-menu-toggle.active {
-    color: var(--primary-color);
-}
-
-.new-header.dark .new-menu-toggle {
-    color: var(--text-lights);
-}
-
-.new-header.dark .new-menu-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.new-header.dark .new-menu-toggle.active {
-    color: var(--active-color);
-}
-
-.new-logo {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
-}
-
-.new-logo-image {
-    height: 40px;
-    width: auto;
-    border-radius: 4px;
-    flex-shrink: 0;
-}
-
-.new-company-name {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--text-dark);
-}
-
-.new-company-name span {
-    font-size: 0.9rem;
-    font-weight: 400;
-    color: var(--text-dark);
-}
-
-.new-header.dark .new-company-name {
-    color: var(--text-lights);
-}
-
-.new-header.dark .new-company-name span {
-    color: var(--text-lights);
-}
-
-.new-header-center {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1.5rem;
-    min-width: 0;
-    margin: 0 auto;
-}
-
-
-
-.new-date-time-container {
-    min-width: 270px;
-    max-width: 100%;
-}
-
-.new-date-box {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    font-size: 0.8rem;
-    text-align: center;
-    background-color: var(--bg-lights);
-    color: var(--text-dark);
-    transition: var(--transition);
-    font-family: monospace;
-    font-weight: 500;
+/* StarAdmin Header Styles */
+.staradmin-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #ffffff;
+  border-bottom: 1px solid #e8e8e8;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
 }
 
-.new-header.dark .new-date-box {
-    background-color: rgba(255, 255, 255, 0.05);
-    color: var(--text-lights);
-    border-color: var(--border-dark);
+.staradmin-header.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
 }
 
-.new-header-right {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-shrink: 0;
+.staradmin-header.dark {
+  background: #1E1E2C;
+  border-bottom: 1px solid #2d2d42;
 }
 
-.new-icon-button {
-    position: relative;
-    background: none;
-    border: none;
-    color: var(--text-dark);
-    font-size: 1.25rem;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: var(--transition);
-    flex-shrink: 0;
+.staradmin-header.dark.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: rgba(30, 30, 44, 0.95);
 }
 
-.new-icon-button:hover {
-    background-color: var(--primary-hover-bg);
-    color: var(--primary-color);
+.staradmin-header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 72px;
+  max-width: 100%;
 }
 
-.new-icon-button.active {
-    background-color: var(--primary-hover-bg);
-    color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-color);
+/* Left Section - Brand */
+.staradmin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
 }
 
-.new-header.dark .new-icon-button {
-    color: var(--text-lights);
+.staradmin-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 18px;
 }
 
-.new-header.dark .new-icon-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: var(--active-color);
+.staradmin-menu-toggle:hover {
+  background: #F29F67;
+  color: white;
+  transform: scale(1.05);
 }
 
-.new-header.dark .new-icon-button.active {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: var(--active-color);
-    box-shadow: 0 0 0 2px var(--active-color);
+.dark .staradmin-menu-toggle {
+  color: #e0e0e0;
 }
 
-.new-badge {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    background-color: var(--active-color);
-    color: var(--text-lights);
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.65rem;
-    font-weight: bold;
+.dark .staradmin-menu-toggle:hover {
+  background: #F29F67;
+  color: white;
 }
 
-.new-profile-button {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 50px;
-    transition: var(--transition);
-    flex-shrink: 0;
+.staradmin-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.new-profile-button:hover {
-    background-color: var(--primary-hover-bg);
+.staradmin-logo-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(242, 159, 103, 0.2);
 }
 
-.new-profile-button.active {
-    background-color: var(--primary-hover-bg);
-    box-shadow: 0 0 0 2px var(--primary-color);
+.staradmin-logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.new-header.dark .new-profile-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+.staradmin-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.new-header.dark .new-profile-button.active {
-    background-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 0 2px var(--active-color);
+.staradmin-company-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1E1E2C;
+  margin: 0;
+  letter-spacing: -0.5px;
 }
 
-.new-profile-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    background-color: var(--primary-hover-bg);
-    transition: var(--transition);
-    overflow: hidden;
+.staradmin-company-subtitle {
+  font-size: 12px;
+  color: #F29F67;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.new-profile-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.dark .staradmin-company-name {
+  color: #ffffff;
 }
 
-.new-profile-button:hover .new-profile-avatar {
-    color: var(--primary-hover);
+/* Center Section - Welcome & DateTime */
+.staradmin-header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 24px;
 }
 
-.new-profile-button.active .new-profile-avatar {
-    color: var(--primary-hover);
+.staradmin-welcome-section {
+  text-align: center;
 }
 
-.new-header.dark .new-profile-avatar {
-    color: var(--active-color);
-    background-color: rgba(255, 255, 255, 0.1);
+.staradmin-welcome-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E1E2C;
+  margin: 0 0 4px 0;
 }
 
-.new-profile-name {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-right: 0.5rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 120px;
+.staradmin-username {
+  color: #F29F67;
+  font-weight: 700;
 }
 
-.new-header.dark .new-profile-name {
-    color: var(--text-lights);
+.staradmin-welcome-subtitle {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+  font-weight: 400;
 }
 
-.new-dropdown-wrapper {
-    position: relative;
+.dark .staradmin-welcome-text {
+  color: #ffffff;
 }
 
-.new-dropdown-menu {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 10px);
-    background-color: var(--bg-light);
-    color: var(--text-dark);
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
-    border-radius: 8px;
-    width: 260px;
-    z-index: 1001;
-    padding: 0.5rem 0;
-    overflow: hidden;
+.dark .staradmin-welcome-subtitle {
+  color: #b0b0b0;
 }
 
-.new-header.dark .new-dropdown-menu {
-    background-color: var(--bg-dark);
-    color: var(--text-lights);
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border-dark);
+.staradmin-datetime-compact {
+  display: flex;
+  align-items: center;
 }
 
-.new-dropdown-header {
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-dark);
-    border-bottom: 1px solid var(--border-color);
+.staradmin-datetime-display {
+  background: linear-gradient(135deg, #F29F67, #E0B50F);
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(242, 159, 103, 0.3);
 }
 
-.new-header.dark .new-dropdown-header {
-    color: var(--text-lights);
-    border-bottom-color: var(--border-dark);
+.staradmin-datetime-text {
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.new-dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
-    font-size: 0.9rem;
-    cursor: pointer;
-    color: var(--text-dark);
-    transition: var(--transition);
+/* Right Section - Actions & Profile */
+.staradmin-header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-shrink: 0;
 }
 
-.new-dropdown-item:hover {
-    background-color: var(--primary-hover-bg);
-    color: var(--primary-color);
+.staradmin-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.new-header.dark .new-dropdown-item {
-    color: var(--text-lights);
+.staradmin-action-item {
+  position: relative;
 }
 
-.new-header.dark .new-dropdown-item:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: var(--active-color);
+.staradmin-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: #f8f9fa;
+  border-radius: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  position: relative;
 }
 
-.new-dropdown-footer {
-    padding: 0.75rem 1rem;
-    text-align: center;
-    border-top: 1px solid var(--border-color);
+.staradmin-action-btn:hover {
+  background: #F29F67;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(242, 159, 103, 0.3);
 }
 
-.new-header.dark .new-dropdown-footer {
-    border-top-color: var(--border-dark);
+.staradmin-action-btn.active {
+  background: #F29F67;
+  color: white;
+  box-shadow: 0 2px 8px rgba(242, 159, 103, 0.4);
 }
 
-.new-dropdown-footer button {
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
+.dark .staradmin-action-btn {
+  background: #2d2d42;
+  color: #e0e0e0;
 }
 
-.new-dropdown-footer button:hover {
-    color: var(--primary-hover);
+.dark .staradmin-action-btn:hover {
+  background: #F29F67;
+  color: white;
 }
 
-.new-header.dark .new-dropdown-footer button {
-    color: var(--active-color);
+/* Notification Badge */
+.staradmin-notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #368FF3;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(54, 143, 243, 0.3);
 }
 
-.new-header.dark .new-dropdown-footer button:hover {
-    color: #fb923c;
+/* Profile Section */
+.staradmin-profile-section {
+  position: relative;
 }
 
-.new-notification-preview,
-.new-message-preview {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    width: 100%;
+.staradmin-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 200px;
 }
 
-.new-notification-icon {
-    font-size: 1.3rem;
-    color: var(--light-gray);
-    flex-shrink: 0;
+.staradmin-profile-btn:hover {
+  background: rgba(242, 159, 103, 0.1);
+  transform: translateY(-1px);
 }
 
-.new-header.dark .new-notification-icon {
-    color: var(--text-light-dark);
+.staradmin-profile-btn.active {
+  background: rgba(242, 159, 103, 0.15);
 }
 
-.new-notification-content,
-.new-message-preview {
-    flex: 1;
-    min-width: 0;
+.staradmin-profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #F29F67, #E0B50F);
+  color: white;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(242, 159, 103, 0.3);
 }
 
-.new-notification-content strong,
-.new-message-preview strong {
-    display: block;
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.staradmin-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.new-notification-content small,
-.new-message-preview small {
-    display: block;
-    font-size: 0.8rem;
-    color: var(--light-gray);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.staradmin-profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
-.new-header.dark .new-notification-content small,
-.new-header.dark .new-message-preview small {
-    color: var(--text-light-dark);
+.staradmin-profile-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E1E2C;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
-.new-settings-button {
-    background: none;
-    border: none;
-    font-size: 1rem;
-    color: var(--light-gray);
-    cursor: pointer;
-    transition: var(--transition);
+.staradmin-profile-role {
+  font-size: 12px;
+  color: #F29F67;
+  font-weight: 500;
 }
 
-.new-settings-button:hover {
-    color: var(--primary-color);
+.dark .staradmin-profile-name {
+  color: #ffffff;
 }
 
-.new-header.dark .new-settings-button {
-    color: var(--text-light-dark);
+/* Dropdown Styles */
+.staradmin-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e8e8e8;
+  min-width: 200px;
+  overflow: hidden;
+  z-index: 1001;
 }
 
-.new-header.dark .new-settings-button:hover {
-    color: var(--active-color);
+.staradmin-dropdown-wide {
+  min-width: 280px;
 }
 
-.new-menu-icon {
-    font-size: 1.1rem;
-    color: var(--text-dark);
-    width: 1.5rem;
-    flex-shrink: 0;
+.dark .staradmin-dropdown {
+  background: #2d2d42;
+  border: 1px solid #3d3d52;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.new-header.dark .new-menu-icon {
-    color: var(--text-lights);
+.staradmin-dropdown-arrow {
+  position: absolute;
+  top: -6px;
+  right: 20px;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-bottom: none;
+  border-right: none;
+  transform: rotate(45deg);
 }
 
-.new-dropdown-divider {
-    height: 1px;
-    background-color: var(--border-color);
-    margin: 0.5rem 0;
+.dark .staradmin-dropdown-arrow {
+  background: #2d2d42;
+  border-color: #3d3d52;
 }
-
-.new-header.dark .new-dropdown-divider {
-    background-color: var(--border-dark);
-}
-
-.header-loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: var(--header-height);
-    color: var(--text-dark);
-    font-size: 0.9rem;
-}
-
-.new-header.dark .header-loading {
-    color: var(--text-lights);
-}
-
-/* Focus styles for accessibility */
-.new-icon-button:focus-visible,
-.new-profile-button:focus-visible,
-.new-menu-toggle:focus-visible,
-.new-dropdown-item:focus-visible {
-    outline: var(--focus-outline);
-    outline-offset: 2px;
-}
-
-/* Responsive Styles */
-@media (max-width: 1200px) {
-    .new-header {
-        padding: 0 1rem;
-    }
-
-    .new-date-time-container {
-        min-width: 240px;
-    }
-
-    .new-search-container {
-        max-width: 250px;
-    }
-}
-
-@media (max-width: 992px) {
-    .new-header {
-        height: var(--mobile-header-height);
-    }
-
-    .new-logo-image {
-        height: 36px;
-    }
-
-    .new-company-name {
-        font-size: 1.1rem;
-    }
-
-    .new-icon-button,
-    .new-profile-avatar {
-        width: 38px;
-        height: 38px;
-        font-size: 1.1rem;
-    }
-
-    .new-dropdown-menu {
-        width: 240px;
-    }
-    .new-header-right{
-        gap: 1px;
-    }
-}
-
-@media (max-width: 768px) {
-    .new-header {
-        padding: 0 0.75rem;
-    }
-
-    .new-company-name span {
-        display: none;
-    }
-
-    .new-date-time-container {
-        display: none;
-    }
-
-    .new-search-container {
-        max-width: 200px;
-        min-width: 120px;
-    }
-
-    .new-header-center {
-        justify-content: flex-end;
-    }
-
-    .new-profile-name {
-        display: none;
-    }
-}
-
-@media (max-width: 576px) {
-    .new-header {
-        padding: 0 0.5rem;
-    }
-
-    .new-logo-image {
-        height: 32px;
-    }
-
-    .new-company-name {
-        font-size: 1rem;
-    }
-
-    .new-icon-button,
-    .new-profile-avatar {
-        width: 36px;
-        height: 36px;
-        font-size: 1rem;
-    }
-
-    .new-dropdown-menu {
-        width: 220px;
-        right: -10px;
-    }
-
-    .new-header-right {
-        gap: 0.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .new-company-name {
-        display: none;
-    }
-
-    .new-search-container {
-        max-width: 180px;
-    }
-
-    .new-dropdown-menu {
-        width: 200px;
-    }
-}
-
-@media (max-width: 400px) {
-    .new-header {
-        padding: 0 0.25rem;
-    }
-
-    .new-menu-toggle {
-        padding: 0.25rem;
-        font-size: 1.4rem;
-    }
-
-    .new-icon-button,
-    .new-profile-avatar {
-        width: 34px;
-        height: 34px;
-    }
 
-    .new-search-container {
-        max-width: 160px;
-    }
+.staradmin-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+  font-weight: 600;
 }

@@ -9,7 +9,9 @@ import {
     FaDollarSign,
     FaUserCircle,
     FaSignOutAlt,
-    FaClipboardList
+    FaClipboardList,
+    FaChevronDown,
+    FaChevronRight
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MyContext } from '../../context/themeContext/themeContext';
@@ -24,12 +26,12 @@ import { debounce } from 'lodash';
 const menuItems = [
     {
         title: 'Dashboard',
-        icon: <FaTachometerAlt className="section-icon" />,
+        icon: <FaTachometerAlt className="staradmin-menu-icon" />,
         path: '/admin/dashboard',
     },
     {
         title: 'Orders',
-        icon: <FaClipboardList  className="section-icon" />,
+        icon: <FaClipboardList className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Today Orders', path: '/admin/order/today' },
             { title: 'Order Status', path: '/admin/order/status' },
@@ -37,7 +39,7 @@ const menuItems = [
     },
     {
         title: 'Product',
-        icon: <FaBox className="section-icon" />,
+        icon: <FaBox className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Add Product', path: '/admin/product/add' },
             { title: 'Manage Products', path: '/admin/product/manage' },
@@ -46,7 +48,7 @@ const menuItems = [
     },
     {
         title: 'Banner',
-        icon: <FaImage className="section-icon" />,
+        icon: <FaImage className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Add Banner', path: '/admin/banner/add' },
             { title: 'Manage Banners', path: '/admin/banner/manage' },
@@ -54,7 +56,7 @@ const menuItems = [
     },
     {
         title: 'Category',
-        icon: <FaTag className="section-icon" />,
+        icon: <FaTag className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Add Category', path: '/admin/category/add' },
             { title: 'Manage Categories', path: '/admin/category/manage' },
@@ -62,7 +64,7 @@ const menuItems = [
     },
     {
         title: 'Video',
-        icon: <FaVideo className="section-icon" />,
+        icon: <FaVideo className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Add Video', path: '/admin/video/add' },
             { title: 'Manage Videos', path: '/admin/video/manage' },
@@ -70,7 +72,7 @@ const menuItems = [
     },
     {
         title: 'Rates',
-        icon: <FaDollarSign className="section-icon" />,
+        icon: <FaDollarSign className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Add Rates', path: '/admin/rates/add' },
             { title: 'Manage Rates', path: '/admin/rates/manage' },
@@ -80,11 +82,117 @@ const menuItems = [
 
 const employeeMenu = {
     title: 'Employee',
-    icon: <FaBox className="section-icon" />,
+    icon: <FaBox className="staradmin-menu-icon" />,
     submenu: [
         { title: 'Add Employee', path: '/admin/employee/add' },
         { title: 'Manage Employees', path: '/admin/employee/manage' },
     ],
+};
+
+const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, currentPath }) => {
+    const hasSubmenu = item.submenu && item.submenu.length > 0;
+    const isActive = item.path === currentPath || 
+        (hasSubmenu && item.submenu.some(subItem => subItem.path === currentPath));
+
+    const handleClick = () => {
+        if (hasSubmenu) {
+            onToggle(item.title.toLowerCase());
+        } else if (onClick) {
+            onClick();
+        }
+    };
+
+    return (
+        <div className="staradmin-menu-item-wrapper">
+            {hasSubmenu ? (
+                <div
+                    className={`staradmin-menu-item ${isActive ? 'active' : ''} ${hasSubmenu ? 'has-submenu' : ''}`}
+                    onClick={handleClick}
+                >
+                    <div className="staradmin-menu-content">
+                        <div className="staradmin-menu-icon-wrapper">
+                            {item.icon}
+                        </div>
+                        <AnimatePresence>
+                            {isOpen && (
+                                <motion.span
+                                    className="staradmin-menu-text"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    {item.title}
+                                </motion.span>
+                            )}
+                        </AnimatePresence>
+                        {hasSubmenu && isOpen && (
+                            <motion.div
+                                className="staradmin-menu-arrow"
+                                animate={{ rotate: isExpanded ? 90 : 0 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <FaChevronRight size={12} />
+                            </motion.div>
+                        )}
+                    </div>
+                </div>
+            ) : (
+                <NavLink
+                    to={item.path}
+                    className={({ isActive }) => 
+                        `staradmin-menu-item ${isActive ? 'active' : ''}`
+                    }
+                    onClick={onClick}
+                >
+                    <div className="staradmin-menu-content">
+                        <div className="staradmin-menu-icon-wrapper">
+                            {item.icon}
+                        </div>
+                        <AnimatePresence>
+                            {isOpen && (
+                                <motion.span
+                                    className="staradmin-menu-text"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    {item.title}
+                                </motion.span>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </NavLink>
+            )}
+
+            <AnimatePresence>
+                {hasSubmenu && isExpanded && isOpen && (
+                    <motion.div
+                        className="staradmin-submenu"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    >
+                        {item.submenu.map((subItem) => (
+                            <NavLink
+                                key={subItem.path}
+                                to={subItem.path}
+                                className={({ isActive }) => 
+                                    `staradmin-submenu-item ${isActive ? 'active' : ''}`
+                                }
+                                onClick={onClick}
+                            >
+                                <div className="staradmin-submenu-indicator"></div>
+                                <span className="staradmin-submenu-text">{subItem.title}</span>
+                            </NavLink>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
 };
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -120,6 +228,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 );
             }
         });
+        // Check employee menu too
+        if (employeeMenu.submenu) {
+            initialExpanded['employee'] = employeeMenu.submenu.some(
+                (subItem) => subItem.path === location.pathname
+            );
+        }
         setExpanded(initialExpanded);
     }, [location.pathname]);
 
@@ -149,7 +263,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     const sidebarVariants = {
         open: {
             x: 0,
-            width: isMobile ? 'var(--sidebar-width-mobile)' : 'var(--sidebar-width)',
+            width: isMobile ? '280px' : '260px',
             transition: {
                 type: 'spring',
                 damping: 25,
@@ -158,7 +272,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         },
         closed: {
             x: isMobile ? '-100%' : 0,
-            width: isMobile ? 0 : 'var(--sidebar-collapsed-width)',
+            width: isMobile ? 0 : '70px',
             transition: {
                 type: 'spring',
                 damping: 25,
@@ -167,98 +281,161 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         },
     };
 
-    const itemVariants = {
-        open: {
-            opacity: 1,
-            x: 0,
-            transition: { duration: 0.2 },
-        },
-        closed: {
-            opacity: 0,
-            x: -20,
-            transition: { duration: 0.1 },
-        },
-    };
-
     if (isLoading) {
-        return <div className="sidebar-loading">Loading...</div>;
+        return (
+            <div className="staradmin-sidebar-loading">
+                <div className="staradmin-loading-spinner"></div>
+            </div>
+        );
     }
 
     return (
         <>
             <motion.aside
-                className={`sidebar ${isOpen ? 'open' : 'closed'} ${themeMode}`}
+                className={`staradmin-sidebar ${isOpen ? 'open' : 'closed'} ${themeMode}`}
                 initial="closed"
                 animate={isOpen ? 'open' : 'closed'}
                 variants={sidebarVariants}
                 role="navigation"
                 aria-label="Admin Navigation"
             >
-                <div className="sidebar-content">
-                    <div className="sidebar-header">
-                        <div className="sidebar-brand">
-                            <NavLink to="/admin" className="sidebar-title">
-                                {currentPageTitle && (
-                                    <div className="current-page-indicator">{currentPageTitle}</div>
-                                )}
-                            </NavLink>
+                <div className="staradmin-sidebar-content">
+                    {/* Sidebar Header */}
+                    <div className="staradmin-sidebar-header">
+                        <AnimatePresence>
+                            {isOpen && (
+                                <motion.div
+                                    className="staradmin-page-indicator"
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <div className="staradmin-page-title">{currentPageTitle}</div>
+                                    <div className="staradmin-page-subtitle">Management Panel</div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    {/* Navigation Menu */}
+                    <div className="staradmin-sidebar-nav">
+                        <div className="staradmin-menu-scroll">
+                            <div className="staradmin-menu-section">
+                                <AnimatePresence>
+                                    {isOpen && (
+                                        <motion.div
+                                            className="staradmin-section-label"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                        >
+                                            MAIN MENU
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                                
+                                {menuItems.map((item) => (
+                                    <StarAdminMenuItem
+                                        key={item.title}
+                                        item={item}
+                                        isExpanded={expanded[item.title.toLowerCase()]}
+                                        onToggle={toggleSection}
+                                        onClick={handleLinkClick}
+                                        isOpen={isOpen}
+                                        currentPath={location.pathname}
+                                    />
+                                ))}
+                            </div>
+
+                            <RoleBasedSection allowedRoles={['ROLE_ADMIN']}>
+                                <div className="staradmin-menu-section">
+                                    <AnimatePresence>
+                                        {isOpen && (
+                                            <motion.div
+                                                className="staradmin-section-label"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                            >
+                                                ADMINISTRATION
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                    
+                                    <StarAdminMenuItem
+                                        item={employeeMenu}
+                                        isExpanded={expanded['employee']}
+                                        onToggle={toggleSection}
+                                        onClick={handleLinkClick}
+                                        isOpen={isOpen}
+                                        currentPath={location.pathname}
+                                    />
+                                </div>
+                            </RoleBasedSection>
                         </div>
                     </div>
 
-                    <nav className="sidebar-nav">
-                        <div className="menu-scroll-container">
-                            {menuItems.map((item) => (
-                                <MenuItem
-                                    key={item.title}
-                                    item={item}
-                                    isExpanded={expanded[item.title.toLowerCase()]}
-                                    onToggle={toggleSection}
-                                    onClick={handleLinkClick}
-                                    variants={itemVariants}
-                                    isOpen={isOpen}
-                                />
-                            ))}
-                            <RoleBasedSection allowedRoles={['ROLE_ADMIN']}>
-                                <MenuItem
-                                    item={employeeMenu}
-                                    isExpanded={expanded['employee']}
-                                    onToggle={toggleSection}
-                                    onClick={handleLinkClick}
-                                    variants={itemVariants}
-                                    isOpen={isOpen}
-                                />
-                            </RoleBasedSection>
-                        </div>
-                    </nav>
-
-                    <div className="sidebar-footer">
+                    {/* Sidebar Footer */}
+                    <div className="staradmin-sidebar-footer">
                         <RoleBasedSection allowedRoles={['ROLE_ADMIN', 'ROLE_EMPLOYEE']}>
-                            <div className="user-profile">
-                                <div className="user-avatar">
-                                    <FaUserCircle size={26} />
+                            <div className="staradmin-user-profile">
+                                <div className="staradmin-user-avatar">
+                                    <FaUserCircle />
                                 </div>
-                                <div className="user-info">
-                                    <div className="user-name">{user?.username || 'User'}</div>
-                                    <div className="user-role">{user?.role || 'Administrator'}</div>
-                                </div>
+                                <AnimatePresence>
+                                    {isOpen && (
+                                        <motion.div
+                                            className="staradmin-user-info"
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            <div className="staradmin-user-name">
+                                                {user?.username || 'Admin User'}
+                                            </div>
+                                            <div className="staradmin-user-role">
+                                                {user?.role || 'Administrator'}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
+                            
                             <button
-                                className="logout-button"
+                                className="staradmin-logout-button"
                                 onClick={handleLogout}
                                 aria-label="Logout"
+                                title={!isOpen ? 'Logout' : ''}
                             >
-                                <FaSignOutAlt />
-                                {isOpen && <span>Logout</span>}
+                                <div className="staradmin-logout-icon">
+                                    <FaSignOutAlt />
+                                </div>
+                                <AnimatePresence>
+                                    {isOpen && (
+                                        <motion.span
+                                            className="staradmin-logout-text"
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            Sign Out
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
                             </button>
                         </RoleBasedSection>
                     </div>
                 </div>
             </motion.aside>
 
+            {/* Mobile Overlay */}
             <AnimatePresence>
                 {isOpen && isMobile && (
                     <motion.div
-                        className="sidebar-overlay"
+                        className="staradmin-sidebar-overlay"
                         onClick={toggleSidebar}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}

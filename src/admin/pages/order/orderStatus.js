@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAllOrders, useUpdateOrderStatus } from '../../hooks/order/useAllOrder';
 import { orderService } from '../../service/orderService';
 import { jsPDF } from 'jspdf';
@@ -12,7 +12,6 @@ import {
     TableHead,
     TableRow,
     Paper,
-    TablePagination,
     IconButton,
     Tooltip,
     TextField,
@@ -32,14 +31,13 @@ import {
     Divider,
     Chip,
     Grid,
-    TableFooter,
     Alert,
-    Stack,
     Radio,
     RadioGroup,
     FormControlLabel,
     Collapse,
-    Avatar
+    Card,
+    CardContent
 } from '@mui/material';
 import {
     Print as PrintIcon,
@@ -55,49 +53,142 @@ import {
     Edit as EditIcon,
     Visibility as ViewIcon,
     ExpandMore,
-    ExpandLess
+    Receipt
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
+import { styled } from '@mui/system';
 import './OrderManagement.css';
 
-// Custom pagination actions component
-function TablePaginationActions(props) {
-    const theme = useTheme();
-    const { count, page, rowsPerPage, onPageChange } = props;
+// ========== ENHANCED STYLED COMPONENTS ==========
+const StyledTableContainer = styled(TableContainer)(() => ({
+    borderRadius: '16px',
+    overflow: 'visible',
+    background: '#ffffff',
+    boxShadow: '0 8px 32px rgba(30, 30, 44, 0.08)',
+    border: '1px solid rgba(30, 30, 44, 0.06)',
+    maxHeight: 'none',
+    '& .MuiTableHead-root': {
+        background: 'linear-gradient(135deg, #1E1E2C 0%, #2c2c3d 100%)',
+        '& .MuiTableCell-head': {
+            color: '#FFFFFF',
+            fontWeight: 700,
+            fontSize: '0.875rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            borderBottom: 'none',
+            padding: '16px 12px',
+        }
+    },
+    '& .MuiTableRow-root': {
+        transition: 'all 0.2s ease',
+        '&:hover': {
+            backgroundColor: 'rgba(242, 159, 103, 0.04)',
+        },
+    },
+    '& .MuiTableCell-root': {
+        borderBottom: '1px solid rgba(30, 30, 44, 0.06)',
+        padding: '12px',
+    },
+}));
 
-    const handleFirstPageButtonClick = (event) => {
-        onPageChange(event, 0);
+const ModernButton = styled(Button)(({ variant: buttonVariant, color }) => ({
+    borderRadius: '12px',
+    textTransform: 'none',
+    fontWeight: 600,
+    padding: '10px 20px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: buttonVariant === 'contained' ? '0 4px 16px rgba(0, 0, 0, 0.1)' : 'none',
+    '&:hover': {
+        transform: 'translateY(-1px)',
+        boxShadow: buttonVariant === 'contained' ? '0 6px 20px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+    },
+    ...(color === 'primary' && {
+        background: 'linear-gradient(135deg, #3B8FF3 0%, #2a7bd9 100%)',
+        '&:hover': {
+            background: 'linear-gradient(135deg, #2a7bd9 0%, #1e5fb8 100%)',
+        }
+    }),
+    ...(color === 'secondary' && {
+        background: 'linear-gradient(135deg, #F29F67 0%, #e08f5a 100%)',
+        '&:hover': {
+            background: 'linear-gradient(135deg, #e08f5a 0%, #cc7a45 100%)',
+        }
+    }),
+    ...(color === 'dark' && {
+        background: 'linear-gradient(135deg, #1E1E2C 0%, #2c2c3d 100%)',
+        color: '#FFFFFF',
+        '&:hover': {
+            background: 'linear-gradient(135deg, #2c2c3d 0%, #3a3a4f 100%)',
+        }
+    }),
+}));
+
+const StatusChip = styled(Chip)(({ status }) => {
+    const getStatusStyles = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'confirmed':
+            case 'delivered':
+                return {
+                    background: 'linear-gradient(135deg, #34B1AA 0%, #2a9891 100%)',
+                    color: '#FFFFFF',
+                    boxShadow: '0 2px 8px rgba(52, 177, 170, 0.3)',
+                };
+            case 'pending':
+                return {
+                    background: 'linear-gradient(135deg, #E0B50F 0%, #c9a00d 100%)',
+                    color: '#FFFFFF',
+                    boxShadow: '0 2px 8px rgba(224, 181, 15, 0.3)',
+                };
+            case 'processing':
+                return {
+                    background: 'linear-gradient(135deg, #3B8FF3 0%, #2a7bd9 100%)',
+                    color: '#FFFFFF',
+                    boxShadow: '0 2px 8px rgba(59, 143, 243, 0.3)',
+                };
+            case 'shipped':
+                return {
+                    background: 'linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%)',
+                    color: '#FFFFFF',
+                    boxShadow: '0 2px 8px rgba(156, 39, 176, 0.3)',
+                };
+            case 'cancelled':
+                return {
+                    background: 'linear-gradient(135deg, #F36868 0%, #e04545 100%)',
+                    color: '#FFFFFF',
+                    boxShadow: '0 2px 8px rgba(243, 104, 104, 0.3)',
+                };
+            default:
+                return {
+                    background: 'linear-gradient(135deg, #3B8FF3 0%, #2a7bd9 100%)',
+                    color: '#FFFFFF',
+                    boxShadow: '0 2px 8px rgba(59, 143, 243, 0.3)',
+                };
+        }
     };
 
-    const handleBackButtonClick = (event) => {
-        onPageChange(event, page - 1);
+    return {
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        fontSize: '0.7rem',
+        minWidth: '90px',
+        height: '28px',
+        borderRadius: '14px',
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+        ...getStatusStyles(status),
+        '&:hover': {
+            transform: 'scale(1.05)',
+        },
     };
+});
 
-    const handleNextButtonClick = (event) => {
-        onPageChange(event, page + 1);
-    };
-
-    const handleLastPageButtonClick = (event) => {
-        onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
-    };
-
-    return (
-        <Box sx={{ flexShrink: 0, ml: 2.5 }}>
-            <IconButton onClick={handleFirstPageButtonClick} disabled={page === 0} aria-label="first page">
-                {theme.direction === 'rtl' ? <LastPage /> : <FirstPage />}
-            </IconButton>
-            <IconButton onClick={handleBackButtonClick} disabled={page === 0} aria-label="previous page">
-                {theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />}
-            </IconButton>
-            <IconButton onClick={handleNextButtonClick} disabled={page >= Math.ceil(count / rowsPerPage) - 1} aria-label="next page">
-                {theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />}
-            </IconButton>
-            <IconButton onClick={handleLastPageButtonClick} disabled={page >= Math.ceil(count / rowsPerPage) - 1} aria-label="last page">
-                {theme.direction === 'rtl' ? <FirstPage /> : <LastPage />}
-            </IconButton>
-        </Box>
-    );
-}
+// Header styled component for the table header with filters
+const TableHeaderCard = styled(Card)(() => ({
+    borderRadius: '16px',
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+    boxShadow: '0 4px 20px rgba(30, 30, 44, 0.08)',
+    border: '1px solid rgba(255, 255, 255, 0.8)',
+    marginBottom: '24px',
+}));
 
 // Helper function to get color based on order status
 const getStatusColor = (status) => {
@@ -124,7 +215,6 @@ const OrderStatusManagement = () => {
     const [exportType, setExportType] = useState('');
     const [exportMode, setExportMode] = useState('current');
     const [isFetchingFullList, setIsFetchingFullList] = useState(false);
-    const [fullOrderList, setFullOrderList] = useState([]);
     const [editForm, setEditForm] = useState({
         status: '',
         remarks: '',
@@ -132,7 +222,6 @@ const OrderStatusManagement = () => {
     });
     const [formError, setFormError] = useState('');
     const [expandedRows, setExpandedRows] = useState({});
-    const tableRef = useRef();
 
     // API hooks
     const { data, isLoading, isError, error, refetch } = useAllOrders(page, rowsPerPage);
@@ -181,7 +270,6 @@ const OrderStatusManagement = () => {
             const totalOrders = data?.data?.totalOrders || 1000;
             const response = await orderService.getAllOrders(0, totalOrders);
             const normalizedOrders = (response?.data?.orders || []).map(normalizeOrder);
-            setFullOrderList(normalizedOrders);
             return normalizedOrders;
         } catch (err) {
             console.error("Error fetching full order list:", err);
@@ -715,38 +803,102 @@ const OrderStatusManagement = () => {
     }
 
     return (
-        <Box sx={{ width: '100%', overflow: 'hidden', p: 2 }}>
-            {/* Header Section */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: "center", mb: 2 }}>
-                <Typography variant="h5" component="h2">
+        <Box
+            p={2}
+            sx={{
+                backgroundColor: '#f8f9fa',
+                minHeight: '100vh',
+                background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                overflow: 'visible'
+            }}
+        >
+            {/* Order Management Table with Integrated Filters */}
+            <TableHeaderCard>
+                <CardContent sx={{ p: 3 }}>
+                    {/* Table Header with Filters */}
+                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <Typography variant="h6" sx={{ color: '#1E1E2C', fontWeight: 700 }}>
                     Order Management
                 </Typography>
-                <Stack direction="row" spacing={1}>
+                            <Chip
+                                label={`${filteredOrders.length} orders`}
+                                size="small"
+                                sx={{
+                                    backgroundColor: 'rgba(59, 143, 243, 0.1)',
+                                    color: '#3B8FF3',
+                                    fontWeight: 600,
+                                }}
+                            />
+                        </Box>
+
+                        {/* Action Buttons */}
+                        <Box display="flex" gap={2} alignItems="center">
                     <Tooltip title="Refresh">
-                        <IconButton onClick={() => refetch()} color="primary">
+                                <IconButton 
+                                    onClick={() => refetch()} 
+                                    sx={{
+                                        backgroundColor: 'rgba(59, 143, 243, 0.1)',
+                                        borderRadius: '8px',
+                                        color: '#3B8FF3',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(59, 143, 243, 0.2)',
+                                        },
+                                    }}
+                                >
                             <RefreshIcon />
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Export to PDF">
-                        <IconButton onClick={() => handleOpenExportDialog('pdf')} color="secondary">
+                                <IconButton 
+                                    onClick={() => handleOpenExportDialog('pdf')}
+                                    sx={{
+                                        backgroundColor: 'rgba(242, 159, 103, 0.1)',
+                                        borderRadius: '8px',
+                                        color: '#F29F67',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(242, 159, 103, 0.2)',
+                                        },
+                                    }}
+                                >
                             <PdfIcon />
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Export to Excel">
-                        <IconButton onClick={() => handleOpenExportDialog('excel')} color="success">
+                                <IconButton 
+                                    onClick={() => handleOpenExportDialog('excel')}
+                                    sx={{
+                                        backgroundColor: 'rgba(52, 177, 170, 0.1)',
+                                        borderRadius: '8px',
+                                        color: '#34B1AA',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(52, 177, 170, 0.2)',
+                                        },
+                                    }}
+                                >
                             <ExcelIcon />
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Print">
-                        <IconButton onClick={() => handleOpenExportDialog('print')}>
+                                <IconButton 
+                                    onClick={() => handleOpenExportDialog('print')}
+                                    sx={{
+                                        backgroundColor: 'rgba(30, 30, 44, 0.1)',
+                                        borderRadius: '8px',
+                                        color: '#1E1E2C',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(30, 30, 44, 0.2)',
+                                        },
+                                    }}
+                                >
                             <PrintIcon />
                         </IconButton>
                     </Tooltip>
-                </Stack>
+                        </Box>
             </Box>
 
             {/* Filter Section */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+                    <Box display="flex" gap={2} alignItems="center" mb={3}>
                 <TextField
                     variant="outlined"
                     size="small"
@@ -764,7 +916,12 @@ const OrderStatusManagement = () => {
                         minWidth: 200,
                         maxWidth: { xs: '100%', sm: 300 },
                         width: '100%',
-                        flexGrow: { xs: 1, sm: 0 }
+                                flexGrow: { xs: 1, sm: 0 },
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '8px',
+                                    backgroundColor: '#ffffff',
+                                    fontSize: '0.875rem',
+                                },
                     }}
                 />
                 <FormControl size="small" sx={{ minWidth: 150 }}>
@@ -773,6 +930,11 @@ const OrderStatusManagement = () => {
                         value={statusFilter}
                         onChange={handleStatusFilterChange}
                         label="Status"
+                                sx={{
+                                    borderRadius: '8px',
+                                    backgroundColor: '#ffffff',
+                                    fontSize: '0.875rem',
+                                }}
                     >
                         <MenuItem value="ALL">All Statuses</MenuItem>
                         <MenuItem value="PENDING">Pending</MenuItem>
@@ -785,109 +947,373 @@ const OrderStatusManagement = () => {
             </Box>
 
             {/* Orders Table */}
-            <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 250px)', overflow: 'auto' }}>
-                <Table stickyHeader aria-label="order table" ref={tableRef}>
+                    {isLoading ? (
+                        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
+                            <CircularProgress
+                                size={50}
+                                sx={{ color: '#F29F67', mb: 2 }}
+                            />
+                            <Typography variant="body1" sx={{ color: '#6B7280' }}>
+                                Loading orders...
+                            </Typography>
+                        </Box>
+                    ) : isError ? (
+                        <Box p={3}>
+                            <Alert
+                                severity="error"
+                                sx={{
+                                    backgroundColor: '#fff5f5',
+                                    color: '#d32f2f',
+                                    borderRadius: '12px',
+                                    '& .MuiAlert-icon': { color: '#d32f2f' }
+                                }}
+                            >
+                                Error loading orders: {error.message}
+                            </Alert>
+                            <ModernButton
+                                onClick={() => refetch()}
+                                variant="contained"
+                                color="primary"
+                                sx={{ mt: 2 }}
+                            >
+                                Retry
+                            </ModernButton>
+                        </Box>
+                    ) : (
+                        <StyledTableContainer>
+                            <Table stickyHeader>
                     <TableHead>
                         <TableRow>
-                            <TableCell>Order ID</TableCell>
-                            <TableCell>Customer</TableCell>
-                            <TableCell align="right">Amount</TableCell>
-                            <TableCell>Status</TableCell>
-                            <TableCell>Order Date</TableCell>
-                            <TableCell>Payment Mode</TableCell>
-                            <TableCell align="center">Actions</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Order ID</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Customer</TableCell>
+                                        <TableCell align="right" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Amount</TableCell>
+                                        <TableCell align="center" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Status</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Order Date</TableCell>
+                                        <TableCell sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Payment Mode</TableCell>
+                                        <TableCell align="center" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {filteredOrders.length > 0 ? (
                             filteredOrders.map((order) => (
                                 <React.Fragment key={order.id}>
-                                    <TableRow hover>
-                                        <TableCell>{order.order_id}</TableCell>
-                                        <TableCell>{order.user_name}</TableCell>
-                                        <TableCell align="right">₹{order.total_amount.toFixed(2)}</TableCell>
+                                                <TableRow sx={{ '&:hover': { backgroundColor: 'rgba(242, 159, 103, 0.02)' } }}>
                                         <TableCell>
-                                            <Chip
-                                                label={order.status}
-                                                color={getStatusColor(order.status)}
+                                                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#3B8FF3' }}>
+                                                            #{order.order_id}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Box>
+                                                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#1E1E2C' }}>
+                                                                {order.user_name}
+                                                            </Typography>
+                                                            <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                                                                {order.email}
+                                                            </Typography>
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell align="right">
+                                                        <Typography variant="body1" sx={{ fontWeight: 700, color: '#F29F67', fontSize: '1rem' }}>
+                                                            ₹{order.total_amount.toFixed(2)}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell align="center">
+                                                        <StatusChip
+                                                            label={order.status.toUpperCase()}
+                                                            status={order.status}
                                                 size="small"
                                                 onClick={() => handleEditOrder(order)}
-                                                sx={{ minWidth: 100 }}
                                             />
                                         </TableCell>
-                                        <TableCell>{new Date(order.order_time).toLocaleString()}</TableCell>
-                                        <TableCell>{order.payment_mode}</TableCell>
+                                                    <TableCell>
+                                                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                            {new Date(order.order_time).toLocaleDateString()}
+                                                        </Typography>
+                                                        <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                                                            {new Date(order.order_time).toLocaleTimeString()}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={order.payment_mode}
+                                                            size="small"
+                                                            sx={{
+                                                                backgroundColor: 'rgba(52, 177, 170, 0.1)',
+                                                                color: '#34B1AA',
+                                                                fontWeight: 600,
+                                                                fontSize: '0.75rem',
+                                                            }}
+                                                        />
+                                                    </TableCell>
                                         <TableCell align="center">
-                                            <Stack direction="row" spacing={1} justifyContent="center">
-                                                <Tooltip title="View Order">
+                                                        <Box display="flex" gap={1} justifyContent="center">
+                                                            <Tooltip title="View Order" arrow>
                                                     <IconButton
                                                         size="small"
                                                         onClick={() => handleViewOrder(order)}
-                                                        color="primary"
+                                                                    sx={{
+                                                                        color: '#3B8FF3',
+                                                                        backgroundColor: 'rgba(59, 143, 243, 0.1)',
+                                                                        borderRadius: '6px',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(59, 143, 243, 0.2)',
+                                                                            transform: 'scale(1.05)',
+                                                                        },
+                                                                    }}
                                                     >
                                                         <ViewIcon fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
-                                                <Tooltip title="Edit Status">
+                                                            <Tooltip title="Edit Status" arrow>
                                                     <IconButton
                                                         size="small"
                                                         onClick={() => handleEditOrder(order)}
-                                                        color="secondary"
+                                                                    sx={{
+                                                                        color: '#F29F67',
+                                                                        backgroundColor: 'rgba(242, 159, 103, 0.1)',
+                                                                        borderRadius: '6px',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(242, 159, 103, 0.2)',
+                                                                            transform: 'scale(1.05)',
+                                                                        },
+                                                                    }}
                                                     >
                                                         <EditIcon fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
-                                                <Tooltip title="View Products">
+                                                            <Tooltip title="View Products" arrow>
                                                     <IconButton
                                                         size="small"
                                                         onClick={() => toggleRowExpansion(order.id)}
-                                                    >
-                                                        {expandedRows[order.id] ? <ExpandLess /> : <ExpandMore />}
+                                                                    sx={{
+                                                                        color: '#34B1AA',
+                                                                        backgroundColor: 'rgba(52, 177, 170, 0.1)',
+                                                                        borderRadius: '6px',
+                                                                        transition: 'transform 0.2s ease',
+                                                                        transform: expandedRows[order.id] ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(52, 177, 170, 0.2)',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <ExpandMore fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
-                                            </Stack>
+                                                        </Box>
                                         </TableCell>
                                     </TableRow>
+
+                                                {/* Expanded Row for Product Details */}
                                     <TableRow>
-                                        <TableCell colSpan={7} style={{ paddingBottom: 0, paddingTop: 0 }}>
+                                                    <TableCell
+                                                        colSpan={7}
+                                                        sx={{
+                                                            py: 0,
+                                                            px: 0,
+                                                            borderBottom: expandedRows[order.id] ? '1px solid rgba(30, 30, 44, 0.06)' : 0,
+                                                            mb: expandedRows[order.id] ? 2 : 0
+                                                        }}
+                                                    >
                                             <Collapse in={expandedRows[order.id]} timeout="auto" unmountOnExit>
-                                                <Box sx={{ margin: 1 }}>
-                                                    <Typography variant="subtitle2" gutterBottom>
-                                                        Products ({order.orderItems?.length || 0})
-                                                    </Typography>
-                                                    <Table size="small" aria-label="products">
+                                                            <Box sx={{ 
+                                                                backgroundColor: '#f8f9fa', 
+                                                                borderTop: '1px solid rgba(30, 30, 44, 0.06)',
+                                                                borderBottom: '1px solid rgba(30, 30, 44, 0.06)',
+                                                                py: 2,
+                                                                px: 2,
+                                                                position: 'relative',
+                                                                zIndex: 1
+                                                            }}>
+                                                                <Box sx={{
+                                                                    maxWidth: '95%',
+                                                                    margin: '0 auto',
+                                                                    backgroundColor: '#ffffff', 
+                                                                    borderRadius: '12px',
+                                                                    overflow: 'visible',
+                                                                    boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
+                                                                    border: '1px solid rgba(30, 30, 44, 0.06)',
+                                                                    position: 'relative'
+                                                                }}>
+                                                                    <Table size="small" sx={{ 
+                                                                        width: '100%',
+                                                                        '& .MuiTableCell-root': {
+                                                                            borderBottom: '1px solid rgba(30, 30, 44, 0.08)',
+                                                                            padding: '12px 16px',
+                                                                        }
+                                                                    }}>
                                                         <TableHead>
-                                                            <TableRow>
-                                                                <TableCell>Product</TableCell>
-                                                                <TableCell>SKU</TableCell>
-                                                                <TableCell align="right">Price</TableCell>
-                                                                <TableCell align="right">Qty</TableCell>
-                                                                <TableCell align="right">Total</TableCell>
+                                                                            <TableRow sx={{ backgroundColor: 'rgba(59, 143, 243, 0.08)' }}>
+                                                                                <TableCell sx={{ 
+                                                                                    fontWeight: 700, 
+                                                                                    color: '#3B8FF3', 
+                                                                                    fontSize: '0.85rem',
+                                                                                    width: '35%'
+                                                                                }}>
+                                                                                    Product
+                                                                                </TableCell>
+                                                                                <TableCell sx={{ 
+                                                                                    fontWeight: 700, 
+                                                                                    color: '#3B8FF3', 
+                                                                                    fontSize: '0.85rem',
+                                                                                    width: '20%'
+                                                                                }}>
+                                                                                    SKU
+                                                                                </TableCell>
+                                                                                <TableCell align="center" sx={{ 
+                                                                                    fontWeight: 700, 
+                                                                                    color: '#3B8FF3', 
+                                                                                    fontSize: '0.85rem',
+                                                                                    width: '15%'
+                                                                                }}>
+                                                                                    Quantity
+                                                                                </TableCell>
+                                                                                <TableCell align="right" sx={{ 
+                                                                                    fontWeight: 700, 
+                                                                                    color: '#3B8FF3', 
+                                                                                    fontSize: '0.85rem',
+                                                                                    width: '15%'
+                                                                                }}>
+                                                                                    Unit Price
+                                                                                </TableCell>
+                                                                                <TableCell align="right" sx={{ 
+                                                                                    fontWeight: 700, 
+                                                                                    color: '#3B8FF3', 
+                                                                                    fontSize: '0.85rem',
+                                                                                    width: '15%'
+                                                                                }}>
+                                                                                    Total
+                                                                                </TableCell>
                                                             </TableRow>
                                                         </TableHead>
                                                         <TableBody>
-                                                            {order.orderItems?.map((item, index) => (
-                                                                <TableRow key={index}>
+                                                                            {order.orderItems?.map((item, index) => {
+                                                                                const isLastRow = index === order.orderItems.length - 1;
+                                                                                return (
+                                                                                    <TableRow
+                                                                                        key={index}
+                                                                                        sx={{
+                                                                                            '&:hover': {
+                                                                                                backgroundColor: 'rgba(242, 159, 103, 0.04)',
+                                                                                            },
+                                                                                            borderBottom: isLastRow ? 'none' : '1px solid rgba(30, 30, 44, 0.08)',
+                                                                                        }}
+                                                                                    >
                                                                     <TableCell>
-                                                                        <Box display="flex" alignItems="center">
+                                                                                            <Box display="flex" alignItems="center" gap={2}>
                                                                             {item.image_path && (
-                                                                                <Avatar
+                                                                                                    <Box
+                                                                                                        sx={{
+                                                                                                            width: 40,
+                                                                                                            height: 40,
+                                                                                                            borderRadius: '8px',
+                                                                                                            overflow: 'hidden',
+                                                                                                            backgroundColor: '#f8f9fa',
+                                                                                                            display: 'flex',
+                                                                                                            alignItems: 'center',
+                                                                                                            justifyContent: 'center',
+                                                                                                            flexShrink: 0,
+                                                                                                            border: '1px solid rgba(30, 30, 44, 0.08)',
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        <img
                                                                                     src={item.image_path}
                                                                                     alt={item.product_name}
-                                                                                    sx={{ width: 40, height: 40, mr: 1 }}
-                                                                                />
-                                                                            )}
+                                                                                                            style={{
+                                                                                                                width: '100%',
+                                                                                                                height: '100%',
+                                                                                                                objectFit: 'cover',
+                                                                                                            }}
+                                                                                                        />
+                                                                                                    </Box>
+                                                                                                )}
+                                                                                                <Typography variant="body2" sx={{ 
+                                                                                                    fontWeight: 600, 
+                                                                                                    color: '#1E1E2C',
+                                                                                                    lineHeight: 1.4
+                                                                                                }}>
                                                                             {item.product_name}
+                                                                                                </Typography>
                                                                         </Box>
                                                                     </TableCell>
-                                                                    <TableCell>{item.item_id}-{item.tagno}</TableCell>
-                                                                    <TableCell align="right">₹{item.price.toFixed(2)}</TableCell>
-                                                                    <TableCell align="right">{item.quantity}</TableCell>
-                                                                    <TableCell align="right">₹{(item.price * item.quantity).toFixed(2)}</TableCell>
+                                                                                        <TableCell>
+                                                                                            <Typography variant="body2" sx={{ 
+                                                                                                color: '#34B1AA', 
+                                                                                                fontWeight: 500, 
+                                                                                                fontFamily: 'monospace', 
+                                                                                                fontSize: '0.8rem',
+                                                                                                backgroundColor: 'rgba(52, 177, 170, 0.1)',
+                                                                                                padding: '4px 8px',
+                                                                                                borderRadius: '4px',
+                                                                                                display: 'inline-block'
+                                                                                            }}>
+                                                                                                {item.item_id}-{item.tagno}
+                                                                                            </Typography>
+                                                                                        </TableCell>
+                                                                                        <TableCell align="center">
+                                                                                            <Chip
+                                                                                                label={item.quantity}
+                                                                                                size="small"
+                                                                                                sx={{
+                                                                                                    backgroundColor: 'rgba(52, 177, 170, 0.1)',
+                                                                                                    color: '#34B1AA',
+                                                                                                    fontWeight: 600,
+                                                                                                    minWidth: '40px',
+                                                                                                    fontSize: '0.75rem',
+                                                                                                    height: '28px',
+                                                                                                }}
+                                                                                            />
+                                                                                        </TableCell>
+                                                                                        <TableCell align="right">
+                                                                                            <Typography variant="body2" sx={{ 
+                                                                                                color: '#6B7280', 
+                                                                                                fontWeight: 500,
+                                                                                                fontSize: '0.9rem'
+                                                                                            }}>
+                                                                                                ₹{item.price.toFixed(2)}
+                                                                                            </Typography>
+                                                                                        </TableCell>
+                                                                                        <TableCell align="right">
+                                                                                            <Typography variant="body2" sx={{ 
+                                                                                                color: '#F29F67', 
+                                                                                                fontWeight: 700, 
+                                                                                                fontSize: '0.95rem'
+                                                                                            }}>
+                                                                                                ₹{(item.price * item.quantity).toFixed(2)}
+                                                                                            </Typography>
+                                                                                        </TableCell>
                                                                 </TableRow>
-                                                            ))}
+                                                                                );
+                                                                            })}
+
+                                                                            {/* Total Row */}
+                                                                            <TableRow sx={{ 
+                                                                                backgroundColor: 'rgba(242, 159, 103, 0.05)',
+                                                                                borderTop: '2px solid rgba(242, 159, 103, 0.2)'
+                                                                            }}>
+                                                                                <TableCell colSpan={4} sx={{ py: 2 }}>
+                                                                                    <Typography variant="body2" sx={{ 
+                                                                                        fontWeight: 700, 
+                                                                                        color: '#1E1E2C', 
+                                                                                        textAlign: 'right',
+                                                                                        fontSize: '0.95rem'
+                                                                                    }}>
+                                                                                        Order Total:
+                                                                                    </Typography>
+                                                                                </TableCell>
+                                                                                <TableCell align="right" sx={{ py: 2 }}>
+                                                                                    <Typography variant="h6" sx={{ 
+                                                                                        color: '#F29F67', 
+                                                                                        fontWeight: 700,
+                                                                                        fontSize: '1.1rem'
+                                                                                    }}>
+                                                                                        ₹{order.total_amount.toFixed(2)}
+                                                                                    </Typography>
+                                                                                </TableCell>
+                                                                            </TableRow>
                                                         </TableBody>
                                                     </Table>
+                                                                </Box>
                                                 </Box>
                                             </Collapse>
                                         </TableCell>
@@ -896,41 +1322,171 @@ const OrderStatusManagement = () => {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={7} align="center">
+                                            <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
+                                                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+                                                    <Receipt sx={{ fontSize: 60, color: '#E5E7EB' }} />
+                                                    <Typography variant="h6" sx={{ color: '#6B7280', fontWeight: 500 }}>
                                     No orders found
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ color: '#9CA3AF' }}>
+                                                        Try adjusting your search or filters
+                                                    </Typography>
+                                                </Box>
                                 </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
-                    <TableFooter>
-                        <TableRow>
-                            <TablePagination
-                                rowsPerPageOptions={[5, 10, 25, 50]}
-                                colSpan={7}
-                                count={data?.data?.totalOrders || 0}
-                                rowsPerPage={rowsPerPage}
-                                page={page}
-                                SelectProps={{
-                                    inputProps: { 'aria-label': 'rows per page' },
-                                    native: true,
-                                }}
-                                onPageChange={handleChangePage}
-                                onRowsPerPageChange={handleChangeRowsPerPage}
-                                ActionsComponent={TablePaginationActions}
+                            </Table>
+                        </StyledTableContainer>
+                    )}
+
+                    {/* Enhanced Pagination */}
+                    {filteredOrders.length > 0 && (
+                        <Box 
                                 sx={{
-                                    '& .MuiTablePagination-toolbar': {
+                                mt: 3,
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                backgroundColor: '#ffffff',
+                                borderRadius: '12px',
+                                padding: '16px 24px',
+                                boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
+                                border: '1px solid rgba(30, 30, 44, 0.06)',
                                         flexWrap: 'wrap',
-                                        justifyContent: 'center'
-                                    },
-                                    '& .MuiTablePagination-spacer': {
-                                        flex: 'none'
-                                    }
-                                }}
-                            />
-                        </TableRow>
-                    </TableFooter>
-                </Table>
-            </TableContainer>
+                                gap: 2
+                            }}
+                        >
+                            {/* Pagination Info */}
+                            <Box display="flex" alignItems="center" gap={2}>
+                                <Typography variant="body2" sx={{ color: '#6B7280', fontWeight: 500 }}>
+                                    Showing {page * rowsPerPage + 1} to {Math.min((page + 1) * rowsPerPage, data?.data?.totalOrders || 0)} of {data?.data?.totalOrders || 0} orders
+                                </Typography>
+                                <Chip
+                                    label={`${filteredOrders.length} filtered`}
+                                    size="small"
+                                    sx={{
+                                        backgroundColor: 'rgba(52, 177, 170, 0.1)',
+                                        color: '#34B1AA',
+                                        fontWeight: 600,
+                                        fontSize: '0.75rem',
+                                    }}
+                                />
+                            </Box>
+
+                            {/* Pagination Controls */}
+                            <Box display="flex" alignItems="center" gap={2}>
+                                {/* Rows per page selector */}
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    <Typography variant="body2" sx={{ color: '#6B7280', fontWeight: 500, fontSize: '0.875rem' }}>
+                                        Rows per page:
+                                    </Typography>
+                                    <FormControl size="small" sx={{ minWidth: 80 }}>
+                                        <Select
+                                            value={rowsPerPage}
+                                            onChange={handleChangeRowsPerPage}
+                                            sx={{
+                                                borderRadius: '8px',
+                                                fontSize: '0.875rem',
+                                                backgroundColor: '#f8f9fa',
+                                                '& .MuiOutlinedInput-root': {
+                                                    border: '1px solid rgba(30, 30, 44, 0.08)',
+                                                },
+                                            }}
+                                        >
+                                            <MenuItem value={5}>5</MenuItem>
+                                            <MenuItem value={10}>10</MenuItem>
+                                            <MenuItem value={25}>25</MenuItem>
+                                            <MenuItem value={50}>50</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Box>
+
+                                {/* Page navigation */}
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    <Typography variant="body2" sx={{ color: '#6B7280', fontWeight: 500, fontSize: '0.875rem' }}>
+                                        Page {page + 1} of {Math.ceil((data?.data?.totalOrders || 0) / rowsPerPage)}
+                                    </Typography>
+                                    
+                                    <Box display="flex" gap={1}>
+                                        <IconButton
+                                            onClick={(e) => handleChangePage(e, 0)}
+                                            disabled={page === 0}
+                                            sx={{
+                                                backgroundColor: 'rgba(59, 143, 243, 0.1)',
+                                                borderRadius: '8px',
+                                                color: page === 0 ? '#9CA3AF' : '#3B8FF3',
+                                                '&:hover': {
+                                                    backgroundColor: page === 0 ? 'rgba(59, 143, 243, 0.1)' : 'rgba(59, 143, 243, 0.2)',
+                                                },
+                                                '&:disabled': {
+                                                    backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                                                },
+                                            }}
+                                        >
+                                            <FirstPage fontSize="small" />
+                                        </IconButton>
+                                        
+                                        <IconButton
+                                            onClick={(e) => handleChangePage(e, page - 1)}
+                                            disabled={page === 0}
+                                            sx={{
+                                                backgroundColor: 'rgba(59, 143, 243, 0.1)',
+                                                borderRadius: '8px',
+                                                color: page === 0 ? '#9CA3AF' : '#3B8FF3',
+                                                '&:hover': {
+                                                    backgroundColor: page === 0 ? 'rgba(59, 143, 243, 0.1)' : 'rgba(59, 143, 243, 0.2)',
+                                                },
+                                                '&:disabled': {
+                                                    backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                                                },
+                                            }}
+                                        >
+                                            <KeyboardArrowLeft fontSize="small" />
+                                        </IconButton>
+                                        
+                                        <IconButton
+                                            onClick={(e) => handleChangePage(e, page + 1)}
+                                            disabled={page >= Math.ceil((data?.data?.totalOrders || 0) / rowsPerPage) - 1}
+                                            sx={{
+                                                backgroundColor: 'rgba(59, 143, 243, 0.1)',
+                                                borderRadius: '8px',
+                                                color: page >= Math.ceil((data?.data?.totalOrders || 0) / rowsPerPage) - 1 ? '#9CA3AF' : '#3B8FF3',
+                                                '&:hover': {
+                                                    backgroundColor: page >= Math.ceil((data?.data?.totalOrders || 0) / rowsPerPage) - 1 ? 'rgba(59, 143, 243, 0.1)' : 'rgba(59, 143, 243, 0.2)',
+                                                },
+                                                '&:disabled': {
+                                                    backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                                                },
+                                            }}
+                                        >
+                                            <KeyboardArrowRight fontSize="small" />
+                                        </IconButton>
+                                        
+                                        <IconButton
+                                            onClick={(e) => handleChangePage(e, Math.max(0, Math.ceil((data?.data?.totalOrders || 0) / rowsPerPage) - 1))}
+                                            disabled={page >= Math.ceil((data?.data?.totalOrders || 0) / rowsPerPage) - 1}
+                                            sx={{
+                                                backgroundColor: 'rgba(59, 143, 243, 0.1)',
+                                                borderRadius: '8px',
+                                                color: page >= Math.ceil((data?.data?.totalOrders || 0) / rowsPerPage) - 1 ? '#9CA3AF' : '#3B8FF3',
+                                                '&:hover': {
+                                                    backgroundColor: page >= Math.ceil((data?.data?.totalOrders || 0) / rowsPerPage) - 1 ? 'rgba(59, 143, 243, 0.1)' : 'rgba(59, 143, 243, 0.2)',
+                                                },
+                                                '&:disabled': {
+                                                    backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                                                },
+                                            }}
+                                        >
+                                            <LastPage fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </Box>
+                    )}
+                </CardContent>
+            </TableHeaderCard>
 
             {/* Export/Print Selection Dialog */}
             <Dialog open={openExportDialog} onClose={handleCloseExportDialog} maxWidth="sm" fullWidth>
