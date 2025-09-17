@@ -1,111 +1,52 @@
-:root {
-    --sidebar-width: 260px;
-    --sidebar-collapsed-width: 50px;
-    --sidebar-width-mobile: 80%;
-    --header-height: 66px;
-    --transition-speed: 0.3s;
-    --primary-color: #2563eb;
-    --dark-bg: #1a2238;
-    --light-bg: #ecf7f6;
-    --text-dark: #f8fafc;
-    --text-light: #2d3748;
-    --border-color: #e2e8f0;
-}
-
-body.dark .app-layout {
-    background-color: var(--dark-bg);
-    color: var(--text-dark);
-}
-
+/* Use :root variables from index.css */
 .app-layout {
     display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background-color: var(--light-bg);
-    color: var(--text-light);
+    flex-direction: row;
+    background: var(--background-color);
+    color: var(--primary-text-color);
 }
 
-.layout-body {
-    display: flex;
-    flex: 1;
-    width: 100%;
-    transition: margin-left var(--transition-speed) ease;
-}
 
-/* ✅ Fix: header height respected */
+/* Main Content */
 .main-content {
     flex: 1;
-    padding: 1.5rem;
-    padding-top: calc(var(--header-height) + 1rem) !important;
+    padding: var(--spacing-md);
+    margin-left: 50px !important;
+    /* Match NewAdminHeader height */
     overflow-x: hidden;
     transition: margin-left var(--transition-speed) ease;
+    background: var(--background-color);
 }
 
-/* Sidebar Space Fix */
-.main-content.sidebar-open {
-    margin-left: var(--sidebar-width);
-}
 
-.main-content.sidebar-closed {
-    margin-left: var(--sidebar-collapsed-width);
-}
 
-/* Header */
-.admin-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--header-height);
-    background-color: var(--light-bg);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-}
 
-body.dark .admin-header {
-    background-color: var(--dark-bg);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .main-content.sidebar-open {
+        margin-left: var(--sidebar-width-mobile);
+    }
 
-/* Responsive Fixes */
-@media(max-width:992) {
-    .main-content {
-        padding-top: 0 !important;
+    .main-content.sidebar-closed {
+        margin-left: 0;
     }
 }
+
 @media (max-width: 768px) {
-    .main-content.sidebar-open {
-        margin-left: 0;
+    .main-content {
+        padding: var(--spacing-sm);
+        margin-top: 56px;
+        margin-left: 0px !important;
     }
 
+    .main-content.sidebar-open,
     .main-content.sidebar-closed {
         margin-left: 0;
     }
-        .main-content {
-            padding-top: 0 !important;
-        }
-      
-    
 }
 
-
-/* Fix sidebar margin between 768px–1024px when collapsed */
-@media (min-width: 768px) and (max-width: 1024px) {
-    .main-content.sidebar-closed {
-        margin-left: 0 !important;
-    }
-}
-@media (min-width: 1025px) {
-    .main-content.sidebar-open {
-        margin-left: var(--sidebar-width);
-    }
-
-    .main-content.sidebar-closed {
-        margin-left: var(--sidebar-collapsed-width);
+@media (max-width: 576px) {
+    .main-content {
+        padding: var(--spacing-xs);
     }
 }

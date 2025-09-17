@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useProductContext } from '../../../context/product/productContext';
@@ -8,54 +7,54 @@ import { saveAs } from 'file-saver';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import { useFilterItemsQuery } from '../../../hooks/products/useProductsQuery';
+import { MyContext } from '../../../context/themeContext/themeContext';
 import './ManageProduct.css';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
-const ManageProduct = ({
-    baseUrl = process.env.REACT_APP_API_BASE_URL || 'https://app.bmgjewellers.com',
-}) => {
+const ManageProduct = ({ baseUrl = 'https://app.bmgjewellers.com' }) => {
     const navigate = useNavigate();
-    const { sno: snoFromUrl } = useParams();
+    const { tagkey } = useParams();
+    const { themeMode } = useContext(MyContext);
     const { images, description, getImages, updateImage, deleteImage, updateDescription } = useProductContext();
+    const [page, setPage] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+    const [searchInput, setSearchInput] = useState('');
+    const [itemName, setItemName] = useState('');
+    const [subItemName, setSubItemName] = useState('');
+    const { data: productdata, isLoading, error } = useFilterItemsQuery({
+        page,
+        pageSize,
+        itemName: itemName || undefined,
+        subItemName: subItemName || undefined,
+        tagNo: searchInput.includes('-') ? undefined : searchInput || undefined,
+        itemId: searchInput.includes('-') ? searchInput.split('-')[0]?.trim() : undefined,
+    });
 
     // State management
     const [selectedImages, setSelectedImages] = useState([]);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
-    const [sno, setSno] = useState(snoFromUrl || localStorage.getItem('sno') || '');
-    const [newDescription, setNewDescription] = useState(description || '');
+    const [sno, setSno] = useState(tagkey || localStorage.getItem('tagKey') || '');
     const [feedback, setFeedback] = useState({ error: '', success: '' });
-    const [editMode, setEditMode] = useState(false);
-    const [imageEditMode, setImageEditMode] = useState(false);
     const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
-    const [showFilters, setShowFilters] = useState(false);
     const fetchAttempts = useRef(0);
     const printRef = useRef();
     const [imageToUpdate, setImageToUpdate] = useState(null);
     const [newImageFile, setNewImageFile] = useState(null);
     const [showUpdateModal, setShowUpdateModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [viewProduct, setViewProduct] = useState(null);
+    const [editProduct, setEditProduct] = useState(null);
+    const [newDescription, setNewDescription] = useState('');
+    const [newImages, setNewImages] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [searchSno, setSearchSno] = useState('');
-
-    // Filters state
-    const [filters, setFilters] = useState({
-        fromDate: '',
-        toDate: '',
-        costCentre: '',
-        counter: 'ALL',
-        itemId: '',
-        tagNo: '',
-        withImage: true,
-        withoutImage: true,
-        checkPhysicalImage: false,
-    });
 
     // Handle window resize
     useEffect(() => {
-        const handleResize = () => {
-            setIsMobileView(window.innerWidth <= 768);
-        };
+        const handleResize = () => setIsMobileView(window.innerWidth <= 768);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
@@ -83,7 +82,6 @@ const ManageProduct = ({
             fetchAttempts.current += 1;
             await getImages(sno);
             fetchAttempts.current = 0;
-            setNewDescription(description);
             setSelectedImages([]);
         } catch (err) {
             console.error('Error fetching images:', err);
@@ -96,7 +94,7 @@ const ManageProduct = ({
         } finally {
             setIsInitialLoad(false);
         }
-    }, [getImages, sno, description]);
+    }, [getImages, sno]);
 
     // Initial data fetch
     useEffect(() => {
@@ -105,44 +103,48 @@ const ManageProduct = ({
         return () => controller.abort();
     }, [fetchImages]);
 
-    // Sync description
-    useEffect(() => {
-        setNewDescription(description);
-    }, [description]);
-    // Add this function to handle SNO search
-    const handleSearchBySno = async () => {
-        if (!searchSno.trim()) {
-            setFeedback({ error: 'Please enter a serial number', success: '' });
+    // Handle search
+    const handleSearch = async () => {
+        if (!searchInput.trim() && !itemName.trim() && !subItemName.trim()) {
+            setFeedback({ error: 'Please enter at least one search criterion (Item ID, Tag Number, Item Name, or Sub Item Name)', success: '' });
             return;
         }
 
         setLoading(true);
         try {
-            await getImages(searchSno);
-            setSno(searchSno);
-            localStorage.setItem('sno', searchSno); // Store in localStorage for persistence
+            let itemId = '';
+            let tagNo = '';
+            if (searchInput.includes('-')) {
+                [itemId, tagNo] = searchInput.split('-').map(s => s.trim());
+            } else if (searchInput.trim()) {
+                tagNo = searchInput.trim();
+            }
+
+            setSno(tagNo);
+            if (tagNo) {
+                localStorage.setItem('sno', tagNo);
+                await getImages(tagNo);
+            }
             setFeedback({ error: '', success: 'Product details loaded successfully' });
         } catch (err) {
             console.error('Error fetching product:', err);
             setFeedback({
-                error: err.response?.data?.error || 'Failed to load product details. Please check the SNO and try again.',
+                error: err.response?.data?.error || 'Failed to load product details. Please check the input and try again.',
                 success: ''
             });
         } finally {
             setLoading(false);
         }
-    }
+    };
 
-    // Listen for localStorage changes (for cross-tab updates)
+    // Listen for localStorage changes
     useEffect(() => {
         const handleStorageChange = (e) => {
-            if (e.key === 'sno' && !snoFromUrl) {
-                setSno(e.newValue || '');
-            }
+            if (e.key === 'tagkey' && !tagkey) setSno(e.newValue || '');
         };
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);
-    }, [snoFromUrl]);
+    }, [tagkey]);
 
     // Clear feedback after timeout
     useEffect(() => {
@@ -152,134 +154,66 @@ const ManageProduct = ({
         }
     }, [feedback]);
 
-    // Filter handlers
-    const handleFilterChange = useCallback((e) => {
-        const { name, value, type, checked } = e.target;
-        setFilters((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-    }, []);
-
-    // Data export functions
-    const handleExportExcel = useCallback(() => {
-        if (!hasImages) return alert('No images available to export.');
-        try {
-            const data = images.map((img, index) => ({
-                'S.No': index + 1,
-                'Serial Number': sno,
-                'Description': description || 'No description available',
-                'Image URL': `${baseUrl}${img}`,
-                'Image Path': img,
-            }));
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'ProductImages');
-            const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            const file = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            saveAs(file, `Product_Images_${sno}_${new Date().toISOString().slice(0, 10)}.xlsx`);
-        } catch (err) {
-            console.error('Export failed:', err);
-            setFeedback({ error: 'Failed to generate Excel file. Please try again.', success: '' });
-        }
-    }, [images, sno, baseUrl, description, hasImages]);
-
-    const handleExportPDF = useCallback(() => {
-        if (!hasImages) return alert('No images available to export.');
-        try {
-            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm' });
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(16);
-            doc.text(`Product Images Report - ${sno}`, 15, 15);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.text(`Description: ${description || 'No description available'}`, 15, 22);
-            doc.text(`Generated: ${new Date().toLocaleString()}`, 15, 28);
-            const tableData = images.map((img, index) => [
-                index + 1,
-                `Image ${index + 1}`,
-                img,
-                `${baseUrl}${img}`,
-            ]);
-            doc.autoTable({
-                startY: 35,
-                head: [['S.No', 'Reference', 'Image Path', 'Full URL']],
-                body: tableData,
-                theme: 'grid',
-                headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
-                styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak' },
-                margin: { left: 15 },
-                columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 20 }, 2: { cellWidth: 60 }, 3: { cellWidth: 80 } },
-            });
-            doc.save(`Product_Images_${sno}_${new Date().toISOString().slice(0, 10)}.pdf`);
-        } catch (err) {
-            console.error('PDF export failed:', err);
-            setFeedback({ error: 'Failed to generate PDF. Please try again.', success: '' });
-        }
-    }, [images, sno, baseUrl, description, hasImages]);
-
-    const handlePrint = useCallback(() => {
-        if (!hasImages) return alert('No images available to print.');
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <title>Product Images - ${sno}</title>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 20mm; color: #333; }
-                    .print-header { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-                    .print-header h2 { color: #2c3e50; margin-bottom: 5px; }
-                    .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
-                    .print-table th, .print-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                    .print-table th { background-color: #f5f5f5; font-weight: bold; }
-                    .print-image { max-width: 150px; max-height: 150px; display: block; margin: 0 auto; }
-                    @page { size: A4 landscape; margin: 20mm; }
-                    @media print { body { margin: 0; } }
-                </style>
-            </head>
-            <body>
-                <div class="print-header">
-                    <h2>Product Images Report</h2>
-                    <p><strong>Serial Number:</strong> ${sno}</p>
-                    <p><strong>Description:</strong> ${description || 'No description available'}</p>
-                    <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-                </div>
-                <table class="print-table">
-                    <thead>
-                        <tr>
-                            <th>S.No</th>
-                            <th>Image Preview</th>
-                            <th>Image Path</th>
-                            <th>Full URL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${images.map(
-            (img, index) => `
-                                <tr>
-                                    <td>${index + 1}</td>
-                                    <td><img class="print-image" src="${baseUrl}${img}" alt="Product Image ${index + 1}" onerror="this.src='https://via.placeholder.com/150?text=Image+Not+Available';"></td>
-                                    <td>${img}</td>
-                                    <td>${baseUrl}${img}</td>
-                                </tr>
-                            `
-        ).join('')}
-                    </tbody>
-                </table>
-                <script>
-                    window.onload = () => setTimeout(() => { window.print(); window.close(); }, 200);
-                </script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
-    }, [images, sno, baseUrl, description, hasImages]);
-
-    // Navigation handlers
+    // Navigation and modal handlers
     const handleNew = useCallback(() => navigate('/admin/product/add'), [navigate]);
     const handleExit = useCallback(() => navigate('/admin'), [navigate]);
 
-    // Image management
+    const handleViewClick = (product) => {
+        setViewProduct(product);
+        setShowViewModal(true);
+    };
+
+    const handleEditClick = (product) => {
+        setEditProduct(product);
+        setNewDescription(product.Description || '');
+        setNewImages([]);
+        setShowEditModal(true);
+    };
+
+    const handleEditFileChange = (e) => {
+        const files = Array.from(e.target.files);
+        const validFiles = files.filter(file => {
+            if (!file.type.match('image.*')) {
+                setFeedback({ error: 'Only image files are allowed', success: '' });
+                return false;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                setFeedback({ error: 'Image size must be less than 5MB', success: '' });
+                return false;
+            }
+            return true;
+        });
+        setNewImages(validFiles);
+    };
+
+    const handleEditSubmit = async () => {
+        if (!newDescription.trim() && newImages.length === 0) {
+            setFeedback({ error: 'Please provide a description or select images to update', success: '' });
+            return;
+        }
+
+        setLoading(true);
+        try {
+            if (newDescription.trim() && newDescription !== editProduct.Description) {
+                await updateDescription(editProduct.TAGKEY, newDescription);
+            }
+            for (const image of newImages) {
+                await updateImage(editProduct.TAGKEY, null, image);
+            }
+            setFeedback({ error: '', success: 'Product updated successfully' });
+            setShowEditModal(false);
+            await fetchImages();
+        } catch (err) {
+            console.error('Error updating product:', err);
+            setFeedback({
+                error: err.response?.data?.error || 'Failed to update product. Please try again.',
+                success: ''
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleUpdateImageClick = (imagePath) => {
         setImageToUpdate(imagePath);
         setNewImageFile(null);
@@ -290,13 +224,11 @@ const ManageProduct = ({
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validate file type
         if (!file.type.match('image.*')) {
             setFeedback({ error: 'Only image files are allowed', success: '' });
             return;
         }
 
-        // Validate file size (5MB max)
         if (file.size > 5 * 1024 * 1024) {
             setFeedback({ error: 'Image size must be less than 5MB', success: '' });
             return;
@@ -314,23 +246,13 @@ const ManageProduct = ({
         setLoading(true);
         try {
             await updateImage(sno, imageToUpdate, newImageFile);
-            setFeedback({
-                error: '',
-                success: 'Image was successfully updated.'
-            });
+            setFeedback({ error: '', success: 'Image updated successfully' });
             setShowUpdateModal(false);
-            // Refresh the images after successful update
             await fetchImages();
         } catch (err) {
             console.error('Error updating image:', err);
-            let errorMsg = 'Failed to update image';
-            if (err.response) {
-                errorMsg = err.response.data?.error ||
-                    err.response.data?.message ||
-                    errorMsg;
-            }
             setFeedback({
-                error: errorMsg,
+                error: err.response?.data?.error || 'Failed to update image. Please try again.',
                 success: ''
             });
         } finally {
@@ -338,86 +260,36 @@ const ManageProduct = ({
         }
     };
 
+    const handleDeleteImage = useCallback(async (imagePath) => {
+        if (!window.confirm('Are you sure you want to permanently delete this image?')) return;
+        try {
+            await deleteImage(sno, imagePath);
+            setFeedback({ error: '', success: 'Image deleted successfully' });
+        } catch (err) {
+            console.error('Error deleting image:', err);
+            setFeedback({ error: 'Failed to delete image. Please try again.', success: '' });
+        }
+    }, [deleteImage, sno]);
 
-    // Update the modal actions to show loading state
-    <button
-        className="btn primary"
-        onClick={handleImageUpdate}
-        disabled={!newImageFile || loading}
-    >
-        {loading ? (
-            <>
-                <span className="spinner-icon" aria-hidden="true"></span>
-                Updating...
-            </>
-        ) : (
-            'Update Image'
-        )}
-    </button>
+    const handleBulkDelete = useCallback(async () => {
+        if (selectedImages.length === 0) {
+            setFeedback({ error: 'Please select one or more images to delete.', success: '' });
+            return;
+        }
+        if (!window.confirm(`This will permanently delete ${selectedImages.length} image(s). Continue?`)) return;
+        try {
+            await Promise.all(selectedImages.map(img => deleteImage(sno, img)));
+            setSelectedImages([]);
+            setFeedback({ error: '', success: `Successfully deleted ${selectedImages.length} image(s)` });
+        } catch (err) {
+            console.error('Error deleting images:', err);
+            setFeedback({ error: 'Failed to delete some images. Please try again.', success: '' });
+        }
+    }, [deleteImage, sno, selectedImages]);
 
-    const handleDeleteImage = useCallback(
-        async (imagePath) => {
-            if (!window.confirm('Are you sure you want to permanently delete this image?')) return;
-            try {
-                await deleteImage(sno, imagePath);
-                setFeedback({ error: '', success: 'Image was successfully deleted.' });
-            } catch (err) {
-                console.error('Error deleting image:', err);
-                setFeedback({ error: 'Failed to delete image. Please try again.', success: '' });
-            }
-        },
-        [deleteImage, sno]
-    );
-
-    const handleBulkDelete = useCallback(
-        async () => {
-            if (selectedImages.length === 0) {
-                setFeedback({ error: 'Please select one or more images to delete.', success: '' });
-                return;
-            }
-            if (!window.confirm(`This will permanently delete ${selectedImages.length} image(s). Continue?`)) return;
-            try {
-                await Promise.all(selectedImages.map((img) => deleteImage(sno, img)));
-                setSelectedImages([]);
-                setFeedback({ error: '', success: `Successfully deleted ${selectedImages.length} image(s).` });
-            } catch (err) {
-                console.error('Error deleting images:', err);
-                setFeedback({ error: 'Failed to delete some images. Please try again.', success: '' });
-            }
-        },
-        [deleteImage, sno, selectedImages]
-    );
-
-    // Description management
-    const handleUpdateDescription = useCallback(
-        async () => {
-            if (!newDescription.trim()) {
-                setFeedback({ error: 'Description cannot be empty.', success: '' });
-                return;
-            }
-            if (newDescription === description) {
-                setEditMode(false);
-                return;
-            }
-            try {
-                await updateDescription(sno, newDescription);
-                setFeedback({ error: '', success: 'Description was successfully updated.' });
-                setEditMode(false);
-            } catch (err) {
-                console.error('Error updating description:', err);
-                setFeedback({
-                    error: err.response?.data?.error || 'Failed to update description. Please try again.',
-                    success: '',
-                });
-            }
-        },
-        [updateDescription, sno, newDescription, description]
-    );
-
-    // Selection handlers
     const toggleImageSelection = useCallback((imagePath) => {
-        setSelectedImages((prev) =>
-            prev.includes(imagePath) ? prev.filter((img) => img !== imagePath) : [...prev, imagePath]
+        setSelectedImages(prev =>
+            prev.includes(imagePath) ? prev.filter(img => img !== imagePath) : [...prev, imagePath]
         );
     }, []);
 
@@ -425,367 +297,279 @@ const ManageProduct = ({
         setSelectedImages(allSelected ? [] : [...images]);
     }, [allSelected, images]);
 
-    // Edit mode toggles
-    const toggleEditMode = useCallback(() => {
-        setEditMode((prev) => !prev);
-        if (editMode) setNewDescription(description);
-    }, [editMode, description]);
-
-    const toggleImageEditMode = useCallback(() => {
-        setImageEditMode((prev) => !prev);
-        if (imageEditMode) setSelectedImages([]);
-    }, [imageEditMode]);
-
-    // Memoized table columns
-    const tableColumns = useMemo(() => {
-        const baseColumns = [
-            { id: 'index', label: '#', width: '4rem' },
-            { id: 'image', label: 'Image', width: '10rem' },
-            { id: 'sno', label: 'SNO', width: '10rem' },
-            { id: 'description', label: 'Description', width: 'auto' },
-            { id: 'actions', label: 'Actions', width: '10rem' },
-        ];
-        if (imageEditMode) {
-            baseColumns.splice(1, 0, { id: 'select', label: 'Select', width: '4.5rem' });
+    const constructImageUrls = (imagePath) => {
+        if (!imagePath) return [];
+        try {
+            const images = JSON.parse(imagePath);
+            return images.map(img => (img.startsWith('http') ? img : `${baseUrl}${img}`));
+        } catch {
+            return [];
         }
-        return baseColumns;
-    }, [imageEditMode]);
+    };
 
-    // Render filter section
-    const renderFilterSection = () => (
-        <div className="filter-section">
-            <button
-                className="filter-toggle btn secondary"
-                onClick={() => setShowFilters((prev) => !prev)}
-                aria-expanded={showFilters}
-                aria-controls="filter-content"
-            >
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </button>
-            <AnimatePresence>
-                {showFilters && (
-                    <motion.div
-                        id="filter-content"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="filter-content"
-                    >
-                        <div className="filter-row">
-                            <div className="filter-group">
-                                {!isMobileView && (
-                                    <>
-                                        <label className="filter-label">
-                                            <input
-                                                type="checkbox"
-                                                name="asOnDate"
-                                                onChange={handleFilterChange}
-                                                aria-label="Filter by date range"
-                                            />
-                                            Date Range
-                                        </label>
-                                        <input
-                                            type="date"
-                                            name="fromDate"
-                                            value={filters.fromDate}
-                                            onChange={handleFilterChange}
-                                            aria-label="Start date"
-                                            max={filters.toDate || new Date().toISOString().split('T')[0]}
-                                            className="filter-input"
+    const handlePageChange = (newPage) => {
+        if (newPage >= 0 && newPage < (productdata?.totalPages || 1)) setPage(newPage);
+    };
+
+    const handlePageSizeChange = (e) => {
+        setPageSize(parseInt(e.target.value));
+        setPage(0);
+    };
+
+    const renderProductTable = () => (
+        <div className="table-responsive">
+            <table className="custom-table product-table" ref={printRef}>
+                <thead>
+                    <tr>
+                        <th scope="col" style={{ width: '10%' }}>Product</th>
+                        <th scope="col" style={{ width: '10%' }}>Product Key</th>
+                        <th scope="col" style={{ width: '20%' }}>Images</th>
+                        <th scope="col" style={{ width: '20%' }}>Description</th>
+                        <th scope="col" style={{ width: '30%' }}>Details</th>
+                        <th scope="col" style={{ width: '10%' }}>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {productdata?.data?.map((product, index) => (
+                        <motion.tr
+                            key={product.TAGKEY}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2, delay: index * 0.02 }}
+                        >
+                            <td>{product.ITEMNAME} - {product.SUBITEMNAME}</td>
+                            <td>{product.TAGKEY}</td>
+                            <td>
+                                <div className="image-gallery">
+                                    {constructImageUrls(product.ImagePath).map((img, idx) => (
+                                        <img
+                                            key={idx}
+                                            src={img}
+                                            alt={`${product.ITEMNAME} - Image ${idx + 1}`}
+                                            className="thumbnail"
+                                            loading="lazy"
+                                            onError={e => {
+                                                e.currentTarget.src = 'https://via.placeholder.com/80?text=Image+Not+Available';
+                                                e.currentTarget.alt = 'Image not available';
+                                            }}
                                         />
-                                        <span className="filter-separator">to</span>
-                                    </>
-                                )}
-                                <input
-                                    type="date"
-                                    name="toDate"
-                                    value={filters.toDate}
-                                    onChange={handleFilterChange}
-                                    aria-label="End date"
-                                    min={filters.fromDate}
-                                    max={new Date().toISOString().split('T')[0]}
-                                    className="filter-input"
-                                />
-                            </div>
-                        </div>
-                        {!isMobileView && (
-                            <>
-                                <div className="filter-row">
-                                    <div className="filter-group">
-                                        <label htmlFor="costCentre" className="filter-label">Cost Centre</label>
-                                        <select
-                                            id="costCentre"
-                                            name="costCentre"
-                                            value={filters.costCentre}
-                                            onChange={handleFilterChange}
-                                            aria-label="Select cost centre"
-                                            className="filter-select"
-                                        >
-                                            <option value="">Select Cost Centre</option>
-                                            <option value="Showroom1">Showroom 1</option>
-                                            <option value="Showroom2">Showroom 2</option>
-                                        </select>
-                                        <label htmlFor="counter" className="filter-label">Counter</label>
-                                        <select
-                                            id="counter"
-                                            name="counter"
-                                            value={filters.counter}
-                                            onChange={handleFilterChange}
-                                            aria-label="Select counter"
-                                            className="filter-select"
-                                        >
-                                            <option value="ALL">All Counters</option>
-                                            <option value="Counter1">Counter 1</option>
-                                            <option value="Counter2">Counter 2</option>
-                                        </select>
-                                    </div>
+                                    ))}
                                 </div>
-                                <div className="filter-row">
-                                    <div className="filter-group">
-                                        <label htmlFor="itemId" className="filter-label">Item ID</label>
-                                        <input
-                                            id="itemId"
-                                            type="text"
-                                            name="itemId"
-                                            value={filters.itemId}
-                                            onChange={handleFilterChange}
-                                            aria-label="Enter item ID"
-                                            placeholder="Item ID"
-                                            className="filter-input"
-                                        />
-                                        <label htmlFor="tagNo" className="filter-label">Tag No</label>
-                                        <input
-                                            id="tagNo"
-                                            type="text"
-                                            name="tagNo"
-                                            value={filters.tagNo}
-                                            onChange={handleFilterChange}
-                                            aria-label="Enter tag number"
-                                            placeholder="Tag Number"
-                                            className="filter-input"
-                                        />
-                                    </div>
+                            </td>
+                            <td>{product.Description || 'No description'}</td>
+                            <td>
+                                <div className="product-details">
+                                    <p><strong>Occasion:</strong> {product.Occasion || 'N/A'}</p>
+                                    <p><strong>Gender:</strong> {product.Gender || 'N/A'}</p>
+                                    <p><strong>Collection:</strong> {product.CollectionType || 'N/A'}</p>
+                                    <p><strong>Material:</strong> {product.MaterialFinish || 'N/A'}</p>
+                                    <p><strong>Net Weight:</strong> {product.NETWT || 'N/A'} g</p>
+                                    <p><strong>Gross Amount:</strong> ₹{product.GrossAmount || 'N/A'}</p>
+                                    <p><strong>GST:</strong> {product.GSTPer || 'N/A'} (₹{product.GSTAmount || 'N/A'})</p>
+                                    <p><strong>Grand Total:</strong> ₹{product.GrandTotal || 'N/A'}</p>
+                                    <p><strong>Size:</strong> {product.SIZENAME || 'N/A'}</p>
+                                    <p><strong>Color:</strong> {product.ColorAccents || 'N/A'}</p>
+                                    {product.Best_Design && <p><strong>Best Design:</strong> Yes</p>}
+                                    {product.Top_Trending && <p><strong>Top Trending:</strong> Yes</p>}
+                                    {product.NewArrival && <p><strong>New Arrival:</strong> Yes</p>}
+                                    {product.Featured_Products && <p><strong>Featured:</strong> Yes</p>}
                                 </div>
-                            </>
-                        )}
-                        <div className="filter-row">
-                            <div className="filter-group checkbox-group">
-                                <label className="filter-checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        name="checkPhysicalImage"
-                                        checked={filters.checkPhysicalImage}
-                                        onChange={handleFilterChange}
-                                        aria-label="Include physical image verification"
-                                        className="filter-checkbox"
-                                    />
-                                    Verify Physical Image
-                                </label>
-                                <label className="filter-checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        name="withoutImage"
-                                        checked={filters.withoutImage}
-                                        onChange={handleFilterChange}
-                                        aria-label="Include items without images"
-                                        className="filter-checkbox"
-                                    />
-                                    Without Images
-                                </label>
-                                <label className="filter-checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        name="withImage"
-                                        checked={filters.withImage}
-                                        onChange={handleFilterChange}
-                                        aria-label="Include items with images"
-                                        className="filter-checkbox"
-                                    />
-                                    With Images
-                                </label>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            </td>
+                            <td className="action-buttons">
+                                <button
+                                    className="btn small info"
+                                    onClick={() => handleViewClick(product)}
+                                    aria-label={`View details for ${product.ITEMNAME}`}
+                                    title="View Product Details"
+                                >
+                                    <span className="icon" aria-hidden="true">👁️</span>
+                                    {isMobileView ? '' : 'View'}
+                                </button>
+                                <button
+                                    className="btn small warning"
+                                    onClick={() => handleEditClick(product)}
+                                    aria-label={`Edit ${product.ITEMNAME}`}
+                                    title="Edit Product"
+                                >
+                                    <span className="icon" aria-hidden="true">✏️</span>
+                                    {isMobileView ? '' : 'Edit'}
+                                </button>
+                            </td>
+                        </motion.tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 
-    // Render mobile image cards
-    const renderMobileImageCards = () => (
-        <div className="mobile-image-grid">
-            {images.map((img, index) => (
+    const renderMobileProductCards = () => (
+        <div className="mobile-product-grid">
+            {productdata?.data?.map((product, index) => (
                 <motion.div
-                    key={`mobile-${img}-${index}`}
-                    className={`mobile-image-card ${selectedImages.includes(img) ? 'selected' : ''}`}
+                    key={product.TAGKEY}
+                    className="mobile-product-card"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.2, delay: index * 0.02 }}
                 >
-                    {imageEditMode && (
-                        <div className="mobile-select-checkbox">
-                            <input
-                                type="checkbox"
-                                checked={selectedImages.includes(img)}
-                                onChange={() => toggleImageSelection(img)}
-                                aria-label={`${selectedImages.includes(img) ? 'Deselect' : 'Select'} image ${index + 1}`}
-                            />
-                        </div>
-                    )}
-                    <div className="mobile-image-container">
-                        <img
-                            src={`${baseUrl}${img}`}
-                            alt={`Product ${sno} - Image ${index + 1}`}
-                            loading="lazy"
-                            onError={(e) => {
-                                e.currentTarget.src = 'https://via.placeholder.com/150?text=Image+Not+Available';
-                                e.currentTarget.alt = 'Image not available';
-                            }}
-                        />
+                    <div className="mobile-product-header">
+                        <h4>{product.ITEMNAME} - {product.SUBITEMNAME}</h4>
+                        <span className="product-key">Key: {product.TAGKEY}</span>
                     </div>
-                    <div className="mobile-image-meta">
-                        <div className="mobile-image-index">#{index + 1}</div>
-                        <div className="mobile-image-actions">
-                            <a
-                                href={`${baseUrl}${img}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn small info"
-                                aria-label={`View full size of image ${index + 1}`}
-                                title="View full size"
-                            >
-                                <span className="icon" aria-hidden="true">👁️</span>
-                            </a>
-                            {imageEditMode && (
-                                <>
-                                    <button
-                                        className="btn small warning"
-                                        onClick={() => handleUpdateImageClick(img)}
-                                        aria-label={`Update image ${index + 1}`}
-                                        disabled={loading}
-                                        title="Update this image"
-                                    >
-                                        <span className="icon" aria-hidden="true">🔄</span>
-                                    </button>
-                                    <button
-                                        className="btn small danger"
-                                        onClick={() => handleDeleteImage(img)}
-                                        aria-label={`Delete image ${index + 1}`}
-                                        disabled={loading}
-                                        title="Delete this image"
-                                    >
-                                        <span className="icon" aria-hidden="true">🗑️</span>
-                                    </button>
-                                </>
-                            )}
-                        </div>
+                    <div className="mobile-image-gallery">
+                        {constructImageUrls(product.ImagePath).map((img, idx) => (
+                            <img
+                                key={idx}
+                                src={img}
+                                alt={`${product.ITEMNAME} - Image ${idx + 1}`}
+                                className="mobile-thumbnail"
+                                loading="lazy"
+                                onError={e => {
+                                    e.currentTarget.src = 'https://via.placeholder.com/80?text=Image+Not+Available';
+                                    e.currentTarget.alt = 'Image not available';
+                                }}
+                            />
+                        ))}
+                    </div>
+                    <div className="mobile-product-details">
+                        <p><strong>Description:</strong> {product.Description || 'No description'}</p>
+                        <p><strong>Occasion:</strong> {product.Occasion || 'N/A'}</p>
+                        <p><strong>Gender:</strong> {product.Gender || 'N/A'}</p>
+                        <p><strong>Collection:</strong> {product.CollectionType || 'N/A'}</p>
+                        <p><strong>Material:</strong> {product.MaterialFinish || 'N/A'}</p>
+                        <p><strong>Net Weight:</strong> {product.NETWT || 'N/A'} g</p>
+                        <p><strong>Gross Amount:</strong> ₹{product.GrossAmount || 'N/A'}</p>
+                    </div>
+                    <div className="mobile-product-actions">
+                        <button
+                            className="btn small info"
+                            onClick={() => handleViewClick(product)}
+                            aria-label={`View details for ${product.ITEMNAME}`}
+                            title="View Product Details"
+                        >
+                            <span className="icon" aria-hidden="true">👁️</span>
+                            View Details
+                        </button>
+                        <button
+                            className="btn small warning"
+                            onClick={() => handleEditClick(product)}
+                            aria-label={`Edit ${product.ITEMNAME}`}
+                            title="Edit Product"
+                        >
+                            <span className="icon" aria-hidden="true">✏️</span>
+                            Edit
+                        </button>
                     </div>
                 </motion.div>
             ))}
         </div>
     );
 
+    const renderViewModalContent = () => (
+        <div className="modal-content">
+            <h3>Product Details: {viewProduct?.ITEMNAME} - {viewProduct?.SUBITEMNAME}</h3>
+            <div className="modal-image-gallery">
+                {constructImageUrls(viewProduct?.ImagePath).map((img, idx) => (
+                    <img
+                        key={idx}
+                        src={img}
+                        alt={`${viewProduct?.ITEMNAME} - Image ${idx + 1}`}
+                        className="modal-thumbnail"
+                        loading="lazy"
+                        onError={e => {
+                            e.currentTarget.src = 'https://via.placeholder.com/100?text=Image+Not+Available';
+                            e.currentTarget.alt = 'Image not available';
+                        }}
+                    />
+                ))}
+            </div>
+            <div className="modal-product-details">
+                <p><strong>Description:</strong> {viewProduct?.Description || 'No description'}</p>
+                <p><strong>Product Key:</strong> {viewProduct?.TAGKEY || 'N/A'}</p>
+                <p><strong>Occasion:</strong> {viewProduct?.Occasion || 'N/A'}</p>
+                <p><strong>Gender:</strong> {viewProduct?.Gender || 'N/A'}</p>
+                <p><strong>Collection:</strong> {viewProduct?.CollectionType || 'N/A'}</p>
+                <p><strong>Material:</strong> {viewProduct?.MaterialFinish || 'N/A'}</p>
+                <p><strong>Net Weight:</strong> {viewProduct?.NETWT || 'N/A'} g</p>
+                <p><strong>Gross Amount:</strong> ₹{viewProduct?.GrossAmount || 'N/A'}</p>
+                <p><strong>GST:</strong> {viewProduct?.GSTPer || 'N/A'} (₹{viewProduct?.GSTAmount || 'N/A'})</p>
+                <p><strong>Grand Total:</strong> ₹{viewProduct?.GrandTotal || 'N/A'}</p>
+                <p><strong>Size:</strong> {viewProduct?.SIZENAME || 'N/A'}</p>
+                <p><strong>Color:</strong> {viewProduct?.ColorAccents || 'N/A'}</p>
+                {viewProduct?.Best_Design && <p><strong>Best Design:</strong> Yes</p>}
+                {viewProduct?.Top_Trending && <p><strong>Top Trending:</strong> Yes</p>}
+                {viewProduct?.NewArrival && <p><strong>New Arrival:</strong> Yes</p>}
+                {viewProduct?.Featured_Products && <p><strong>Featured:</strong> Yes</p>}
+            </div>
+            <div className="modal-actions">
+                <button
+                    className="btn primary"
+                    onClick={() => setShowViewModal(false)}
+                    aria-label="Close product details"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    );
+
     return (
-        <div className="manage-product-container" role="main">
-            {/* Breadcrumb Navigation */}
+        <div className={`manage-product-container ${themeMode}`} role="main">
             <nav aria-label="breadcrumb">
                 <ol className="breadcrumb">
                     <li className="breadcrumb-item">
                         <Link to="/">Dashboard</Link>
                     </li>
                     <li className="breadcrumb-item active" aria-current="page">
-                        Manage Product - {sno || 'No SNO'}
+                        Manage Product Images
                     </li>
                 </ol>
             </nav>
 
-            {/* Filters Section */}
             <motion.div
-                className="filter-box card"
+                className="card search-section"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                aria-labelledby="filter-section-title"
             >
-                <h2 id="filter-section-title" className="visually-hidden">
-                    Product Filters
-                </h2>
-                {renderFilterSection()}
-                <div className="action-buttons">
-                    <button className="btn primary" aria-label="Search products" disabled={loading}>
-                        {loading ? (
-                            <>
-                                <span className="spinner-icon" aria-hidden="true"></span>
-                                Searching...
-                            </>
-                        ) : (
-                            <>
-                                <span className="icon" aria-hidden="true">🔍</span>
-                                Search
-                            </>
-                        )}
-                    </button>
-                    <div className="button-group">
-                        <button className="btn success" onClick={handleNew} aria-label="Add new product">
-                            <span className="icon" aria-hidden="true">✨</span>
-                            {!isMobileView && 'New Product'}
-                        </button>
-                        <button className="btn danger" onClick={handleExit} aria-label="Exit to dashboard">
-                            <span className="icon" aria-hidden="true">❌</span>
-                            {!isMobileView && 'Exit'}
-                        </button>
-                    </div>
-                    <div className="export-actions">
-                        <button
-                            className="btn info"
-                            onClick={handleExportExcel}
-                            aria-label="Export to Excel"
-                            disabled={!hasImages}
-                            title="Export to Excel"
-                            style={{ color: 'white', background: '#616161' }}
-                        >
-                            <span className="icon" aria-hidden="true">📊</span>
-                            {!isMobileView && 'Excel'}
-                        </button>
-                        <button
-                            className="btn secondary"
-                            onClick={handleExportPDF}
-                            aria-label="Export to PDF"
-                            disabled={!hasImages}
-                            title="Export to PDF"
-                        >
-                            <span className="icon" aria-hidden="true">📄</span>
-                            {!isMobileView && 'PDF'}
-                        </button>
-                        <button
-                            className="btn secondary"
-                            onClick={handlePrint}
-                            aria-label="Print report"
-                            disabled={!hasImages}
-                            title="Print Report"
-                        >
-                            <span className="icon" aria-hidden="true">🖨️</span>
-                            {!isMobileView && 'Print'}
-                        </button>
+                <div className="section-header">
+                    <h3>Manage Product Images</h3>
+                    <div className="section-actions">
+                        <span className="results-count">
+                            {productdata?.data?.length || 0} product{productdata?.data?.length !== 1 ? 's' : ''} • Page {page + 1} of {productdata?.totalPages || 1}
+                        </span>
                     </div>
                 </div>
-            </motion.div>
-            <div className="search-section">
+
                 <div className="search-container">
                     <input
                         type="text"
-                        value={searchSno}
-                        onChange={(e) => setSearchSno(e.target.value)}
-                        placeholder="Enter Product SNO"
+                        value={searchInput}
+                        onChange={e => setSearchInput(e.target.value)}
+                        placeholder="Item ID-Tag No (e.g., 1-124) or Tag No (e.g., 1234)"
+                        className="search-input"
+                        disabled={loading}
+                    />
+                    <input
+                        type="text"
+                        value={itemName}
+                        onChange={e => setItemName(e.target.value)}
+                        placeholder="Item Name"
+                        className="search-input"
+                        disabled={loading}
+                    />
+                    <input
+                        type="text"
+                        value={subItemName}
+                        onChange={e => setSubItemName(e.target.value)}
+                        placeholder="Sub Item Name"
                         className="search-input"
                         disabled={loading}
                     />
                     <button
                         className="btn primary search-button"
-                        onClick={handleSearchBySno}
-                        disabled={loading || !searchSno.trim()}
+                        onClick={handleSearch}
+                        disabled={loading || (!searchInput.trim() && !itemName.trim() && !subItemName.trim())}
                     >
                         {loading ? (
                             <>
@@ -799,11 +583,50 @@ const ManageProduct = ({
                             </>
                         )}
                     </button>
+                    <div className="pagination-controls">
+                        <button
+                            className="btn secondary"
+                            onClick={() => handlePageChange(page - 1)}
+                            disabled={page === 0 || loading}
+                            aria-label="Previous page"
+                        >
+                            <span className="icon" aria-hidden="true">◄</span>
+                        </button>
+                        <select
+                            value={pageSize}
+                            onChange={handlePageSizeChange}
+                            className="page-size-select"
+                            disabled={loading}
+                            aria-label="Select items per page"
+                        >
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <button
+                            className="btn secondary"
+                            onClick={() => handlePageChange(page + 1)}
+                            disabled={page >= (productdata?.totalPages - 1) || loading}
+                            aria-label="Next page"
+                        >
+                            <span className="icon" aria-hidden="true">►</span>
+                        </button>
+                    </div>
+                    <div className="action-buttons">
+                        <button className="btn success" onClick={handleNew} aria-label="Add new product">
+                            <span className="icon" aria-hidden="true">✨</span>
+                            {isMobileView ? '' : 'New Product'}
+                        </button>
+                        <button className="btn danger" onClick={handleExit} aria-label="Exit to dashboard">
+                            <span className="icon" aria-hidden="true">❌</span>
+                            {isMobileView ? '' : 'Exit'}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </motion.div>
 
-            {/* Feedback Messages */}
-            <AnimatePresence>
+            {/* <AnimatePresence>
                 {feedback.error && (
                     <motion.div
                         className="alert error"
@@ -835,84 +658,16 @@ const ManageProduct = ({
                         <span className="alert-message">{feedback.success}</span>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence> */}
 
-            {/* Description Section */}
             <motion.div
-                className="description-section card"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                aria-labelledby="description-section-title"
-            >
-                <div className="section-header">
-                    <h3 id="description-section-title">Product Description</h3>
-                    <div className="section-actions">
-                        <span className="sno-badge">
-                            <span className="sno-label">SNO:</span>
-                            <span className="sno-value">{sno || 'N/A'}</span>
-                        </span>
-                        {editMode ? (
-                            <>
-                                <button
-                                    onClick={handleUpdateDescription}
-                                    className="btn success small"
-                                    disabled={loading || !newDescription.trim() || newDescription === description}
-                                    aria-label="Save description changes"
-                                >
-                                    {loading ? (
-                                        <>
-                                            <span className="spinner-icon small" aria-hidden="true"></span>
-                                            {!isMobileView && 'Saving...'}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className="icon" aria-hidden="true">💾</span>
-                                            {!isMobileView && 'Save'}
-                                        </>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={toggleEditMode}
-                                    className="btn danger small"
-                                    aria-label="Cancel editing description"
-                                >
-                                    <span className="icon" aria-hidden="true">❌</span>
-                                    {!isMobileView && 'Cancel'}
-                                </button>
-                            </>
-                        ) : (
-                            <button
-                                onClick={toggleEditMode}
-                                className="btn primary small"
-                                aria-label="Edit product description"
-                            >
-                                <span className="icon" aria-hidden="true">✏️</span>
-                                {!isMobileView && 'Edit'}
-                            </button>
-                        )}
-                    </div>
-                </div>
-                <textarea
-                    value={newDescription}
-                    onChange={(e) => setNewDescription(e.target.value)}
-                    placeholder="Enter detailed product description..."
-                    className="description-textarea"
-                    rows={isMobileView ? 3 : 4}
-                    aria-label="Product description input"
-                    disabled={!editMode}
-                />
-            </motion.div>
-
-            {/* Image Display Section */}
-            <motion.div
-                className="image-section card"
+                className="products-section card"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
-                aria-labelledby="images-section-title"
+                aria-labelledby="products-section-title"
             >
-                {isInitialLoad && loading ? (
+                {isLoading ? (
                     <motion.div
                         className="loading-state"
                         aria-live="polite"
@@ -921,179 +676,10 @@ const ManageProduct = ({
                         exit={{ opacity: 0 }}
                     >
                         <div className="spinner" aria-hidden="true"></div>
-                        <p>Loading product images...</p>
+                        <p>Loading products...</p>
                     </motion.div>
-                ) : hasImages ? (
-                    <>
-                        <div className="section-header">
-                            <h3 id="images-section-title">Product Images</h3>
-                            <div className="section-actions">
-                                <span className="results-count">
-                                    {images.length} image{images.length !== 1 ? 's' : ''}
-                                </span>
-                                {imageEditMode ? (
-                                    <>
-                                        <button
-                                            style={{ color: 'black' }}
-                                            className="btn small"
-                                            onClick={selectAllImages}
-                                            aria-label={allSelected ? 'Deselect all images' : 'Select all images'}
-                                        >
-                                            {allSelected ? (
-                                                <>
-                                                    <span className="icon" aria-hidden="true">❌</span>
-                                                    {!isMobileView && 'Deselect All'}
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span className="icon" aria-hidden="true">✔️</span>
-                                                    {!isMobileView && 'Select All'}
-                                                </>
-                                            )}
-                                        </button>
-                                        <button
-                                            onClick={toggleImageEditMode}
-                                            className="btn danger small"
-                                            aria-label="Exit image edit mode"
-                                        >
-                                            <span className="icon" aria-hidden="true">❌</span>
-                                            {!isMobileView && 'Cancel'}
-                                        </button>
-                                    </>
-                                ) : (
-                                    <button
-                                        onClick={toggleImageEditMode}
-                                        className="btn primary small"
-                                        aria-label="Enable image edit mode"
-                                    >
-                                        <span className="icon" aria-hidden="true">✏️</span>
-                                        {!isMobileView && 'Edit Images'}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                        {isMobileView ? (
-                            <>
-                                {renderMobileImageCards()}
-                                {imageEditMode && selectedImages.length > 0 && (
-                                    <div className="mobile-bulk-actions">
-                                        <button
-                                            className="btn danger"
-                                            onClick={handleBulkDelete}
-                                            aria-label={`Delete ${selectedImages.length} selected images`}
-                                            disabled={loading}
-                                        >
-                                            {loading ? (
-                                                <>
-                                                    <span className="spinner-icon" aria-hidden="true"></span>
-                                                    Deleting ({selectedImages.length})...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span className="icon" aria-hidden="true">🗑️</span>
-                                                    Delete ({selectedImages.length})
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="table-responsive">
-                                <table className="custom-table image-table" ref={printRef}>
-                                    <thead>
-                                        <tr>
-                                            {tableColumns.map((column) => (
-                                                <th key={column.id} style={{ width: column.width }} scope="col">
-                                                    {column.label}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {images.map((img, index) => (
-                                            <motion.tr
-                                                key={`${img}-${index}`}
-                                                className={selectedImages.includes(img) ? 'selected-row' : ''}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.95 }}
-                                                transition={{ duration: 0.2, delay: index * 0.02 }}
-                                            >
-                                                <td>{index + 1}</td>
-                                                {imageEditMode && (
-                                                    <td>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedImages.includes(img)}
-                                                            onChange={() => toggleImageSelection(img)}
-                                                            aria-label={`${selectedImages.includes(img) ? 'Deselect' : 'Select'} image ${index + 1}`}
-                                                            className="image-checkbox"
-                                                        />
-                                                    </td>
-                                                )}
-                                                <td>
-                                                    <div className="thumbnail-container">
-                                                        <img
-                                                            src={`${baseUrl}${img}`}
-                                                            alt={`Product ${sno} - Image ${index + 1}`}
-                                                            className="thumbnail"
-                                                            loading="lazy"
-                                                            onError={(e) => {
-                                                                e.currentTarget.src = 'https://via.placeholder.com/150?text=Image+Not+Available';
-                                                                e.currentTarget.alt = 'Image not available';
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </td>
-                                                <td>{sno || 'N/A'}</td>
-                                                <td className="description-cell">{description || 'No description available'}</td>
-                                                <td>
-                                                    <div className="action-buttons">
-                                                        <a
-                                                            href={`${baseUrl}${img}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="btn small info"
-                                                            aria-label={`View full size of image ${index + 1}`}
-                                                            title="View full size"
-                                                        >
-                                                            <span className="icon" aria-hidden="true">👁️</span>
-                                                            View
-                                                        </a>
-                                                        {imageEditMode && (
-                                                            <>
-                                                                <button
-                                                                    className="btn small warning"
-                                                                    onClick={() => handleUpdateImageClick(img)}
-                                                                    aria-label={`Update image ${index + 1}`}
-                                                                    disabled={loading}
-                                                                    title="Update this image"
-                                                                >
-                                                                    <span className="icon" aria-hidden="true">🔄</span>
-                                                                    Update
-                                                                </button>
-                                                                <button
-                                                                    className="btn small danger"
-                                                                    onClick={() => handleDeleteImage(img)}
-                                                                    aria-label={`Delete image ${index + 1}`}
-                                                                    disabled={loading}
-                                                                    title="Delete this image"
-                                                                >
-                                                                    <span className="icon" aria-hidden="true">🗑️</span>
-                                                                    Delete
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </motion.tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </>
+                ) : productdata?.data?.length > 0 ? (
+                    <>{isMobileView ? renderMobileProductCards() : renderProductTable()}</>
                 ) : (
                     <motion.div
                         className="empty-state"
@@ -1102,9 +688,9 @@ const ManageProduct = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                     >
-                        <div className="empty-state-icon">📷</div>
-                        <h4>No Images Found</h4>
-                        <p>No images are currently associated with product {sno || 'N/A'}.</p>
+                        <div className="empty-state-icon">📦</div>
+                        <h4>No Products Found</h4>
+                        <p>No products are currently available.</p>
                         <button
                             onClick={fetchImages}
                             className="btn primary"
@@ -1127,7 +713,6 @@ const ManageProduct = ({
                 )}
             </motion.div>
 
-            {/* Update Image Modal */}
             <AnimatePresence>
                 {showUpdateModal && (
                     <motion.div
@@ -1142,11 +727,10 @@ const ManageProduct = ({
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={e => e.stopPropagation()}
                         >
                             <h3>Update Image</h3>
                             <p>Replacing: {imageToUpdate}</p>
-
                             <div className="form-group">
                                 <label htmlFor="newImageFile">Select New Image:</label>
                                 <input
@@ -1162,12 +746,11 @@ const ManageProduct = ({
                                         <img
                                             src={URL.createObjectURL(newImageFile)}
                                             alt="Preview of new image"
-                                            style={{ maxWidth: '100%', maxHeight: '200px' }}
+                                            className="modal-thumbnail"
                                         />
                                     </div>
                                 )}
                             </div>
-
                             <div className="modal-actions">
                                 <button
                                     className="btn primary"
@@ -1186,6 +769,133 @@ const ManageProduct = ({
                                 <button
                                     className="btn danger"
                                     onClick={() => setShowUpdateModal(false)}
+                                    disabled={loading}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showViewModal && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowViewModal(false)}
+                    >
+                        <motion.div
+                            className="modal-content modal-view-content"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {renderViewModalContent()}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showEditModal && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setShowEditModal(false)}
+                    >
+                        <motion.div
+                            className="modal-content modal-edit-content"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <h3>Edit Product: {editProduct?.ITEMNAME} - {editProduct?.SUBITEMNAME}</h3>
+                            <div className="modal-image-gallery">
+                                {constructImageUrls(editProduct?.ImagePath).map((img, idx) => (
+                                    <div key={idx} className="image-container">
+                                        <img
+                                            src={img}
+                                            alt={`${editProduct?.ITEMNAME} - Image ${idx + 1}`}
+                                            className="modal-thumbnail"
+                                            loading="lazy"
+                                            onError={e => {
+                                                e.currentTarget.src = 'https://via.placeholder.com/100?text=Image+Not+Available';
+                                                e.currentTarget.alt = 'Image not available';
+                                            }}
+                                        />
+                                        <button
+                                            className="btn small danger delete-image-btn"
+                                            onClick={() => handleDeleteImage(img)}
+                                            aria-label={`Delete image ${idx + 1}`}
+                                        >
+                                            <span className="icon" aria-hidden="true">🗑️</span>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="editDescription">Description</label>
+                                <textarea
+                                    id="editDescription"
+                                    value={newDescription}
+                                    onChange={e => setNewDescription(e.target.value)}
+                                    placeholder="Enter product description"
+                                    className="form-textarea"
+                                    disabled={loading}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="editImages">Add New Images</label>
+                                <input
+                                    type="file"
+                                    id="editImages"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleEditFileChange}
+                                    disabled={loading}
+                                />
+                                {newImages.length > 0 && (
+                                    <div className="image-preview">
+                                        <p>New Image Previews:</p>
+                                        <div className="modal-image-gallery">
+                                            {newImages.map((image, idx) => (
+                                                <img
+                                                    key={idx}
+                                                    src={URL.createObjectURL(image)}
+                                                    alt={`Preview ${idx + 1}`}
+                                                    className="modal-thumbnail"
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="modal-actions">
+                                <button
+                                    className="btn primary"
+                                    onClick={handleEditSubmit}
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <span className="spinner-icon" aria-hidden="true"></span>
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        'Save Changes'
+                                    )}
+                                </button>
+                                <button
+                                    className="btn danger"
+                                    onClick={() => setShowEditModal(false)}
                                     disabled={loading}
                                 >
                                     Cancel

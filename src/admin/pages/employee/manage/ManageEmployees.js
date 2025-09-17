@@ -29,7 +29,8 @@ import {
     CardContent,
     useMediaQuery,
     useTheme,
-    Grid
+    Grid,
+    Avatar
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -39,57 +40,97 @@ import {
     Person as PersonIcon,
     Email as EmailIcon,
     Phone as PhoneIcon,
-    Security as SecurityIcon
+    Security as SecurityIcon,
+    ArrowForward,
+    TrendingUp,
+    Group
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
-// ========== ENHANCED STYLED COMPONENTS ==========
-const StyledTableContainer = styled(TableContainer)(() => ({
-    borderRadius: '16px',
-    boxShadow: '0 4px 20px rgba(30, 30, 44, 0.08)',
-    border: '1px solid rgba(255, 255, 255, 0.8)',
-    maxHeight: '60vh',
-    overflow: 'auto',
-    '& .MuiTableHead-root': {
-        background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)',
-        '& .MuiTableCell-head': {
-            color: '#FFFFFF !important',
-            fontWeight: 700,
-            fontSize: '0.95rem',
-            textAlign: 'center',
-            padding: '16px',
-            borderBottom: 'none',
-        },
-    },
-    '& .MuiTableCell-body': {
-        padding: '16px',
-        textAlign: 'center',
-        borderBottom: '1px solid rgba(224, 224, 224, 0.5)',
-        fontSize: '0.9rem',
-    },
-    '& .MuiTableRow-root:hover': {
-        backgroundColor: 'rgba(59, 143, 243, 0.04)',
-    },
-}));
-
-const ModernCard = styled(Card)(() => ({
+// ========== ENHANCED STYLED COMPONENTS (Similar to LatestOrders) ==========
+const StyledCard = styled(Card)(({ theme }) => ({
     borderRadius: '16px',
     background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
     boxShadow: '0 4px 20px rgba(30, 30, 44, 0.08)',
     border: '1px solid rgba(255, 255, 255, 0.8)',
-    marginBottom: '24px',
-    position: 'relative',
-    overflow: 'hidden',
-    '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '4px',
-        background: 'linear-gradient(90deg, #3B8FF3 0%, #F29F67 50%, #34B1AA 100%)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 8px 32px rgba(30, 30, 44, 0.12)',
     },
 }));
+
+const CompactTable = styled(TableContainer)(() => ({
+    borderRadius: '12px',
+    overflow: 'hidden',
+    background: '#ffffff',
+    boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
+    border: '1px solid rgba(30, 30, 44, 0.06)',
+    '& .MuiTableHead-root': {
+        background: 'linear-gradient(135deg, #fdf1e8 0%, #f5e6d4 100%)',
+        '& .MuiTableCell-head': {
+            color: '#1a1a1a !important',
+            fontWeight: 700,
+            fontSize: '0.75rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            borderBottom: 'none',
+            padding: '8px 12px',
+        }
+    },
+    '& .MuiTableRow-root': {
+        transition: 'all 0.2s ease',
+        '&:hover': {
+            backgroundColor: 'rgba(242, 159, 103, 0.04)',
+        },
+    },
+    '& .MuiTableCell-root': {
+        borderBottom: '1px solid rgba(30, 30, 44, 0.06)',
+        padding: '8px 12px',
+        fontSize: '0.8rem',
+    },
+}));
+
+const StatusChip = styled(Chip)(({ status }) => {
+    const getStatusStyles = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'admin':
+                return {
+                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                    color: 'white',
+                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
+                };
+            case 'employee':
+                return {
+                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                    color: 'white',
+                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
+                };
+            default:
+                return {
+                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                    color: 'white',
+                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
+                };
+        }
+    };
+
+    return {
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        fontSize: '0.7rem',
+        minWidth: '80px',
+        height: '24px',
+        borderRadius: '12px',
+        transition: 'all 0.2s ease',
+        ...getStatusStyles(status),
+        '&:hover': {
+            transform: 'scale(1.05)',
+        },
+    };
+});
 
 const SearchField = styled(TextField)(() => ({
     '& .MuiOutlinedInput-root': {
@@ -97,10 +138,10 @@ const SearchField = styled(TextField)(() => ({
         backgroundColor: '#fff',
         fontSize: '1rem',
         '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#3B8FF3',
+            borderColor: '#eba748',
         },
         '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#3B8FF3',
+            borderColor: '#eba748',
             borderWidth: '2px',
         },
     },
@@ -122,9 +163,10 @@ const ActionButton = styled(Button)(({ variant: buttonVariant, color }) => ({
         boxShadow: buttonVariant === 'contained' ? '0 6px 20px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
     },
     ...(color === 'primary' && {
-        background: 'linear-gradient(135deg, #3B8FF3 0%, #2a7bd9 100%)',
+        background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+        color: 'white',
         '&:hover': {
-            background: 'linear-gradient(135deg, #2a7bd9 0%, #1e5fb8 100%)',
+            background: 'linear-gradient(135deg, #e09a3a 0%, #d48a2c 100%)',
         }
     }),
     ...(color === 'error' && {
@@ -152,7 +194,7 @@ const ManageEmployees = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    const { employees, isLoading, refetch, deleteEmployee, isDeleting } = useEmployees();
+    const { employees, isLoading, isError, refetch, deleteEmployee, isDeleting } = useEmployees();
     
     const [searchText, setSearchText] = useState('');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -178,6 +220,15 @@ const ManageEmployees = () => {
     }, [searchText, employees]);
 
     const displayedEmployees = filteredEmployees.slice(0, visibleItems);
+
+    // Calculate statistics
+    const totalEmployees = filteredEmployees.length;
+    const adminCount = filteredEmployees.filter(emp => 
+        emp.roles?.some(role => role === 'ROLE_ADMIN')
+    ).length;
+    const employeeCount = filteredEmployees.filter(emp => 
+        emp.roles?.some(role => role === 'ROLE_EMPLOYEE')
+    ).length;
 
     useEffect(() => {
         const handleTableScroll = () => {
@@ -397,6 +448,34 @@ const ManageEmployees = () => {
         printWindow.print();
     };
 
+    if (isError) {
+        return (
+            <StyledCard>
+                <CardContent>
+                    <Alert
+                        severity="error"
+                        sx={{
+                            backgroundColor: '#fff5f5',
+                            color: '#d32f2f',
+                            borderRadius: '12px',
+                            '& .MuiAlert-icon': { color: '#d32f2f' }
+                        }}
+                    >
+                        Failed to load employees. Please try again.
+                    </Alert>
+                    <Button
+                        onClick={() => refetch()}
+                        variant="contained"
+                        color="primary"
+                        sx={{ mt: 2 }}
+                    >
+                        Retry
+                    </Button>
+                </CardContent>
+            </StyledCard>
+        );
+    }
+
     return (
         <Box
             p={3}
@@ -439,53 +518,117 @@ const ManageEmployees = () => {
                 </Box>
             )}
 
-            <ModernCard>
-                <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-                    {/* Header Section */}
-                    <Box sx={{ 
-                        display: 'flex', 
-                        flexDirection: { xs: 'column', md: 'row' },
-                        justifyContent: 'space-between',
-                        alignItems: { xs: 'stretch', md: 'center' },
-                        mb: 4,
-                        gap: 2
-                    }}>
-                        <Box>
-                            <Typography 
-                                variant="h4" 
-                                sx={{ 
-                                    color: '#1E1E2C', 
-                                    fontWeight: 700,
-                                    mb: 1
+            <StyledCard>
+                <CardContent sx={{ p: 3 }}>
+                    {/* Header */}
+                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <Avatar
+                                sx={{
+                                    background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)',
+                                    width: 40,
+                                    height: 40,
                                 }}
                             >
-                                Manage Employees
-                            </Typography>
-                            <Typography 
-                                variant="body1" 
-                                sx={{ 
-                                    color: '#6B7280',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1
+                                <Group />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h6" sx={{ color: '#1E1E2C', fontWeight: 700 }}>
+                                    Manage Employees
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                                    Manage your team members and their roles
+                                </Typography>
+                            </Box>
+                        </Box>
+                        
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <Chip
+                                label={`${totalEmployees} employees`}
+                                size="small"
+                                sx={{
+                                    backgroundColor: 'rgba(59, 143, 243, 0.1)',
+                                    color: '#3B8FF3',
+                                    fontWeight: 600,
                                 }}
-                            >
-                                <PersonIcon sx={{ fontSize: 20 }} />
-                                {filteredEmployees.length} employees
+                            />
+                            <Tooltip title="Add new employee">
+                                <ActionButton
+                                    variant="contained"
+                                    color="primary"
+                                    startIcon={<AddIcon />}
+                                    onClick={() => navigate('/admin/employee/add')}
+                                    sx={{ minWidth: '140px' }}
+                                >
+                                    Add Employee
+                                </ActionButton>
+                            </Tooltip>
+                        </Box>
+                    </Box>
+
+                    {/* Quick Summary */}
+                    <Box 
+                        sx={{ 
+                            display: 'flex', 
+                            gap: isMobile ? 1 : 2, 
+                            mb: 3, 
+                            p: 2, 
+                            backgroundColor: 'rgba(59, 143, 243, 0.05)', 
+                            borderRadius: '12px',
+                            border: '1px solid rgba(59, 143, 243, 0.1)',
+                            flexDirection: isMobile ? 'column' : 'row',
+                            flexWrap: isMobile ? 'wrap' : 'nowrap'
+                        }}
+                    >
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <Group sx={{ color: '#3B8FF3', fontSize: '1.2rem' }} />
+                            <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                                Total: <strong style={{ color: '#3B8FF3' }}>{totalEmployees}</strong>
                             </Typography>
                         </Box>
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <SecurityIcon sx={{ color: '#34B1AA', fontSize: '1.2rem' }} />
+                            <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                                Admins: <strong style={{ color: '#34B1AA' }}>{adminCount}</strong>
+                            </Typography>
+                        </Box>
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <PersonIcon sx={{ color: '#F29F67', fontSize: '1.2rem' }} />
+                            <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                                Employees: <strong style={{ color: '#F29F67' }}>{employeeCount}</strong>
+                            </Typography>
+                        </Box>
+                    </Box>
 
-                        <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                    {/* Search and Actions */}
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        gap: 2,
+                        mb: 3
+                    }}>
+                        <SearchField
+                            placeholder="Search by username, email, or contact..."
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <SearchIcon sx={{ color: '#6B7280', mr: 1 }} />
+                                ),
+                            }}
+                            sx={{ flex: 1 }}
+                        />
+                        <Box sx={{ display: 'flex', gap: 1 }}>
                             <ActionButton
-                                variant="contained"
-                                color="primary"
-                                startIcon={<AddIcon />}
-                                onClick={() => navigate('/admin/employee/add')}
-                                sx={{ minWidth: '140px' }}
+                                variant="outlined"
+                                startIcon={<RefreshIcon />}
+                                onClick={refetch}
+                                disabled={isLoading}
+                                sx={{ minWidth: '120px' }}
                             >
-                                Add Employee
+                                {isLoading ? 'Refreshing...' : 'Refresh'}
                             </ActionButton>
-
+                            
                             <Box sx={{ position: 'relative' }}>
                                 <ActionButton
                                     variant="outlined"
@@ -522,7 +665,6 @@ const ManageEmployees = () => {
                                             py: 1.5,
                                             borderRadius: 0,
                                             '&:first-of-type': { borderTopLeftRadius: '12px', borderTopRightRadius: '12px' },
-                                            '&:last-of-type': { borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' },
                                         }}
                                     >
                                         Excel
@@ -547,7 +689,6 @@ const ManageEmployees = () => {
                                             px: 2,
                                             py: 1.5,
                                             borderRadius: 0,
-                                            '&:first-of-type': { borderTopLeftRadius: '12px', borderTopRightRadius: '12px' },
                                             '&:last-of-type': { borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' },
                                         }}
                                     >
@@ -555,132 +696,209 @@ const ManageEmployees = () => {
                                     </Button>
                                 </Box>
                             </Box>
-                        </Stack>
+                        </Box>
                     </Box>
 
-                    {/* Search and Refresh */}
-                    <Box sx={{ 
-                        display: 'flex', 
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        gap: 2,
-                        mb: 3
-                    }}>
-                        <SearchField
-                            placeholder="Search by username, email, or contact..."
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            InputProps={{
-                                startAdornment: (
-                                    <SearchIcon sx={{ color: '#6B7280', mr: 1 }} />
-                                ),
-                            }}
-                            sx={{ flex: 1 }}
-                        />
-                        <ActionButton
-                            variant="outlined"
-                            startIcon={<RefreshIcon />}
-                            onClick={refetch}
-                            disabled={isLoading}
-                            sx={{ minWidth: '120px' }}
-                        >
-                            {isLoading ? 'Refreshing...' : 'Refresh'}
-                        </ActionButton>
-                    </Box>
+                    {/* Loading State */}
+                    {isLoading && (
+                        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={4}>
+                            <CircularProgress
+                                size={40}
+                                sx={{ color: '#F29F67', mb: 2 }}
+                            />
+                            <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                                Loading employees...
+                            </Typography>
+                        </Box>
+                    )}
+
+                    {/* Loading Skeleton for Employees */}
+                    {isLoading && (
+                        <Box>
+                            {[1, 2, 3].map((index) => (
+                                <Box
+                                    key={index}
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        p: 2,
+                                        mb: 1,
+                                        borderRadius: '12px',
+                                        backgroundColor: '#ffffff',
+                                        border: '1px solid rgba(30, 30, 44, 0.06)',
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={2}>
+                                        <Box
+                                            sx={{
+                                                width: 32,
+                                                height: 32,
+                                                borderRadius: '50%',
+                                                backgroundColor: '#f0f0f0',
+                                                animation: 'pulse 1.5s ease-in-out infinite',
+                                            }}
+                                        />
+                                        <Box>
+                                            <Box
+                                                sx={{
+                                                    width: 80,
+                                                    height: 16,
+                                                    backgroundColor: '#f0f0f0',
+                                                    borderRadius: '4px',
+                                                    mb: 0.5,
+                                                    animation: 'pulse 1.5s ease-in-out infinite',
+                                                }}
+                                            />
+                                            <Box
+                                                sx={{
+                                                    width: 60,
+                                                    height: 12,
+                                                    backgroundColor: '#f0f0f0',
+                                                    borderRadius: '4px',
+                                                    animation: 'pulse 1.5s ease-in-out infinite',
+                                                }}
+                                            />
+                                        </Box>
+                                    </Box>
+                                    <Box display="flex" alignItems="center" gap={2}>
+                                        <Box
+                                            sx={{
+                                                width: 60,
+                                                height: 16,
+                                                backgroundColor: '#f0f0f0',
+                                                borderRadius: '4px',
+                                                animation: 'pulse 1.5s ease-in-out infinite',
+                                            }}
+                                        />
+                                        <Box
+                                            sx={{
+                                                width: 70,
+                                                height: 24,
+                                                backgroundColor: '#f0f0f0',
+                                                borderRadius: '12px',
+                                                animation: 'pulse 1.5s ease-in-out infinite',
+                                            }}
+                                        />
+                                    </Box>
+                                </Box>
+                            ))}
+                        </Box>
+                    )}
 
                     {/* Desktop Table */}
-                    {!isMobile && (
-                        <StyledTableContainer ref={tableContainerRef}>
-                            <Table stickyHeader>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>Username</TableCell>
-                                        <TableCell>Email</TableCell>
-                                        <TableCell>Contact Number</TableCell>
-                                        <TableCell>Role</TableCell>
-                                        <TableCell>Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {displayedEmployees.map(emp => (
-                                        <TableRow key={emp.id}>
-                                            <TableCell>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                                    <PersonIcon sx={{ color: '#3B8FF3', fontSize: 20 }} />
-                                                    <Typography sx={{ fontWeight: 600, color: '#1E1E2C' }}>
-                                                        {emp.username}
-                                                    </Typography>
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                                    <EmailIcon sx={{ color: '#6B7280', fontSize: 16 }} />
-                                                    <Typography sx={{ color: '#6B7280', fontSize: '0.9rem' }}>
-                                                        {emp.email}
-                                                    </Typography>
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                                    <PhoneIcon sx={{ color: '#6B7280', fontSize: 16 }} />
-                                                    <Typography sx={{ color: '#6B7280', fontSize: '0.9rem' }}>
-                                                        {emp.contactNumber}
-                                                    </Typography>
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                                                    {emp.roles
-                                                        .filter(role => ['ROLE_EMPLOYEE', 'ROLE_ADMIN'].includes(role))
-                                                        .map(role => (
-                                                            <Chip
-                                                                key={role}
-                                                                label={role.replace('ROLE_', '')}
-                                                                size="small"
+                    {!isLoading && !isMobile && (
+                        <AnimatePresence>
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <CompactTable ref={tableContainerRef}>
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>Employee</TableCell>
+                                                <TableCell>Email</TableCell>
+                                                <TableCell>Contact</TableCell>
+                                                <TableCell align="center">Role</TableCell>
+                                                <TableCell align="center">Actions</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {displayedEmployees.map((emp) => (
+                                                <TableRow key={emp.id}>
+                                                    <TableCell>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <Avatar
                                                                 sx={{
-                                                                    backgroundColor: role === 'ROLE_ADMIN' 
-                                                                        ? 'rgba(59, 143, 243, 0.1)' 
-                                                                        : 'rgba(242, 159, 103, 0.1)',
-                                                                    color: role === 'ROLE_ADMIN' ? '#3B8FF3' : '#F29F67',
-                                                                    fontWeight: 600,
-                                                                    fontSize: '0.75rem',
+                                                                    width: 32,
+                                                                    height: 32,
+                                                                    background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)',
+                                                                    fontSize: '0.8rem',
                                                                 }}
-                                                            />
-                                                        ))}
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                                                    <Tooltip title="Delete Employee">
-                                                        <IconButton
-                                                            onClick={() => handleDelete(emp)}
-                                                            sx={{
-                                                                color: '#F29F67',
-                                                                '&:hover': {
-                                                                    backgroundColor: 'rgba(242, 159, 103, 0.1)',
-                                                                },
-                                                            }}
-                                                        >
-                                                            <DeleteIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </Box>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </StyledTableContainer>
+                                                            >
+                                                                {emp.username?.charAt(0)?.toUpperCase()}
+                                                            </Avatar>
+                                                            <Box>
+                                                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#1E1E2C' }}>
+                                                                    {emp.username}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <EmailIcon sx={{ color: '#6B7280', fontSize: 16 }} />
+                                                            <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                                                                {emp.email}
+                                                            </Typography>
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <PhoneIcon sx={{ color: '#6B7280', fontSize: 16 }} />
+                                                            <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                                                                {emp.contactNumber}
+                                                            </Typography>
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell align="center">
+                                                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                                            {emp.roles
+                                                                .filter(role => ['ROLE_EMPLOYEE', 'ROLE_ADMIN'].includes(role))
+                                                                .map(role => (
+                                                                    <StatusChip
+                                                                        key={role}
+                                                                        label={role.replace('ROLE_', '')}
+                                                                        status={role.replace('ROLE_', '')}
+                                                                        size="small"
+                                                                    />
+                                                                ))}
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell align="center">
+                                                        <Tooltip title="Delete Employee">
+                                                            <IconButton
+                                                                onClick={() => handleDelete(emp)}
+                                                                sx={{
+                                                                    color: '#F29F67',
+                                                                    '&:hover': {
+                                                                        backgroundColor: 'rgba(242, 159, 103, 0.1)',
+                                                                    },
+                                                                }}
+                                                            >
+                                                                <DeleteIcon />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </CompactTable>
+                            </motion.div>
+                        </AnimatePresence>
                     )}
 
                     {/* Mobile Card Layout */}
-                    {isMobile && (
+                    {!isLoading && isMobile && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             {displayedEmployees.map(emp => (
                                 <EmployeeCard key={emp.id}>
                                     <CardContent>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <PersonIcon sx={{ color: '#3B8FF3', fontSize: 24 }} />
+                                                <Avatar
+                                                    sx={{
+                                                        width: 40,
+                                                        height: 40,
+                                                        background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)',
+                                                    }}
+                                                >
+                                                    {emp.username?.charAt(0)?.toUpperCase()}
+                                                </Avatar>
                                                 <Typography variant="h6" sx={{ fontWeight: 600, color: '#1E1E2C' }}>
                                                     {emp.username}
                                                 </Typography>
@@ -720,18 +938,11 @@ const ManageEmployees = () => {
                                                         {emp.roles
                                                             .filter(role => ['ROLE_EMPLOYEE', 'ROLE_ADMIN'].includes(role))
                                                             .map(role => (
-                                                                <Chip
+                                                                <StatusChip
                                                                     key={role}
                                                                     label={role.replace('ROLE_', '')}
+                                                                    status={role.replace('ROLE_', '')}
                                                                     size="small"
-                                                                    sx={{
-                                                                        backgroundColor: role === 'ROLE_ADMIN' 
-                                                                            ? 'rgba(59, 143, 243, 0.1)' 
-                                                                            : 'rgba(242, 159, 103, 0.1)',
-                                                                        color: role === 'ROLE_ADMIN' ? '#3B8FF3' : '#F29F67',
-                                                                        fontWeight: 600,
-                                                                        fontSize: '0.75rem',
-                                                                    }}
                                                                 />
                                                             ))}
                                                     </Box>
@@ -744,31 +955,20 @@ const ManageEmployees = () => {
                         </Box>
                     )}
 
-                    {/* Loading State */}
-                    {isLoading && (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                            <CircularProgress />
-                        </Box>
-                    )}
-
-                    {/* No Data State */}
+                    {/* Empty State */}
                     {!isLoading && displayedEmployees.length === 0 && (
-                        <Box sx={{ 
-                            textAlign: 'center', 
-                            py: 8,
-                            color: '#6B7280'
-                        }}>
-                            <PersonIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
-                            <Typography variant="h6" sx={{ mb: 1 }}>
+                        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={4}>
+                            <Group sx={{ fontSize: 48, color: '#E5E7EB', mb: 2 }} />
+                            <Typography variant="h6" sx={{ color: '#6B7280', fontWeight: 500, mb: 1 }}>
                                 No employees found
                             </Typography>
-                            <Typography variant="body2">
+                            <Typography variant="body2" sx={{ color: '#9CA3AF', textAlign: 'center' }}>
                                 {searchText ? 'Try adjusting your search criteria.' : 'Add your first employee to get started.'}
                             </Typography>
                         </Box>
                     )}
                 </CardContent>
-            </ModernCard>
+            </StyledCard>
 
             {/* Delete Confirmation Modal */}
             <Dialog

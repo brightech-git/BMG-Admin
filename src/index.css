@@ -1,13 +1,92 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap');
+
+/* Light theme (default) */
+:root {
+  /* Colors */
+  --primary-text-color: #041f60;
+  --secondary-text-color: #0c2c50;
+  --background-color: #f9f9f9;
+  --primary-color: #cd865c;
+  --secondary-color: #6c757d;
+  --success-color: #28a745;
+  --error-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --border-color: #020202;
+  --card-background-color: #ffffff;
+  --both-text-color:#041f60;
+
+  /* Fonts */
+  --font-primary: 'Inter', 'Roboto', 'Open Sans', Arial, sans-serif;
+  --font-secondary: 'Roboto', 'Inter', 'Open Sans', Arial, sans-serif;
+
+  /* Font Sizes */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+
+  /* Header Style */
+    --sidebar-width: 260px;
+      --sidebar-collapsed-width: 0px;
+      --sidebar-normal-width: 0px;
+      --sidebar-width-mobile: 10%;
+      --header-height: 66px;
+      --transition-speed: 0.3s;
+      --primary-color: #2563eb;
+      --dark-bg: #1a2238;
+      --light-bg: #ecf7f6;
+      --text-dark: #f8fafc;
+      --text-light: #2d3748;
+      --border-color: #e2e8f0;
+
+        --active-bg: rgb(37, 162, 235,0.14);
+          --active-border: #2563eb;
+          --submenu-indicator: #718096;
+          --submenu-indicator-active: #2563eb;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Dark theme overrides */
+.dark {
+  --primary-text-color: #e0e0e0;
+  --secondary-text-color: #b0b0b0;
+  --background-color: #02021d;
+  --primary-color: #3399ff;
+  --secondary-color: #888888;
+  --success-color: #28a745;
+  --error-color: #ff6b6b;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --border-color: #333333;
+  --card-background-color: #02021d;
+  /*SideBar Style */
+   --active-bg: rgba(37, 99, 235, 0.55);
+  --active-border: #60a5fa;
+  --submenu-indicator: #a0aec0;
+  --submenu-indicator-active: #60a5fa;
+  --both-text-color: #041f60;
+  
+
 }
+
+/* Global styles */
+body {
+  font-family: var(--font-primary);
+  color: var(--primary-text-color);
+  background-color: var(--background-color);
+}
+

@@ -63,18 +63,19 @@
 }
 
 .submit-button {
-    background-color: #1890ff;
-    border-color: #1890ff;
+    background-color: #eba748;
+    border-color: #eba748;
     border-radius: 6px;
     font-weight: 500;
     min-width: 120px;
     height: 40px;
     transition: all 0.3s;
+    color: white;
 }
 
 .submit-button:hover {
-    background-color: #40a9ff;
-    border-color: #40a9ff;
+    background-color: #e09a3a;
+    border-color: #e09a3a;
     transform: translateY(-1px);
 }
 
@@ -86,8 +87,8 @@
 }
 
 .cancel-button:hover {
-    border-color: #1890ff;
-    color: #1890ff;
+    border-color: #eba748;
+    color: #eba748;
     transform: translateY(-1px);
 }
 

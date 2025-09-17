@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { bannersService } from "../../service/bannersSerivce";
+import { bannersService } from "../../../service/bannersSerivce";
 
 export const useUploadBannerMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ image, title }) =>
-            bannersService.createBanner(image, title),
+        mutationFn: ({ image, title, itemname, subtitle, gender }) =>
+            bannersService.createBanner(image, title, itemname, subtitle, gender),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['banners'] }); // Refetch banners list
         },
@@ -17,8 +17,8 @@ export const useUpdateBannerMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ image, id }) =>
-            bannersService.updateBanner(image, id),
+        mutationFn: ({ id,image, title ,subtitle,  itemname,  gender }) =>
+            bannersService.updateBanner(id,image, title, subtitle, itemname, gender),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['banners'] }); // Refetch banners list after update
         },

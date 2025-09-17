@@ -1,6 +1,6 @@
 :root {
-    --primary-color: #4361ee;
-    --primary-hover: #3a56d4;
+    --primary-color: #eba748;
+    --primary-hover: #e09a3a;
     --secondary-color: #3f37c9;
     --danger-color: #d61212;
     --danger-hover: #e51717;
@@ -10,7 +10,7 @@
     --text-secondary: #4a4e69;
     --text-muted: #8e9aaf;
     --border-color: #e9ecef;
-    --bg-light: #f8f9fa;
+    --bg-light: #fdf1e8;
     --bg-lighter: #ffffff;
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -135,11 +135,11 @@
 }
 
 .rates-table tr:hover {
-    background-color: rgba(67, 97, 238, 0.03);
+    background-color: rgba(235, 167, 72, 0.03);
 }
 
 .editing-row {
-    background-color: rgba(67, 97, 238, 0.05) !important;
+    background-color: rgba(235, 167, 72, 0.05) !important;
 }
 
 .edit-input {
@@ -156,7 +156,7 @@
 .edit-input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    box-shadow: 0 0 0 3px rgba(235, 167, 72, 0.1);
 }
 
 .action-cell {
@@ -244,7 +244,7 @@
 .spinner {
     width: 2.5rem;
     height: 2.5rem;
-    border: 3px solid rgba(67, 97, 238, 0.1);
+    border: 3px solid rgba(235, 167, 72, 0.1);
     border-top-color: var(--primary-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;

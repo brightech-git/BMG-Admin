@@ -3,75 +3,8 @@ import axiosInstance from "../api/axiosInstance";
 
 export const getDashboardData = async () => {
     try {
-        const [
-            pendingOrdersRes,
-            totalOrdersRes,
-            deliveredOrdersRes,
-            cancelledOrdersRes,
-            shippedOrdersRes,
-            userCountRes,
-        ] = await Promise.all([
-            axiosInstance.get(`/order/pending-orders`),
-            axiosInstance.get(`/order/all-ordersCount`),
-            axiosInstance.get(`/order/delivered-orders`),
-            axiosInstance.get(`/order/cancelled-orders`),
-            axiosInstance.get(`/order/shipped-orders`),
-            axiosInstance.get(`/auth/user/count`),
-        ]);
-
-        // Enhanced response with additional metrics
-        const enhancedData = {
-            pendingOrders: pendingOrdersRes.data,
-            totalOrders: totalOrdersRes.data,
-            deliveredOrders: deliveredOrdersRes.data,
-            cancelledOrders: cancelledOrdersRes.data,
-            shippedOrders: shippedOrdersRes.data,
-            totalUsers: userCountRes.data,
-            
-            // Additional enhanced metrics (dummy data for now)
-            revenue: {
-                totalRevenue: 12500000,
-                monthlyGrowth: 12.5,
-                todayRevenue: 450000,
-                weeklyRevenue: 3200000,
-                revenueBreakdown: {
-                    goldSales: 6500000,
-                    silverSales: 3200000,
-                    diamondSales: 1800000,
-                    platinumSales: 1000000
-                }
-            },
-            products: {
-                totalProducts: 1250,
-                premiumProducts: 45,
-                lowStockProducts: 12,
-                outOfStockProducts: 3,
-                categoryDistribution: {
-                    goldJewelry: 35,
-                    silverJewelry: 25,
-                    diamondSets: 20,
-                    platinumItems: 15,
-                    other: 5
-                }
-            },
-            users: {
-                totalUsers: userCountRes.data?.totalUsers || 0,
-                newUsers: 45,
-                activeUsers: 35,
-                premiumUsers: 15,
-                inactiveUsers: 5,
-                userGrowth: 8.2
-            },
-            analytics: {
-                averageOrderValue: 8500,
-                customerSatisfaction: 4.8,
-                returnRate: 2.1,
-                conversionRate: 15.3,
-                monthlyGrowth: 12.5
-            }
-        };
-
-        return enhancedData;
+        const  userCountRes = await axiosInstance.get(`/auth/user/count`)
+        return userCountRes.data;
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
         throw error;

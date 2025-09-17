@@ -1,14 +1,14 @@
 /* Base Variables */
 :root {
-    --primary-color: #4a6bff;
-    --primary-hover: #3a56d4;
+    --primary-color: #eba748;
+    --primary-hover: #e09a3a;
     --danger-color: #ff4d4f;
     --danger-hover: #d9363e;
     --success-color: #52c41a;
     --warning-color: #faad14;
     --text-color: #1a1a1a;
     --text-light: #6c757d;
-    --background-light: #f8f9fa;
+    --background-light: #fdf1e8;
     --border-color: #dee2e6;
     --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     --card-shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.1);
@@ -138,13 +138,13 @@
 }
 
 .btn-edit {
-    background-color: rgba(74, 107, 255, 0.1);
-    color: var(--primary-color);
-    border-color: rgba(74, 107, 255, 0.3);
+    background-color: rgba(235, 167, 72, 0.1);
+    color: #eba748;
+    border-color: rgba(235, 167, 72, 0.3);
 }
 
 .btn-edit:hover {
-    background-color: rgba(74, 107, 255, 0.2);
+    background-color: rgba(235, 167, 72, 0.2);
 }
 
 .btn-delete {
@@ -248,12 +248,14 @@
 }
 
 .employee-table th {
-    background-color: var(--background-light);
+    background-color: #fdf1e8;
     text-align: left;
     align-items: center;
     justify-content: center;
     padding: 12px 15px;
     border-bottom: 2px solid var(--border-color);
+    color: #1a1a1a;
+    font-weight: 600;
 }
 
 .employee-table td {
@@ -262,7 +264,7 @@
 }
 
 .employee-table tr:hover td {
-    background-color: rgba(74, 107, 255, 0.03);
+    background-color: rgba(253, 241, 232, 0.3);
 }
 
 .user-info {
@@ -359,8 +361,8 @@
 }
 
 .role-badge.employee {
-    background-color: rgba(74, 107, 255, 0.1);
-    color: var(--primary-color);
+    background-color: rgba(235, 167, 72, 0.1);
+    color: #eba748;
 }
 
 /* Modal Styles */

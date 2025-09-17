@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Banner from "../banner/Banner";
-import { useBannersQuery } from "../../../admin/hooks/banners/useBannersQuery";
+import { useBannersQuery } from "../../../admin/hooks/banners/mainBanner/useBannersQuery";
 import SkeletonLoader from "../../components/loader/SkeletonLoader";
 import Error from "../../components/error/Error";
 import { useVideos } from "../../hook/video/useVideoQuery";

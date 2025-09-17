@@ -4,35 +4,35 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
-  background: #ffffff;
-  border-bottom: 1px solid #e8e8e8;
+  z-index: 1100;
+  background: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  height: 56px;
+  /* Reduced header height */
 }
 
 .staradmin-header.scrolled {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(249, 249, 249, 0.95);
 }
 
 .staradmin-header.dark {
-  background: #1E1E2C;
-  border-bottom: 1px solid #2d2d42;
+  background: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .staradmin-header.dark.scrolled {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  background: rgba(30, 30, 44, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: rgba(18, 18, 18, 0.95);
 }
 
 .staradmin-header-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  height: 72px;
+  padding: 0 var(--spacing-sm);
+  height: 100%;
   max-width: 100%;
 }
 
@@ -40,7 +40,7 @@
 .staradmin-header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-sm);
   flex-shrink: 0;
 }
 
@@ -48,212 +48,99 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border: none;
   background: transparent;
-  border-radius: 8px;
-  color: #666;
+  border-radius: var(--border-radius-sm);
+  color: var(--secondary-text-color);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 18px;
 }
 
 .staradmin-menu-toggle:hover {
-  background: #F29F67;
-  color: white;
-  transform: scale(1.05);
+  background: var(--primary-color);
+  color: #ffffff;
 }
 
 .dark .staradmin-menu-toggle {
-  color: #e0e0e0;
+  color: var(--primary-text-color);
 }
 
 .dark .staradmin-menu-toggle:hover {
-  background: #F29F67;
-  color: white;
+  background: var(--primary-color);
+  color: #ffffff;
 }
 
 .staradmin-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.staradmin-logo-wrapper {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(242, 159, 103, 0.2);
+  gap: var(--spacing-xs);
 }
 
 .staradmin-logo-image {
-  width: 100%;
-  height: 100%;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-sm);
   object-fit: cover;
 }
 
-.staradmin-brand-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .staradmin-company-name {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1E1E2C;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--primary-text-color);
   margin: 0;
-  letter-spacing: -0.5px;
-}
-
-.staradmin-company-subtitle {
-  font-size: 12px;
-  color: #F29F67;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .dark .staradmin-company-name {
-  color: #ffffff;
-}
-
-/* Center Section - Welcome & DateTime */
-.staradmin-header-center {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 24px;
-}
-
-.staradmin-welcome-section {
-  text-align: center;
-}
-
-.staradmin-welcome-text {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1E1E2C;
-  margin: 0 0 4px 0;
-}
-
-.staradmin-username {
-  color: #F29F67;
-  font-weight: 700;
-}
-
-.staradmin-welcome-subtitle {
-  font-size: 13px;
-  color: #888;
-  margin: 0;
-  font-weight: 400;
-}
-
-.dark .staradmin-welcome-text {
-  color: #ffffff;
-}
-
-.dark .staradmin-welcome-subtitle {
-  color: #b0b0b0;
-}
-
-.staradmin-datetime-compact {
-  display: flex;
-  align-items: center;
-}
-
-.staradmin-datetime-display {
-  background: linear-gradient(135deg, #F29F67, #E0B50F);
-  padding: 8px 16px;
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(242, 159, 103, 0.3);
-}
-
-.staradmin-datetime-text {
-  color: white;
-  font-size: 13px;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  color: var(--primary-text-color);
 }
 
 /* Right Section - Actions & Profile */
 .staradmin-header-right {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: var(--spacing-sm);
   flex-shrink: 0;
 }
 
 .staradmin-actions-group {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.staradmin-action-item {
-  position: relative;
+  gap: var(--spacing-xs);
 }
 
 .staradmin-action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   border: none;
-  background: #f8f9fa;
-  border-radius: 12px;
-  color: #666;
+  background: transparent;
+  border-radius: var(--border-radius-sm);
+  color: var(--secondary-text-color);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 16px;
-  position: relative;
 }
 
 .staradmin-action-btn:hover {
-  background: #F29F67;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(242, 159, 103, 0.3);
+  background: var(--primary-color);
+  color: #ffffff;
 }
 
 .staradmin-action-btn.active {
-  background: #F29F67;
-  color: white;
-  box-shadow: 0 2px 8px rgba(242, 159, 103, 0.4);
+  background: var(--primary-color);
+  color: #ffffff;
 }
 
 .dark .staradmin-action-btn {
-  background: #2d2d42;
-  color: #e0e0e0;
+  color: var(--primary-text-color);
 }
 
 .dark .staradmin-action-btn:hover {
-  background: #F29F67;
-  color: white;
-}
-
-/* Notification Badge */
-.staradmin-notification-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: #368FF3;
-  color: white;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(54, 143, 243, 0.3);
+  background: var(--primary-color);
+  color: #ffffff;
 }
 
 /* Profile Section */
@@ -264,37 +151,32 @@
 .staradmin-profile-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
   border: none;
   background: transparent;
-  border-radius: 12px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  max-width: 200px;
 }
 
 .staradmin-profile-btn:hover {
-  background: rgba(242, 159, 103, 0.1);
-  transform: translateY(-1px);
+  background: rgba(0, 123, 255, 0.1);
 }
 
 .staradmin-profile-btn.active {
-  background: rgba(242, 159, 103, 0.15);
+  background: rgba(0, 123, 255, 0.15);
 }
 
 .staradmin-profile-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  overflow: hidden;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--border-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #F29F67, #E0B50F);
-  color: white;
-  font-size: 18px;
-  box-shadow: 0 2px 8px rgba(242, 159, 103, 0.3);
+  background: var(--primary-color);
+  color: #ffffff;
 }
 
 .staradmin-profile-avatar img {
@@ -303,81 +185,92 @@
   object-fit: cover;
 }
 
-.staradmin-profile-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-}
-
 .staradmin-profile-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1E1E2C;
-  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--primary-text-color);
+  max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
-}
-
-.staradmin-profile-role {
-  font-size: 12px;
-  color: #F29F67;
-  font-weight: 500;
+  white-space: nowrap;
 }
 
 .dark .staradmin-profile-name {
-  color: #ffffff;
+  color: var(--primary-text-color);
 }
 
 /* Dropdown Styles */
 .staradmin-dropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + var(--spacing-xs));
   right: 0;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  border: 1px solid #e8e8e8;
-  min-width: 200px;
+  background: var(--card-background-color);
+  border-radius: var(--border-radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+  min-width: 120px;
   overflow: hidden;
   z-index: 1001;
 }
 
-.staradmin-dropdown-wide {
-  min-width: 280px;
-}
-
 .dark .staradmin-dropdown {
-  background: #2d2d42;
-  border: 1px solid #3d3d52;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
-.staradmin-dropdown-arrow {
-  position: absolute;
-  top: -6px;
-  right: 20px;
-  width: 12px;
-  height: 12px;
-  background: white;
-  border: 1px solid #e8e8e8;
-  border-bottom: none;
-  border-right: none;
-  transform: rotate(45deg);
-}
-
-.dark .staradmin-dropdown-arrow {
-  background: #2d2d42;
-  border-color: #3d3d52;
-}
-
-.staradmin-dropdown-header {
+.staradmin-dropdown-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 14px;
-  font-weight: 600;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  border: none;
+  width: 100%;
+  font-size: var(--font-size-xs);
+  color: var(--primary-text-color);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.staradmin-dropdown-item:hover {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+.dark .staradmin-dropdown-item {
+  color: var(--primary-text-color);
+}
+
+.dark .staradmin-dropdown-item:hover {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .staradmin-header-container {
+    padding: 0 var(--spacing-xs);
+  }
+
+  .staradmin-menu-toggle,
+  .staradmin-action-btn,
+  .staradmin-profile-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .staradmin-logo-image,
+  .staradmin-profile-avatar {
+    width: 24px;
+    height: 24px;
+  }
+
+  .staradmin-profile-name {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .staradmin-company-name {
+    display: none;
+  }
 }

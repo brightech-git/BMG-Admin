@@ -21,38 +21,33 @@ import { styled } from '@mui/system';
 
 // Styled components matching EstimationProductsPage
 const StyledTableContainer = styled(TableContainer)(() => ({
-    borderRadius: '16px',
-    overflow: 'auto',
+    borderRadius: '12px',
+    overflow: 'hidden',
     background: '#ffffff',
-    boxShadow: '0 8px 32px rgba(30, 30, 44, 0.08)',
+    boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
     border: '1px solid rgba(30, 30, 44, 0.06)',
-    maxHeight: '60vh',
     '& .MuiTableHead-root': {
-        background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)',
+        background: 'linear-gradient(135deg, #fdf1e8 0%, #f5e6d4 100%)',
         '& .MuiTableCell-head': {
-            color: '#FFFFFF !important',
+            color: '#1a1a1a !important',
             fontWeight: 700,
-            fontSize: '0.875rem',
+            fontSize: '0.75rem',
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             borderBottom: 'none',
-            padding: '16px 12px',
-            textAlign: 'left',
+            padding: '8px 12px',
         }
     },
     '& .MuiTableRow-root': {
         transition: 'all 0.2s ease',
         '&:hover': {
-            backgroundColor: 'rgba(242, 159, 103, 0.04)',
+            backgroundColor: 'rgba(253, 241, 232, 0.3)',
         },
     },
     '& .MuiTableCell-root': {
         borderBottom: '1px solid rgba(30, 30, 44, 0.06)',
-        padding: '12px 16px',
-        textAlign: 'left',
-    },
-    '& .MuiTableCell-body': {
-        padding: '16px',
+        padding: '8px 12px',
+        fontSize: '0.8rem',
     },
 }));
 
@@ -75,26 +70,76 @@ const ModernCard = styled(Card)(() => ({
     },
 }));
 
-const SearchField = styled(TextField)(({ theme }) => ({
-    width: '100%',
-    maxWidth: 300,
+const SearchField = styled(TextField)(() => ({
     '& .MuiOutlinedInput-root': {
-        borderRadius: '8px',
-        '& fieldset': { borderColor: 'rgba(30, 30, 44, 0.06)' },
-        '&:hover fieldset': { borderColor: '#3B8FF3' },
-        '&.Mui-focused fieldset': { borderColor: '#3B8FF3' },
+        borderRadius: '12px',
+        backgroundColor: '#fff',
+        fontSize: '1rem',
+        '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#eba748',
+        },
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#eba748',
+            borderWidth: '2px',
+        },
     },
-    [theme.breakpoints.down('sm')]: {
-        maxWidth: '100%',
+    '& .MuiInputLabel-root': {
+        color: '#6B7280',
+        fontWeight: 500,
     },
 }));
 
+const StatusChip = styled(Chip)(({ status }) => {
+    const getStatusStyles = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'active':
+                return {
+                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                    color: 'white',
+                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
+                };
+            case 'inactive':
+                return {
+                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                    color: 'white',
+                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
+                };
+            default:
+                return {
+                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                    color: 'white',
+                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
+                };
+        }
+    };
+
+    return {
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        fontSize: '0.7rem',
+        minWidth: '80px',
+        height: '24px',
+        borderRadius: '12px',
+        transition: 'all 0.2s ease',
+        ...getStatusStyles(status),
+        '&:hover': {
+            transform: 'scale(1.05)',
+        },
+    };
+});
+
 const ActionButton = styled(Button)(({ theme }) => ({
-    borderRadius: '8px',
+    borderRadius: '12px',
     textTransform: 'none',
     fontWeight: 600,
     padding: theme.spacing(1, 2),
     minWidth: 'fit-content',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+    '&:hover': {
+        transform: 'translateY(-1px)',
+        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
+    },
     [theme.breakpoints.down('sm')]: {
         padding: theme.spacing(0.75, 1.5),
         fontSize: '0.75rem',
@@ -284,7 +329,7 @@ const ManageRates = () => {
                 <Alert severity="error" sx={{ borderRadius: '12px', backgroundColor: '#fff5f5', color: '#d32f2f' }}>
                     Failed to load rates. Please try again.
                 </Alert>
-                <Button variant="contained" onClick={() => refetch()} sx={{ mt: 2, borderRadius: '12px', background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)' }}>
+                <Button variant="contained" onClick={() => refetch()} sx={{ mt: 2, borderRadius: '12px', background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)' }}>
                     Retry
                 </Button>
             </Box>
@@ -316,11 +361,12 @@ const ManageRates = () => {
                             />
                             <ActionButton
                                 variant="contained"
-                                onClick={() => navigate('/rate/add')}
+                                onClick={() => navigate('/admin/rates/add')}
                                 startIcon={<AddIcon />}
                                 sx={{
-                                    borderRadius: '8px', 
-                                    background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)',
+                                    borderRadius: '12px', 
+                                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                                    color: 'white',
                                     fontWeight: 600 
                                 }}
                             >
@@ -331,10 +377,13 @@ const ManageRates = () => {
                                 onClick={handleRefreshClick}
                                 startIcon={<RefreshIcon />}
                                 sx={{
-                                    borderRadius: '8px', 
-                                    color: '#6B7280', 
-                                    borderColor: '#6B7280',
-                                    fontWeight: 600 
+                                    borderRadius: '12px', 
+                                    color: '#eba748', 
+                                    borderColor: '#eba748',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                    }
                                 }}
                             >
                                 {isSmallScreen ? 'Refresh' : 'Refresh'}
@@ -431,8 +480,8 @@ const ManageRates = () => {
                                                             color="primary"
                                                             size="small"
                                                             sx={{
-                                                                backgroundColor: 'rgba(242, 159, 103, 0.1)',
-                                                                color: '#F29F67',
+                                                                backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                color: '#eba748',
                                                                 fontWeight: 600
                                                             }}
                                                         />
@@ -461,8 +510,8 @@ const ManageRates = () => {
                                                             color="secondary"
                                                             size="small"
                                                             sx={{
-                                                                backgroundColor: 'rgba(52, 177, 170, 0.1)',
-                                                                color: '#34B1AA',
+                                                                backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                color: '#eba748',
                                                                 fontWeight: 600
                                                             }}
                                                         />
@@ -497,8 +546,12 @@ const ManageRates = () => {
                                                                     disabled={isUpdating}
                                                                     color="success"
                                                                     sx={{
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: 'rgba(76, 175, 80, 0.08)'
+                                                                        borderRadius: '12px',
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                                        }
                                                                     }}
                                                                 >
                                                                     {isUpdating ? (
@@ -515,8 +568,12 @@ const ManageRates = () => {
                                                                     disabled={isUpdating}
                                                                     color="default"
                                                                     sx={{
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: 'rgba(158, 158, 158, 0.08)'
+                                                                        borderRadius: '12px',
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                                        }
                                                                     }}
                                                                 >
                                                                     <CancelIcon fontSize="small" />
@@ -532,8 +589,12 @@ const ManageRates = () => {
                                                                     disabled={isDeleting}
                                                                     color="primary"
                                                                     sx={{
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: 'rgba(59, 143, 243, 0.08)'
+                                                                        borderRadius: '12px',
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                                        }
                                                                     }}
                                                                 >
                                                                     <EditIcon fontSize="small" />
@@ -568,7 +629,7 @@ const ManageRates = () => {
 
                             {isLoadingMore && (
                                 <Box mt={3} display="flex" justifyContent="center" alignItems="center">
-                                    <CircularProgress size={20} sx={{ color: '#3B8FF3' }} />
+                                    <CircularProgress size={20} sx={{ color: '#eba748' }} />
                                     <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, ml: 1 }}>
                                         Loading more rates...
                                     </Typography>

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useOrderQueries } from '../../hooks/order/useOrderQueries';
 import { jsPDF } from 'jspdf';
+import { Link } from 'react-router-dom';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx-js-style';
 import { useMediaQuery } from 'react-responsive';
@@ -58,13 +59,13 @@ import {
 } from '@mui/icons-material';
 import { useTheme, createTheme, ThemeProvider } from '@mui/material/styles';
 
-// Custom theme with the provided color scheme
+// Custom theme with Employee module color scheme
 const customTheme = createTheme({
     palette: {
         primary: {
-            main: '#F29F67', // Orange
-            light: '#F5B584',
-            dark: '#E8894A',
+            main: '#eba748', // Employee theme orange
+            light: '#f0c068',
+            dark: '#e09a3a',
             contrastText: '#FFFFFF',
         },
         secondary: {
@@ -74,9 +75,9 @@ const customTheme = createTheme({
             contrastText: '#FFFFFF',
         },
         info: {
-            main: '#368FF3', // Blue
-            light: '#5BA3F5',
-            dark: '#2B7CE0',
+            main: '#eba748', // Employee theme for info
+            light: '#f0c068',
+            dark: '#e09a3a',
         },
         success: {
             main: '#34B1AA', // Teal/Green
@@ -264,7 +265,7 @@ function TablePaginationActions(props) {
 
 // Helper function to get color based on order status
 const getStatusColor = (status) => {
-    switch (status) {
+    switch (status?.toUpperCase()) {
         case 'PENDING': return 'warning';
         case 'PROCESSING': return 'info';
         case 'SHIPPED': return 'primary';
@@ -276,7 +277,7 @@ const getStatusColor = (status) => {
 
 // Helper function to get status icon
 const getStatusIcon = (status) => {
-    switch (status) {
+    switch (status?.toUpperCase()) {
         case 'PENDING': return '⏳';
         case 'PROCESSING': return '🔄';
         case 'SHIPPED': return '🚚';
@@ -331,24 +332,24 @@ const OrderPage = ({ orderType, title }) => {
         monthlySales: monthlySalesQuery
     }[orderType];
 
-    const { data, isLoading, error, refetch } = queryResult;
+    const { data, isLoading, error, refetch } = queryResult || {};
 
     // Normalize API data to match expected field names
     const normalizeOrder = (order) => ({
-        order_id: order.orderId || order.id || 'N/A',
-        user_name: order.customerName || order.user_name || 'N/A',
-        contact: order.contact || 'N/A',
-        email: order.email || 'N/A',
-        total_amount: order.totalAmount || order.amount || 0,
-        status: order.status || orderType.toUpperCase(),
-        order_time: order.orderTime || order.date || 'N/A',
-        orderItems: (order.orderItems || []).map(item => ({
-            product_name: item.productName || item.product_name || 'N/A',
-            quantity: item.quantity || 0,
-            price: item.price || 0,
-            sno: item.sno || 'N/A',
-            tagno: item.tagno || 'N/A',
-            item_id: item.itemid || 'N/A'
+        order_id: order?.orderId || order?.id || 'N/A',
+        user_name: order?.customerName || order?.user_name || 'N/A',
+        contact: order?.contact || 'N/A',
+        email: order?.email || 'N/A',
+        total_amount: order?.totalAmount || order?.amount || 0,
+        status: order?.status || orderType?.toUpperCase(),
+        order_time: order?.orderTime || order?.date || 'N/A',
+        orderItems: (order?.orderItems || []).map(item => ({
+            product_name: item?.productName || item?.product_name || 'N/A',
+            quantity: item?.quantity || 0,
+            price: item?.price || 0,
+            sno: item?.sno || 'N/A',
+            tagno: item?.tagno || 'N/A',
+            item_id: item?.itemid || item?.item_id || 'N/A'
         }))
     });
 
@@ -367,17 +368,18 @@ const OrderPage = ({ orderType, title }) => {
     };
 
     const handleRefresh = () => {
-        refetch();
+        if (refetch) refetch();
     };
 
     // Filter orders based on search term
     const filteredOrders = orderType === 'monthlySales' ? data || []
         : (data?.[`${orderType}Orders`] || []).map(normalizeOrder).filter(order => {
+            const searchLower = searchTerm.toLowerCase();
             return (
-                order.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.email.toLowerCase().includes(searchTerm.toLowerCase())
+                order.order_id.toString().toLowerCase().includes(searchLower) ||
+                order.user_name.toLowerCase().includes(searchLower) ||
+                order.contact.toString().toLowerCase().includes(searchLower) ||
+                order.email.toLowerCase().includes(searchLower)
             );
         });
 
@@ -423,7 +425,7 @@ const OrderPage = ({ orderType, title }) => {
             ? orders.map((report, index) => [
                 index + 1,
                 report.month || `Month ${index + 1}`,
-                parseFloat(report.sales)?.toFixed(2) || '0.00',
+                parseFloat(report.sales || 0).toFixed(2),
                 report.orderCount || 0
             ])
             : orders.map((order, index) => [
@@ -431,10 +433,10 @@ const OrderPage = ({ orderType, title }) => {
                 order.order_id,
                 order.user_name,
                 order.contact,
-                parseFloat(order.total_amount)?.toFixed(2) || '0.00',
+                parseFloat(order.total_amount || 0).toFixed(2),
                 order.status,
                 order.order_time ? new Date(order.order_time).toLocaleString() : 'N/A',
-                order.orderItems.map(item => `${item.product_name} (SKU: ${item.item_id}-${item.tagno} )${parseFloat(item.price)?.toFixed(2)}`).join('; ')
+                order.orderItems.map(item => `${item.product_name} (SKU: ${item.item_id}-${item.tagno} )₹${parseFloat(item.price || 0).toFixed(2)}`).join('; ')
             ]);
 
         autoTable(doc, {
@@ -463,7 +465,7 @@ const OrderPage = ({ orderType, title }) => {
             ? orders.map((report, index) => [
                 index + 1,
                 report.month || `Month ${index + 1}`,
-                parseFloat(report.sales)?.toFixed(2) || '0.00',
+                parseFloat(report.sales || 0).toFixed(2),
                 report.orderCount || 0
             ])
             : orders.map((order, index) => [
@@ -472,11 +474,11 @@ const OrderPage = ({ orderType, title }) => {
                 order.user_name,
                 order.contact,
                 order.email,
-                parseFloat(order.total_amount)?.toFixed(2) || '0.00',
+                parseFloat(order.total_amount || 0).toFixed(2),
                 order.status,
                 order.order_time ? new Date(order.order_time).toLocaleString() : 'N/A',
                 order.orderItems
-                    .map(item => `${item.product_name} (Qty: ${item.quantity}, ₹${parseFloat(item.price)?.toFixed(2)}, TAG: ${item.tagno}, ID: ${item.item_id})`)
+                    .map(item => `${item.product_name} (Qty: ${item.quantity}, ₹${parseFloat(item.price || 0).toFixed(2)}, TAG: ${item.tagno}, ID: ${item.item_id})`)
                     .join('; ')
             ]);
 
@@ -486,9 +488,8 @@ const OrderPage = ({ orderType, title }) => {
         // Header styling with custom colors
         header.forEach((_, colIndex) => {
             const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex });
-            worksheet[cellAddress] = {
-                v: header[colIndex],
-                s: {
+            if (worksheet[cellAddress]) {
+                worksheet[cellAddress].s = {
                     fill: { fgColor: { rgb: '1E1E2C' } },
                     font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 10 },
                     alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
@@ -498,17 +499,16 @@ const OrderPage = ({ orderType, title }) => {
                         left: { style: 'thin' },
                         right: { style: 'thin' }
                     }
-                }
-            };
+                };
+            }
         });
 
         // Body styling
         tableData.forEach((row, rowIndex) => {
             row.forEach((cell, colIndex) => {
                 const cellAddress = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
-                worksheet[cellAddress] = {
-                    v: cell,
-                    s: {
+                if (worksheet[cellAddress]) {
+                    worksheet[cellAddress].s = {
                         font: { sz: 9 },
                         alignment: {
                             horizontal: orderType !== 'monthlySales' && colIndex === 5 ? 'right' : 'left',
@@ -521,8 +521,8 @@ const OrderPage = ({ orderType, title }) => {
                             left: { style: 'thin' },
                             right: { style: 'thin' }
                         }
-                    }
-                };
+                    };
+                }
             });
         });
 
@@ -608,7 +608,7 @@ const OrderPage = ({ orderType, title }) => {
                 ? orders.map((report, index) => `
                                 <tr>
                                     <td>${report.month || `Month ${index + 1}`}</td>
-                                    <td class="amount">₹${parseFloat(report.sales)?.toFixed(2) || '0.00'}</td>
+                                    <td class="amount">₹${parseFloat(report.sales || 0).toFixed(2)}</td>
                                     <td>${report.orderCount || 0}</td>
                                 </tr>
                             `).join('')
@@ -617,10 +617,10 @@ const OrderPage = ({ orderType, title }) => {
                                     <td>${order.order_id}</td>
                                     <td>${order.user_name}</td>
                                     <td>${order.contact}</td>
-                                    <td class="amount">₹${parseFloat(order.total_amount)?.toFixed(2) || '0.00'}</td>
+                                    <td class="amount">₹${parseFloat(order.total_amount || 0).toFixed(2)}</td>
                                     <td>${order.status}</td>
                                     <td>${order.order_time ? new Date(order.order_time).toLocaleString() : 'N/A'}</td>
-                                    <td>${order.orderItems.map(item => `${item.product_name} (SKU: ${item.item_id}-${item.tagno}, ₹${parseFloat(item.price)?.toFixed(2)})`).join('; ')}</td>
+                                    <td>${order.orderItems.map(item => `${item.product_name} (SKU: ${item.item_id}-${item.tagno}, ₹${parseFloat(item.price || 0).toFixed(2)})`).join('; ')}</td>
                                 </tr>
                             `).join('')}
                     </tbody>
@@ -671,7 +671,7 @@ const OrderPage = ({ orderType, title }) => {
                             Error Loading Data
                         </Typography>
                         <Typography color="text.secondary" sx={{ mb: 2 }}>
-                            {error.message}
+                            {error?.message || 'An unexpected error occurred'}
                         </Typography>
                         <Button
                             variant="contained"
@@ -697,6 +697,16 @@ const OrderPage = ({ orderType, title }) => {
                 {/* Header Section */}
                 <Card sx={{ mb: 3, overflow: 'visible' }}>
                     <CardContent sx={{ p: 3 }}>
+                         <nav aria-label="breadcrumb">
+                                                <ol className="breadcrumb">
+                                                    <li className="breadcrumb-item">
+                                                        <Link to="/">Dashboard</Link>
+                                                    </li>
+                                                    <li className="breadcrumb-item active" aria-current="page">
+                                                        Manage Orders
+                                                    </li>
+                                                </ol>
+                                            </nav>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                 <Avatar sx={{
@@ -801,24 +811,24 @@ const OrderPage = ({ orderType, title }) => {
                                 <TableRow>
                                     {orderType === 'monthlySales'
                                         ? <>
-                                            <TableCell sx={{color: '#000'}}>Month</TableCell>
-                                            <TableCell align="right" sx={{color: '#000'}}>Sales (₹)</TableCell>
-                                            <TableCell sx={{color: '#000'}}>Order Count</TableCell>
+                                            <TableCell>Month</TableCell>
+                                            <TableCell align="right">Sales (₹)</TableCell>
+                                            <TableCell>Order Count</TableCell>
                                         </>
                                         : orderType === 'totalRevenue' || orderType === 'todayRevenue'
                                             ? <>
-                                                <TableCell sx={{color: '#000'}}>Metric</TableCell>
-                                                <TableCell align="right" sx={{color: '#000'}}>Amount (₹)</TableCell>
+                                                <TableCell>Metric</TableCell>
+                                                <TableCell align="right">Amount (₹)</TableCell>
                                             </>
                                             : <>
-                                                <TableCell sx={{color: '#000'}}>Order ID</TableCell>
-                                                {!isMobile && <TableCell sx={{color: '#000'}}>Date</TableCell>}
-                                                <TableCell sx={{color: '#000'}}>Customer</TableCell>
-                                                {!isMobile && <TableCell sx={{color: '#000'}}>Contact</TableCell>}
-                                                <TableCell sx={{color: '#000'}}>Products</TableCell>
-                                                <TableCell align="right" sx={{color: '#000'}}>Amount</TableCell>
-                                                <TableCell sx={{color: '#000'}}>Status</TableCell>
-                                                <TableCell align="center" sx={{color: '#000'}}>Actions</TableCell>
+                                                <TableCell style={{color: 'black'}}>Order ID</TableCell>
+                                                {!isMobile && <TableCell>Date</TableCell>}
+                                                <TableCell>Customer</TableCell>
+                                                {!isMobile && <TableCell>Contact</TableCell>}
+                                                <TableCell>Products</TableCell>
+                                                <TableCell align="right">Amount</TableCell>
+                                                <TableCell>Status</TableCell>
+                                                <TableCell align="center">Actions</TableCell>
                                             </>}
                                 </TableRow>
                             </TableHead>
@@ -831,7 +841,7 @@ const OrderPage = ({ orderType, title }) => {
                                                     {report.month || `Month ${index + 1}`}
                                                 </TableCell>
                                                 <TableCell align="right" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                                                    ₹{parseFloat(report.sales)?.toFixed(2) || '0.00'}
+                                                    ₹{parseFloat(report.sales || 0).toFixed(2)}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge badgeContent={report.orderCount || 0} color="primary" max={999}>
@@ -844,7 +854,7 @@ const OrderPage = ({ orderType, title }) => {
                                             ? <TableRow hover>
                                                 <TableCell sx={{ fontWeight: 500 }}>{title}</TableCell>
                                                 <TableCell align="right" sx={{ fontWeight: 600, color: 'primary.main', fontSize: '1.1rem' }}>
-                                                    ₹{parseFloat(data?.[`${orderType.replace('use', '').toLowerCase()}`])?.toFixed(2) || '0.00'}
+                                                    ₹{parseFloat(data?.[`${orderType.replace('use', '').toLowerCase()}`] || 0).toFixed(2)}
                                                 </TableCell>
                                             </TableRow>
                                             : filteredOrders.map(order => (
@@ -893,7 +903,7 @@ const OrderPage = ({ orderType, title }) => {
                                                         </Box>
                                                     </TableCell>
                                                     <TableCell align="right" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                                                        ₹{parseFloat(order.total_amount)?.toFixed(2) || '0.00'}
+                                                        ₹{parseFloat(order.total_amount || 0).toFixed(2)}
                                                     </TableCell>
                                                     <TableCell>
                                                         <Chip
@@ -1141,19 +1151,9 @@ const OrderViewModal = ({ open, onClose, order, orderType }) => {
                             </Grid>
                             <Grid item xs={12} md={6}>
                                 <Card sx={{ p: 3, height: '100%', bgcolor: alpha(customTheme.palette.success.main, 0.05) }}>
-                                    <Typography
-                                        variant="h6"
-                                        gutterBottom
-                                        sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 1,
-                                            color: '#000' // sets text color to black
-                                        }}
-                                    >
+                                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                         📋 Order Details
                                     </Typography>
-
                                     <Divider sx={{ mb: 2 }} />
                                     <Stack spacing={2}>
                                         <Box>
@@ -1174,7 +1174,7 @@ const OrderViewModal = ({ open, onClose, order, orderType }) => {
                                         <Box>
                                             <Typography variant="body2" color="text.secondary">Total Amount</Typography>
                                             <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                                                ₹{parseFloat(order.total_amount)?.toFixed(2) || '0.00'}
+                                                ₹{parseFloat(order.total_amount || 0).toFixed(2)}
                                             </Typography>
                                         </Box>
                                     </Stack>
@@ -1187,13 +1187,13 @@ const OrderViewModal = ({ open, onClose, order, orderType }) => {
                                     </Typography>
                                     <Divider sx={{ mb: 2 }} />
                                     <TableContainer>
-                                        <Table size="small" className="modal-table">
+                                        <Table size="small">
                                             <TableHead>
                                                 <TableRow>
-                                                    <TableCell sx={{ fontWeight: 600 }}>Product Name</TableCell>
-                                                    <TableCell align="right" sx={{ fontWeight: 600 }}>Price (₹)</TableCell>
-                                                    <TableCell sx={{ fontWeight: 600 }}>SNO</TableCell>
-                                                    <TableCell sx={{ fontWeight: 600 }}>SK-Unit</TableCell>
+                                                    <TableCell sx={{ fontWeight: 600, bgcolor: '#F8F9FA' }}>Product Name</TableCell>
+                                                    <TableCell align="right" sx={{ fontWeight: 600, bgcolor: '#F8F9FA' }}>Price (₹)</TableCell>
+                                                    <TableCell sx={{ fontWeight: 600, bgcolor: '#F8F9FA' }}>SNO</TableCell>
+                                                    <TableCell sx={{ fontWeight: 600, bgcolor: '#F8F9FA' }}>SK-Unit</TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
@@ -1204,12 +1204,12 @@ const OrderViewModal = ({ open, onClose, order, orderType }) => {
                                                                 {item.product_name || 'N/A'}
                                                             </TableCell>
                                                             <TableCell align="right" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                                                                ₹{parseFloat(item.price)?.toFixed(2) || '0.00'}
+                                                                ₹{parseFloat(item.price || 0).toFixed(2)}
                                                             </TableCell>
                                                             <TableCell>{item.sno || 'N/A'}</TableCell>
                                                             <TableCell>
                                                                 <Chip
-                                                                    label={`${item.item_id} - ${item.tagno}`}
+                                                                    label={`${item.item_id || 'N/A'} - ${item.tagno || 'N/A'}`}
                                                                     size="small"
                                                                     variant="outlined"
                                                                 />

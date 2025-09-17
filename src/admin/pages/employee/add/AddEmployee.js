@@ -57,9 +57,10 @@ const ModernButton = styled(Button)(({ variant: buttonVariant, color }) => ({
         boxShadow: buttonVariant === 'contained' ? '0 6px 20px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
     },
     ...(color === 'primary' && {
-        background: 'linear-gradient(135deg, #3B8FF3 0%, #2a7bd9 100%)',
+        background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+        color: 'white',
         '&:hover': {
-            background: 'linear-gradient(135deg, #2a7bd9 0%, #1e5fb8 100%)',
+            background: 'linear-gradient(135deg, #e09a3a 0%, #d48a2c 100%)',
         }
     }),
     ...(color === 'secondary' && {
@@ -201,23 +202,42 @@ const AddEmployee = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                padding: { xs: 2, sm: 4, md: 6 },
             }}
         >
-            <ModernCard sx={{ maxWidth: 800, width: '100%' }}>
-                <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
+            <ModernCard sx={{ 
+                maxWidth: { xs: '100%', sm: 900, md: 1000, lg: 1200 }, 
+                width: '100%',
+                margin: 'auto'
+            }}>
+                <CardContent sx={{ p: { xs: 3, sm: 5, md: 6 } }}>
                     {/* Header Section */}
-                    <Box textAlign="center" mb={4}>
+                    <Box textAlign="center" mb={5}>
                         <Typography 
-                            variant="h4" 
-                            sx={{ color: '#1E1E2C', fontWeight: 700, mb: 1 }}
+                            variant="h3" 
+                            sx={{ 
+                                color: '#1E1E2C', 
+                                fontWeight: 800, 
+                                mb: 2,
+                                fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' },
+                                background: 'linear-gradient(135deg, #1E1E2C 0%, #eba748 100%)',
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent'
+                            }}
                         >
                             Add New Employee
                         </Typography>
                         <Typography 
                             variant="body1" 
-                            sx={{ color: '#6B7280', fontSize: '1.1rem' }}
+                            sx={{ 
+                                color: '#6B7280', 
+                                fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
+                                maxWidth: '600px',
+                                margin: '0 auto'
+                            }}
                         >
-                            Create a new employee account for the platform
+                            Create a new employee account for the platform with comprehensive details
                         </Typography>
                     </Box>
 
@@ -259,168 +279,246 @@ const AddEmployee = () => {
 
                     {/* Form */}
                     <Box component="form" onSubmit={handleSubmit}>
-                        <Grid container spacing={3}>
+                        <Grid container spacing={4}>
                             {/* Username */}
                             <Grid item xs={12} md={6}>
-                                <Typography
-                                    variant="body2"
-                                    sx={{ color: '#1E1E2C', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}
-                                >
-                                    Username
-                                    <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
-                                </Typography>
-                                <FormField
-                                    placeholder="Enter username"
-                                    value={formData.username}
-                                    onChange={(e) => handleInputChange('username', e.target.value)}
-                                    fullWidth
-                                    variant="outlined"
-                                    error={!!errors.username}
-                                    helperText={errors.username}
-                                />
+                                <Box sx={{ 
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)', 
+                                    p: 2, 
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(235, 167, 72, 0.1)'
+                                }}>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ 
+                                            color: '#1E1E2C', 
+                                            fontWeight: 700, 
+                                            mb: 2, 
+                                            fontSize: '1rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1
+                                        }}
+                                    >
+                                        <PersonIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
+                                        Username
+                                        <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                                    </Typography>
+                                    <FormField
+                                        placeholder="Enter username"
+                                        value={formData.username}
+                                        onChange={(e) => handleInputChange('username', e.target.value)}
+                                        fullWidth
+                                        variant="outlined"
+                                        error={!!errors.username}
+                                        helperText={errors.username}
+                                    />
+                                </Box>
                             </Grid>
 
                             {/* Email */}
                             <Grid item xs={12} md={6}>
-                                <Typography
-                                    variant="body2"
-                                    sx={{ color: '#1E1E2C', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}
-                                >
-                                    Email
-                                    <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
-                                </Typography>
-                                <FormField
-                                    placeholder="Enter email"
-                                    value={formData.email}
-                                    onChange={(e) => handleInputChange('email', e.target.value)}
-                                    fullWidth
-                                    variant="outlined"
-                                    error={!!errors.email}
-                                    helperText={errors.email}
-                                />
+                                <Box sx={{ 
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)', 
+                                    p: 2, 
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(235, 167, 72, 0.1)'
+                                }}>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ 
+                                            color: '#1E1E2C', 
+                                            fontWeight: 700, 
+                                            mb: 2, 
+                                            fontSize: '1rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1
+                                        }}
+                                    >
+                                        <PersonIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
+                                        Email
+                                        <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                                    </Typography>
+                                    <FormField
+                                        placeholder="Enter email"
+                                        value={formData.email}
+                                        onChange={(e) => handleInputChange('email', e.target.value)}
+                                        fullWidth
+                                        variant="outlined"
+                                        error={!!errors.email}
+                                        helperText={errors.email}
+                                    />
+                                </Box>
                             </Grid>
 
                             {/* Password */}
                             <Grid item xs={12} md={6}>
-                                <Typography
-                                    variant="body2"
-                                    sx={{ color: '#1E1E2C', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}
-                                >
-                                    Password
-                                    <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
-                                </Typography>
-                                <FormField
-                                    placeholder="Enter password"
-                                    type="password"
-                                    value={formData.password}
-                                    onChange={(e) => handleInputChange('password', e.target.value)}
-                                    fullWidth
-                                    variant="outlined"
-                                    error={!!errors.password}
-                                    helperText={errors.password}
-                                />
+                                <Box sx={{ 
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)', 
+                                    p: 2, 
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(235, 167, 72, 0.1)'
+                                }}>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ 
+                                            color: '#1E1E2C', 
+                                            fontWeight: 700, 
+                                            mb: 2, 
+                                            fontSize: '1rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1
+                                        }}
+                                    >
+                                        <PersonIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
+                                        Password
+                                        <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                                    </Typography>
+                                    <FormField
+                                        placeholder="Enter password"
+                                        type="password"
+                                        value={formData.password}
+                                        onChange={(e) => handleInputChange('password', e.target.value)}
+                                        fullWidth
+                                        variant="outlined"
+                                        error={!!errors.password}
+                                        helperText={errors.password}
+                                    />
+                                </Box>
                             </Grid>
 
                             {/* Contact Number */}
                             <Grid item xs={12} md={6}>
-                                <Typography
-                                    variant="body2"
-                                    sx={{ color: '#1E1E2C', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}
-                                >
-                                    Contact Number
-                                    <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
-                                </Typography>
-                                <FormField
-                                    placeholder="Enter contact number"
-                                    value={formData.contactNumber}
-                                    onChange={(e) => handleInputChange('contactNumber', e.target.value)}
-                                    fullWidth
-                                    variant="outlined"
-                                    error={!!errors.contactNumber}
-                                    helperText={errors.contactNumber}
-                                />
+                                <Box sx={{ 
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)', 
+                                    p: 2, 
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(235, 167, 72, 0.1)'
+                                }}>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ 
+                                            color: '#1E1E2C', 
+                                            fontWeight: 700, 
+                                            mb: 2, 
+                                            fontSize: '1rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1
+                                        }}
+                                    >
+                                        <PersonIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
+                                        Contact Number
+                                        <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                                    </Typography>
+                                    <FormField
+                                        placeholder="Enter contact number"
+                                        value={formData.contactNumber}
+                                        onChange={(e) => handleInputChange('contactNumber', e.target.value)}
+                                        fullWidth
+                                        variant="outlined"
+                                        error={!!errors.contactNumber}
+                                        helperText={errors.contactNumber}
+                                    />
+                                </Box>
                             </Grid>
 
                             {/* Role */}
                             <Grid item xs={12} md={6}>
-                                <Typography
-                                    variant="body2"
-                                    sx={{ color: '#1E1E2C', fontWeight: 600, mb: 1, fontSize: '0.95rem' }}
-                                >
-                                    Role
-                                    <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
-                                </Typography>
-                                <StyledSelect fullWidth variant="outlined" error={!!errors.roles}>
-                                    <InputLabel>Select role</InputLabel>
-                                    <Select
-                                        value={formData.roles}
-                                        onChange={(e) => handleInputChange('roles', e.target.value)}
-                                        label="Select role"
+                                <Box sx={{ 
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)', 
+                                    p: 2, 
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(235, 167, 72, 0.1)'
+                                }}>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ 
+                                            color: '#1E1E2C', 
+                                            fontWeight: 700, 
+                                            mb: 2, 
+                                            fontSize: '1rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1
+                                        }}
                                     >
-                                        <MenuItem value="ROLE_ADMIN">Admin</MenuItem>
-                                        <MenuItem value="ROLE_EMPLOYEE">Employee</MenuItem>
-                                    </Select>
-                                </StyledSelect>
-                                {errors.roles && (
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', mt: 0.5 }}>
-                                        {errors.roles}
+                                        <PersonIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
+                                        Role
+                                        <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
                                     </Typography>
-                                )}
+                                    <StyledSelect fullWidth variant="outlined" error={!!errors.roles}>
+                                        <InputLabel>Select role</InputLabel>
+                                        <Select
+                                            value={formData.roles}
+                                            onChange={(e) => handleInputChange('roles', e.target.value)}
+                                            label="Select role"
+                                        >
+                                            <MenuItem value="ROLE_ADMIN">Admin</MenuItem>
+                                            <MenuItem value="ROLE_EMPLOYEE">Employee</MenuItem>
+                                        </Select>
+                                    </StyledSelect>
+                                    {errors.roles && (
+                                        <Typography variant="caption" sx={{ color: '#d32f2f', mt: 0.5 }}>
+                                            {errors.roles}
+                                        </Typography>
+                                    )}
+                                </Box>
                             </Grid>
                         </Grid>
 
                         {/* Employee Summary */}
                         {(formData.username || formData.email || formData.roles) && (
-                            <Box mt={3}>
+                            <Box mt={4}>
                                 <Box sx={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
-                                    p: 2,
-                                    background: 'linear-gradient(135deg, #f0f6ff 0%, #e6f3ff 100%)',
-                                    borderRadius: '12px',
-                                    border: '1px solid rgba(59, 143, 243, 0.2)',
-                                    boxShadow: '0 2px 8px rgba(59, 143, 243, 0.1)'
+                                    p: 3,
+                                    background: 'linear-gradient(135deg, rgba(235, 167, 72, 0.1) 0%, rgba(235, 167, 72, 0.05) 100%)',
+                                    borderRadius: '16px',
+                                    border: '1px solid rgba(235, 167, 72, 0.2)',
+                                    boxShadow: '0 4px 16px rgba(235, 167, 72, 0.1)'
                                 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                                         <Box sx={{
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            width: '48px',
-                                            height: '48px',
+                                            width: '56px',
+                                            height: '56px',
                                             borderRadius: '50%',
-                                            background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)',
-                                            boxShadow: '0 4px 12px rgba(59, 143, 243, 0.3)'
+                                            background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                                            boxShadow: '0 4px 16px rgba(235, 167, 72, 0.3)'
                                         }}>
-                                            <PersonIcon sx={{ color: 'white', fontSize: 24 }} />
+                                            <PersonIcon sx={{ color: 'white', fontSize: 28 }} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ 
-                                                color: '#1E1E2C', 
-                                                fontWeight: 600,
-                                                mb: 0.5
-                                            }}>
+                                            <Typography variant="h5" sx={{ color: '#1E1E2C', fontWeight: 700, mb: 1 }}>
                                                 Employee Summary
                                             </Typography>
-                                            <Typography variant="body2" sx={{ 
-                                                color: '#6B7280',
-                                                fontSize: '0.875rem'
+                                            <Typography variant="body1" sx={{ 
+                                                color: '#6B7280', 
+                                                fontSize: '1rem',
+                                                lineHeight: 1.5
                                             }}>
                                                 {formData.username && `Username: ${formData.username}`} {formData.username && formData.email && '•'} {formData.email && `Email: ${formData.email}`} {formData.roles && `• Role: ${formData.roles === 'ROLE_ADMIN' ? 'Admin' : 'Employee'}`}
                                             </Typography>
                                         </Box>
                                     </Box>
-                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Box sx={{ display: 'flex', gap: 1.5 }}>
                                         {formData.username && (
                                             <Chip
                                                 label={formData.username}
                                                 color="primary"
-                                                size="small"
+                                                size="medium"
                                                 sx={{
-                                                    backgroundColor: 'rgba(59, 143, 243, 0.1)',
-                                                    color: '#3B8FF3',
-                                                    fontWeight: 600
+                                                    backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                    color: '#eba748',
+                                                    fontWeight: 700,
+                                                    fontSize: '0.9rem'
                                                 }}
                                             />
                                         )}
@@ -428,11 +526,12 @@ const AddEmployee = () => {
                                             <Chip
                                                 label={formData.roles === 'ROLE_ADMIN' ? 'Admin' : 'Employee'}
                                                 color="secondary"
-                                                size="small"
+                                                size="medium"
                                                 sx={{
-                                                    backgroundColor: 'rgba(242, 159, 103, 0.1)',
-                                                    color: '#F29F67',
-                                                    fontWeight: 600
+                                                    backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                    color: '#eba748',
+                                                    fontWeight: 700,
+                                                    fontSize: '0.9rem'
                                                 }}
                                             />
                                         )}
@@ -442,19 +541,24 @@ const AddEmployee = () => {
                         )}
 
                         {/* Action Buttons */}
-                        <Box display="flex" justifyContent="center" gap={2} mt={4}>
+                        <Box display="flex" justifyContent="center" gap={3} mt={6}>
                             <ModernButton
                                 variant="outlined"
                                 onClick={() => navigate('/admin/employee/manage')}
                                 disabled={isLoading}
                                 sx={{
-                                    minWidth: '120px',
-                                    height: '48px',
-                                    borderColor: '#6B7280',
-                                    color: '#6B7280',
+                                    minWidth: '140px',
+                                    height: '56px',
+                                    borderColor: '#eba748',
+                                    color: '#eba748',
+                                    fontSize: '1.1rem',
+                                    fontWeight: 600,
+                                    borderRadius: '12px',
                                     '&:hover': {
-                                        borderColor: '#4B5563',
-                                        color: '#4B5563',
+                                        borderColor: '#e09a3a',
+                                        color: '#e09a3a',
+                                        backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                        transform: 'translateY(-2px)',
                                     },
                                 }}
                             >
@@ -466,30 +570,31 @@ const AddEmployee = () => {
                                 variant="contained"
                                 color="primary"
                                 disabled={isLoading || !formData.username || !formData.email || !formData.password || !formData.contactNumber || !formData.roles}
-                                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
+                                startIcon={isLoading ? <CircularProgress size={24} color="inherit" /> : <AddIcon />}
                                 sx={{
-                                    minWidth: '200px',
-                                    height: '48px',
-                                    fontSize: '1rem',
+                                    minWidth: '220px',
+                                    height: '56px',
+                                    fontSize: '1.1rem',
                                     fontWeight: 700,
                                     borderRadius: '16px',
-                                    background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 50%, #F29F67 100%)',
-                                    boxShadow: '0 8px 24px rgba(59, 143, 243, 0.25)',
+                                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 50%, #d48a2c 100%)',
+                                    boxShadow: '0 8px 24px rgba(235, 167, 72, 0.25)',
                                     textTransform: 'none',
                                     letterSpacing: '0.5px',
+                                    color: 'white',
                                     '&:hover': {
-                                        background: 'linear-gradient(135deg, #2a7bd9 0%, #2a9891 50%, #e08f5a 100%)',
+                                        background: 'linear-gradient(135deg, #e09a3a 0%, #d48a2c 50%, #c47a1c 100%)',
                                         transform: 'translateY(-3px)',
-                                        boxShadow: '0 12px 32px rgba(59, 143, 243, 0.4)',
+                                        boxShadow: '0 12px 32px rgba(235, 167, 72, 0.4)',
                                     },
                                     '&:disabled': {
-                                        background: 'linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%)',
+                                        background: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)',
                                         color: '#9e9e9e',
                                         transform: 'none',
                                         boxShadow: 'none',
                                     },
                                     '& .MuiButton-startIcon': {
-                                        marginRight: '8px',
+                                        marginRight: '10px',
                                     },
                                 }}
                             >

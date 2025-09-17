@@ -57,7 +57,7 @@ const LoginPage = () => {
                 roles: result.user.roles,
             };
             const roles = userData.roles || [];
-            if (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_EMPLOYEE')) {
+            if (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_USER')) {
                 login(token, userData);
                 navigate('/admin');
             } else if (roles.includes('ROLE_USER') || roles.includes('USER')) {

@@ -61,7 +61,42 @@ export const orderService = {
 
       // 🔹 12. Get Orders by Date Range
       getOrdersByDateRange: (startDate, endDate) =>
+            
             axiosInstance.get("/order/orders-by-date", {
                   params: { startDate, endDate },
             }),
+      getOrdersByStatus: (status, page, size) =>
+            axiosInstance.get("/order/orders-by-status", {
+                  params: { status, page, size },
+            }),
+            
+};
+
+export const getOrderStatus = async (orderId, trackingId) => {
+      if (!orderId || !trackingId) {
+            throw new Error("Order ID and Tracking ID are required");
+      }
+
+      const { data } = await axiosInstance.post(`/order/${orderId}/status`, {
+            params: { orderId, trackingId },
+      });
+
+      return data; // return full response; filter in hook/page if needed
+};
+
+export const trackOrderById = async (orderId) => {
+      if (!orderId) throw new Error("Order ID is required");
+
+      const { data } = await axiosInstance.get(`/order/track-order`, {
+            params: { orderId },
+      });
+
+      // We only need current_status and history
+      return {
+            current_status: data.current_status,
+            history: data.history || [],
+            items:data.items || [],
+            order_id:data.order_id || null,
+          
+      };
 };

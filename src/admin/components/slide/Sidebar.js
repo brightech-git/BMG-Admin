@@ -10,15 +10,14 @@ import {
     FaUserCircle,
     FaSignOutAlt,
     FaClipboardList,
-    FaChevronDown,
     FaChevronRight
 } from 'react-icons/fa';
+import { MdMenuOpen, MdOutlineMenu } from 'react-icons/md';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MyContext } from '../../context/themeContext/themeContext';
 import './Sidebar.css';
 import { getPageTitle } from '../../../utils/pageTitle/getPageTitle';
 import RoleBasedSection from '../common/RoleBasedSection';
-import MenuItem from '../common/MenuItem';
 import { useUserProfile } from '../../hooks/profile/useUserProfile';
 import { useAuth } from '../../context/auth/authContext';
 import { debounce } from 'lodash';
@@ -33,33 +32,45 @@ const menuItems = [
         title: 'Orders',
         icon: <FaClipboardList className="staradmin-menu-icon" />,
         submenu: [
-            { title: 'Today Orders', path: '/admin/order/today' },
-            { title: 'Order Status', path: '/admin/order/status' },
+            { title: 'Today Orders', path: '/admin/order/today', key: '', values: [''] },
+            { title: 'Pending', path: '/admin/order/status/pending', key: 'PAYMENT_PENDING', values: ['IN_PROCESSING', 'CANCELLED'] },
+            { title: 'Quality Checking', path: '/admin/order/status/qc', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
+            { title: 'Packed', path: '/admin/order/status/packed', key: 'IN_PROCESSING', values: ['PACKED', 'CANCELLED'] },
+            { title: 'Dispatch', path: '/admin/order/status/shipped', key: 'PACKED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Shipped', path: '/admin/order/status/shipping', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'In-Transit', path: '/admin/order/status/in-transit', key: 'IN_TRANSIT', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Delivered', path: '/admin/order/status/delivered', key: 'DELIVERED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Cancelled', path: '/admin/order/status/cancelled', key: 'CANCELLED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Returned', path: '/admin/order/status/returned', key: 'RETURNED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Refunded', path: '/admin/order/status/refunded', key: 'REFUNDED', values: ['SHIPPED', 'CANCELLED'] },
         ],
     },
     {
-        title: 'Product',
+        title: 'Images',
         icon: <FaBox className="staradmin-menu-icon" />,
         submenu: [
-            { title: 'Add Product', path: '/admin/product/add' },
-            { title: 'Manage Products', path: '/admin/product/manage' },
-            { title: 'Manage ALLProducts', path: '/admin/product/itemManage' },
+            { title: 'Tag image updator', path: '/admin/product/add' },
+            { title: 'Tag image view', path: '/admin/product/manage' },
         ],
     },
     {
         title: 'Banner',
         icon: <FaImage className="staradmin-menu-icon" />,
         submenu: [
-            { title: 'Add Banner', path: '/admin/banner/add' },
             { title: 'Manage Banners', path: '/admin/banner/manage' },
+            { title: 'Manage OccasionBanners', path: '/admin/occasionbanner/manage' },
+            { title: 'Manage OfferBanners', path: '/admin/offerbanner/manage' },
+            { title: 'Manage BudgetBanner', path: '/admin/budgetbanner/manage' },
+            { title: 'Manage CategoryBanner', path: '/admin/categorybanner/manage' },
+            { title: 'Manage FestivalBanner', path: '/admin/festivalbanner/manage' },
+            { title: 'Manage BreadCrumb', path: '/admin/breadcrumbbanner/manage' },
         ],
     },
     {
         title: 'Category',
         icon: <FaTag className="staradmin-menu-icon" />,
         submenu: [
-            { title: 'Add Category', path: '/admin/category/add' },
-            { title: 'Manage Categories', path: '/admin/category/manage' },
+            { title: 'Manage Header', path: '/admin/header/manage' },
         ],
     },
     {
@@ -78,6 +89,20 @@ const menuItems = [
             { title: 'Manage Rates', path: '/admin/rates/manage' },
         ],
     },
+    {
+        title: 'Notification',
+        icon: <FaDollarSign className="staradmin-menu-icon" />,
+        submenu: [
+            { title: 'Send Notification', path: '/admin/notification' },
+        ],
+    },
+    {
+        title: 'Address',
+        icon: <FaDollarSign className="staradmin-menu-icon" />,
+        submenu: [
+            { title: 'Manage Address', path: '/admin/address/manage' },
+        ],
+    },
 ];
 
 const employeeMenu = {
@@ -91,7 +116,7 @@ const employeeMenu = {
 
 const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, currentPath }) => {
     const hasSubmenu = item.submenu && item.submenu.length > 0;
-    const isActive = item.path === currentPath || 
+    const isActive = item.path === currentPath ||
         (hasSubmenu && item.submenu.some(subItem => subItem.path === currentPath));
 
     const handleClick = () => {
@@ -140,7 +165,7 @@ const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, curren
             ) : (
                 <NavLink
                     to={item.path}
-                    className={({ isActive }) => 
+                    className={({ isActive }) =>
                         `staradmin-menu-item ${isActive ? 'active' : ''}`
                     }
                     onClick={onClick}
@@ -179,7 +204,8 @@ const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, curren
                             <NavLink
                                 key={subItem.path}
                                 to={subItem.path}
-                                className={({ isActive }) => 
+                                state={{ key: subItem.key, values: subItem.values }}
+                                className={({ isActive }) =>
                                     `staradmin-submenu-item ${isActive ? 'active' : ''}`
                                 }
                                 onClick={onClick}
@@ -228,7 +254,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 );
             }
         });
-        // Check employee menu too
         if (employeeMenu.submenu) {
             initialExpanded['employee'] = employeeMenu.submenu.some(
                 (subItem) => subItem.path === location.pathname
@@ -258,6 +283,18 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     const handleLogout = () => {
         logout();
         navigate('/admin/login');
+    };
+
+    const handleMouseEnter = () => {
+        if (!isMobile && !isOpen) {
+            toggleSidebar();
+        }
+    };
+
+    const handleMouseLeave = () => {
+        if (!isMobile && isOpen) {
+            toggleSidebar();
+        }
     };
 
     const sidebarVariants = {
@@ -298,10 +335,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 variants={sidebarVariants}
                 role="navigation"
                 aria-label="Admin Navigation"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
             >
                 <div className="staradmin-sidebar-content">
-                    {/* Sidebar Header */}
-                    <div className="staradmin-sidebar-header">
+                    {/* <div className="staradmin-sidebar-header">
                         <AnimatePresence>
                             {isOpen && (
                                 <motion.div
@@ -316,13 +354,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                 </motion.div>
                             )}
                         </AnimatePresence>
-                    </div>
+                    </div> */}
 
-                    {/* Navigation Menu */}
                     <div className="staradmin-sidebar-nav">
                         <div className="staradmin-menu-scroll">
                             <div className="staradmin-menu-section">
-                                <AnimatePresence>
+                                {/* <AnimatePresence>
                                     {isOpen && (
                                         <motion.div
                                             className="staradmin-section-label"
@@ -333,8 +370,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                             MAIN MENU
                                         </motion.div>
                                     )}
-                                </AnimatePresence>
-                                
+                                </AnimatePresence> */}
+
                                 {menuItems.map((item) => (
                                     <StarAdminMenuItem
                                         key={item.title}
@@ -362,7 +399,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
-                                    
+
                                     <StarAdminMenuItem
                                         item={employeeMenu}
                                         isExpanded={expanded['employee']}
@@ -376,7 +413,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         </div>
                     </div>
 
-                    {/* Sidebar Footer */}
                     <div className="staradmin-sidebar-footer">
                         <RoleBasedSection allowedRoles={['ROLE_ADMIN', 'ROLE_EMPLOYEE']}>
                             <div className="staradmin-user-profile">
@@ -402,7 +438,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                     )}
                                 </AnimatePresence>
                             </div>
-                            
+
                             <button
                                 className="staradmin-logout-button"
                                 onClick={handleLogout}
@@ -431,7 +467,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </div>
             </motion.aside>
 
-            {/* Mobile Overlay */}
             <AnimatePresence>
                 {isOpen && isMobile && (
                     <motion.div

@@ -1,50 +1,87 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useContext } from 'react';
 import './DashboardCards.css';
 import { getDashboardData } from '../../service/dashBoardService';
-import {
-    FaUsers, FaShoppingCart,
-    FaCheckCircle, FaTruck, FaTimesCircle,
-    FaChartLine, FaRedo, FaDollarSign, FaGem,
-    FaSearch, FaCalendar, FaEye
-} from 'react-icons/fa';
-import { motion } from 'framer-motion';
+import { useOrdersByStatus } from '../../hooks/order/useAllOrder';
+import { FaUsers, FaShoppingCart, FaCheckCircle, FaShoppingBag, FaCogs, FaBoxes, FaRocket, FaPlane, FaBan, FaExchangeAlt, FaCreditCard, FaTimesCircle, FaRedo, FaChevronUp, FaChevronDown, FaExternalLinkAlt, FaSync } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 import Loader from './Loader';
+import { Link } from 'react-router-dom';
+import { MyContext } from '../../context/themeContext/themeContext';
 import { useNavigate } from 'react-router-dom';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-
 const DashboardCards = () => {
+    const { themeMode } = useContext(MyContext);
     const [dashboardData, setDashboardData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [hoveredCard, setHoveredCard] = useState(null);
-    const [selectedChart, setSelectedChart] = useState('orders');
-    const [searchTerm, setSearchTerm] = useState('');
-    const navigate = useNavigate();
+    const [lastUpdated, setLastUpdated] = useState(null);
+    const [totalUsers, setTotalUsers] = useState(0);
+    const [refreshInterval, setRefreshInterval] = useState(60); // Default refresh interval: 60 seconds
+    const [showToast, setShowToast] = useState(false);
+   
+
+    const page = 0;
+    const size = 100000;
+    const { data: pendingOrders, isLoading: loadingPending } = useOrdersByStatus("PAYMENT_PENDING", page, size);
+    const { data: placedOrders, isLoading: loadingPlaced } = useOrdersByStatus("PLACED", page, size);
+    const { data: inProcessingOrders, isLoading: loadingProcessing } = useOrdersByStatus("IN_PROCESSING", page, size);
+    const { data: packedOrders, isLoading: loadingPacked } = useOrdersByStatus("PACKED", page, size);
+    const { data: shippedOrders, isLoading: loadingShipped } = useOrdersByStatus("SHIPPED", page, size);
+    const { data: inTransitOrders, isLoading: loadingTransit } = useOrdersByStatus("IN_TRANSIT", page, size);
+    const { data: deliveredOrders, isLoading: loadingDelivered } = useOrdersByStatus("DELIVERED", page, size);
+    const { data: cancelledOrders, isLoading: loadingCancelled } = useOrdersByStatus("CANCELLED", page, size);
+    const { data: returnedOrders, isLoading: loadingReturned } = useOrdersByStatus("RETURNED", page, size);
+    const { data: refundedOrders, isLoading: loadingRefunded } = useOrdersByStatus("REFUNDED", page, size);
+
+    const fetchDashboardData = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const data = await getDashboardData();
+            setTotalUsers(data?.totalUsers || 0);
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000); // Hide toast after 3 seconds
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error);
+            setError("Failed to fetch dashboard data");
+        } finally {
+            setIsLoading(false);
+            setLastUpdated(new Date());
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchDashboardData();
+        const intervalId = setInterval(fetchDashboardData, refreshInterval * 1000);
+        return () => clearInterval(intervalId); // Cleanup interval on component unmount
+    }, [fetchDashboardData, refreshInterval]);
+
+    const handleRefreshIntervalChange = useCallback((event) => {
+        setRefreshInterval(Number(event.target.value));
+    }, []);
 
     const formatNumber = useCallback((num, options = {}) => {
-        const { isCurrency = false, currency = 'INR' } = options;
+        const { isCurrency = false, currency = 'USD' } = options;
         if (isNaN(num) || num === null) return '-';
         if (isCurrency) {
-            return new Intl.NumberFormat('en-IN', {
+            return new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency,
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
-            }).format(num).replace('INR', '₹');
+            }).format(num);
         }
-        if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-        if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+        if (num >= 1000000) return `${(num / 1000000).toFixed(1)}m`;
+        if (num >= 1000) return `${(num / 1000).toFixed(1)}k`;
         return num.toLocaleString();
     }, []);
 
     const calculateChange = useCallback((cardId, dashboardData) => {
         const percentageMap = {
             totalOrders: dashboardData?.totalPercentage,
-            pendingOrders: dashboardData?.pendingPercentage,
             deliveredOrders: dashboardData?.deliveredPercentage,
             shippedOrders: dashboardData?.shippedPercentage,
             cancelledOrders: dashboardData?.cancelledPercentage
         };
+
         if (percentageMap[cardId]) {
             const percentageValue = parseFloat(percentageMap[cardId]);
             return {
@@ -55,268 +92,112 @@ const DashboardCards = () => {
         return { value: 0, direction: 'neutral' };
     }, []);
 
-    // Summary cards data
-    const summaryCards = useMemo(() => {
+    const cardsData = useMemo(() => {
         if (!dashboardData) return [];
         return [
             {
-                id: 'totalItems',
-                title: 'Items',
-                value: 0,
-                icon: <FaShoppingCart />,
-                detail: 'Total Items Sold',
-                color: '#10B981',
-                isCurrency: false
+                id: 'totalUsers',
+                title: 'Total Users',
+                value: dashboardData.totalUsers,
+                icon: <FaUsers />,
+                detail: 'Active registered users',
+                link: 'userDetails',
             },
             {
                 id: 'totalOrders',
-                title: 'Orders',
-                value: dashboardData.totalOrders || 0,
+                title: 'Total Orders',
+                value: dashboardData.totalOrders,
                 icon: <FaShoppingCart />,
-                detail: 'Total Orders',
-                color: '#4361ee',
-                isCurrency: false
+                detail: 'All orders placed',
+                link: 'AllOrderPage',
             },
             {
-                id: 'totalStores',
-                title: 'Grocery Stores',
-                value: 1,
-                icon: <FaGem />,
-                detail: 'Total Stores',
-                color: '#f8961e',
-                isCurrency: false
-            },
-            {
-                id: 'totalCustomers',
-                title: 'Customers',
-                value: dashboardData.totalUsers || 0,
-                icon: <FaUsers />,
-                detail: 'Total Customers',
-                color: '#7209b7',
-                isCurrency: false
-            },
-            {
-                id: 'totalEarnings',
-                title: 'Total Earnings',
-                value: dashboardData.totalRevenue || 103.20,
-                icon: <FaDollarSign />,
-                detail: '0 Newly added',
-                color: '#f72585',
-                isCurrency: true
+                id: 'deliveredOrders',
+                title: 'Delivered Orders',
+                value: dashboardData.deliveredOrders,
+                icon: <FaCheckCircle />,
+                detail: 'Orders successfully delivered',
+                link: 'order/status/delivered',
             }
-        ];
+        ].filter(card => !isNaN(card.value));
     }, [dashboardData]);
 
-    // Order status cards data
     const orderStatusCards = useMemo(() => {
         if (!dashboardData) return [];
         return [
-            {
-                id: 'unassigned',
-                title: 'Unassigned Orders',
-                value: 0,
-                icon: <FaCalendar />,
-                color: '#6b7280'
-            },
-            {
-                id: 'accepted',
-                title: 'Accepted By Delivery',
-                value: 0,
-                icon: <FaTruck />,
-                color: '#3b82f6'
-            },
-            {
-                id: 'packaging',
-                title: 'Packaging',
-                value: 0,
-                icon: <FaShoppingCart />,
-                color: '#f59e0b'
-            },
-            {
-                id: 'outForDelivery',
-                title: 'Out For Delivery',
-                value: 0,
-                icon: <FaTruck />,
-                color: '#8b5cf6'
-            },
-            {
-                id: 'delivered',
-                title: 'Delivered',
-                value: dashboardData.deliveredOrders || 0,
-                icon: <FaCheckCircle />,
-                color: '#10b981'
-            },
-            {
-                id: 'cancelled',
-                title: 'Cancelled',
-                value: dashboardData.cancelledOrders || 0,
-                icon: <FaTimesCircle />,
-                color: '#ef4444'
-            },
-            {
-                id: 'refunded',
-                title: 'Refunded',
-                value: 0,
-                icon: <FaDollarSign />,
-                color: '#ec4899'
-            },
-            {
-                id: 'paymentFailed',
-                title: 'Payment Failed',
-                value: 0,
-                icon: <FaTimesCircle />,
-                color: '#3b82f6'
-            }
+            { id: 'pending', title: 'Pending', value: dashboardData.pendingOrders || 0, icon: <FaShoppingBag />, detail: 'Orders not placed', status: 'PAYMENT_PENDING', path: '/admin/order/status/pending', key: 'PAYMENT_PENDING', values: ['IN_PROCESSING', 'CANCELLED'] },
+            { id: 'placed', title: 'Placed', value: dashboardData.placedOrders || 0, icon: <FaShoppingBag />, detail: 'Orders recently placed', status: 'PLACED' , path: '/admin/order/status/qc', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
+            { id: 'inProcessing', title: 'In Processing', value: dashboardData.inProcessingOrders || 0, icon: <FaCogs />, detail: 'Orders being processed', status: 'IN_PROCESSING', path: '/admin/order/status/packed', key: 'IN_PROCESSING', values: ['PACKED', 'CANCELLED'] },
+            { id: 'packed', title: 'Packed', value: dashboardData.packedOrders || 0, icon: <FaBoxes />, detail: 'Orders packed and ready', status: 'PACKED', path: '/admin/order/status/shipped', key: 'PACKED', values: ['SHIPPED', 'CANCELLED'] },
+            { id: 'shipped', title: 'Shipped', value: dashboardData.shippedOrders || 0, icon: <FaRocket />, detail: 'Orders in transit', status: 'SHIPPED', path: '/admin/order/status/shipping', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
+            { id: 'inTransit', title: 'In Transit', value: dashboardData.inTransitOrders || 0, icon: <FaPlane />, detail: 'Orders on the way', status: 'IN_TRANSIT', path: '/admin/order/status/shipped', key: 'IN_TRANSIT', values: ['SHIPPED', 'CANCELLED'] },
+            { id: 'delivered', title: 'Delivered', value: dashboardData.inTransitOrders || 0, icon: <FaPlane />, detail: 'Orders on the way', status: 'DELIVERED', path: '/admin/order/status/shipped', key: 'DELIVERED', values: ['SHIPPED', 'CANCELLED'] },
+            { id: 'cancelled', title: 'Cancelled', value: dashboardData.cancelledOrders || 0, icon: <FaBan />, detail: 'Cancelled orders', status: 'CANCELLED', path: '/admin/order/status/shipped', key: 'CANCELLED', values: ['SHIPPED', 'CANCELLED'] },
+            { id: 'returned', title: 'Returned', value: dashboardData.returnedOrders || 0, icon: <FaExchangeAlt />, detail: 'Returned orders', status: 'RETURNED', path: '/admin/order/status/shipped', key: 'RETURNED', values: ['SHIPPED', 'CANCELLED'] },
+            { id: 'refunded', title: 'Refunded', value: dashboardData.refundedOrders || 0, icon: <FaCreditCard />, detail: 'Refunded orders', status: 'REFUNDED', path: '/admin/order/status/shipped', key: 'REFUNDED', values: ['SHIPPED', 'CANCELLED'] },
         ];
     }, [dashboardData]);
 
-    // Mock latest orders data
-    const latestOrders = useMemo(() => [
-        {
-            id: '#79963c',
-            customerName: 'Jenish1',
-            status: 'Delivered',
-            total: 74.00,
-            date: '5 Jul 2025'
-        },
-        {
-            id: '#8a95a8',
-            customerName: 'Jenish1',
-            status: 'Cancelled',
-            total: 36.00,
-            date: '21 Jun 2025'
-        },
-        {
-            id: '#8ad074',
-            customerName: 'Jenish1',
-            status: 'Cancelled',
-            total: 36.00,
-            date: '21 Jun 2025'
-        },
-        {
-            id: '#8b27bf',
-            customerName: 'Jenish1',
-            status: 'Transferred to delivery partner',
-            total: 36.00,
-            date: '21 Jun 2025'
-        },
-        {
-            id: '#8b869d',
-            customerName: 'Jenish1',
-            status: 'Processing',
-            total: 18.00,
-            date: '21 Jun 2025'
-        }
-    ], []);
-
-    // Pie chart data based on selected chart
-    const pieChartData = useMemo(() => {
-        const data = {
-            orders: [
-                { name: 'Pending', value: dashboardData?.pendingOrders || 0, color: '#f8961e' },
-                { name: 'Delivered', value: dashboardData?.deliveredOrders || 0, color: '#7209b7' },
-                { name: 'Shipped', value: dashboardData?.shippedOrders || 0, color: '#4895ef' },
-                { name: 'Cancelled', value: dashboardData?.cancelledOrders || 0, color: '#f72585' }
-            ],
-            revenue: [
-                { name: 'Gold Sales', value: 6500000, color: '#FFD700' },
-                { name: 'Silver Sales', value: 3200000, color: '#C0C0C0' },
-                { name: 'Diamond Sales', value: 1800000, color: '#B9F2FF' },
-                { name: 'Platinum Sales', value: 1000000, color: '#E5E4E2' }
-            ],
-            products: [
-                { name: 'Gold Jewelry', value: 35, color: '#FFD700' },
-                { name: 'Silver Jewelry', value: 25, color: '#C0C0C0' },
-                { name: 'Diamond Sets', value: 20, color: '#B9F2FF' },
-                { name: 'Platinum Items', value: 15, color: '#E5E4E2' },
-                { name: 'Other', value: 5, color: '#FF6B6B' }
-            ],
-            users: [
-                { name: 'New Users', value: 45, color: '#10B981' },
-                { name: 'Active Users', value: 35, color: '#4361ee' },
-                { name: 'Premium Users', value: 15, color: '#FFD700' },
-                { name: 'Inactive', value: 5, color: '#6B7280' }
-            ]
-        };
-        return data[selectedChart] || data.orders;
-    }, [selectedChart, dashboardData]);
-
-    const fetchData = useCallback(async () => {
-        try {
-            setIsLoading(true);
-            setError(null);
-            const data = await getDashboardData();
-            const transformedData = {
-                totalUsers: data.totalUsers?.totalUsers || 0,
-                totalOrders: data.totalOrders?.totalOrders || 0,
-                pendingOrders: data.pendingOrders?.totalPending || 0,
-                deliveredOrders: data.deliveredOrders?.deliveredOrders?.length || 0,
-                shippedOrders: data.shippedOrders?.shippedOrders?.length || 0,
-                cancelledOrders: data.cancelledOrders?.total || 0,
-                totalPercentage: data.totalOrders?.totalPercentage || '10%',
-                pendingPercentage: data.pendingOrders?.pendingPercentage || '0%',
-                deliveredPercentage: data.deliveredOrders?.deliveredPercentage || '0%',
-                shippedPercentage: data.shippedOrders?.ShippedPercentage || '0%',
-                cancelledPercentage: data.cancelledOrders?.cancelledPercentage || '0%',
-                totalRevenue: 103.20,
-                premiumProducts: 45,
-                monthlyGrowth: 12.5,
-                customerSatisfaction: 4.8
-            };
-            setDashboardData(transformedData);
-        } catch (err) {
-            console.error('Failed to fetch dashboard data:', err);
-            setError('Failed to load dashboard data. Please try again later.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
     useEffect(() => {
-        fetchData();
-        const interval = setInterval(fetchData, 300000);
-        return () => clearInterval(interval);
-    }, [fetchData]);
+        if (
+            !pendingOrders &&
+            !placedOrders &&
+            !inProcessingOrders &&
+            !packedOrders &&
+            !shippedOrders &&
+            !inTransitOrders &&
+            !deliveredOrders &&
+            !cancelledOrders &&
+            !returnedOrders &&
+            !refundedOrders
+        ) return;
 
-    const handleCardClick = useCallback((cardId) => {
-        const card = summaryCards.find(c => c.id === cardId);
-        if (card) {
-            if (cardId.includes('Orders') || cardId === 'totalOrders') {
-                setSelectedChart('orders');
-            } else if (cardId.includes('Revenue') || cardId === 'totalEarnings') {
-                setSelectedChart('revenue');
-            } else if (cardId.includes('Products') || cardId === 'totalStores') {
-                setSelectedChart('products');
-            } else if (cardId.includes('Users') || cardId === 'totalCustomers') {
-                setSelectedChart('users');
-            }
-            navigate(`/${cardId}`);
-        }
-    }, [summaryCards, navigate]);
-
-    const getStatusColor = (status) => {
-        const statusColors = {
-            'Delivered': '#10b981',
-            'Cancelled': '#f59e0b',
-            'Processing': '#3b82f6',
-            'Transferred to delivery partner': '#fbbf24'
+        const transformedData = {
+            totalUsers: totalUsers || 0,
+            totalOrders:
+            (pendingOrders?.totalByStatus || 0) +
+                (placedOrders?.totalByStatus || 0) +
+                (inProcessingOrders?.totalByStatus || 0) +
+                (packedOrders?.totalByStatus || 0) +
+                (shippedOrders?.totalByStatus || 0) +
+                (inTransitOrders?.totalByStatus || 0) +
+                (deliveredOrders?.totalByStatus || 0) +
+                (cancelledOrders?.totalByStatus || 0) +
+                (returnedOrders?.totalByStatus || 0) +
+                (refundedOrders?.totalByStatus || 0),
+            pendingOrders: pendingOrders?.totalByStatus || 0,
+            placedOrders: placedOrders?.totalByStatus || 0,
+            inProcessingOrders: inProcessingOrders?.totalByStatus || 0,
+            packedOrders: packedOrders?.totalByStatus || 0,
+            shippedOrders: shippedOrders?.totalByStatus || 0,
+            inTransitOrders: inTransitOrders?.totalByStatus || 0,
+            deliveredOrders: deliveredOrders?.totalByStatus || 0,
+            cancelledOrders: cancelledOrders?.totalByStatus || 0,
+            returnedOrders: returnedOrders?.totalByStatus || 0,
+            refundedOrders: refundedOrders?.totalByStatus || 0,
+            totalPercentage: placedOrders?.percentage || "0%",
+            deliveredPercentage: deliveredOrders?.percentage || "0%",
+            shippedPercentage: shippedOrders?.percentage || "0%",
+            cancelledPercentage: cancelledOrders?.percentage || "0%",
         };
-        return statusColors[status] || '#6b7280';
-    };
 
-    const CustomTooltip = ({ active, payload }) => {
-        if (active && payload && payload.length) {
-            return (
-                <div className="pie-tooltip">
-                    <p className="tooltip-label">{payload[0].name}</p>
-                    <p className="tooltip-value">
-                        {selectedChart === 'revenue' ? formatNumber(payload[0].value, { isCurrency: true }) : payload[0].value}
-                    </p>
-                </div>
-            );
-        }
-        return null;
-    };
+        setDashboardData(transformedData);
+        setLastUpdated(new Date());
+        setIsLoading(false);
+    }, [
+        pendingOrders,
+        placedOrders,
+        inProcessingOrders,
+        packedOrders,
+        shippedOrders,
+        inTransitOrders,
+        deliveredOrders,
+        cancelledOrders,
+        returnedOrders,
+        refundedOrders,
+        totalUsers
+    ]);
+    
 
     if (error) {
         return (
@@ -331,10 +212,10 @@ const DashboardCards = () => {
                     <h3>Data Loading Error</h3>
                     <p>{error}</p>
                     <motion.button
-                        onClick={fetchData}
                         className="retry-btn"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        onClick={() => fetchDashboardData()}
                     >
                         <FaRedo className="mr-2" />
                         Retry
@@ -345,7 +226,59 @@ const DashboardCards = () => {
     }
 
     return (
-        <div className="dashboard-container">
+        <div className={`dashboard-container ${themeMode}`}>
+            <div className="dashboard-header">
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    style={{display:'flex' ,justifyContent:'space-between'}}
+                >
+                    <div>
+                    <h1>Hi, Welcome back 👋</h1>
+                    {lastUpdated && (
+                        <p className="last-updated">
+                            Last updated: {lastUpdated.toLocaleTimeString()} on {lastUpdated.toLocaleDateString()}
+                        </p>
+                    )}
+                    </div>
+                    <div className="refresh-controls">
+                        <select
+                            value={refreshInterval}
+                            onChange={handleRefreshIntervalChange}
+                            className="refresh-interval-select"
+                        >
+                            <option value={30}>Refresh every 30s</option>
+                            <option value={60}>Refresh every 60s</option>
+                            <option value={120}>Refresh every 120s</option>
+                        </select>
+                        <motion.button
+                            className="refresh-btn"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={fetchDashboardData}
+                        >
+                            <FaSync className="mr-2" />
+                            Refresh Now
+                        </motion.button>
+                    </div>
+                </motion.div>
+            </div>
+
+            <AnimatePresence>
+                {showToast && (
+                    <motion.div
+                        className="toast-notification"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        Data refreshed successfully!
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {isLoading ? (
                 <motion.div
                     className="loading-state"
@@ -358,508 +291,133 @@ const DashboardCards = () => {
                 </motion.div>
             ) : (
                 <>
-                    {/* Charts Section - Moved to Top */}
                     <motion.div
-                        className="charts-section"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="cards-grid"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5, staggerChildren: 0.1 }}
                     >
-                        <div className="charts-grid">
-                            {/* Pie Chart */}
-                            <motion.div
-                                className="chart-card pie-chart-card"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.5, delay: 0.3 }}
-                            >
-                                <div className="chart-header">
-                                    <div className="chart-title-section">
-                                        <h3 className="chart-main-title">Data Distribution</h3>
-                                        <p className="chart-subtitle">Click cards below to see different views</p>
-                                    </div>
-                                    <div className="chart-controls">
-                                        <button 
-                                            className={`chart-btn ${selectedChart === 'orders' ? 'active' : ''}`}
-                                            onClick={() => setSelectedChart('orders')}
-                                        >
-                                            Orders
-                                        </button>
-                                        <button 
-                                            className={`chart-btn ${selectedChart === 'revenue' ? 'active' : ''}`}
-                                            onClick={() => setSelectedChart('revenue')}
-                                        >
-                                            Revenue
-                                        </button>
-                                        <button 
-                                            className={`chart-btn ${selectedChart === 'products' ? 'active' : ''}`}
-                                            onClick={() => setSelectedChart('products')}
-                                        >
-                                            Products
-                                        </button>
-                                        <button 
-                                            className={`chart-btn ${selectedChart === 'users' ? 'active' : ''}`}
-                                            onClick={() => setSelectedChart('users')}
-                                        >
-                                            Users
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="pie-chart-container">
-                                    <ResponsiveContainer width="100%" height={450}>
-                                        <PieChart>
-                                            <Pie
-                                                data={pieChartData}
-                                                cx="50%"
-                                                cy="50%"
-                                                outerRadius={160}
-                                                innerRadius={90}
-                                                paddingAngle={3}
-                                                dataKey="value"
-                                            >
-                                                {pieChartData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip content={<CustomTooltip />} />
-                                            <Legend 
-                                                layout="horizontal" 
-                                                verticalAlign="bottom" 
-                                                align="center"
-                                                wrapperStyle={{ 
-                                                    fontSize: '14px', 
-                                                    paddingTop: '20px',
-                                                    fontWeight: '500'
-                                                }}
-                                            />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </motion.div>
-
-                            {/* Quick Stats Card */}
-                            <motion.div
-                                className="chart-card stats-card"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.5, delay: 0.4 }}
-                            >
-                                <div className="chart-header">
-                                    <h3>Quick Stats</h3>
-                                    <p className="chart-subtitle">Key performance indicators</p>
-                                </div>
-                                <div className="stats-grid">
-                                    <div className="stat-item">
-                                        <div className="stat-icon" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
-                                            <FaChartLine style={{ color: '#10B981' }} />
-                                        </div>
-                                        <div className="stat-content">
-                                            <h4>Growth Rate</h4>
-                                            <p className="stat-value">+12.5%</p>
-                                            <p className="stat-change positive">+2.1% from last month</p>
-                                        </div>
-                                    </div>
-                                    <div className="stat-item">
-                                        <div className="stat-icon" style={{ backgroundColor: 'rgba(67, 97, 238, 0.1)' }}>
-                                            <FaUsers style={{ color: '#4361ee' }} />
-                                        </div>
-                                        <div className="stat-content">
-                                            <h4>Customer Satisfaction</h4>
-                                            <p className="stat-value">4.8/5</p>
-                                            <p className="stat-change positive">+0.2 from last month</p>
-                                        </div>
-                                    </div>
-                                    <div className="stat-item">
-                                        <div className="stat-icon" style={{ backgroundColor: 'rgba(242, 159, 103, 0.1)' }}>
-                                            <FaShoppingCart style={{ color: '#F29F67' }} />
-                                        </div>
-                                        <div className="stat-content">
-                                            <h4>Conversion Rate</h4>
-                                            <p className="stat-value">15.3%</p>
-                                            <p className="stat-change positive">+1.2% from last month</p>
-                                        </div>
-                                    </div>
-                                    <div className="stat-item">
-                                        <div className="stat-icon" style={{ backgroundColor: 'rgba(52, 177, 170, 0.1)' }}>
-                                            <FaDollarSign style={{ color: '#34B1AA' }} />
-                                        </div>
-                                        <div className="stat-content">
-                                            <h4>Avg Order Value</h4>
-                                            <p className="stat-value">₹8,500</p>
-                                            <p className="stat-change positive">+₹500 from last month</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
+                        {cardsData.map((card, index) => (
+                            <DashboardCard
+                                key={card.id}
+                                card={card}
+                                index={index}
+                                calculateChange={calculateChange}
+                                formatNumber={formatNumber}
+                                dashboardData={dashboardData}
+                                themeMode={themeMode}
+                            />
+                        ))}
                     </motion.div>
 
-                    {/* Summary Cards */}
-                <motion.div
-                        className="summary-cards-grid"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.5 }}
-                    >
-                        <SummaryCard
-                            card={{
-                                id: 'totalItems',
-                                title: 'Items',
-                                value: 0,
-                                icon: <FaShoppingCart />,
-                                detail: 'Total Items Sold',
-                                color: '#10B981',
-                                isCurrency: false
-                            }}
-                            index={0}
-                            isHovered={hoveredCard === 'totalItems'}
-                            onHover={setHoveredCard}
-                            formatNumber={formatNumber}
-                            onClick={() => {}}
-                        />
-                        <SummaryCard
-                            card={{
-                                id: 'totalOrders',
-                                title: 'Orders',
-                                value: dashboardData?.totalOrders || 0,
-                                icon: <FaShoppingCart />,
-                                detail: 'Total Orders',
-                                color: '#4361ee',
-                                isCurrency: false
-                            }}
-                            index={1}
-                            isHovered={hoveredCard === 'totalOrders'}
-                            onHover={setHoveredCard}
-                            formatNumber={formatNumber}
-                            onClick={() => handleCardClick('totalOrders')}
-                        />
-                        <SummaryCard
-                            card={{
-                                id: 'totalStores',
-                                title: 'Grocery Stores',
-                                value: 1,
-                                icon: <FaGem />,
-                                detail: 'Total Stores',
-                                color: '#f8961e',
-                                isCurrency: false
-                            }}
-                            index={2}
-                            isHovered={hoveredCard === 'totalStores'}
-                            onHover={setHoveredCard}
-                            formatNumber={formatNumber}
-                            onClick={() => {}}
-                        />
-                        <SummaryCard
-                            card={{
-                                id: 'totalCustomers',
-                                title: 'Customers',
-                                value: dashboardData?.totalUsers || 0,
-                                icon: <FaUsers />,
-                                detail: 'Total Customers',
-                                color: '#7209b7',
-                                isCurrency: false
-                            }}
-                            index={3}
-                            isHovered={hoveredCard === 'totalCustomers'}
-                            onHover={setHoveredCard}
-                            formatNumber={formatNumber}
-                            onClick={() => handleCardClick('totalCustomers')}
-                        />
-                        <SummaryCard
-                            card={{
-                                id: 'totalEarnings',
-                                title: 'Total Earnings',
-                                value: dashboardData?.totalRevenue || 103.20,
-                                icon: <FaDollarSign />,
-                                detail: '0 Newly added',
-                                color: '#f72585',
-                                isCurrency: true
-                            }}
-                            index={4}
-                            isHovered={hoveredCard === 'totalEarnings'}
-                            onHover={setHoveredCard}
-                            formatNumber={formatNumber}
-                            onClick={() => handleCardClick('totalEarnings')}
-                        />
-                    </motion.div>
-
-                    {/* Order Status Cards */}
                     <motion.div
-                        className="order-status-grid"
+                        className="order-status-section"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.6 }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
                     >
-                        <OrderStatusCard
-                            card={{
-                                id: 'accepted',
-                                title: 'Accepted By Delivery',
-                                value: 0,
-                                icon: <FaTruck />,
-                                color: '#3b82f6'
-                            }}
-                            index={0}
-                            formatNumber={formatNumber}
-                        />
-                        <OrderStatusCard
-                            card={{
-                                id: 'packaging',
-                                title: 'Packaging',
-                                value: 0,
-                                icon: <FaShoppingCart />,
-                                color: '#f59e0b'
-                            }}
-                            index={1}
-                            formatNumber={formatNumber}
-                        />
-                        <OrderStatusCard
-                            card={{
-                                id: 'outForDelivery',
-                                title: 'Out For Delivery',
-                                value: 0,
-                                icon: <FaTruck />,
-                                color: '#8b5cf6'
-                            }}
-                            index={2}
-                            formatNumber={formatNumber}
-                        />
-                        <OrderStatusCard
-                            card={{
-                                id: 'delivered',
-                                title: 'Delivered',
-                                value: dashboardData?.deliveredOrders || 0,
-                                icon: <FaCheckCircle />,
-                                color: '#10b981'
-                            }}
-                            index={3}
-                            formatNumber={formatNumber}
-                        />
-                        <OrderStatusCard
-                            card={{
-                                id: 'cancelled',
-                                title: 'Cancelled',
-                                value: dashboardData?.cancelledOrders || 0,
-                                icon: <FaTimesCircle />,
-                                color: '#ef4444'
-                            }}
-                            index={4}
-                            formatNumber={formatNumber}
-                        />
-                        <OrderStatusCard
-                            card={{
-                                id: 'refunded',
-                                title: 'Refunded',
-                                value: 0,
-                                icon: <FaDollarSign />,
-                                color: '#ec4899'
-                            }}
-                            index={5}
-                            formatNumber={formatNumber}
-                        />
-                        <OrderStatusCard
-                            card={{
-                                id: 'paymentFailed',
-                                title: 'Payment Failed',
-                                value: 0,
-                                icon: <FaTimesCircle />,
-                                color: '#3b82f6'
-                            }}
-                            index={6}
-                            formatNumber={formatNumber}
-                        />
-                    </motion.div>
+                        <motion.div
+                            className="section-header"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5, delay: 0.4 }}
+                        >
+                            <h2>Order Status Overview</h2>
+                            <p>Track all order statuses in real-time</p>
+                        </motion.div>
 
-                    {/* Latest Orders Section */}
-                    <motion.div
-                        className="latest-orders-section"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.7 }}
-                    >
-                        <div className="orders-header">
-                            <div className="orders-title-section">
-                                <h3>Latest Orders</h3>
-                                <p>Track and manage customer orders</p>
-                                <span className="total-orders">{latestOrders.length} total orders</span>
-                            </div>
-                            <div className="orders-controls">
-                                <div className="search-container">
-                                    <FaSearch className="search-icon" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by Order ID (e.g. #643d8)"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="search-input"
-                                    />
-                                </div>
-                                <button className="date-picker-btn">
-                                    <FaCalendar />
-                                    <span>dd/mm/yyyy</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div className="orders-table-container">
-                            <table className="orders-table">
-                                <thead>
-                                    <tr>
-                                        <th>Order ID</th>
-                                        <th>Customer Name</th>
-                                        <th>Status</th>
-                                        <th>Total</th>
-                                        <th>Date</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {latestOrders.map((order, index) => (
-                                        <motion.tr
-                                            key={order.id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.3, delay: index * 0.1 }}
-                                            className="order-row"
-                                        >
-                                            <td>
-                                                <div className="order-id">
-                                                    <FaShoppingCart className="order-icon" />
-                                                    {order.id}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="customer-name">
-                                                    <FaUsers className="customer-icon" />
-                                                    {order.customerName}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span 
-                                                    className="status-badge"
-                                                    style={{ backgroundColor: getStatusColor(order.status) }}
-                                                >
-                                                    {order.status}
-                                                </span>
-                                            </td>
-                                            <td className="order-total">₹{order.total.toFixed(2)}</td>
-                                            <td>
-                                                <div className="order-date">
-                                                    <FaChartLine className="date-icon" />
-                                                    {order.date}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <button className="action-btn">
-                                                    <FaEye />
-                                                </button>
-                                            </td>
-                                        </motion.tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                </motion.div>
+                        <motion.div
+                            className="order-status-grid"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5, staggerChildren: 0.1, delay: 0.5 }}
+                        >
+                            {orderStatusCards.map((card, index) => (
+                                <OrderStatusCard
+                                    key={card.id}
+                                    card={card}
+                                    index={index}
+                                    formatNumber={formatNumber}
+                                    themeMode={themeMode}
+                                />
+                            ))}
+                        </motion.div>
+                    </motion.div>
                 </>
             )}
         </div>
     );
 };
 
-// Summary Card Component
-const SummaryCard = React.memo(({
-    card,
-    index,
-    isHovered,
-    onHover,
-    formatNumber,
-    onClick
-}) => {
+const DashboardCard = React.memo(({ card, index, calculateChange, formatNumber, dashboardData, themeMode }) => {
+    const change = calculateChange(card.id, dashboardData);
+
+
     return (
         <motion.div
-            className="summary-card"
+            className={`card ${themeMode}`}
             initial={{ opacity: 0, y: 20 }}
-            animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1
-            }}
-            transition={{
-                duration: 0.4,
-                delay: index * 0.1,
-                type: 'spring',
-                stiffness: 100
-            }}
-            whileHover={{
-                y: -8,
-                scale: 1.02,
-                boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
-            }}
-            onClick={onClick}
-            onMouseEnter={() => onHover(card.id)}
-            onMouseLeave={() => onHover(null)}
-            style={{
-                background: `linear-gradient(135deg, ${card.color}15 0%, ${card.color}05 100%)`,
-                border: `1px solid ${card.color}20`
-            }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+            whileHover={{ y: -5, boxShadow: 'var(--shadow-md)' }}
         >
-            <div className="card-header-modern">
-                <div className="icon-container" style={{ backgroundColor: card.color }}>
+            <div className="card-header">
+                <div className="card-icon" style={{ background: 'var(--primary-color)', color: '#ffffff' }}>
                     {card.icon}
                 </div>
+                {/* <div className={`change-indicator ${change.direction}`}>
+                    {change.direction === 'up' ? <FaChevronUp /> : change.direction === 'down' ? <FaChevronDown /> : null}
+                    {change.value}%
+                </div> */}
             </div>
-
-            <div className="card-content">
-                <div className="metric-info">
-                    <h3 className="metric-title">{card.title}</h3>
-                    <p className="metric-value">
-                        {card.isCurrency ? formatNumber(card.value, { isCurrency: true }) : formatNumber(card.value)}
-                    </p>
-                    <p className="metric-description">{card.detail}</p>
-                </div>
-                </div>
-            </motion.div>
-    );
-});
-
-// Order Status Card Component
-const OrderStatusCard = React.memo(({ card, index, formatNumber }) => {
-    return (
-        <motion.div
-            className="order-status-card"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1
-            }}
-            transition={{
-                duration: 0.4,
-                delay: index * 0.05,
-                type: 'spring',
-                stiffness: 100
-            }}
-                whileHover={{
-                y: -4,
-                scale: 1.02,
-                boxShadow: '0 12px 24px rgba(0,0,0,0.1)'
-            }}
-            style={{
-                background: `linear-gradient(135deg, ${card.color}10 0%, ${card.color}05 100%)`,
-                border: `1px solid ${card.color}20`
-            }}
-        >
-            <div className="status-icon" style={{ backgroundColor: card.color }}>
-                {card.icon}
-            </div>
-            <div className="status-content">
-                <h4>{card.title}</h4>
-                <p className="status-value">{formatNumber(card.value)}</p>
-            </div>
+            <h3>{card.title}</h3>
+            <p className="card-value">{formatNumber(card.value)}</p>
+            <Link to={card.link} className="card-link">
+                View Details <FaExternalLinkAlt />
+            </Link>
         </motion.div>
     );
 });
 
-SummaryCard.displayName = 'SummaryCard';
-OrderStatusCard.displayName = 'OrderStatusCard';
+const OrderStatusCard = React.memo(({ card, index, formatNumber, themeMode }) => {
+    const navigate = useNavigate();
+
+    const handleOnClick = (e, card) => {
+        e.preventDefault();
+
+        const link = card.path;
+        const status = card.status;
+
+        console.log("Navigating to:", link, "status:", status);
+
+        navigate(link, {
+            state: {
+                key: card.key,
+                values: card.values,
+                qc: card.status // or whatever qc means in your flow
+            }
+        });
+    };
+
+    return (
+        <motion.div
+            className={`order-status-card ${themeMode}`}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+            whileHover={{ scale: 1.05, boxShadow: 'var(--shadow-md)' }}
+            onClick={(e) => handleOnClick(e, card)}
+
+        >
+            <div className="status-icon-circle" style={{ background: 'var(--primary-color)' }}>
+                {card.icon}
+            </div>
+            <div>
+                <div className="status-title">{card.title}</div>
+                <div className="status-value">{formatNumber(card.value)}</div>
+            </div>
+        </motion.div>
+    );
+});
 
 export default DashboardCards;

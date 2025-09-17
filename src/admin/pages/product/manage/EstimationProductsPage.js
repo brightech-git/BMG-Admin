@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import useEstimationQuery from '../../../hooks/products/useEstimationQuery';
 import { useMediaQuery } from 'react-responsive';
 import { CSVLink } from 'react-csv';
@@ -6,9 +6,10 @@ import {
     Box, Typography, Button, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, CircularProgress, Alert,
     IconButton, Chip, Tooltip, Dialog, DialogTitle,
-    DialogContent, DialogActions, Stack, Card, CardContent
+    DialogContent, DialogActions, Stack, Card, CardContent,
+    TextField, Grid, FormControl, Select, MenuItem
 } from '@mui/material';
-import { Download, PictureAsPdf, Print, Visibility } from '@mui/icons-material';
+import { Download, PictureAsPdf, Print, Visibility, Edit, Delete } from '@mui/icons-material';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -16,33 +17,33 @@ import { saveAs } from 'file-saver';
 import { styled } from '@mui/system';
 
 const StyledTableContainer = styled(TableContainer)(() => ({
-    borderRadius: '16px',
-    overflow: 'auto',
+    borderRadius: '12px',
+    overflow: 'hidden',
     background: '#ffffff',
-    boxShadow: '0 8px 32px rgba(30, 30, 44, 0.08)',
+    boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
     border: '1px solid rgba(30, 30, 44, 0.06)',
-    maxHeight: '60vh',
     '& .MuiTableHead-root': {
-        background: 'linear-gradient(135deg, #1E1E2C 0%, #2c2c3d 100%)',
+        background: 'linear-gradient(135deg, #fdf1e8 0%, #f5e6d4 100%)',
         '& .MuiTableCell-head': {
-            color: '#FFFFFF',
-            fontWeight: 700,
-            fontSize: '0.875rem',
-            textTransform: 'uppercase',
+            color: '#1a1a1a !important',
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            textTransform: 'none',
             letterSpacing: '0.5px',
             borderBottom: 'none',
-            padding: '16px 12px',
+            padding: '8px 12px',
         }
     },
     '& .MuiTableRow-root': {
         transition: 'all 0.2s ease',
         '&:hover': {
-            backgroundColor: 'rgba(242, 159, 103, 0.04)',
+            backgroundColor: 'rgba(235, 167, 72, 0.04)',
         },
     },
     '& .MuiTableCell-root': {
         borderBottom: '1px solid rgba(30, 30, 44, 0.06)',
-        padding: '12px',
+        padding: '8px 12px',
+        fontSize: '0.8rem',
     },
 }));
 
@@ -54,14 +55,10 @@ const ModernCard = styled(Card)(() => ({
     marginBottom: '24px',
     position: 'relative',
     overflow: 'hidden',
-    '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '4px',
-        background: 'linear-gradient(90deg, #3B8FF3 0%, #F29F67 50%, #34B1AA 100%)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 8px 25px rgba(30, 30, 44, 0.12)',
     },
 }));
 
@@ -70,11 +67,20 @@ const EstimationProductsPage = () => {
     const [exportData, setExportData] = useState([]);
     const [previewModal, setPreviewModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [editModal, setEditModal] = useState(false);
+    const [deleteModal, setDeleteModal] = useState(false);
+    const [itemToEdit, setItemToEdit] = useState(null);
+    const [itemToDelete, setItemToDelete] = useState(null);
     const [visibleItems, setVisibleItems] = useState(50);
     const [loadedData, setLoadedData] = useState([]);
     const [exportDialogOpen, setExportDialogOpen] = useState(false);
     const [currentExportType, setCurrentExportType] = useState(null);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+    const [purityFilter, setPurityFilter] = useState('');
+    const [weightRange, setWeightRange] = useState({ min: '', max: '' });
+    const [gstFilter, setGstFilter] = useState('');
     const tableContainerRef = useRef(null);
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
     const isSmallScreen = useMediaQuery({ query: '(max-width: 480px)' });
@@ -85,6 +91,66 @@ const EstimationProductsPage = () => {
             setLoadedData(processedData);
         }
     }, [data]);
+
+    // Filter data based on search query and advanced filters
+    const filteredData = useMemo(() => {
+        let filtered = loadedData;
+
+        // Text search filter
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(item => 
+                item.ITEMNAME?.toLowerCase().includes(query) ||
+                item.SUBITEMNAME?.toLowerCase().includes(query) ||
+                item.ITEMID?.toLowerCase().includes(query) ||
+                item.TAGNO?.toLowerCase().includes(query) ||
+                item.Description?.toLowerCase().includes(query) ||
+                item.PURITY?.toLowerCase().includes(query) ||
+                item.NETWT?.toString().includes(query) ||
+                item.GRSWT?.toString().includes(query) ||
+                item.GrossAmount?.toString().includes(query) ||
+                item.GSTPer?.toString().includes(query) ||
+                item.GSTAmount?.toString().includes(query) ||
+                item.GrandTotal?.toString().includes(query)
+            );
+        }
+
+        // Price range filter
+        if (priceRange.min || priceRange.max) {
+            filtered = filtered.filter(item => {
+                const price = parseFloat(item.GrandTotal) || 0;
+                const minPrice = priceRange.min ? parseFloat(priceRange.min) : 0;
+                const maxPrice = priceRange.max ? parseFloat(priceRange.max) : Infinity;
+                return price >= minPrice && price <= maxPrice;
+            });
+        }
+
+        // Purity filter
+        if (purityFilter) {
+            filtered = filtered.filter(item => 
+                item.PURITY?.toLowerCase().includes(purityFilter.toLowerCase())
+            );
+        }
+
+        // Weight range filter
+        if (weightRange.min || weightRange.max) {
+            filtered = filtered.filter(item => {
+                const weight = parseFloat(item.NETWT) || 0;
+                const minWeight = weightRange.min ? parseFloat(weightRange.min) : 0;
+                const maxWeight = weightRange.max ? parseFloat(weightRange.max) : Infinity;
+                return weight >= minWeight && weight <= maxWeight;
+            });
+        }
+
+        // GST filter
+        if (gstFilter) {
+            filtered = filtered.filter(item => 
+                item.GSTPer?.toString() === gstFilter
+            );
+        }
+
+        return filtered;
+    }, [loadedData, searchQuery, priceRange, purityFilter, weightRange, gstFilter]);
 
     // Lazy loading with scroll detection for table container
     useEffect(() => {
@@ -118,6 +184,56 @@ const EstimationProductsPage = () => {
     const handlePreviewClick = (item) => {
         setSelectedItem(item);
         setPreviewModal(true);
+    };
+
+    const handleEditClick = (item) => {
+        setItemToEdit(item);
+        setEditModal(true);
+    };
+
+    const handleDeleteClick = (item) => {
+        setItemToDelete(item);
+        setDeleteModal(true);
+    };
+
+    const handleCloseEditModal = () => {
+        setEditModal(false);
+        setItemToEdit(null);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setDeleteModal(false);
+        setItemToDelete(null);
+    };
+
+    const handleEditSubmit = async (editedData) => {
+        try {
+            // TODO: Implement edit functionality
+            console.log('Editing product:', editedData);
+            // Here you would typically call an API to update the product
+            // await updateProduct(editedData);
+            
+            // Close modal and refresh data
+            handleCloseEditModal();
+            refetch();
+        } catch (error) {
+            console.error('Error updating product:', error);
+        }
+    };
+
+    const handleDeleteConfirm = async () => {
+        try {
+            // TODO: Implement delete functionality
+            console.log('Deleting product:', itemToDelete);
+            // Here you would typically call an API to delete the product
+            // await deleteProduct(itemToDelete.ITEMID);
+            
+            // Close modal and refresh data
+            handleCloseDeleteModal();
+            refetch();
+        } catch (error) {
+            console.error('Error deleting product:', error);
+        }
     };
 
     const formatCurrency = (value, decimals = 2) => {
@@ -481,7 +597,15 @@ const EstimationProductsPage = () => {
                 <Alert severity="error" sx={{ borderRadius: '12px', backgroundColor: '#fff5f5', color: '#d32f2f' }}>
                     Failed to load estimation products. Please try again.
                 </Alert>
-                <Button variant="contained" onClick={() => refetch()} sx={{ mt: 2, borderRadius: '12px', background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)' }}>
+                <Button variant="contained" onClick={() => refetch()} sx={{ 
+                    mt: 2, 
+                    borderRadius: '12px', 
+                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                    color: 'white',
+                    '&:hover': {
+                        background: 'linear-gradient(135deg, #e09a3a 0%, #d18a2a 100%)',
+                    }
+                }}>
                     Retry
                 </Button>
             </Box>
@@ -492,17 +616,46 @@ const EstimationProductsPage = () => {
         <Box p={isMobile ? 1 : 3} sx={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', minHeight: '100vh' }}>
             <ModernCard>
                 <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
-                    <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={isMobile ? 'flex-start' : 'center'} mb={3}>
-                        <Typography variant={isMobile ? 'h6' : 'h4'} sx={{ color: '#1E1E2C', fontWeight: 700 }}>
-                        Product Estimations
-                    </Typography>
+                    {/* Enhanced Header Section */}
+                    <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={isMobile ? 'flex-start' : 'center'} mb={4}>
+                        <Box>
+                            <Typography variant={isMobile ? 'h6' : 'h4'} sx={{ 
+                                color: '#1E1E2C', 
+                                fontWeight: 800,
+                                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.25rem' },
+                                background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                mb: 1
+                            }}>
+                                Product Estimations
+                            </Typography>
+                            <Typography variant="body1" sx={{ 
+                                color: '#6B7280', 
+                                fontSize: '1rem',
+                                maxWidth: '600px'
+                            }}>
+                                Manage and view product estimation data with detailed pricing information
+                            </Typography>
+                        </Box>
                         <Stack direction={isSmallScreen ? 'column' : 'row'} spacing={1} mt={isMobile ? 2 : 0}>
                         <Button
                             variant="outlined"
                             startIcon={<Print />}
                             onClick={() => handleExportClick('print')}
                             size={isSmallScreen ? 'small' : 'medium'}
-                                sx={{ borderRadius: '8px', color: '#3B8FF3', borderColor: '#3B8FF3', fontWeight: 600 }}
+                            sx={{ 
+                                borderRadius: '12px', 
+                                color: '#eba748', 
+                                borderColor: '#eba748', 
+                                fontWeight: 600,
+                                '&:hover': {
+                                    borderColor: '#e09a3a',
+                                    color: '#e09a3a',
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                }
+                            }}
                         >
                             {isSmallScreen ? 'Print' : 'Print Report'}
                         </Button>
@@ -511,7 +664,17 @@ const EstimationProductsPage = () => {
                             startIcon={<PictureAsPdf />}
                             onClick={() => handleExportClick('pdf')}
                             size={isSmallScreen ? 'small' : 'medium'}
-                                sx={{ borderRadius: '8px', color: '#F29F67', borderColor: '#F29F67', fontWeight: 600 }}
+                            sx={{ 
+                                borderRadius: '12px', 
+                                color: '#eba748', 
+                                borderColor: '#eba748', 
+                                fontWeight: 600,
+                                '&:hover': {
+                                    borderColor: '#e09a3a',
+                                    color: '#e09a3a',
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                }
+                            }}
                         >
                             {isSmallScreen ? 'PDF' : 'Export PDF'}
                         </Button>
@@ -520,7 +683,17 @@ const EstimationProductsPage = () => {
                             startIcon={<Download />}
                             onClick={() => handleExportClick('excel')}
                             size={isSmallScreen ? 'small' : 'medium'}
-                                sx={{ borderRadius: '8px', color: '#34B1AA', borderColor: '#34B1AA', fontWeight: 600 }}
+                            sx={{ 
+                                borderRadius: '12px', 
+                                color: '#eba748', 
+                                borderColor: '#eba748', 
+                                fontWeight: 600,
+                                '&:hover': {
+                                    borderColor: '#e09a3a',
+                                    color: '#e09a3a',
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                }
+                            }}
                         >
                             {isSmallScreen ? 'Excel' : 'Export Excel'}
                         </Button>
@@ -532,7 +705,449 @@ const EstimationProductsPage = () => {
                                 style={{ display: 'none' }}
                             />
                         )}
-                    </Stack>
+                                            </Stack>
+                    </Box>
+
+                    {/* Quick Summary Section */}
+                    <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        p: 2,
+                        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(30, 30, 44, 0.06)',
+                        boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
+                        mb: 3
+                    }}>
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 48,
+                            height: 48,
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                            boxShadow: '0 4px 12px rgba(235, 167, 72, 0.3)'
+                        }}>
+                            <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '1.2rem' }}>
+                                📊
+                            </Typography>
+                        </Box>
+                        <Box>
+                            <Typography variant="h6" sx={{
+                                color: '#1E1E2C',
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                                mb: 0.5
+                            }}>
+                                Estimation Overview
+                            </Typography>
+                            <Typography variant="body2" sx={{
+                                color: '#6B7280',
+                                fontSize: '0.875rem'
+                            }}>
+                                Total Products: {loadedData.length} • Showing: {Math.min(visibleItems, filteredData.length)}
+                                {(searchQuery || priceRange.min || priceRange.max || purityFilter || weightRange.min || weightRange.max || gstFilter) && 
+                                    ` • Filtered: ${filteredData.length}`}
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* Enhanced Search Section */}
+                    <Box sx={{
+                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                        borderRadius: '16px',
+                        boxShadow: '0 4px 20px rgba(30, 30, 44, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.8)',
+                        marginBottom: '24px',
+                        padding: '24px',
+                        transition: 'all 0.3s ease',
+                    }}>
+                        <Box sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '16px'
+                        }}>
+                            <Box>
+                                <Typography variant="h6" sx={{
+                                    color: '#1E1E2C',
+                                    fontWeight: 700,
+                                    fontSize: '1.25rem',
+                                    margin: '0 0 8px 0',
+                                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                                    backgroundClip: 'text',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                }}>
+                                    Search Products
+                                </Typography>
+                                <Typography variant="body2" sx={{
+                                    color: '#6B7280',
+                                    fontSize: '0.875rem',
+                                    margin: '0'
+                                }}>
+                                    Search by product name, SKU, or description
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        <Box sx={{
+                            display: 'flex',
+                            gap: '12px',
+                            alignItems: 'center'
+                        }}>
+                            <TextField
+                                placeholder="Search products..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: '12px',
+                                        backgroundColor: '#fff',
+                                        fontSize: '1rem',
+                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: '#eba748',
+                                        },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                            borderColor: '#eba748',
+                                            borderWidth: '2px',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root': {
+                                        color: '#6B7280',
+                                        fontWeight: 500,
+                                    },
+                                }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <Box sx={{ color: '#6B7280', mr: 1 }}>
+                                            🔍
+                                        </Box>
+                                    ),
+                                }}
+                            />
+                            <Button
+                                variant="contained"
+                                onClick={() => setSearchQuery('')}
+                                disabled={!searchQuery}
+                                sx={{
+                                    padding: '12px 20px',
+                                    borderRadius: '12px',
+                                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg, #e09a3a 0%, #d18a2a 100%)',
+                                        transform: 'translateY(-1px)',
+                                        boxShadow: '0 4px 12px rgba(235, 167, 72, 0.3)',
+                                    },
+                                    '&:disabled': {
+                                        background: 'linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%)',
+                                        color: '#9e9e9e',
+                                        transform: 'none',
+                                        boxShadow: 'none',
+                                    },
+                                }}
+                            >
+                                Clear
+                            </Button>
+                        </Box>
+                    </Box>
+
+                    {/* Enhanced Filter Options */}
+                    <Box sx={{
+                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                        borderRadius: '16px',
+                        boxShadow: '0 4px 20px rgba(30, 30, 44, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.8)',
+                        marginBottom: '24px',
+                        padding: '24px',
+                        transition: 'all 0.3s ease',
+                    }}>
+                        <Box sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '20px'
+                        }}>
+                            <Box>
+                                <Typography variant="h6" sx={{
+                                    color: '#1E1E2C',
+                                    fontWeight: 700,
+                                    fontSize: '1.25rem',
+                                    margin: '0 0 8px 0',
+                                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                                    backgroundClip: 'text',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                }}>
+                                    Advanced Filters
+                                </Typography>
+                                <Typography variant="body2" sx={{
+                                    color: '#6B7280',
+                                    fontSize: '0.875rem',
+                                    margin: '0'
+                                }}>
+                                    Filter products by price range, purity, and other criteria
+                                </Typography>
+                            </Box>
+                            <Button
+                                variant="outlined"
+                                onClick={() => {
+                                    setPriceRange({ min: '', max: '' });
+                                    setPurityFilter('');
+                                    setWeightRange({ min: '', max: '' });
+                                    setGstFilter('');
+                                }}
+                                sx={{
+                                    borderRadius: '12px',
+                                    borderColor: '#eba748',
+                                    color: '#eba748',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                        borderColor: '#e09a3a',
+                                        color: '#e09a3a',
+                                        backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                    }
+                                }}
+                            >
+                                Clear Filters
+                            </Button>
+                        </Box>
+
+                        <Grid container spacing={3}>
+                            {/* Price Range Filter */}
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Box sx={{
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                    p: 2,
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(235, 167, 72, 0.1)'
+                                }}>
+                                    <Typography variant="body2" sx={{
+                                        color: '#1E1E2C',
+                                        fontWeight: 700,
+                                        mb: 1,
+                                        fontSize: '0.9rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1
+                                    }}>
+                                        💰 Price Range
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <TextField
+                                            placeholder="Min"
+                                            value={priceRange.min}
+                                            onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+                                            size="small"
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    borderRadius: '8px',
+                                                    fontSize: '0.875rem',
+                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#eba748',
+                                                    },
+                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#eba748',
+                                                    },
+                                                },
+                                            }}
+                                        />
+                                        <TextField
+                                            placeholder="Max"
+                                            value={priceRange.max}
+                                            onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+                                            size="small"
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    borderRadius: '8px',
+                                                    fontSize: '0.875rem',
+                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#eba748',
+                                                    },
+                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#eba748',
+                                                    },
+                                                },
+                                            }}
+                                        />
+                                    </Box>
+                                </Box>
+                            </Grid>
+
+                            {/* Purity Filter */}
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Box sx={{
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                    p: 2,
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(235, 167, 72, 0.1)'
+                                }}>
+                                    <Typography variant="body2" sx={{
+                                        color: '#1E1E2C',
+                                        fontWeight: 700,
+                                        mb: 1,
+                                        fontSize: '0.9rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1
+                                    }}>
+                                        💎 Purity
+                                    </Typography>
+                                    <FormControl fullWidth size="small">
+                                        <Select
+                                            value={purityFilter}
+                                            onChange={(e) => setPurityFilter(e.target.value)}
+                                            displayEmpty
+                                            sx={{
+                                                borderRadius: '8px',
+                                                fontSize: '0.875rem',
+                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'rgba(30, 30, 44, 0.1)',
+                                                },
+                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: '#eba748',
+                                                },
+                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: '#eba748',
+                                                },
+                                            }}
+                                        >
+                                            <MenuItem value="">All Purity</MenuItem>
+                                            <MenuItem value="18K">18K</MenuItem>
+                                            <MenuItem value="22K">22K</MenuItem>
+                                            <MenuItem value="24K">24K</MenuItem>
+                                            <MenuItem value="916">916</MenuItem>
+                                            <MenuItem value="875">875</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Box>
+                            </Grid>
+
+                            {/* Weight Range Filter */}
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Box sx={{
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                    p: 2,
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(235, 167, 72, 0.1)'
+                                }}>
+                                    <Typography variant="body2" sx={{
+                                        color: '#1E1E2C',
+                                        fontWeight: 700,
+                                        mb: 1,
+                                        fontSize: '0.9rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1
+                                    }}>
+                                        ⚖️ Weight Range (g)
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <TextField
+                                            placeholder="Min"
+                                            value={weightRange.min}
+                                            onChange={(e) => setWeightRange(prev => ({ ...prev, min: e.target.value }))}
+                                            size="small"
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    borderRadius: '8px',
+                                                    fontSize: '0.875rem',
+                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#eba748',
+                                                    },
+                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#eba748',
+                                                    },
+                                                },
+                                            }}
+                                        />
+                                        <TextField
+                                            placeholder="Max"
+                                            value={weightRange.max}
+                                            onChange={(e) => setWeightRange(prev => ({ ...prev, max: e.target.value }))}
+                                            size="small"
+                                            sx={{
+                                                '& .MuiOutlinedInput-root': {
+                                                    borderRadius: '8px',
+                                                    fontSize: '0.875rem',
+                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#eba748',
+                                                    },
+                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: '#eba748',
+                                                    },
+                                                },
+                                            }}
+                                        />
+                                    </Box>
+                                </Box>
+                            </Grid>
+
+                            {/* GST Filter */}
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Box sx={{
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                    p: 2,
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(235, 167, 72, 0.1)'
+                                }}>
+                                    <Typography variant="body2" sx={{
+                                        color: '#1E1E2C',
+                                        fontWeight: 700,
+                                        mb: 1,
+                                        fontSize: '0.9rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1
+                                    }}>
+                                        📊 GST Rate
+                                    </Typography>
+                                    <FormControl fullWidth size="small">
+                                        <Select
+                                            value={gstFilter}
+                                            onChange={(e) => setGstFilter(e.target.value)}
+                                            displayEmpty
+                                            sx={{
+                                                borderRadius: '8px',
+                                                fontSize: '0.875rem',
+                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: 'rgba(30, 30, 44, 0.1)',
+                                                },
+                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: '#eba748',
+                                                },
+                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: '#eba748',
+                                                },
+                                            }}
+                                        >
+                                            <MenuItem value="">All GST Rates</MenuItem>
+                                            <MenuItem value="3">3%</MenuItem>
+                                            <MenuItem value="5">5%</MenuItem>
+                                            <MenuItem value="12">12%</MenuItem>
+                                            <MenuItem value="18">18%</MenuItem>
+                                            <MenuItem value="28">28%</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Box>
+                            </Grid>
+                        </Grid>
                     </Box>
 
             {isLoading ? (
@@ -540,28 +1155,29 @@ const EstimationProductsPage = () => {
             ) : (
                 <>
                     <Box mb={2}>
-                                <Typography variant="subtitle1" sx={{ color: '#6B7280', fontWeight: 500 }}>
-                            Showing {Math.min(visibleItems, loadedData.length)} of {loadedData.length} products
+                        <Typography variant="subtitle1" sx={{ color: '#6B7280', fontWeight: 500 }}>
+                            Showing {Math.min(visibleItems, filteredData.length)} of {filteredData.length} products
+                            {searchQuery && ` (filtered from ${loadedData.length} total)`}
                         </Typography>
                     </Box>
                             <StyledTableContainer ref={tableContainerRef}>
                             <Table stickyHeader size={isSmallScreen ? 'small' : 'medium'}>
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>Name</TableCell>
-                                        <TableCell>SubItemName</TableCell>
-                                        <TableCell>SKU</TableCell>
-                                        <TableCell>Details</TableCell>
-                                        {!isMobile && <TableCell>Purity/Weight</TableCell>}
-                                            <TableCell align="right">Amount</TableCell>
-                                        <TableCell align="center">GST</TableCell>
-                                            <TableCell align="right">Total</TableCell>
+                                        <TableCell>Product Name</TableCell>
+                                        <TableCell>Sub Item Name</TableCell>
+                                        <TableCell>Product SKU</TableCell>
+                                        <TableCell>Product Details</TableCell>
+                                        {!isMobile && <TableCell>Purity & Weight</TableCell>}
+                                        <TableCell align="right">Gross Amount</TableCell>
+                                        <TableCell align="center">GST Details</TableCell>
+                                        <TableCell align="right">Total Amount</TableCell>
                                         <TableCell align="center">Actions</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {loadedData.length > 0 ? (
-                                        loadedData.slice(0, visibleItems).map((item, index) => (
+                                    {filteredData.length > 0 ? (
+                                        filteredData.slice(0, visibleItems).map((item, index) => (
                                             <React.Fragment key={`${item.SubItemId}-${item.ITEMID}-${index}`}>
                                                 <TableRow hover>
                                                         <TableCell>{item.ITEMNAME}</TableCell>
@@ -590,9 +1206,9 @@ const EstimationProductsPage = () => {
                                                             label={`${item.GSTPer} (${formatCurrency(item.GSTAmount)})`}
                                                             size="small"
                                                             sx={{
-                                                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                                                                    color: '#3B8FF3',
-                                                                    fontWeight: 600
+                                                                backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                color: '#eba748',
+                                                                fontWeight: 600
                                                             }}
                                                         />
                                                     </TableCell>
@@ -600,24 +1216,70 @@ const EstimationProductsPage = () => {
                                                             {formatCurrency(item.GrandTotal)}
                                                     </TableCell>
                                                     <TableCell align="center">
-                                                        <Tooltip title="View Details">
-                                                            <IconButton
-                                                                size="small"
+                                                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                                                            <Tooltip title="View Details">
+                                                                <IconButton
+                                                                    size="small"
                                                                     onClick={() => handlePreviewClick(item)}
-                                                                color="primary"
-                                                                    sx={{ borderRadius: '8px', backgroundColor: 'rgba(59, 143, 243, 0.08)' }}
-                                                            >
+                                                                    color="primary"
+                                                                    sx={{ 
+                                                                        borderRadius: '12px', 
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                                            transform: 'scale(1.1)',
+                                                                        },
+                                                                    }}
+                                                                >
                                                                     <Visibility />
-                                                            </IconButton>
-                                                        </Tooltip>
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <Tooltip title="Edit Product">
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() => handleEditClick(item)}
+                                                                    color="primary"
+                                                                    sx={{ 
+                                                                        borderRadius: '12px', 
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                                            transform: 'scale(1.1)',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <Edit />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <Tooltip title="Delete Product">
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() => handleDeleteClick(item)}
+                                                                    color="error"
+                                                                    sx={{ 
+                                                                        borderRadius: '12px', 
+                                                                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                                                        color: '#f44336',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(244, 67, 54, 0.2)',
+                                                                            transform: 'scale(1.1)',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <Delete />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        </Box>
                                                     </TableCell>
                                                 </TableRow>
                                             </React.Fragment>
                                         ))
                                     ) : (
                                         <TableRow>
-                                                <TableCell colSpan={isMobile ? 6 : 8} align="center">
-                                                No estimation products found
+                                            <TableCell colSpan={isMobile ? 6 : 8} align="center">
+                                                {searchQuery ? 'No products match your search' : 'No estimation products found'}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -627,11 +1289,11 @@ const EstimationProductsPage = () => {
 
                             {isLoadingMore && (
                                 <Box mt={3} display="flex" justifyContent="center" alignItems="center">
-                                    <CircularProgress size={20} sx={{ color: '#3B8FF3' }} />
+                                    <CircularProgress size={20} sx={{ color: '#eba748' }} />
                                     <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, ml: 1 }}>
                                         Loading more...
                                     </Typography>
-                        </Box>
+                                </Box>
                             )}
                         </>
                     )}
@@ -808,6 +1470,294 @@ const EstimationProductsPage = () => {
                                 }}
                             >
                                 Close
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Edit Product Modal */}
+                    <Dialog 
+                        open={editModal} 
+                        onClose={handleCloseEditModal}
+                        maxWidth="md"
+                        fullWidth
+                    >
+                        <DialogTitle sx={{ 
+                            background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                            color: 'white',
+                            fontWeight: 700,
+                            fontSize: '1.2rem'
+                        }}>
+                            Edit Product
+                        </DialogTitle>
+                        <DialogContent sx={{ p: 3 }}>
+                            {itemToEdit && (
+                                <Box>
+                                    <Typography variant="h6" sx={{ mb: 2, color: '#1E1E2C' }}>
+                                        Edit Product: {itemToEdit.ITEMNAME} - {itemToEdit.SUBITEMNAME}
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: '#6B7280', mb: 3 }}>
+                                        SKU: {itemToEdit.ITEMID}-{itemToEdit.TAGNO}
+                                    </Typography>
+                                    
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Product Name"
+                                                defaultValue={itemToEdit.ITEMNAME}
+                                                variant="outlined"
+                                                size="small"
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '8px',
+                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                    },
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Sub Item Name"
+                                                defaultValue={itemToEdit.SUBITEMNAME}
+                                                variant="outlined"
+                                                size="small"
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '8px',
+                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                    },
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                label="Description"
+                                                defaultValue={itemToEdit.Description}
+                                                variant="outlined"
+                                                multiline
+                                                rows={3}
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '8px',
+                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                    },
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Purity"
+                                                defaultValue={itemToEdit.PURITY}
+                                                variant="outlined"
+                                                size="small"
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '8px',
+                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                    },
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Net Weight (g)"
+                                                defaultValue={itemToEdit.NETWT}
+                                                variant="outlined"
+                                                size="small"
+                                                type="number"
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '8px',
+                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                    },
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Gross Weight (g)"
+                                                defaultValue={itemToEdit.GRSWT}
+                                                variant="outlined"
+                                                size="small"
+                                                type="number"
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '8px',
+                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                    },
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="GST Percentage"
+                                                defaultValue={itemToEdit.GSTPer}
+                                                variant="outlined"
+                                                size="small"
+                                                type="number"
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: '8px',
+                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: '#eba748',
+                                                        },
+                                                    },
+                                                }}
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            )}
+                        </DialogContent>
+                        <DialogActions sx={{ p: 2 }}>
+                            <Button 
+                                onClick={handleCloseEditModal} 
+                                variant="outlined"
+                                sx={{ 
+                                    borderRadius: '8px', 
+                                    fontWeight: 600,
+                                    borderColor: '#eba748',
+                                    color: '#eba748',
+                                    '&:hover': {
+                                        borderColor: '#e09a3a',
+                                        color: '#e09a3a',
+                                        backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button 
+                                onClick={() => handleEditSubmit(itemToEdit)} 
+                                variant="contained"
+                                sx={{ 
+                                    borderRadius: '8px', 
+                                    fontWeight: 600,
+                                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg, #e09a3a 0%, #d18a2a 100%)',
+                                    }
+                                }}
+                            >
+                                Update Product
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Delete Confirmation Modal */}
+                    <Dialog 
+                        open={deleteModal} 
+                        onClose={handleCloseDeleteModal}
+                        maxWidth="sm"
+                        fullWidth
+                    >
+                        <DialogTitle sx={{ 
+                            background: 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
+                            color: 'white',
+                            fontWeight: 700,
+                            fontSize: '1.2rem'
+                        }}>
+                            Delete Product
+                        </DialogTitle>
+                        <DialogContent sx={{ p: 3 }}>
+                            {itemToDelete && (
+                                <Box>
+                                    <Typography variant="h6" sx={{ mb: 2, color: '#1E1E2C' }}>
+                                        Are you sure you want to delete this product?
+                                    </Typography>
+                                    <Box sx={{ 
+                                        p: 2, 
+                                        backgroundColor: 'rgba(244, 67, 54, 0.05)', 
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(244, 67, 54, 0.2)'
+                                    }}>
+                                        <Typography variant="body1" sx={{ fontWeight: 600, color: '#1E1E2C', mb: 1 }}>
+                                            {itemToDelete.ITEMNAME} - {itemToDelete.SUBITEMNAME}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                                            SKU: {itemToDelete.ITEMID}-{itemToDelete.TAGNO}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                                            Total Amount: {formatCurrency(itemToDelete.GrandTotal)}
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="body2" sx={{ color: '#f44336', mt: 2, fontWeight: 600 }}>
+                                        This action cannot be undone.
+                                    </Typography>
+                                </Box>
+                            )}
+                        </DialogContent>
+                        <DialogActions sx={{ p: 2 }}>
+                            <Button 
+                                onClick={handleCloseDeleteModal} 
+                                variant="outlined"
+                                sx={{ 
+                                    borderRadius: '8px', 
+                                    fontWeight: 600,
+                                    borderColor: '#6B7280',
+                                    color: '#6B7280',
+                                    '&:hover': {
+                                        borderColor: '#4B5563',
+                                        color: '#4B5563',
+                                        backgroundColor: 'rgba(107, 114, 128, 0.05)',
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button 
+                                onClick={handleDeleteConfirm} 
+                                variant="contained"
+                                color="error"
+                                sx={{ 
+                                    borderRadius: '8px', 
+                                    fontWeight: 600,
+                                    background: 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg, #d32f2f 0%, #c62828 100%)',
+                                    }
+                                }}
+                            >
+                                Delete Product
                             </Button>
                         </DialogActions>
                     </Dialog>

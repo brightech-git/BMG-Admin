@@ -26,25 +26,23 @@ import { styled } from '@mui/system';
 
 const BASE_VIDEO_URL = "https://app.bmgjewellers.com";
 
-// Styled components matching EstimationProductsPage
-const StyledTableContainer = styled(TableContainer)(() => ({
-    borderRadius: '16px',
-    overflow: 'auto',
+// Enhanced styled components matching Employee table
+const CompactTable = styled(TableContainer)(() => ({
+    borderRadius: '12px',
+    overflow: 'hidden',
     background: '#ffffff',
-    boxShadow: '0 8px 32px rgba(30, 30, 44, 0.08)',
+    boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
     border: '1px solid rgba(30, 30, 44, 0.06)',
-    maxHeight: '60vh',
     '& .MuiTableHead-root': {
-        background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)',
+        background: 'linear-gradient(135deg, #fdf1e8 0%, #f5e6d4 100%)',
         '& .MuiTableCell-head': {
-            color: '#FFFFFF !important',
+            color: '#1a1a1a !important',
             fontWeight: 700,
-            fontSize: '0.875rem',
+            fontSize: '0.75rem',
             textTransform: 'uppercase',
             letterSpacing: '0.5px',
             borderBottom: 'none',
-            padding: '16px 12px',
-            textAlign: 'left',
+            padding: '8px 12px',
         }
     },
     '& .MuiTableRow-root': {
@@ -55,53 +53,93 @@ const StyledTableContainer = styled(TableContainer)(() => ({
     },
     '& .MuiTableCell-root': {
         borderBottom: '1px solid rgba(30, 30, 44, 0.06)',
-        padding: '12px 16px',
-        textAlign: 'left',
-    },
-    '& .MuiTableCell-body': {
-        padding: '16px',
+        padding: '8px 12px',
+        fontSize: '0.8rem',
     },
 }));
 
-const ModernCard = styled(Card)(() => ({
+const StyledCard = styled(Card)(({ theme }) => ({
     borderRadius: '16px',
     background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
     boxShadow: '0 4px 20px rgba(30, 30, 44, 0.08)',
     border: '1px solid rgba(255, 255, 255, 0.8)',
-    marginBottom: '24px',
-    position: 'relative',
-    overflow: 'hidden',
-    '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '4px',
-        background: 'linear-gradient(90deg, #3B8FF3 0%, #F29F67 50%, #34B1AA 100%)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 8px 32px rgba(30, 30, 44, 0.12)',
     },
 }));
 
-const SearchField = styled(TextField)(({ theme }) => ({
-    width: '100%',
-    maxWidth: 300,
+const SearchField = styled(TextField)(() => ({
     '& .MuiOutlinedInput-root': {
-        borderRadius: '8px',
-        '& fieldset': { borderColor: 'rgba(30, 30, 44, 0.06)' },
-        '&:hover fieldset': { borderColor: '#3B8FF3' },
-        '&.Mui-focused fieldset': { borderColor: '#3B8FF3' },
+        borderRadius: '12px',
+        backgroundColor: '#fff',
+        fontSize: '1rem',
+        '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#eba748',
+        },
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#eba748',
+            borderWidth: '2px',
+        },
     },
-    [theme.breakpoints.down('sm')]: {
-        maxWidth: '100%',
+    '& .MuiInputLabel-root': {
+        color: '#6B7280',
+        fontWeight: 500,
     },
 }));
+
+const StatusChip = styled(Chip)(({ status }) => {
+    const getStatusStyles = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'active':
+                return {
+                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                    color: 'white',
+                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
+                };
+            case 'inactive':
+                return {
+                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                    color: 'white',
+                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
+                };
+            default:
+                return {
+                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                    color: 'white',
+                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
+                };
+        }
+    };
+
+    return {
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        fontSize: '0.7rem',
+        minWidth: '80px',
+        height: '24px',
+        borderRadius: '12px',
+        transition: 'all 0.2s ease',
+        ...getStatusStyles(status),
+        '&:hover': {
+            transform: 'scale(1.05)',
+        },
+    };
+});
 
 const ActionButton = styled(Button)(({ theme }) => ({
-    borderRadius: '8px',
+    borderRadius: '12px',
     textTransform: 'none',
     fontWeight: 600,
     padding: theme.spacing(1, 2),
     minWidth: 'fit-content',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+    '&:hover': {
+        transform: 'translateY(-1px)',
+        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
+    },
     [theme.breakpoints.down('sm')]: {
         padding: theme.spacing(0.75, 1.5),
         fontSize: '0.75rem',
@@ -128,12 +166,12 @@ const VideoPreviewContainer = styled(Box)(() => ({
     gap: '8px',
     padding: '8px',
     borderRadius: '8px',
-    backgroundColor: 'rgba(59, 143, 243, 0.04)',
-    border: '1px solid rgba(59, 143, 243, 0.1)',
+    backgroundColor: 'rgba(235, 167, 72, 0.04)',
+    border: '1px solid rgba(235, 167, 72, 0.1)',
     transition: 'all 0.2s ease',
     '&:hover': {
-        backgroundColor: 'rgba(59, 143, 243, 0.08)',
-        borderColor: 'rgba(59, 143, 243, 0.2)',
+        backgroundColor: 'rgba(235, 167, 72, 0.08)',
+        borderColor: 'rgba(235, 167, 72, 0.2)',
     },
 }));
 
@@ -292,7 +330,7 @@ const ManageVideos = () => {
                 <Alert severity="error" sx={{ borderRadius: '12px', backgroundColor: '#fff5f5', color: '#d32f2f' }}>
                     Failed to load videos. Please try again.
                 </Alert>
-                <Button variant="contained" onClick={() => refetch()} sx={{ mt: 2, borderRadius: '12px', background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)' }}>
+                <Button variant="contained" onClick={() => refetch()} sx={{ mt: 2, borderRadius: '12px', background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)' }}>
                     Retry
                 </Button>
             </Box>
@@ -301,7 +339,7 @@ const ManageVideos = () => {
 
     return (
         <Box p={isMobile ? 1 : 3} sx={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', minHeight: '100vh' }}>
-            <ModernCard>
+            <StyledCard>
                 <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
                     <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={isMobile ? 'flex-start' : 'center'} mb={3}>
                         <Typography variant={isMobile ? 'h6' : 'h4'} sx={{ color: '#1E1E2C', fontWeight: 700 }}>
@@ -324,11 +362,12 @@ const ManageVideos = () => {
                             />
                             <ActionButton
                                 variant="contained"
-                                onClick={() => navigate('/video/add')}
+                                onClick={() => navigate('/admin/video/add')}
                                 startIcon={<AddIcon />}
                                 sx={{
-                                    borderRadius: '8px', 
-                                    background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)',
+                                    borderRadius: '12px', 
+                                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+                                    color: 'white',
                                     fontWeight: 600 
                                 }}
                             >
@@ -339,10 +378,13 @@ const ManageVideos = () => {
                                 onClick={handleRefreshClick}
                                 startIcon={<RefreshIcon />}
                                 sx={{
-                                    borderRadius: '8px', 
-                                    color: '#6B7280', 
-                                    borderColor: '#6B7280',
-                                    fontWeight: 600 
+                                    borderRadius: '12px', 
+                                    color: '#eba748', 
+                                    borderColor: '#eba748',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                    }
                                 }}
                             >
                                 {isSmallScreen ? 'Refresh' : 'Refresh'}
@@ -399,7 +441,7 @@ const ManageVideos = () => {
                                     Showing {Math.min(visibleItems, filteredVideos.length)} of {filteredVideos.length} videos
                                 </Typography>
                             </Box>
-                            <StyledTableContainer ref={tableContainerRef}>
+                            <CompactTable ref={tableContainerRef}>
                                 <Table stickyHeader size={isSmallScreen ? 'small' : 'medium'}>
                                     <TableHead>
                                         <TableRow>
@@ -412,7 +454,7 @@ const ManageVideos = () => {
                                     <TableBody>
                                         {filteredVideos.slice(0, visibleItems).map((video) => (
                                             <TableRow key={video.id} hover>
-                                                <TableCell sx={{ fontWeight: 600, color: '#3B8FF3', padding: '16px', textAlign: 'center' }}>
+                                                <TableCell sx={{ fontWeight: 600, color: '#eba748', padding: '16px', textAlign: 'center' }}>
                                                     {video.id}
                                                 </TableCell>
                                                 <TableCell sx={{ padding: '16px', textAlign: 'center' }}>
@@ -430,8 +472,8 @@ const ManageVideos = () => {
                                                                     color="primary"
                                                                     size="small"
                                                                     sx={{
-                                                                        backgroundColor: 'rgba(59, 143, 243, 0.1)',
-                                                                        color: '#3B8FF3',
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
                                                                         fontWeight: 600
                                                                     }}
                                                                 />
@@ -455,7 +497,7 @@ const ManageVideos = () => {
                                                                         Click to preview
                                                                     </Typography>
                                                                     <Typography variant="caption" sx={{ 
-                                                                        color: '#3B8FF3',
+                                                                        color: '#eba748',
                                                                         fontSize: '0.7rem',
                                                                         display: 'block',
                                                                         mt: 0.5
@@ -486,8 +528,13 @@ const ManageVideos = () => {
                                                                     disabled={!editFile || isUpdating}
                                                                     color="success"
                                                                     sx={{
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: 'rgba(76, 175, 80, 0.08)'
+                                                                        borderRadius: '12px',
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                                            transform: 'scale(1.1)',
+                                                                        },
                                                                     }}
                                                                 >
                                                                     {isUpdating ? (
@@ -504,8 +551,13 @@ const ManageVideos = () => {
                                                                     disabled={isUpdating}
                                                                     color="default"
                                                                     sx={{
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: 'rgba(158, 158, 158, 0.08)'
+                                                                        borderRadius: '12px',
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                                            transform: 'scale(1.1)',
+                                                                        },
                                                                     }}
                                                                 >
                                                                     <CancelIcon fontSize="small" />
@@ -520,8 +572,13 @@ const ManageVideos = () => {
                                                                     onClick={() => handlePreviewClick(video)}
                                                                     color="primary"
                                                                     sx={{
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: 'rgba(59, 143, 243, 0.08)'
+                                                                        borderRadius: '12px',
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                                            transform: 'scale(1.1)',
+                                                                        },
                                                                     }}
                                                                 >
                                                                     <VisibilityIcon fontSize="small" />
@@ -534,8 +591,13 @@ const ManageVideos = () => {
                                                                     disabled={isDeleting}
                                                                     color="primary"
                                                                     sx={{
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: 'rgba(59, 143, 243, 0.08)'
+                                                                        borderRadius: '12px',
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                                            transform: 'scale(1.1)',
+                                                                        },
                                                                     }}
                                                                 >
                                                                     <EditIcon fontSize="small" />
@@ -548,8 +610,13 @@ const ManageVideos = () => {
                                                                     disabled={isDeleting}
                                                                     color="error"
                                                                     sx={{
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: 'rgba(244, 67, 54, 0.08)'
+                                                                        borderRadius: '12px',
+                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
+                                                                        color: '#eba748',
+                                                                        '&:hover': {
+                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
+                                                                            transform: 'scale(1.1)',
+                                                                        },
                                                                     }}
                                                                 >
                                                                     {isDeleting ? (
@@ -566,11 +633,11 @@ const ManageVideos = () => {
                                         ))}
                                     </TableBody>
                                 </Table>
-                            </StyledTableContainer>
+                            </CompactTable>
 
                             {isLoadingMore && (
                                 <Box mt={3} display="flex" justifyContent="center" alignItems="center">
-                                    <CircularProgress size={20} sx={{ color: '#3B8FF3' }} />
+                                    <CircularProgress size={20} sx={{ color: '#eba748' }} />
                                     <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, ml: 1 }}>
                                         Loading more videos...
                                     </Typography>
@@ -579,7 +646,7 @@ const ManageVideos = () => {
                         </>
                     )}
                 </CardContent>
-            </ModernCard>
+            </StyledCard>
         </Box>
     );
 };

@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import classes from './UserDetails.module.css';
+import React, { useState, useEffect, useCallback, useMemo, useContext } from 'react';
+import { MyContext } from '../../context/themeContext/themeContext';
 import dashBoardDetailsService from '../../service/dashBoardDetailsService';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { saveAs } from 'file-saver';
-import { 
-  FaFileExcel, 
-  FaFilePdf, 
-  FaPrint, 
-  FaSearch, 
-  FaSyncAlt, 
+import {
+  FaFileExcel,
+  FaFilePdf,
+  FaPrint,
+  FaSearch,
+  FaSyncAlt,
   FaFilter,
   FaEllipsisV,
   FaChevronDown,
@@ -20,8 +20,10 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { debounce } from 'lodash';
 import { useMediaQuery } from 'react-responsive';
+import classes from './UserDetails.module.css';
 
 function UserDetails() {
+  const { themeMode } = useContext(MyContext);
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [error, setError] = useState(null);
@@ -92,11 +94,11 @@ function UserDetails() {
     if (!sortConfig.key) return filteredUsers;
 
     return [...filteredUsers].sort((a, b) => {
-      const aValue = Array.isArray(a[sortConfig.key]) 
-        ? a[sortConfig.key].join(', ') 
+      const aValue = Array.isArray(a[sortConfig.key])
+        ? a[sortConfig.key].join(', ')
         : a[sortConfig.key] || '';
-      const bValue = Array.isArray(b[sortConfig.key]) 
-        ? b[sortConfig.key].join(', ') 
+      const bValue = Array.isArray(b[sortConfig.key])
+        ? b[sortConfig.key].join(', ')
         : b[sortConfig.key] || '';
 
       if (aValue < bValue) {
@@ -181,8 +183,6 @@ function UserDetails() {
       setError('Failed to generate Excel file. Please try again.');
     }
   }, [filteredUsers]);
-
-
 
   const handleExportPDF = useCallback(() => {
     if (filteredUsers.length === 0) {
@@ -271,7 +271,6 @@ function UserDetails() {
       setError('Failed to generate PDF. Please try again.');
     }
   }, [filteredUsers]);
-  
 
   const handlePrint = useCallback(() => {
     if (filteredUsers.length === 0) {
@@ -292,19 +291,19 @@ function UserDetails() {
           <style>
               @page { size: A4 landscape; margin: 10mm; }
               body { 
-                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                  font-family: var(--font-primary); 
                   margin: 0; 
                   padding: 20px; 
-                  color: #333;
-                  background-color: #fff;
+                  color: var(--primary-text-color);
+                  background-color: var(--card-background-color);
               }
               .print-header { 
                   margin-bottom: 20px; 
                   padding-bottom: 15px; 
-                  border-bottom: 2px solid #eee;
+                  border-bottom: 2px solid var(--border-color);
               }
               .print-header h2 { 
-                  color: #336699;
+                  color: var(--primary-color);
                   margin: 0 0 5px 0;
                   font-size: 24px;
               }
@@ -312,7 +311,7 @@ function UserDetails() {
                   display: flex;
                   justify-content: space-between;
                   font-size: 12px;
-                  color: #666;
+                  color: var(--secondary-text-color);
               }
               .print-table { 
                   width: 100%; 
@@ -322,7 +321,7 @@ function UserDetails() {
                   table-layout: fixed;
               }
               .print-table th { 
-                  background-color: #336699;
+                  background-color: var(--primary-color);
                   color: white;
                   font-weight: 600;
                   text-align: left;
@@ -332,21 +331,21 @@ function UserDetails() {
               }
               .print-table td { 
                   padding: 8px 10px;
-                  border-bottom: 1px solid #eee;
+                  border-bottom: 1px solid var(--border-color);
                   word-wrap: break-word;
               }
               .print-table tr:nth-child(even) {
-                  background-color: #f9f9f9;
+                  background-color: var(--active-bg);
               }
               .print-table tr:hover {
-                  background-color: #f1f1f1;
+                  background-color: rgba(0, 0, 0, 0.05);
               }
               .print-footer {
                   margin-top: 20px;
                   padding-top: 10px;
-                  border-top: 1px solid #eee;
+                  border-top: 1px solid var(--border-color);
                   font-size: 11px;
-                  color: #777;
+                  color: var(--secondary-text-color);
                   text-align: right;
               }
               @media print {
@@ -416,7 +415,7 @@ function UserDetails() {
 
   // Mobile user card component
   const MobileUserCard = ({ user }) => (
-    <motion.div 
+    <motion.div
       className={classes.mobileCard}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -426,13 +425,12 @@ function UserDetails() {
       <div className={classes.mobileCardHeader}>
         <div className={classes.mobileUserInfo}>
           <span className={classes.mobileUsername}>{user.username}</span>
-        
         </div>
         {selectedUser?.id === user.id ? <FaChevronUp /> : <FaChevronDown />}
       </div>
 
       {selectedUser?.id === user.id && (
-        <motion.div 
+        <motion.div
           className={classes.mobileCardDetails}
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
@@ -475,7 +473,7 @@ function UserDetails() {
   );
 
   return (
-    <div className={classes.container}>
+    <div className={`${classes.container} ${themeMode === 'dark' ? classes.dark : ''}`}>
       <div className={classes.header}>
         <div className={classes.titleGroup}>
           <h1 className={classes.heading}>User Management</h1>
@@ -493,7 +491,7 @@ function UserDetails() {
               value={searchTerm}
             />
             {searchTerm && (
-              <button 
+              <button
                 className={classes.clearSearchButton}
                 onClick={() => setSearchTerm('')}
               >
@@ -562,7 +560,7 @@ function UserDetails() {
 
               <AnimatePresence>
                 {showMobileMenu && (
-                  <motion.div 
+                  <motion.div
                     className={classes.mobileMenu}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -714,7 +712,7 @@ function UserDetails() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.05, duration: 0.3 }}
-                          whileHover={{ backgroundColor: 'rgba(51, 102, 153, 0.05)' }}
+                          whileHover={{ backgroundColor: 'var(--active-bg)' }}
                         >
                           {columns.map(column => column.visible && (
                             <td key={column.key} className={classes.dataCell}>
@@ -744,7 +742,6 @@ function UserDetails() {
                                   )}
                                 </div>
                               )}
-                            
                               {column.key === 'id' && user.id}
                             </td>
                           ))}
@@ -759,7 +756,7 @@ function UserDetails() {
                       {searchTerm && ' (filtered)'}
                     </div>
                     <div className={classes.footerControls}>
-                      <button 
+                      <button
                         className={classes.columnToggle}
                         onClick={() => setShowMobileMenu(!showMobileMenu)}
                       >
@@ -767,7 +764,7 @@ function UserDetails() {
                       </button>
                       <AnimatePresence>
                         {showMobileMenu && (
-                          <motion.div 
+                          <motion.div
                             className={classes.columnMenu}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}

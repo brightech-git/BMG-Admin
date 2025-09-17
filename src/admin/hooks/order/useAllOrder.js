@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { orderService } from "../../service/orderService";
+import { getOrderStatus } from "../../service/orderService";
 
 // 🔹 1. Get All Orders (paginated)
 export const useAllOrders = (page, size) => {
@@ -44,5 +45,23 @@ export const useOrdersByDateRange = (startDate, endDate) => {
             return response.data; // Make sure to return response.data
         },
         enabled: !!startDate && !!endDate,
+    });
+};
+
+export const useOrdersByStatus = (status, page, size) => {
+    return useQuery({
+        queryKey: ["getOrdersByStatus", status, page, size],
+        queryFn: () => orderService.getOrdersByStatus(status, page, size),
+        enabled: !!status && page !== undefined && size !== undefined, // only run when valid inputs
+        select: (res) => res.data, // optional: unwrap .data directly
+    });
+};
+
+export const useOrderStatus = (orderId, trackingId) => {
+    return useQuery({
+        queryKey: ["orderStatus", orderId, trackingId],
+        queryFn: () => getOrderStatus(orderId, trackingId),
+        enabled: !!orderId && !!trackingId, // only run if both exist
+        refetchInterval: 60 * 1000, // refresh every 1 min
     });
 };

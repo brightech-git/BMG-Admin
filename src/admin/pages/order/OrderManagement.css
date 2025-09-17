@@ -1,4 +1,4 @@
-/* OrderManagement.css - Upgraded with Brand Colors */
+/* OrderManagement.css - Employee Module Theme */
 
 /* Main container */
 .order-management-container {
@@ -15,12 +15,12 @@
 }
 
 .MuiTableHead-root {
-    background-color: #1E1E2C !important; /* Dark navy for header */
+    background: linear-gradient(135deg, #fdf1e8 0%, #f5e6d4 100%) !important; /* Employee theme header */
 }
 
 .MuiTableCell-head {
     font-weight: 600;
-    color: #FFFFFF !important; /* White text on dark header */
+    color: #1a1a1a !important; /* Dark text on light header */
     font-size: 0.875rem;
 }
 
@@ -40,7 +40,7 @@
 }
 
 .MuiTableRow-root:hover {
-    background-color: rgba(242, 159, 103, 0.05) !important; /* Subtle orange tint on hover */
+    background-color: rgba(235, 167, 72, 0.04) !important; /* Employee theme hover */
 }
 
 /* Pagination styles */
@@ -70,30 +70,37 @@
 
 /* Button styles */
 .MuiButton-contained {
-    background-color: #F29F67 !important; /* Orange primary button */
+    background: linear-gradient(135deg, #eba748 0%, #e09a3a 100%) !important; /* Employee theme button */
     color: #FFFFFF !important;
-    border-radius: 8px !important;
+    border-radius: 12px !important;
     font-weight: 600 !important;
     text-transform: none !important;
-    box-shadow: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
     padding: 8px 16px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .MuiButton-contained:hover {
-    background-color: #e08f5a !important; /* Darker orange on hover */
+    background: linear-gradient(135deg, #e09a3a 0%, #d18a2a 100%) !important; /* Employee theme hover */
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
 }
 
 .MuiButton-outlined {
-    border-color: #368FF3 !important; /* Blue border */
-    color: #368FF3 !important;
-    border-radius: 8px !important;
-    font-weight: 500 !important;
+    border-color: #eba748 !important; /* Employee theme border */
+    color: #eba748 !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
     text-transform: none !important;
-    padding: 6px 12px !important;
+    padding: 8px 16px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .MuiButton-outlined:hover {
-    background-color: rgba(54, 143, 243, 0.08) !important;
+    background-color: rgba(235, 167, 72, 0.05) !important;
+    border-color: #e09a3a !important;
+    color: #e09a3a !important;
+    transform: translateY(-1px) !important;
 }
 
 /* Modal styles */
@@ -105,9 +112,9 @@
 .MuiDialogTitle-root {
     padding: 20px 24px !important;
     border-bottom: 1px solid rgba(30, 30, 44, 0.1) !important;
-    background-color: #1E1E2C !important;
+    background: linear-gradient(135deg, #eba748 0%, #e09a3a 100%) !important;
     color: #FFFFFF !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
 }
 
 .MuiDialogContent-root {
@@ -148,8 +155,12 @@
 }
 
 .Mui-focused .MuiOutlinedInput-notchedOutline {
-    border-color: #368FF3 !important; /* Blue focus */
+    border-color: #eba748 !important; /* Employee theme focus */
     border-width: 1px !important;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+    border-color: #eba748 !important;
 }
 
 /* Responsive adjustments */

@@ -51,9 +51,10 @@ const ModernButton = styled(Button)(({ variant: buttonVariant, color }) => ({
         boxShadow: buttonVariant === 'contained' ? '0 6px 20px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
     },
     ...(color === 'primary' && {
-        background: 'linear-gradient(135deg, #3B8FF3 0%, #2a7bd9 100%)',
+        background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
+        color: 'white',
         '&:hover': {
-            background: 'linear-gradient(135deg, #2a7bd9 0%, #1e5fb8 100%)',
+            background: 'linear-gradient(135deg, #e09a3a 0%, #d48a2c 100%)',
         }
     }),
     ...(color === 'secondary' && {
@@ -70,10 +71,10 @@ const RateInputField = styled(TextField)(() => ({
         backgroundColor: '#fff',
         fontSize: '1rem',
         '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#3B8FF3',
+            borderColor: '#eba748',
         },
         '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#3B8FF3',
+            borderColor: '#eba748',
             borderWidth: '2px',
         },
     },
@@ -150,101 +151,168 @@ const AddRates = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                padding: { xs: 2, sm: 4, md: 6 },
             }}
         >
-            <ModernCard sx={{ maxWidth: 600, width: '100%' }}>
-                <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
+            <ModernCard sx={{ 
+                maxWidth: { xs: '100%', sm: 800, md: 900, lg: 1000 }, 
+                width: '100%',
+                margin: 'auto'
+            }}>
+                <CardContent sx={{ p: { xs: 3, sm: 5, md: 6 } }}>
                     {/* Header Section */}
-                    <Box textAlign="center" mb={4}>
+                    <Box textAlign="center" mb={5}>
                         <Typography 
-                            variant="h4" 
-                            sx={{ color: '#1E1E2C', fontWeight: 700, mb: 1 }}
+                            variant="h3" 
+                            sx={{ 
+                                color: '#1E1E2C', 
+                                fontWeight: 800, 
+                                mb: 2,
+                                fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' },
+                                background: 'linear-gradient(135deg, #1E1E2C 0%, #eba748 100%)',
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent'
+                            }}
                         >
                             Add New Rate
                         </Typography>
                         <Typography 
                             variant="body1" 
-                            sx={{ color: '#6B7280', fontSize: '1.1rem' }}
+                            sx={{ 
+                                color: '#6B7280', 
+                                fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
+                                maxWidth: '600px',
+                                margin: '0 auto'
+                            }}
                         >
-                            Enter gold and silver rates for the platform
+                            Enter gold and silver rates for the platform with comprehensive details
                         </Typography>
                     </Box>
 
                     {/* Gold Rate Input */}
-                    <Box mb={3}>
-                        <Typography
-                            variant="body2"
-                            sx={{ color: '#1E1E2C', fontWeight: 600, mb: 1, fontSize: '0.95rem', textAlign: 'left' }}
-                        >
-                            Gold Rate (per gram)
-                            <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
-                        </Typography>
-                        <RateInputField
-                            placeholder="Enter gold rate"
-                            value={goldRate}
-                            onChange={(e) => setGoldRate(e.target.value)}
-                            type="number"
-                            step="0.01"
-                            fullWidth
-                            variant="outlined"
-                            InputProps={{
-                                startAdornment: (
-                                    <Box sx={{ color: '#F29F67', mr: 1 }}>
-                                        ₹
-                                    </Box>
-                                ),
-                            }}
-                        />
+                    <Box mb={4}>
+                        <Box sx={{ 
+                            backgroundColor: 'rgba(235, 167, 72, 0.05)', 
+                            p: 2, 
+                            borderRadius: '12px',
+                            border: '1px solid rgba(235, 167, 72, 0.1)'
+                        }}>
+                            <Typography
+                                variant="body2"
+                                sx={{ 
+                                    color: '#1E1E2C', 
+                                    fontWeight: 700, 
+                                    mb: 2, 
+                                    fontSize: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1
+                                }}
+                            >
+                                <MoneyIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
+                                Gold Rate (per gram)
+                                <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                            </Typography>
+                            <RateInputField
+                                placeholder="Enter gold rate"
+                                value={goldRate}
+                                onChange={(e) => setGoldRate(e.target.value)}
+                                type="number"
+                                step="0.01"
+                                fullWidth
+                                variant="outlined"
+                                InputProps={{
+                                    startAdornment: (
+                                        <Box sx={{ color: '#F29F67', mr: 1 }}>
+                                            ₹
+                                        </Box>
+                                    ),
+                                }}
+                            />
+                        </Box>
                     </Box>
 
                     {/* Silver Rate Input */}
-                    <Box mb={3}>
-                        <Typography
-                            variant="body2"
-                            sx={{ color: '#1E1E2C', fontWeight: 600, mb: 1, fontSize: '0.95rem', textAlign: 'left' }}
-                        >
-                            Silver Rate (per gram)
-                            <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
-                        </Typography>
-                        <RateInputField
-                            placeholder="Enter silver rate"
-                            value={silverRate}
-                            onChange={(e) => setSilverRate(e.target.value)}
-                            type="number"
-                            step="0.01"
-                            fullWidth
-                            variant="outlined"
-                            InputProps={{
-                                startAdornment: (
-                                    <Box sx={{ color: '#34B1AA', mr: 1 }}>
-                                        ₹
-                                    </Box>
-                                ),
-                            }}
-                        />
+                    <Box mb={4}>
+                        <Box sx={{ 
+                            backgroundColor: 'rgba(235, 167, 72, 0.05)', 
+                            p: 2, 
+                            borderRadius: '12px',
+                            border: '1px solid rgba(235, 167, 72, 0.1)'
+                        }}>
+                            <Typography
+                                variant="body2"
+                                sx={{ 
+                                    color: '#1E1E2C', 
+                                    fontWeight: 700, 
+                                    mb: 2, 
+                                    fontSize: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1
+                                }}
+                            >
+                                <MoneyIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
+                                Silver Rate (per gram)
+                                <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                            </Typography>
+                            <RateInputField
+                                placeholder="Enter silver rate"
+                                value={silverRate}
+                                onChange={(e) => setSilverRate(e.target.value)}
+                                type="number"
+                                step="0.01"
+                                fullWidth
+                                variant="outlined"
+                                InputProps={{
+                                    startAdornment: (
+                                        <Box sx={{ color: '#34B1AA', mr: 1 }}>
+                                            ₹
+                                        </Box>
+                                    ),
+                                }}
+                            />
+                        </Box>
                     </Box>
 
                     {/* Created By Input */}
-                    <Box mb={3}>
-                        <Typography
-                            variant="body2"
-                            sx={{ color: '#1E1E2C', fontWeight: 600, mb: 1, fontSize: '0.95rem', textAlign: 'left' }}
-                        >
-                            Created By
-                            <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
-                        </Typography>
-                        <RateInputField
-                            placeholder="Enter your name"
-                            value={createdBy}
-                            onChange={(e) => setCreatedBy(e.target.value)}
-                            fullWidth
-                            variant="outlined"
-                            inputProps={{ maxLength: 50 }}
-                        />
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                            <Typography variant="caption" sx={{ color: '#6B7280' }}>
-                                {createdBy.length}/50 characters
+                    <Box mb={4}>
+                        <Box sx={{ 
+                            backgroundColor: 'rgba(235, 167, 72, 0.05)', 
+                            p: 2, 
+                            borderRadius: '12px',
+                            border: '1px solid rgba(235, 167, 72, 0.1)'
+                        }}>
+                            <Typography
+                                variant="body2"
+                                sx={{ 
+                                    color: '#1E1E2C', 
+                                    fontWeight: 700, 
+                                    mb: 2, 
+                                    fontSize: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1
+                                }}
+                            >
+                                <MoneyIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
+                                Created By
+                                <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
                             </Typography>
+                            <RateInputField
+                                placeholder="Enter your name"
+                                value={createdBy}
+                                onChange={(e) => setCreatedBy(e.target.value)}
+                                fullWidth
+                                variant="outlined"
+                                inputProps={{ maxLength: 50 }}
+                            />
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                                <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                                    {createdBy.length}/50 characters
+                                </Typography>
+                            </Box>
                         </Box>
                     </Box>
 
@@ -357,7 +425,7 @@ const AddRates = () => {
                     )}
 
                     {/* Action Buttons */}
-                    <Box display="flex" justifyContent="center" gap={2} mt={4}>
+                    <Box display="flex" justifyContent="center" gap={3} mt={6}>
                         <ModernButton
                             variant="outlined"
                             onClick={() => {
@@ -368,13 +436,18 @@ const AddRates = () => {
                             }}
                             disabled={isLoading}
                             sx={{
-                                minWidth: '120px',
-                                height: '48px',
-                                borderColor: '#6B7280',
-                                color: '#6B7280',
+                                minWidth: '140px',
+                                height: '56px',
+                                borderColor: '#eba748',
+                                color: '#eba748',
+                                fontSize: '1.1rem',
+                                fontWeight: 600,
+                                borderRadius: '12px',
                                 '&:hover': {
-                                    borderColor: '#4B5563',
-                                    color: '#4B5563',
+                                    borderColor: '#e09a3a',
+                                    color: '#e09a3a',
+                                    backgroundColor: 'rgba(235, 167, 72, 0.05)',
+                                    transform: 'translateY(-2px)',
                                 },
                             }}
                         >
@@ -386,30 +459,31 @@ const AddRates = () => {
                             variant="contained"
                             color="primary"
                             disabled={isLoading || !goldRate || !silverRate || !createdBy.trim()}
-                            startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
+                            startIcon={isLoading ? <CircularProgress size={24} color="inherit" /> : <AddIcon />}
                             sx={{
-                                minWidth: '200px',
-                                height: '48px',
-                                fontSize: '1rem',
+                                minWidth: '220px',
+                                height: '56px',
+                                fontSize: '1.1rem',
                                 fontWeight: 700,
                                 borderRadius: '16px',
-                                background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 50%, #F29F67 100%)',
-                                boxShadow: '0 8px 24px rgba(59, 143, 243, 0.25)',
+                                background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 50%, #d48a2c 100%)',
+                                boxShadow: '0 8px 24px rgba(235, 167, 72, 0.25)',
                                 textTransform: 'none',
                                 letterSpacing: '0.5px',
+                                color: 'white',
                                 '&:hover': {
-                                    background: 'linear-gradient(135deg, #2a7bd9 0%, #2a9891 50%, #e08f5a 100%)',
+                                    background: 'linear-gradient(135deg, #e09a3a 0%, #d48a2c 50%, #c47a1c 100%)',
                                     transform: 'translateY(-3px)',
-                                    boxShadow: '0 12px 32px rgba(59, 143, 243, 0.4)',
+                                    boxShadow: '0 12px 32px rgba(235, 167, 72, 0.4)',
                                 },
                                 '&:disabled': {
-                                    background: 'linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%)',
+                                    background: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)',
                                     color: '#9e9e9e',
                                     transform: 'none',
                                     boxShadow: 'none',
                                 },
                                 '& .MuiButton-startIcon': {
-                                    marginRight: '8px',
+                                    marginRight: '10px',
                                 },
                             }}
                         >
