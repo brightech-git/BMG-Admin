@@ -633,7 +633,7 @@ const QualityChecking = () => {
                                 <Link to="/">Dashboard</Link>
                             </li>
                             <li className="breadcrumb-item active" aria-current="page">
-                                Manage Orders
+                                Manage QC Orders
                             </li>
                         </ol>
                     </nav>
@@ -763,7 +763,7 @@ const QualityChecking = () => {
                                                             sx={{
                                                                 fontWeight: 600,
                                                                 color: 'var(--primary-color)',
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                             }}
                                                         >
@@ -777,7 +777,7 @@ const QualityChecking = () => {
                                                                 sx={{
                                                                     fontWeight: 600,
                                                                     color: 'var(--primary-text-color)',
-                                                                    fontFamily: 'var(--font-primary)',
+                                                                    fontFamily: 'var(--font-secondary)',
                                                                     fontSize: 'var(--font-size-xs)',
                                                                 }}
                                                             >
@@ -787,7 +787,7 @@ const QualityChecking = () => {
                                                                 variant="caption"
                                                                 sx={{
                                                                     color: 'var(--secondary-text-color)',
-                                                                    fontFamily: 'var(--font-primary)',
+                                                                    fontFamily: 'var(--font-secondary)',
                                                                     fontSize: 'var(--font-size-xs)',
                                                                 }}
                                                             >
@@ -801,7 +801,7 @@ const QualityChecking = () => {
                                                             sx={{
                                                                 fontWeight: 700,
                                                                 color: 'var(--primary-color)',
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                             }}
                                                         >
@@ -822,7 +822,7 @@ const QualityChecking = () => {
                                                             sx={{
                                                                 fontWeight: 500,
                                                                 color: 'var(--primary-text-color)',
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                             }}
                                                         >
@@ -832,7 +832,7 @@ const QualityChecking = () => {
                                                             variant="caption"
                                                             sx={{
                                                                 color: 'var(--secondary-text-color)',
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                             }}
                                                         >
@@ -847,7 +847,7 @@ const QualityChecking = () => {
                                                                 backgroundColor: 'var(--info-color)',
                                                                 color: 'var(--text-dark)',
                                                                 fontWeight: 600,
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                             }}
                                                         />
@@ -950,7 +950,7 @@ const QualityChecking = () => {
                                                                             '& .MuiTableCell-root': {
                                                                                 borderBottom: '1px solid var(--border-color)',
                                                                                 padding: 'var(--spacing-sm) var(--spacing-md)',
-                                                                                fontFamily: 'var(--font-primary)',
+                                                                                fontFamily: 'var(--font-secondary)',
                                                                                 fontSize: 'var(--font-size-sm)',
                                                                             },
                                                                         }}
@@ -1021,7 +1021,7 @@ const QualityChecking = () => {
                                                                                                 sx={{
                                                                                                     color: 'var(--primary-text-color)',
                                                                                                     fontWeight: 500,
-                                                                                                    fontFamily: 'var(--font-primary)',
+                                                                                                    fontFamily: 'var(--font-secondary)',
                                                                                                     fontSize: 'var(--font-size-xs)',
                                                                                                 }}
                                                                                             >
@@ -1052,7 +1052,7 @@ const QualityChecking = () => {
                                                                                                 sx={{
                                                                                                     color: 'var(--secondary-text-color)',
                                                                                                     fontWeight: 500,
-                                                                                                    fontFamily: 'var(--font-primary)',
+                                                                                                    fontFamily: 'var(--font-secondary)',
                                                                                                     fontSize: 'var(--font-size-sm)',
                                                                                                 }}
                                                                                             >
@@ -1065,7 +1065,7 @@ const QualityChecking = () => {
                                                                                                 sx={{
                                                                                                     color: 'var(--primary-color)',
                                                                                                     fontWeight: 700,
-                                                                                                    fontFamily: 'var(--font-primary)',
+                                                                                                    fontFamily: 'var(--font-secondary)',
                                                                                                     fontSize: 'var(--font-size-sm)',
                                                                                                 }}
                                                                                             >
@@ -1088,7 +1088,7 @@ const QualityChecking = () => {
                                                                                             fontWeight: 700,
                                                                                             color: 'var(--primary-text-color)',
                                                                                             textAlign: 'right',
-                                                                                            fontFamily: 'var(--font-primary)',
+                                                                                            fontFamily: 'var(--font-secondary)',
                                                                                             fontSize: 'var(--font-size-sm)',
                                                                                         }}
                                                                                     >
@@ -1101,7 +1101,7 @@ const QualityChecking = () => {
                                                                                         sx={{
                                                                                             color: 'var(--primary-color)',
                                                                                             fontWeight: 700,
-                                                                                            fontFamily: 'var(--font-primary)',
+                                                                                            fontFamily: 'var(--font-secondary)',
                                                                                             fontSize: 'var(--font-size-lg)',
                                                                                         }}
                                                                                     >
@@ -1191,7 +1191,7 @@ const QualityChecking = () => {
                                         sx={{
                                             color: 'var(--secondary-text-color)',
                                             fontWeight: 500,
-                                            fontFamily: 'var(--font-primary)',
+                                            fontFamily: 'var(--font-secondary)',
                                             fontSize: 'var(--font-size-sm)',
                                         }}
                                     >
@@ -1205,7 +1205,7 @@ const QualityChecking = () => {
                                                 borderRadius: 'var(--border-radius-md)',
                                                 fontSize: 'var(--font-size-sm)',
                                                 backgroundColor: 'var(--background-color)',
-                                                fontFamily: 'var(--font-primary)',
+                                                fontFamily: 'var(--font-secondary)',
                                                 color: 'var(--primary-text-color)',
                                                 '& .MuiOutlinedInput-root': {
                                                     border: '1px solid var(--border-color)',
@@ -1304,7 +1304,7 @@ const QualityChecking = () => {
                                             <TableCell
                                                 sx={{
                                                     width: '25%',
-                                                    fontFamily: 'var(--font-primary)',
+                                                    fontFamily: 'var(--font-secondary)',
                                                     fontSize: 'var(--font-size-xs)',
                                                     color: 'var(--primary-text-color)',
                                                 }}
@@ -1325,7 +1325,7 @@ const QualityChecking = () => {
                                             <TableCell
                                                 sx={{
                                                     width: '25%',
-                                                    fontFamily: 'var(--font-primary)',
+                                                    fontFamily: 'var(--font-secondary)',
                                                     fontSize: 'var(--font-size-xs)',
                                                     color: 'var(--primary-text-color)',
                                                 }}
@@ -1346,7 +1346,7 @@ const QualityChecking = () => {
                                             </TableCell>
                                             <TableCell
                                                 sx={{
-                                                    fontFamily: 'var(--font-primary)',
+                                                    fontFamily: 'var(--font-secondary)',
                                                     fontSize: 'var(--font-size-xs)',
                                                     color: 'var(--primary-text-color)',
                                                 }}
@@ -1365,7 +1365,7 @@ const QualityChecking = () => {
                                             </TableCell>
                                             <TableCell
                                                 sx={{
-                                                    fontFamily: 'var(--font-primary)',
+                                                    fontFamily: 'var(--font-secondary)',
                                                     fontSize: 'var(--font-size-xs)',
                                                     color: 'var(--primary-text-color)',
                                                 }}
@@ -1386,7 +1386,7 @@ const QualityChecking = () => {
                                             </TableCell>
                                             <TableCell
                                                 sx={{
-                                                    fontFamily: 'var(--font-primary)',
+                                                    fontFamily: 'var(--font-secondary)',
                                                     fontSize: 'var(--font-size-xs)',
                                                     color: 'var(--primary-text-color)',
                                                 }}
@@ -1421,7 +1421,7 @@ const QualityChecking = () => {
                                             </TableCell>
                                             <TableCell
                                                 sx={{
-                                                    fontFamily: 'var(--font-primary)',
+                                                    fontFamily: 'var(--font-secondary)',
                                                     fontSize: 'var(--font-size-xs)',
                                                     color: 'var(--primary-text-color)',
                                                 }}
@@ -1529,7 +1529,7 @@ const QualityChecking = () => {
                                             <TableRow key={index}>
                                                 <TableCell
                                                     sx={{
-                                                        fontFamily: 'var(--font-primary)',
+                                                        fontFamily: 'var(--font-secondary)',
                                                         fontSize: 'var(--font-size-xs)',
                                                         color: 'var(--primary-text-color)',
                                                     }}
@@ -1538,7 +1538,7 @@ const QualityChecking = () => {
                                                 </TableCell>
                                                 <TableCell
                                                     sx={{
-                                                        fontFamily: 'var(--font-primary)',
+                                                        fontFamily: 'var(--font-secondary)',
                                                         fontSize: 'var(--font-size-xs)',
                                                         color: 'var(--primary-text-color)',
                                                     }}
@@ -1573,7 +1573,7 @@ const QualityChecking = () => {
                                                                 variant="caption"
                                                                 sx={{
                                                                     color: 'var(--secondary-text-color)',
-                                                                    fontFamily: 'var(--font-primary)',
+                                                                    fontFamily: 'var(--font-secondary)',
                                                                     fontSize: 'var(--font-size-xs)',
                                                                 }}
                                                             >
@@ -1584,7 +1584,7 @@ const QualityChecking = () => {
                                                 </TableCell>
                                                 <TableCell
                                                     sx={{
-                                                        fontFamily: 'var(--font-primary)',
+                                                        fontFamily: 'var(--font-secondary)',
                                                         fontSize: 'var(--font-size-xs)',
                                                         color: 'var(--primary-text-color)',
                                                     }}
@@ -1594,7 +1594,7 @@ const QualityChecking = () => {
                                                 <TableCell
                                                     align="right"
                                                     sx={{
-                                                        fontFamily: 'var(--font-primary)',
+                                                        fontFamily: 'var(--font-secondary)',
                                                         fontSize: 'var(--font-size-xs)',
                                                         color: 'var(--primary-text-color)',
                                                     }}
@@ -1604,7 +1604,7 @@ const QualityChecking = () => {
                                                 <TableCell
                                                     align="right"
                                                     sx={{
-                                                        fontFamily: 'var(--font-primary)',
+                                                        fontFamily: 'var(--font-secondary)',
                                                         fontSize: 'var(--font-size-xs)',
                                                         color: 'var(--primary-text-color)',
                                                     }}
@@ -1631,7 +1631,7 @@ const QualityChecking = () => {
                                                 sx={{
                                                     fontWeight: 'bold',
                                                     color: 'var(--text-dark)',
-                                                    fontFamily: 'var(--font-primary)',
+                                                    fontFamily: 'var(--font-secondary)',
                                                     fontSize: 'var(--font-size-xs)',
                                                 }}
                                             >
@@ -1767,7 +1767,7 @@ const QualityChecking = () => {
                                                     sx={{
                                                         color: 'var(--primary-text-color)',
                                                         fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
+                                                        fontFamily: 'var(--font-secondary)',
                                                         fontSize: 'var(--font-size-xs)',
                                                     }}
                                                 >
@@ -1795,7 +1795,7 @@ const QualityChecking = () => {
                                                         size="small"
                                                         sx={{
                                                             fontWeight: 600,
-                                                            fontFamily: 'var(--font-primary)',
+                                                            fontFamily: 'var(--font-secondary)',
                                                             fontSize: 'var(--font-size-xs)',
                                                             backgroundColor: `var(--warning-color)`,
                                                             color: 'var(--secondary-text-color)',
@@ -1822,7 +1822,7 @@ const QualityChecking = () => {
                                                     sx={{
                                                         color: 'var(--primary-text-color)',
                                                         fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
+                                                        fontFamily: 'var(--font-secondary)',
                                                         fontSize: 'var(--font-size-xs)',
                                                     }}
                                                 >
@@ -1848,7 +1848,7 @@ const QualityChecking = () => {
                                                     sx={{
                                                         color: 'var(--secondary-text-color)',
                                                         fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
+                                                        fontFamily: 'var(--font-secondary)',
                                                         fontSize: 'var(--font-size-xs)',
                                                     }}
                                                 >
@@ -1874,7 +1874,7 @@ const QualityChecking = () => {
                                                     sx={{
                                                         color: 'var(--success-color)',
                                                         fontWeight: 600,
-                                                        fontFamily: 'var(--font-primary)',
+                                                        fontFamily: 'var(--font-secondary)',
                                                         fontSize: 'var(--font-size-xs)',
                                                     }}
                                                 >
@@ -1899,7 +1899,7 @@ const QualityChecking = () => {
                                                     variant="body2"
                                                     sx={{
                                                         color: 'var(--primary-text-color)',
-                                                        fontFamily: 'var(--font-primary)',
+                                                        fontFamily: 'var(--font-secondary)',
                                                         fontSize: 'var(--font-size-xs)',
                                                     }}
                                                 >
@@ -1937,7 +1937,7 @@ const QualityChecking = () => {
                                             variant="body2"
                                             sx={{
                                                 color: 'var(--secondary-text-color)',
-                                                fontFamily: 'var(--font-primary)',
+                                                fontFamily: 'var(--font-secondary)',
                                                 fontSize: 'var(--font-size-xs)',
                                             }}
                                         >
@@ -1955,7 +1955,7 @@ const QualityChecking = () => {
                                                 backgroundColor: 'var(--error-color)',
                                                 color: 'var(--text-dark)',
                                                 borderRadius: 'var(--border-radius-md)',
-                                                fontFamily: 'var(--font-primary)',
+                                                fontFamily: 'var(--font-secondary)',
                                                 fontSize: 'var(--font-size-xs)',
                                                 '& .MuiAlert-icon': { fontSize: 'var(--font-size-xs)' },
                                             }}
@@ -1986,7 +1986,7 @@ const QualityChecking = () => {
                                                         value="IN_PROCESSING"
                                                         control={<Radio sx={{ color: 'var(--primary-color)', '& .MuiSvgIcon-root': { fontSize: 'var(--font-size-xs)' } }} />}
                                                         label={
-                                                            <Typography sx={{ fontFamily: 'var(--font-primary)', fontSize: 'var(--font-size-xs)' , color: 'var(--primary-text-color)' }}>
+                                                            <Typography sx={{ fontFamily: 'var(--font-secondary)', fontSize: 'var(--font-size-xs)' , color: 'var(--primary-text-color)' }}>
                                                                 Move to Packing
                                                             </Typography>
                                                         }
@@ -1995,7 +1995,7 @@ const QualityChecking = () => {
                                                         value="CANCELLED"
                                                         control={<Radio sx={{ color: 'var(--primary-color)', '& .MuiSvgIcon-root': { fontSize: 'var(--font-size-xs)' } }} />}
                                                         label={
-                                                            <Typography sx={{ fontFamily: 'var(--font-primary)', fontSize: 'var(--font-size-xs)', color: 'var(--primary-text-color)' }}>
+                                                            <Typography sx={{ fontFamily: 'var(--font-secondary)', fontSize: 'var(--font-size-xs)', color: 'var(--primary-text-color)' }}>
                                                                 Cancel Order
                                                             </Typography>
                                                         }
@@ -2067,7 +2067,7 @@ const QualityChecking = () => {
                                                             variant="body2"
                                                             sx={{
                                                                 color: 'var(--secondary-text-color)',
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                             }}
                                                         >
@@ -2079,7 +2079,7 @@ const QualityChecking = () => {
                                                             size="small"
                                                             sx={{
                                                                 fontWeight: 600,
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                                 backgroundColor: `var(--${getStatusColor(selectedOrder.status)}-color)`,
                                                                 color: 'var(--primary-text-color)',
@@ -2094,7 +2094,7 @@ const QualityChecking = () => {
                                                             variant="body2"
                                                             sx={{
                                                                 color: 'var(--secondary-text-color)',
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                             }}
                                                         >
@@ -2106,7 +2106,7 @@ const QualityChecking = () => {
                                                             size="small"
                                                             sx={{
                                                                 fontWeight: 600,
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                                 backgroundColor: editForm.status ? `var(--${getStatusColor(editForm.status)}-color)` : 'var(--secondary-color)',
                                                                 color: 'var(--primary-text-color)',
@@ -2122,7 +2122,7 @@ const QualityChecking = () => {
                                                             size="small"
                                                             sx={{
                                                                 fontWeight: 600,
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                                 backgroundColor: 'var(--warning-color)',
                                                                 color: 'var(--primary-text-color)',
@@ -2142,7 +2142,7 @@ const QualityChecking = () => {
                                                             sx={{
                                                                 color: 'var(--secondary-text-color)',
                                                                 fontWeight: 500,
-                                                                fontFamily: 'var(--font-primary)',
+                                                                fontFamily: 'var(--font-secondary)',
                                                                 fontSize: 'var(--font-size-xs)',
                                                             }}
                                                         >

@@ -92,7 +92,7 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
           <div className="staradmin-brand">
             <img src={logo} alt="BMG Jewelers Logo" className="staradmin-logo-image" />
             {windowWidth > 576 && (
-              <span className="staradmin-company-name">BMG Jewelers</span>
+              <span className="staradmin-company-name">BMG Jewelers <span >  pvt ltd</span></span>
             )}
           </div>
         </div>

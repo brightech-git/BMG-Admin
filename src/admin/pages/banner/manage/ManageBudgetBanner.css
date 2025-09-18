@@ -14,7 +14,8 @@
 }
 
 .manage-budget-banner-card {
-    background: var(--card-background-color);
+    background: var(--card-background-color) !important;
+        border: 1px solid var(--border-color) !important;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-sm);
     max-width: 1200px;

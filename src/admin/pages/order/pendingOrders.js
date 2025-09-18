@@ -728,10 +728,11 @@ const PendingOrders = () => {
                 backgroundColor: 'var(--background-color)',
                 minHeight: '100vh',
                 color: 'var(--primary-text-color)',
-                mt: '20px'
+                mt: '20px',
+                fontFamily: 'var(--font-secondary)',
             }}
         >
-            <TableHeaderCard>
+            <TableHeaderCard sx={{ fontFamily: 'var(--font-secondary)'}}>
                 <CardContent sx={{ p: 3 }}>
                     <nav aria-label="breadcrumb">
                         <ol className="breadcrumb">
@@ -739,7 +740,7 @@ const PendingOrders = () => {
                                 <Link to="/">Dashboard</Link>
                             </li>
                             <li className="breadcrumb-item active" aria-current="page">
-                                Manage Orders
+                                Manage Pending Orders
                             </li>
                         </ol>
                     </nav>
@@ -815,7 +816,10 @@ const PendingOrders = () => {
                                         '&:hover': {
                                             backgroundColor: 'var(--active-border)',
                                         },
+                                        fontFamily:'var(--font-secondary)'
                                     }}
+                                    
+
                                 >
                                     <PrintIcon />
                                 </IconButton>
@@ -856,6 +860,7 @@ const PendingOrders = () => {
                                         color: 'var(--secondary-text-color)',
                                         opacity: 0.8,
                                     },
+                                    fontFamily: 'var(--font-secondary)'
                                 }}
                             />
                         </Box>
@@ -865,13 +870,13 @@ const PendingOrders = () => {
                         <Table stickyHeader>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>Order ID</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>Customer</TableCell>
-                                    <TableCell align="right" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>Amount</TableCell>
-                                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>Status</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>Order Date</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>Payment Mode</TableCell>
-                                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)' }}>Actions</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Order ID</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Customer</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Amount</TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Status</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Order Date</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Payment Mode</TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -880,37 +885,38 @@ const PendingOrders = () => {
                                         <React.Fragment key={order.id}>
                                             <TableRow sx={{ '&:hover': { backgroundColor: 'var(--active-bg)' } }}>
                                                 <TableCell>
-                                                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--primary-color)' }}>
+                                                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--primary-color)' ,fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-secondary)'}}>
                                                         #{order.order_id}
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Box>
-                                                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--primary-text-color)' }}>
+                                                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'var(--primary-text-color)', fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-secondary) '}}>
                                                             {order.user_name}
                                                         </Typography>
-                                                        <Typography variant="caption" sx={{ color: 'var(--secondary-text-color)' }}>
+                                                        <Typography variant="caption" sx={{ color: 'var(--secondary-text-color)', fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-secondary)' }}>
                                                             {order.email}
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    <Typography variant="body1" sx={{ fontWeight: 700, color: 'var(--primary-color)', fontSize: 'var(--font-size-md)' }}>
+                                                    <Typography variant="body1" sx={{ fontWeight: 700, color: 'var(--primary-color)', fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-secondary)' }}>
                                                         ₹{order.total_amount.toFixed(2)}
                                                     </Typography>
                                                 </TableCell>
-                                                <TableCell align="center">
+                                                <TableCell align="center" sx={{fontSize: 'var(--font-size-xs)'}}>
                                                     <StatusChip
                                                         label={order.status.toUpperCase()}
                                                         status={order.status}
                                                         size="small"
+                                                        sx={{ fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-secondary)' }}
                                                     />
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                    <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-secondary)' }}>
                                                         {new Date(order.order_time).toLocaleDateString()}
                                                     </Typography>
-                                                    <Typography variant="caption" sx={{ color: 'var(--secondary-text-color)' }}>
+                                                    <Typography variant="caption" sx={{ color: 'var(--secondary-text-color)', fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-secondary)' }}>
                                                         {new Date(order.order_time).toLocaleTimeString()}
                                                     </Typography>
                                                 </TableCell>
@@ -923,6 +929,7 @@ const PendingOrders = () => {
                                                             color: 'var(--primary-color)',
                                                             fontWeight: 600,
                                                             fontSize: 'var(--font-size-xs)',
+                                                            fontFamily: 'var(--font-secondary)'
                                                         }}
                                                     />
                                                 </TableCell>
@@ -933,12 +940,13 @@ const PendingOrders = () => {
                                                                 size="small"
                                                                 onClick={() => handleViewOrder(order)}
                                                                 sx={{
-                                                                    color: 'var(--primary-color)',
+                                                                    color: 'var(--success-color)',
                                                                     backgroundColor: 'var(--active-bg)',
                                                                     borderRadius: 'var(--border-radius-sm)',
                                                                     '&:hover': {
                                                                         backgroundColor: 'var(--active-border)',
-                                                                    },
+                                                                    }, fontSize: 'var(--font-size-xs)',
+                                                                     fontFamily: 'var(--font-secondary)'
                                                                 }}
                                                             >
                                                                 <ViewIcon fontSize="small" />
@@ -949,7 +957,7 @@ const PendingOrders = () => {
                                                                 size="small"
                                                                 onClick={() => toggleRowExpansion(order.order_id)}
                                                                 sx={{
-                                                                    color: 'var(--primary-color)',
+                                                                    color: 'var(--success-color)',
                                                                     backgroundColor: 'var(--active-bg)',
                                                                     borderRadius: 'var(--border-radius-sm)',
                                                                     transition: 'transform 0.2s ease',
@@ -1002,7 +1010,8 @@ const PendingOrders = () => {
                                                                                 fontWeight: 700,
                                                                                 color: 'var(--primary-color)',
                                                                                 fontSize: 'var(--font-size-sm)',
-                                                                                width: '30%'
+                                                                                width: '30%',
+                                                                                fontFamily: 'var(--font-primary)'
                                                                             }}>
                                                                                 Product
                                                                             </TableCell>
@@ -1010,7 +1019,8 @@ const PendingOrders = () => {
                                                                                 fontWeight: 700,
                                                                                 color: 'var(--primary-color)',
                                                                                 fontSize: 'var(--font-size-sm)',
-                                                                                width: '20%'
+                                                                                width: '20%',
+                                                                                fontFamily: 'var(--font-primary)'
                                                                             }}>
                                                                                 SKU
                                                                             </TableCell>
@@ -1018,7 +1028,8 @@ const PendingOrders = () => {
                                                                                 fontWeight: 700,
                                                                                 color: 'var(--primary-color)',
                                                                                 fontSize: 'var(--font-size-sm)',
-                                                                                width: '15%'
+                                                                                width: '15%',
+                                                                                fontFamily: 'var(--font-primary)'
                                                                             }}>
                                                                                 Quantity
                                                                             </TableCell>
@@ -1026,7 +1037,8 @@ const PendingOrders = () => {
                                                                                 fontWeight: 700,
                                                                                 color: 'var(--primary-color)',
                                                                                 fontSize: 'var(--font-size-sm)',
-                                                                                width: '15%'
+                                                                                width: '15%',
+                                                                                fontFamily: 'var(--font-primary)'
                                                                             }}>
                                                                                 Unit Price
                                                                             </TableCell>
@@ -1034,7 +1046,8 @@ const PendingOrders = () => {
                                                                                 fontWeight: 700,
                                                                                 color: 'var(--primary-color)',
                                                                                 fontSize: 'var(--font-size-sm)',
-                                                                                width: '20%'
+                                                                                width: '20%',
+                                                                                fontFamily: 'var(--font-primary)'
                                                                             }}>
                                                                                 Total
                                                                             </TableCell>
@@ -1083,6 +1096,7 @@ const PendingOrders = () => {
                                                                                             color: 'var(--primary-text-color)',
                                                                                             fontWeight: 500,
                                                                                             fontSize: 'var(--font-size-sm)',
+                                                                                            fontFamily: 'var(--font-secondary)'
                                                                                         }}>
                                                                                             {item.product_name}
                                                                                         </Typography>
@@ -1112,6 +1126,7 @@ const PendingOrders = () => {
                                                                                                 minWidth: '40px',
                                                                                                 fontSize: 'var(--font-size-xs)',
                                                                                                 height: '28px',
+                                                                                                fontFamily: 'var(--font-secondary)'
                                                                                             }}
                                                                                         />
                                                                                     </TableCell>
@@ -1119,7 +1134,8 @@ const PendingOrders = () => {
                                                                                         <Typography variant="body2" sx={{
                                                                                             color: 'var(--secondary-text-color)',
                                                                                             fontWeight: 500,
-                                                                                            fontSize: 'var(--font-size-sm)'
+                                                                                            fontSize: 'var(--font-size-sm)',
+                                                                                            fontFamily: 'var(--font-secondary)'
                                                                                         }}>
                                                                                             ₹{item.price.toFixed(2)}
                                                                                         </Typography>
@@ -1128,7 +1144,8 @@ const PendingOrders = () => {
                                                                                         <Typography variant="body2" sx={{
                                                                                             color: 'var(--primary-color)',
                                                                                             fontWeight: 700,
-                                                                                            fontSize: 'var(--font-size-sm)'
+                                                                                            fontSize: 'var(--font-size-sm)',
+                                                                                            fontFamily: 'var(--font-secondary)'
                                                                                         }}>
                                                                                             ₹{(item.price * item.quantity).toFixed(2)}
                                                                                         </Typography>
@@ -1145,7 +1162,8 @@ const PendingOrders = () => {
                                                                                     fontWeight: 700,
                                                                                     color: 'var(--primary-text-color)',
                                                                                     textAlign: 'right',
-                                                                                    fontSize: 'var(--font-size-sm)'
+                                                                                    fontSize: 'var(--font-size-sm)',
+                                                                                    fontFamily: 'var(--font-secondary)'
                                                                                 }}>
                                                                                     Order Total:
                                                                                 </Typography>
@@ -1154,7 +1172,8 @@ const PendingOrders = () => {
                                                                                 <Typography variant="h6" sx={{
                                                                                     color: 'var(--primary-color)',
                                                                                     fontWeight: 700,
-                                                                                    fontSize: 'var(--font-size-md)'
+                                                                                    fontSize: 'var(--font-size-md)',
+                                                                                    fontFamily: 'var(--font-secondary)'
                                                                                 }}>
                                                                                     ₹{order.total_amount.toFixed(2)}
                                                                                 </Typography>
@@ -1210,6 +1229,7 @@ const PendingOrders = () => {
                                         color: 'var(--secondary-text-color)',
                                         fontWeight: 500,
                                         fontSize: 'var(--font-size-sm)',
+                                        fontFamily: 'var(--font-secondary)'
                                     }}
                                 >
                                     Rows per page:
@@ -1306,8 +1326,8 @@ const PendingOrders = () => {
                     }}
                 >
                     <DialogTitle>
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
-                            <Typography variant="h6">Order Details - {selectedOrder.order_id}</Typography>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ color: 'var(--primary-text-color)' }}>
+                            <Typography variant='h6'>Order Details - {selectedOrder.order_id}</Typography>
                             <IconButton onClick={handleCloseViewModal}>
                                 <CloseIcon sx={{ color: 'var(--primary-text-color)' }} />
                             </IconButton>
@@ -1315,27 +1335,27 @@ const PendingOrders = () => {
                     </DialogTitle>
                     <DialogContent dividers sx={{ backgroundColor: 'var(--background-color)' }}>
                         <Box mb={3}>
-                            <Typography variant="h6" gutterBottom sx={{ color: 'var(--primary-color)', textAlign: 'center', mb: 2 }}>
+                            <Typography variant="h6" gutterBottom sx={{ color: 'var(--primary-text-color)', textAlign: 'center', mb: 1, fontFamily: 'var(--font-primary)' }}>
                                 User Details
                             </Typography>
                             <TableContainer component={Paper} sx={{ backgroundColor: 'var(--card-background-color)', border: `1px solid var(--border-color)` }}>
                                 <Table size="small">
                                     <TableBody>
                                         <TableRow>
-                                            <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>Order Number</TableCell>
-                                            <TableCell sx={{ width: '25%' }}>{selectedOrder.order_id}</TableCell>
-                                            <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>Name</TableCell>
-                                            <TableCell sx={{ width: '25%' }}>{selectedOrder.user_name}</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', width: '25%', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Order Number</TableCell>
+                                            <TableCell sx={{ width: '25%' ,fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>{selectedOrder.order_id}</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', width: '25%' , fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Name</TableCell>
+                                            <TableCell sx={{ width: '25%' ,fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>{selectedOrder.user_name}</TableCell>
                                         </TableRow>
                                         <TableRow>
-                                            <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
-                                            <TableCell>{selectedOrder.email}</TableCell>
-                                            <TableCell sx={{ fontWeight: 'bold' }}>Mobile Number</TableCell>
-                                            <TableCell>{selectedOrder.contact}</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Email</TableCell>
+                                            <TableCell sx={{ fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>{selectedOrder.email}</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Mobile Number</TableCell>
+                                            <TableCell sx={{ fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>{selectedOrder.contact}</TableCell>
                                         </TableRow>
                                         <TableRow>
-                                            <TableCell sx={{ fontWeight: 'bold' }}>Address</TableCell>
-                                            <TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold' ,  fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Address</TableCell>
+                                            <TableCell sx={{ fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>
                                                 {selectedOrder?.address ? (
                                                     <>
                                                         <div>{selectedOrder.address.name}</div>
@@ -1353,8 +1373,8 @@ const PendingOrders = () => {
                                                     <div>No address available</div>
                                                 )}
                                             </TableCell>
-                                            <TableCell sx={{ fontWeight: 'bold' }}>Order Date</TableCell>
-                                            <TableCell>{new Date(selectedOrder.order_time).toLocaleString()}</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Order Date</TableCell>
+                                            <TableCell sx={{ fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>{new Date(selectedOrder.order_time).toLocaleString()}</TableCell>
                                         </TableRow>
                                     </TableBody>
                                 </Table>
@@ -1362,27 +1382,27 @@ const PendingOrders = () => {
                         </Box>
 
                         <Box mb={3}>
-                            <Typography variant="h6" gutterBottom sx={{ color: 'var(--primary-color)', textAlign: 'center', mb: 2 }}>
+                            <Typography variant="h6" gutterBottom sx={{ color: 'var(--primary-text-color)', textAlign: 'center', mb: 2 }}>
                                 Order Details
                             </Typography>
                             <TableContainer component={Paper} sx={{ backgroundColor: 'var(--card-background-color)', border: `1px solid var(--border-color)` }}>
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow sx={{ backgroundColor: 'var(--active-bg)' }}>
-                                            <TableCell sx={{ fontWeight: 'bold' }}>S.No</TableCell>
-                                            <TableCell sx={{ fontWeight: 'bold' }}>Product ID</TableCell>
-                                            <TableCell sx={{ fontWeight: 'bold' }}>Product Image</TableCell>
-                                            <TableCell sx={{ fontWeight: 'bold' }}>Product Name</TableCell>
-                                            <TableCell align="center" sx={{ fontWeight: 'bold' }}>Quantity</TableCell>
-                                            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Price</TableCell>
-                                            <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>S.No</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Product ID</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Product Image</TableCell>
+                                            <TableCell sx={{ fontWeight: 'bold', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Product Name</TableCell>
+                                            <TableCell align="center" sx={{ fontWeight: 'bold', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Quantity</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 'bold', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Price</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 'bold', fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>Total</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {selectedOrder.orderItems?.map((item, index) => (
                                             <TableRow key={index}>
-                                                <TableCell>{index + 1}</TableCell>
-                                                <TableCell>{item.tagno || item.sno || '-'}</TableCell>
+                                                <TableCell sx={{ fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>{index + 1}</TableCell>
+                                                <TableCell sx={{ fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>{item.tagno || item.sno || '-'}</TableCell>
                                                 <TableCell>
                                                     {normalizeImagePaths(item.image_path)[0] ? (
                                                         <img
@@ -1408,17 +1428,17 @@ const PendingOrders = () => {
                                                         </Box>
                                                     )}
                                                 </TableCell>
-                                                <TableCell>{item.product_name}</TableCell>
-                                                <TableCell align="center">{item.quantity}</TableCell>
-                                                <TableCell align="right">₹{item.price.toFixed(2)}</TableCell>
-                                                <TableCell align="right">₹{(item.price * item.quantity).toFixed(2)}</TableCell>
+                                                <TableCell sx={{ fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>{item.product_name}</TableCell>
+                                                <TableCell sx={{ fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }} align="center">{item.quantity}</TableCell>
+                                                <TableCell sx={{ fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }} align="right">₹{item.price.toFixed(2)}</TableCell>
+                                                <TableCell sx={{ fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }} align="right">₹{(item.price * item.quantity).toFixed(2)}</TableCell>
                                             </TableRow>
                                         ))}
                                         <TableRow sx={{ backgroundColor: 'var(--active-bg)' }}>
-                                            <TableCell colSpan={6} sx={{ fontWeight: 'bold', textAlign: 'right', color: 'var(--primary-color)' }}>
+                                            <TableCell colSpan={6} sx={{ fontWeight: 'bold', textAlign: 'right', color: 'var(--primary-text-color)' }}>
                                                 Grand Total
                                             </TableCell>
-                                            <TableCell align="right" sx={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>
+                                            <TableCell align="right" sx={{ fontWeight: 'bold', color: 'var(--primary-text-color)' }}>
                                                 ₹{selectedOrder.total_amount.toFixed(2)}
                                             </TableCell>
                                         </TableRow>

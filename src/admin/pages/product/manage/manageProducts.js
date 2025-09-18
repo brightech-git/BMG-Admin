@@ -584,14 +584,7 @@ const ManageProduct = ({ baseUrl = 'https://app.bmgjewellers.com' }) => {
                         )}
                     </button>
                     <div className="pagination-controls">
-                        <button
-                            className="btn secondary"
-                            onClick={() => handlePageChange(page - 1)}
-                            disabled={page === 0 || loading}
-                            aria-label="Previous page"
-                        >
-                            <span className="icon" aria-hidden="true">◄</span>
-                        </button>
+                       
                         <select
                             value={pageSize}
                             onChange={handlePageSizeChange}
@@ -604,19 +597,12 @@ const ManageProduct = ({ baseUrl = 'https://app.bmgjewellers.com' }) => {
                             <option value="50">50</option>
                             <option value="100">100</option>
                         </select>
-                        <button
-                            className="btn secondary"
-                            onClick={() => handlePageChange(page + 1)}
-                            disabled={page >= (productdata?.totalPages - 1) || loading}
-                            aria-label="Next page"
-                        >
-                            <span className="icon" aria-hidden="true">►</span>
-                        </button>
+                       
                     </div>
-                    <div className="action-buttons">
+                    <div className="action-button">
                         <button className="btn success" onClick={handleNew} aria-label="Add new product">
                             <span className="icon" aria-hidden="true">✨</span>
-                            {isMobileView ? '' : 'New Product'}
+                            {isMobileView ? '' : 'New '}
                         </button>
                         <button className="btn danger" onClick={handleExit} aria-label="Exit to dashboard">
                             <span className="icon" aria-hidden="true">❌</span>

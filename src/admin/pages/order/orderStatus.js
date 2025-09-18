@@ -140,7 +140,7 @@ const OrderStatusManagement = () => {
     console.log(key, values, 'key');
 
     // State management
-    const [page, setPage] = useState(0);
+    const [page, setPage] = useState(0);    
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
@@ -262,11 +262,11 @@ const OrderStatusManagement = () => {
                                                     <Link to="/">Dashboard</Link>
                                                 </li>
                                                 <li className="breadcrumb-item active" aria-current="page">
-                                                    Manage Orders
+                                                    Manage All Orders
                                                 </li>
                                             </ol>
                                         </nav>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0, flexWrap: 'wrap', gap: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Typography
                                 variant="h6"
@@ -285,20 +285,6 @@ const OrderStatusManagement = () => {
                                 }}
                             />
                         </Box>
-                        <ModernButton
-                            onClick={() => refetch()}
-                            variant="contained"
-                            color="primary"
-                            startIcon={<RefreshIcon />}
-                            sx={{ fontSize: 'var(--font-size-xs)' }}
-                            themeMode={themeMode}
-                        >
-                            Refresh
-                        </ModernButton>
-                    </Box>
-
-                    {/* Filter Section */}
-                    <Grid container spacing={2} sx={{ mb: 3 }}>
                         <Grid item xs={12} sm={6} md={4}>
                             <TextField
                                 variant="outlined"
@@ -325,7 +311,12 @@ const OrderStatusManagement = () => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
+                    </Box>
+
+                    {/* Filter Section */}
+                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                       
+                        {/* <Grid item xs={12} sm={6} md={3}>
                             <FormControl size="small" fullWidth>
                                 <InputLabel sx={{ fontFamily: 'var(--font-primary)', color: 'var(--primary-text-color)' }}>
                                     Status
@@ -352,7 +343,7 @@ const OrderStatusManagement = () => {
                                     <MenuItem value="CANCELLED">Cancelled</MenuItem>
                                 </Select>
                             </FormControl>
-                        </Grid>
+                        </Grid> */}
                     </Grid>
 
                     {/* Orders Table */}
@@ -375,22 +366,22 @@ const OrderStatusManagement = () => {
                                         <React.Fragment key={order.id}>
                                             <TableRow sx={{ '&:hover': { backgroundColor: 'var(--active-bg)' } }}>
                                                 <TableCell>
-                                                    <Typography sx={{ fontWeight: 600, color: 'var(--primary-color)', fontSize: 'var(--font-size-sm)' }}>
+                                                    <Typography sx={{ fontWeight: 600, color: 'var(--primary-color)', fontSize: 'var(--font-size-xs)' }}>
                                                         #{order.order_id}
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Box>
-                                                        <Typography sx={{ fontWeight: 600, color: 'var(--primary-text-color)', fontSize: 'var(--font-size-sm)' }}>
+                                                        <Typography sx={{ fontWeight: 600, color: 'var(--primary-text-color)', fontSize: 'var(--font-size-xs)' }}>
                                                             {order.user_name}
                                                         </Typography>
-                                                        <Typography variant="caption" sx={{ color: 'var(--secondary-text-color)', fontSize: 'var(--font-size-sm)' }}>
+                                                        <Typography variant="caption" sx={{ color: 'var(--secondary-text-color)', fontSize: 'var(--font-size-xs)' }}>
                                                             {order.email}
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell align="right">
-                                                    <Typography sx={{ fontWeight: 700, color: 'var(--primary-color)', fontSize: 'var(--font-size-sm)' }}>
+                                                    <Typography sx={{ fontWeight: 700, color: 'var(--primary-color)', fontSize: 'var(--font-size-xs)' }}>
                                                         ₹{order.total_amount.toFixed(2)}
                                                     </Typography>
                                                 </TableCell>
@@ -398,10 +389,10 @@ const OrderStatusManagement = () => {
                                                     <StatusChip label={order.status} status={order.status} themeMode={themeMode} />
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Typography sx={{ fontWeight: 500, fontSize: 'var(--font-size-sm)' }}>
+                                                    <Typography sx={{ fontWeight: 500, fontSize: 'var(--font-size-xs)' }}>
                                                         {new Date(order.order_time).toLocaleDateString()}
                                                     </Typography>
-                                                    <Typography variant="caption" sx={{ color: 'var(--secondary-text-color)', fontSize: 'var(--font-size-sm)' }}>
+                                                    <Typography variant="caption" sx={{ color: 'var(--secondary-text-color)', fontSize: 'var(--font-size-xs)' }}>
                                                         {new Date(order.order_time).toLocaleTimeString()}
                                                     </Typography>
                                                 </TableCell>
@@ -414,7 +405,7 @@ const OrderStatusManagement = () => {
                                                             color: 'var(--primary-color)',
                                                             fontWeight: 600,
                                                             fontFamily: 'var(--font-primary)',
-                                                            fontSize: 'var(--font-size-sm)'
+                                                            fontSize: 'var(--font-size-xs)'
                                                         }}
                                                     />
                                                 </TableCell>
@@ -428,6 +419,7 @@ const OrderStatusManagement = () => {
                                                                     color: 'var(--primary-color)',
                                                                     backgroundColor: 'var(--active-bg)',
                                                                     '&:hover': { backgroundColor: themeMode === 'dark' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(59, 143, 243, 0.2)' },
+                                                                    fontSize: 'var(--font-size-xs)'
                                                                 }}
                                                             >
                                                                 <ViewIcon fontSize="small" />
@@ -441,6 +433,7 @@ const OrderStatusManagement = () => {
                                                                     color: 'var(--info-color)',
                                                                     backgroundColor: 'var(--active-bg)',
                                                                     '&:hover': { backgroundColor: themeMode === 'dark' ? 'rgba(23, 162, 184, 0.2)' : 'rgba(52, 177, 170, 0.2)' },
+                                                                     fontSize: 'var(--font-size-xs)'
                                                                 }}
                                                             >
                                                                 <TrackIcon fontSize="small" />

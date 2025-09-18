@@ -8,6 +8,9 @@ import Loader from './Loader';
 import { Link } from 'react-router-dom';
 import { MyContext } from '../../context/themeContext/themeContext';
 import { useNavigate } from 'react-router-dom';
+import { format, parseISO, isWithinInterval } from "date-fns";
+import { useOrdersByDateRange } from '../../hooks/order/useAllOrder';
+
 const DashboardCards = () => {
     const { themeMode } = useContext(MyContext);
     const [dashboardData, setDashboardData] = useState(null);
@@ -15,9 +18,36 @@ const DashboardCards = () => {
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
     const [totalUsers, setTotalUsers] = useState(0);
+    const [todayOrders ,setTodayOrders] =useState([]);
     const [refreshInterval, setRefreshInterval] = useState(60); // Default refresh interval: 60 seconds
     const [showToast, setShowToast] = useState(false);
-   
+
+    const today = new Date();
+    const formattedStartDate = format(today, 'yyyy-MM-dd');
+    const formattedEndDate = format(today, 'yyyy-MM-dd');
+
+    // ✅ Fetch only today’s orders
+    const { data: orders = [], isError, refetch } = useOrdersByDateRange(
+        formattedStartDate,
+        formattedEndDate
+    );
+
+    // ✅ Filter to make sure only today’s orders are stored
+    useEffect(() => {
+        if (!Array.isArray(orders)) return;
+
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        const end = new Date();
+        end.setHours(23, 59, 59, 999);
+
+        const filtered = orders.filter((order) =>
+            isWithinInterval(parseISO(order.orderTime), { start, end })
+        );
+
+        setTodayOrders(filtered);
+    }, [orders]);
+
 
     const page = 0;
     const size = 100000;
@@ -96,12 +126,12 @@ const DashboardCards = () => {
         if (!dashboardData) return [];
         return [
             {
-                id: 'totalUsers',
-                title: 'Total Users',
-                value: dashboardData.totalUsers,
-                icon: <FaUsers />,
-                detail: 'Active registered users',
-                link: 'userDetails',
+                id: 'todayOrders',
+                title: 'Today Orders',
+                value: todayOrders.length,
+                icon: <FaShoppingCart />,
+                detail: 'All orders placed',
+                link: 'order/today',
             },
             {
                 id: 'totalOrders',
@@ -118,16 +148,26 @@ const DashboardCards = () => {
                 icon: <FaCheckCircle />,
                 detail: 'Orders successfully delivered',
                 link: 'order/status/delivered',
-            }
+            },
+            {
+                id: 'totalUsers',
+                title: 'Total Users',
+                value: dashboardData.totalUsers,
+                icon: <FaUsers />,
+                detail: 'Active registered users',
+                link: 'userDetails',
+            },
+            
+            
         ].filter(card => !isNaN(card.value));
     }, [dashboardData]);
 
     const orderStatusCards = useMemo(() => {
         if (!dashboardData) return [];
         return [
-            { id: 'pending', title: 'Pending', value: dashboardData.pendingOrders || 0, icon: <FaShoppingBag />, detail: 'Orders not placed', status: 'PAYMENT_PENDING', path: '/admin/order/status/pending', key: 'PAYMENT_PENDING', values: ['IN_PROCESSING', 'CANCELLED'] },
-            { id: 'placed', title: 'Placed', value: dashboardData.placedOrders || 0, icon: <FaShoppingBag />, detail: 'Orders recently placed', status: 'PLACED' , path: '/admin/order/status/qc', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
-            { id: 'inProcessing', title: 'In Processing', value: dashboardData.inProcessingOrders || 0, icon: <FaCogs />, detail: 'Orders being processed', status: 'IN_PROCESSING', path: '/admin/order/status/packed', key: 'IN_PROCESSING', values: ['PACKED', 'CANCELLED'] },
+            { id: 'pending', title: 'Order Pending', value: dashboardData.pendingOrders || 0, icon: <FaShoppingBag />, detail: 'Orders not placed', status: 'PAYMENT_PENDING', path: '/admin/order/status/pending', key: 'PAYMENT_PENDING', values: ['IN_PROCESSING', 'CANCELLED'] },
+            { id: 'placed', title: 'Order Placed', value: dashboardData.placedOrders || 0, icon: <FaShoppingBag />, detail: 'Orders recently placed', status: 'PLACED' , path: '/admin/order/status/qc', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
+            { id: 'inProcessing', title: 'QC Check', value: dashboardData.inProcessingOrders || 0, icon: <FaCogs />, detail: 'Orders being processed', status: 'IN_PROCESSING', path: '/admin/order/status/packed', key: 'IN_PROCESSING', values: ['PACKED', 'CANCELLED'] },
             { id: 'packed', title: 'Packed', value: dashboardData.packedOrders || 0, icon: <FaBoxes />, detail: 'Orders packed and ready', status: 'PACKED', path: '/admin/order/status/shipped', key: 'PACKED', values: ['SHIPPED', 'CANCELLED'] },
             { id: 'shipped', title: 'Shipped', value: dashboardData.shippedOrders || 0, icon: <FaRocket />, detail: 'Orders in transit', status: 'SHIPPED', path: '/admin/order/status/shipping', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
             { id: 'inTransit', title: 'In Transit', value: dashboardData.inTransitOrders || 0, icon: <FaPlane />, detail: 'Orders on the way', status: 'IN_TRANSIT', path: '/admin/order/status/shipped', key: 'IN_TRANSIT', values: ['SHIPPED', 'CANCELLED'] },

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
 import { useMediaQuery } from 'react-responsive';
 import { useRatesQuery, useUpdateRateMutation, useDeleteRateMutation } from '../../../hooks/rate/useRatesQuery';
 import {
@@ -7,165 +7,25 @@ import {
     IconButton, Chip, Tooltip, Stack, Card, CardContent,
     TextField, InputAdornment
 } from '@mui/material';
-import { 
-    Edit as EditIcon, 
-    Delete as DeleteIcon, 
-    Save as SaveIcon, 
-    Cancel as CancelIcon, 
-    Add as AddIcon, 
-    Refresh as RefreshIcon, 
+import {
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+    Save as SaveIcon,
+    Cancel as CancelIcon,
+    Add as AddIcon,
+    Refresh as RefreshIcon,
     Search as SearchIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { styled } from '@mui/system';
-
-// Styled components matching EstimationProductsPage
-const StyledTableContainer = styled(TableContainer)(() => ({
-    borderRadius: '12px',
-    overflow: 'hidden',
-    background: '#ffffff',
-    boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
-    border: '1px solid rgba(30, 30, 44, 0.06)',
-    '& .MuiTableHead-root': {
-        background: 'linear-gradient(135deg, #fdf1e8 0%, #f5e6d4 100%)',
-        '& .MuiTableCell-head': {
-            color: '#1a1a1a !important',
-            fontWeight: 700,
-            fontSize: '0.75rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            borderBottom: 'none',
-            padding: '8px 12px',
-        }
-    },
-    '& .MuiTableRow-root': {
-        transition: 'all 0.2s ease',
-        '&:hover': {
-            backgroundColor: 'rgba(253, 241, 232, 0.3)',
-        },
-    },
-    '& .MuiTableCell-root': {
-        borderBottom: '1px solid rgba(30, 30, 44, 0.06)',
-        padding: '8px 12px',
-        fontSize: '0.8rem',
-    },
-}));
-
-const ModernCard = styled(Card)(() => ({
-    borderRadius: '16px',
-    background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-    boxShadow: '0 4px 20px rgba(30, 30, 44, 0.08)',
-    border: '1px solid rgba(255, 255, 255, 0.8)',
-    marginBottom: '24px',
-    position: 'relative',
-    overflow: 'hidden',
-    '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '4px',
-        background: 'linear-gradient(90deg, #3B8FF3 0%, #F29F67 50%, #34B1AA 100%)',
-    },
-}));
-
-const SearchField = styled(TextField)(() => ({
-    '& .MuiOutlinedInput-root': {
-        borderRadius: '12px',
-        backgroundColor: '#fff',
-        fontSize: '1rem',
-        '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#eba748',
-        },
-        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#eba748',
-            borderWidth: '2px',
-        },
-    },
-    '& .MuiInputLabel-root': {
-        color: '#6B7280',
-        fontWeight: 500,
-    },
-}));
-
-const StatusChip = styled(Chip)(({ status }) => {
-    const getStatusStyles = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'active':
-                return {
-                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
-                    color: 'white',
-                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
-                };
-            case 'inactive':
-                return {
-                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
-                    color: 'white',
-                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
-                };
-            default:
-                return {
-                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
-                    color: 'white',
-                    boxShadow: '0 2px 8px rgba(235, 167, 72, 0.3)',
-                };
-        }
-    };
-
-    return {
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        fontSize: '0.7rem',
-        minWidth: '80px',
-        height: '24px',
-        borderRadius: '12px',
-        transition: 'all 0.2s ease',
-        ...getStatusStyles(status),
-        '&:hover': {
-            transform: 'scale(1.05)',
-        },
-    };
-});
-
-const ActionButton = styled(Button)(({ theme }) => ({
-    borderRadius: '12px',
-    textTransform: 'none',
-    fontWeight: 600,
-    padding: theme.spacing(1, 2),
-    minWidth: 'fit-content',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
-    '&:hover': {
-        transform: 'translateY(-1px)',
-        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
-    },
-    [theme.breakpoints.down('sm')]: {
-        padding: theme.spacing(0.75, 1.5),
-        fontSize: '0.75rem',
-    },
-}));
-
-const RateInputField = styled(TextField)(() => ({
-    '& .MuiOutlinedInput-root': {
-        borderRadius: '8px',
-        backgroundColor: '#fff',
-        fontSize: '0.875rem',
-        '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#3B8FF3',
-        },
-        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: '#3B8FF3',
-            borderWidth: '2px',
-        },
-    },
-}));
+import { MyContext } from '../../../context/themeContext/themeContext';
+import './ManageRates.css';
 
 const ManageRates = () => {
+    const { themeMode } = useContext(MyContext);
     const navigate = useNavigate();
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
     const isSmallScreen = useMediaQuery({ query: '(max-width: 480px)' });
-    
+
     const [selectedId, setSelectedId] = useState(null);
     const [editGoldRate, setEditGoldRate] = useState('');
     const [editSilverRate, setEditSilverRate] = useState('');
@@ -190,25 +50,21 @@ const ManageRates = () => {
         }
     }, [ratesData]);
 
-    // Lazy loading with scroll detection for table container
     useEffect(() => {
         const handleTableScroll = () => {
             if (!tableContainerRef.current) return;
-            
+
             const container = tableContainerRef.current;
             const scrollTop = container.scrollTop;
             const scrollHeight = container.scrollHeight;
             const clientHeight = container.clientHeight;
-            
-            // Load more when user is near bottom (within 100px)
-            if (scrollTop + clientHeight >= scrollHeight - 100) {
-                if (visibleItems < filteredRates.length && !isLoadingMore) {
-                    setIsLoadingMore(true);
-                    setTimeout(() => {
-                        setVisibleItems(prev => Math.min(prev + 10, filteredRates.length));
-                        setIsLoadingMore(false);
-                    }, 300);
-                }
+
+            if (scrollTop + clientHeight >= scrollHeight - 100 && !isLoadingMore) {
+                setIsLoadingMore(true);
+                setTimeout(() => {
+                    setVisibleItems(prev => Math.min(prev + 10, filteredRates.length));
+                    setIsLoadingMore(false);
+                }, 300);
             }
         };
 
@@ -233,13 +89,13 @@ const ManageRates = () => {
             rate.silverRate.toString().includes(query)
         );
         setFilteredRates(filtered);
-        setVisibleItems(10); // Reset to initial load
+        setVisibleItems(10);
     };
 
     const handleRefreshClick = () => {
         refetch();
         setSuccess('Rates refreshed successfully!');
-        setTimeout(() => setSuccess(''), 3000);
+        setTimeout(() => setSuccess(null), 3000);
     };
 
     const handleEditClick = (rate) => {
@@ -286,6 +142,9 @@ const ManageRates = () => {
                 onSuccess: () => {
                     setSuccess('Rate updated successfully!');
                     setSelectedId(null);
+                    setEditGoldRate('');
+                    setEditSilverRate('');
+                    setEditCreatedBy('');
                     setTimeout(() => setSuccess(null), 3000);
                     refetch();
                 },
@@ -298,6 +157,9 @@ const ManageRates = () => {
 
     const handleCancelEdit = () => {
         setSelectedId(null);
+        setEditGoldRate('');
+        setEditSilverRate('');
+        setEditCreatedBy('');
         setError(null);
     };
 
@@ -317,110 +179,100 @@ const ManageRates = () => {
     };
 
     const formatCurrency = (value) => {
-        return `₹${parseFloat(value || 0).toLocaleString('en-IN', { 
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2 
+        return `₹${parseFloat(value || 0).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
         })}`;
     };
 
     if (queryError) {
         return (
-            <Box p={3}>
-                <Alert severity="error" sx={{ borderRadius: '12px', backgroundColor: '#fff5f5', color: '#d32f2f' }}>
+            <div className={`manage-rates-container ${themeMode}`}>
+                <Alert
+                    severity="error"
+                    onClose={() => refetch()}
+                    className="alert error"
+                >
                     Failed to load rates. Please try again.
                 </Alert>
-                <Button variant="contained" onClick={() => refetch()} sx={{ mt: 2, borderRadius: '12px', background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)' }}>
+                <Button
+                    variant="contained"
+                    onClick={() => refetch()}
+                    className="btn primary"
+                >
                     Retry
                 </Button>
-            </Box>
+            </div>
         );
     }
 
     return (
-        <Box p={isMobile ? 1 : 3} sx={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', minHeight: '100vh' }}>
-            <ModernCard>
-                <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
-                    <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={isMobile ? 'flex-start' : 'center'} mb={3}>
-                        <Typography variant={isMobile ? 'h6' : 'h4'} sx={{ color: '#1E1E2C', fontWeight: 700 }}>
+        <div className={`manage-rates-container ${themeMode}`}>
+            <Card className="manage-rates-card">
+                <CardContent>
+                    <Box
+                        display="flex"
+                        flexDirection={isMobile ? 'column' : 'row'}
+                        justifyContent="space-between"
+                        alignItems={isMobile ? 'flex-start' : 'center'}
+                        mb={3}
+                    >
+                        <Typography variant={isMobile ? 'h6' : 'h4'} className="header-title">
                             Manage Rates
                         </Typography>
                         <Stack direction={isSmallScreen ? 'column' : 'row'} spacing={1} mt={isMobile ? 2 : 0}>
-                            <SearchField
+                            <TextField
                                 placeholder="Search rates..."
                                 value={searchQuery}
                                 onChange={handleSearch}
+                                className="search-field"
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
-                                            <SearchIcon color="action" />
+                                            <SearchIcon />
                                         </InputAdornment>
                                     ),
                                 }}
                                 variant="outlined"
                                 size="small"
                             />
-                            <ActionButton
+                            <Button
                                 variant="contained"
                                 onClick={() => navigate('/admin/rates/add')}
                                 startIcon={<AddIcon />}
-                                sx={{
-                                    borderRadius: '12px', 
-                                    background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
-                                    color: 'white',
-                                    fontWeight: 600 
-                                }}
+                                className="btn primary"
                             >
                                 {isSmallScreen ? 'Add' : 'Add Rate'}
-                            </ActionButton>
-                            <ActionButton
+                            </Button>
+                            <Button
                                 variant="outlined"
                                 onClick={handleRefreshClick}
                                 startIcon={<RefreshIcon />}
-                                sx={{
-                                    borderRadius: '12px', 
-                                    color: '#eba748', 
-                                    borderColor: '#eba748',
-                                    fontWeight: 600,
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(235, 167, 72, 0.05)',
-                                    }
-                                }}
+                                className="btn secondary"
                             >
                                 {isSmallScreen ? 'Refresh' : 'Refresh'}
-                            </ActionButton>
+                            </Button>
                         </Stack>
                     </Box>
 
-                    {/* Error Messages */}
                     {error && (
-                        <Box mb={3}>
-                            <Alert
-                                severity="error"
-                                sx={{
-                                    borderRadius: '12px',
-                                    backgroundColor: '#fff5f5',
-                                    color: '#d32f2f'
-                                }}
-                            >
-                                {error}
-                            </Alert>
-                        </Box>
+                        <Alert
+                            severity="error"
+                            onClose={() => setError(null)}
+                            className="alert error"
+                        >
+                            {error}
+                        </Alert>
                     )}
 
-                    {/* Success Messages */}
                     {success && (
-                        <Box mb={3}>
-                            <Alert
-                                severity="success"
-                                sx={{
-                                    borderRadius: '12px',
-                                    backgroundColor: '#f0f9ff',
-                                    color: '#0d9488'
-                                }}
-                            >
-                                {success}
-                            </Alert>
-                        </Box>
+                        <Alert
+                            severity="success"
+                            onClose={() => setSuccess(null)}
+                            className="alert success"
+                        >
+                            {success}
+                        </Alert>
                     )}
 
                     {isLoading ? (
@@ -428,47 +280,42 @@ const ManageRates = () => {
                             <CircularProgress />
                         </Box>
                     ) : filteredRates.length === 0 ? (
-                        <Box mb={3}>
-                            <Alert severity="info" sx={{ borderRadius: '12px' }}>
-                                {searchQuery ? 'No rates match your search' : 'No rates available'}
-                            </Alert>
-                        </Box>
+                        <Alert severity="info" className="alert info">
+                            {searchQuery ? 'No rates match your search.' : 'No rates available.'}
+                        </Alert>
                     ) : (
                         <>
-                            <Box mb={2}>
-                                <Typography variant="subtitle1" sx={{ color: '#6B7280', fontWeight: 500 }}>
-                                    Showing {Math.min(visibleItems, filteredRates.length)} of {filteredRates.length} rates
-                                </Typography>
-                            </Box>
-                            <StyledTableContainer ref={tableContainerRef}>
-                                <Table stickyHeader size={isSmallScreen ? 'small' : 'medium'}>
+                            <Typography variant="subtitle1" className="table-info">
+                                Showing {Math.min(visibleItems, filteredRates.length)} of {filteredRates.length} rates
+                            </Typography>
+                            <TableContainer ref={tableContainerRef} className="table-container">
+                                <Table stickyHeader size={isSmallScreen ? 'small' : 'medium'} className="table">
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell sx={{ minWidth: '80px', width: '10%', fontWeight: 700, textAlign: 'center' }}>ID</TableCell>
-                                            <TableCell sx={{ minWidth: '150px', width: '25%', fontWeight: 700, textAlign: 'center' }}>Gold Rate (₹/g)</TableCell>
-                                            <TableCell sx={{ minWidth: '150px', width: '25%', fontWeight: 700, textAlign: 'center' }}>Silver Rate (₹/g)</TableCell>
-                                            <TableCell sx={{ minWidth: '150px', width: '25%', fontWeight: 700, textAlign: 'center' }}>Created By</TableCell>
-                                            <TableCell sx={{ minWidth: '120px', width: '15%', fontWeight: 700, textAlign: 'center' }}>Actions</TableCell>
+                                            <TableCell className="table-header">ID</TableCell>
+                                            <TableCell className="table-header">Gold Rate (₹/g)</TableCell>
+                                            <TableCell className="table-header">Silver Rate (₹/g)</TableCell>
+                                            <TableCell className="table-header">Created By</TableCell>
+                                            <TableCell className="table-header">Actions</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {filteredRates.slice(0, visibleItems).map((rate) => (
-                                            <TableRow key={rate.id} hover>
-                                                <TableCell sx={{ fontWeight: 600, color: '#3B8FF3', padding: '16px', textAlign: 'center' }}>
-                                                    {rate.id}
-                                                </TableCell>
-                                                <TableCell sx={{ padding: '16px', textAlign: 'center' }}>
+                                            <TableRow key={rate.id} className="table-row">
+                                                <TableCell className="table-cell id">{rate.id}</TableCell>
+                                                <TableCell className="table-cell">
                                                     {selectedId === rate.id ? (
-                                                        <RateInputField
+                                                        <TextField
                                                             type="number"
                                                             step="0.01"
                                                             min="0"
                                                             value={editGoldRate}
                                                             onChange={(e) => setEditGoldRate(e.target.value)}
                                                             size="small"
+                                                            className="rate-input"
                                                             InputProps={{
                                                                 startAdornment: (
-                                                                    <Box sx={{ color: '#F29F67', mr: 1 }}>
+                                                                    <Box component="span" className="currency-symbol">
                                                                         ₹
                                                                     </Box>
                                                                 ),
@@ -477,28 +324,23 @@ const ManageRates = () => {
                                                     ) : (
                                                         <Chip
                                                             label={formatCurrency(rate.goldRate)}
-                                                            color="primary"
-                                                            size="small"
-                                                            sx={{
-                                                                backgroundColor: 'rgba(235, 167, 72, 0.1)',
-                                                                color: '#eba748',
-                                                                fontWeight: 600
-                                                            }}
+                                                            className="chip"
                                                         />
                                                     )}
                                                 </TableCell>
-                                                <TableCell sx={{ padding: '16px', textAlign: 'center' }}>
+                                                <TableCell className="table-cell">
                                                     {selectedId === rate.id ? (
-                                                        <RateInputField
+                                                        <TextField
                                                             type="number"
                                                             step="0.01"
                                                             min="0"
                                                             value={editSilverRate}
                                                             onChange={(e) => setEditSilverRate(e.target.value)}
                                                             size="small"
+                                                            className="rate-input"
                                                             InputProps={{
                                                                 startAdornment: (
-                                                                    <Box sx={{ color: '#34B1AA', mr: 1 }}>
+                                                                    <Box component="span" className="currency-symbol">
                                                                         ₹
                                                                     </Box>
                                                                 ),
@@ -507,58 +349,37 @@ const ManageRates = () => {
                                                     ) : (
                                                         <Chip
                                                             label={formatCurrency(rate.silverRate)}
-                                                            color="secondary"
-                                                            size="small"
-                                                            sx={{
-                                                                backgroundColor: 'rgba(235, 167, 72, 0.1)',
-                                                                color: '#eba748',
-                                                                fontWeight: 600
-                                                            }}
+                                                            className="chip"
                                                         />
                                                     )}
                                                 </TableCell>
-                                                <TableCell sx={{ padding: '16px', textAlign: 'center' }}>
+                                                <TableCell className="table-cell created-by">
                                                     {selectedId === rate.id ? (
-                                                        <RateInputField
+                                                        <TextField
                                                             type="text"
                                                             value={editCreatedBy}
                                                             onChange={(e) => setEditCreatedBy(e.target.value)}
                                                             size="small"
+                                                            className="rate-input"
                                                             inputProps={{ maxLength: 50 }}
                                                         />
                                                     ) : (
-                                                        <Typography variant="body2" sx={{ 
-                                                            fontWeight: 600, 
-                                                            color: '#1E1E2C',
-                                                            textAlign: 'center'
-                                                        }}>
+                                                        <Typography variant="body2" className="created-by-text">
                                                             {rate.createdBy}
                                                         </Typography>
                                                     )}
                                                 </TableCell>
-                                                <TableCell sx={{ padding: '16px', textAlign: 'center' }}>
+                                                <TableCell className="table-cell actions">
                                                     {selectedId === rate.id ? (
-                                                        <Box display="flex" gap={1} justifyContent="center">
+                                                        <Box className="action-button">
                                                             <Tooltip title="Save changes">
                                                                 <IconButton
                                                                     size="small"
                                                                     onClick={() => handleSaveEdit(rate.id)}
                                                                     disabled={isUpdating}
-                                                                    color="success"
-                                                                    sx={{
-                                                                        borderRadius: '12px',
-                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
-                                                                        color: '#eba748',
-                                                                        '&:hover': {
-                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
-                                                                        }
-                                                                    }}
+                                                                    className="icon-button save"
                                                                 >
-                                                                    {isUpdating ? (
-                                                                        <CircularProgress size={16} color="inherit" />
-                                                                    ) : (
-                                                                        <SaveIcon fontSize="small" />
-                                                                    )}
+                                                                    {isUpdating ? <CircularProgress size={16} /> : <SaveIcon />}
                                                                 </IconButton>
                                                             </Tooltip>
                                                             <Tooltip title="Cancel editing">
@@ -566,38 +387,22 @@ const ManageRates = () => {
                                                                     size="small"
                                                                     onClick={handleCancelEdit}
                                                                     disabled={isUpdating}
-                                                                    color="default"
-                                                                    sx={{
-                                                                        borderRadius: '12px',
-                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
-                                                                        color: '#eba748',
-                                                                        '&:hover': {
-                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
-                                                                        }
-                                                                    }}
+                                                                    className="icon-button cancel"
                                                                 >
-                                                                    <CancelIcon fontSize="small" />
+                                                                    <CancelIcon />
                                                                 </IconButton>
                                                             </Tooltip>
                                                         </Box>
                                                     ) : (
-                                                        <Box display="flex" gap={1} justifyContent="center">
+                                                        <Box className="action-button">
                                                             <Tooltip title="Edit rate">
                                                                 <IconButton
                                                                     size="small"
                                                                     onClick={() => handleEditClick(rate)}
                                                                     disabled={isDeleting}
-                                                                    color="primary"
-                                                                    sx={{
-                                                                        borderRadius: '12px',
-                                                                        backgroundColor: 'rgba(235, 167, 72, 0.1)',
-                                                                        color: '#eba748',
-                                                                        '&:hover': {
-                                                                            backgroundColor: 'rgba(235, 167, 72, 0.2)',
-                                                                        }
-                                                                    }}
+                                                                    className="icon-button edit"
                                                                 >
-                                                                    <EditIcon fontSize="small" />
+                                                                    <EditIcon />
                                                                 </IconButton>
                                                             </Tooltip>
                                                             <Tooltip title="Delete rate">
@@ -605,17 +410,9 @@ const ManageRates = () => {
                                                                     size="small"
                                                                     onClick={() => handleDelete(rate.id)}
                                                                     disabled={isDeleting}
-                                                                    color="error"
-                                                                    sx={{
-                                                                        borderRadius: '8px',
-                                                                        backgroundColor: 'rgba(244, 67, 54, 0.08)'
-                                                                    }}
+                                                                    className="icon-button delete"
                                                                 >
-                                                                    {isDeleting ? (
-                                                                        <CircularProgress size={16} color="inherit" />
-                                                                    ) : (
-                                                                        <DeleteIcon fontSize="small" />
-                                                                    )}
+                                                                    {isDeleting ? <CircularProgress size={16} /> : <DeleteIcon />}
                                                                 </IconButton>
                                                             </Tooltip>
                                                         </Box>
@@ -625,12 +422,12 @@ const ManageRates = () => {
                                         ))}
                                     </TableBody>
                                 </Table>
-                            </StyledTableContainer>
+                            </TableContainer>
 
                             {isLoadingMore && (
-                                <Box mt={3} display="flex" justifyContent="center" alignItems="center">
-                                    <CircularProgress size={20} sx={{ color: '#eba748' }} />
-                                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, ml: 1 }}>
+                                <Box className="loading-more">
+                                    <CircularProgress size={20} />
+                                    <Typography className="loading-text">
                                         Loading more rates...
                                     </Typography>
                                 </Box>
@@ -638,8 +435,8 @@ const ManageRates = () => {
                         </>
                     )}
                 </CardContent>
-            </ModernCard>
-        </Box>
+            </Card>
+        </div>
     );
 };
 

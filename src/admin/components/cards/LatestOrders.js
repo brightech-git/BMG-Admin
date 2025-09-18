@@ -309,7 +309,7 @@ const LatestOrders = () => {
                                     color: 'var(--primary-text-color)',
                                     fontWeight: 700,
                                     fontFamily: 'var(--font-primary)',
-                                    fontSize: isMobile ? 'var(--font-size-md)' : 'var(--font-size-lg)',
+                                    fontSize: isMobile ? 'var(--font-size-md)' : 'var(--font-size-md)',
                                 }}
                             >
                                 Latest Orders
@@ -368,7 +368,7 @@ const LatestOrders = () => {
                                 color: 'var(--primary-color)',
                                 fontFamily: 'var(--font-primary)',
                                 fontWeight: 600,
-                                fontSize: isMobile ? '0.65rem' : 'var(--font-size-xs)',
+                                fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
                             }}
                         />
                         <Tooltip title="View all orders">
@@ -537,7 +537,7 @@ const LatestOrders = () => {
                                                                 fontWeight: 600,
                                                                 color: 'var(--primary-color)',
                                                                 fontFamily: 'var(--font-primary)',
-                                                                fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-sm)',
+                                                                fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
                                                             }}
                                                         >
                                                             #{order.orderId}
@@ -548,7 +548,7 @@ const LatestOrders = () => {
                                                                 sx={{
                                                                     color: 'var(--secondary-text-color)',
                                                                     fontFamily: 'var(--font-primary)',
-                                                                    fontSize: '0.65rem',
+                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
                                                                 }}
                                                             >
                                                                 {format(parseISO(order.orderTime), 'dd/MM/yyyy hh:mm a')}
@@ -561,7 +561,7 @@ const LatestOrders = () => {
                                                                     fontWeight: 700,
                                                                     color: 'var(--warning-color)',
                                                                     fontFamily: 'var(--font-primary)',
-                                                                    fontSize: '0.65rem',
+                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
                                                                 }}
                                                             >
                                                                 ₹{getOrderAmount(order).toFixed(2)}
@@ -576,7 +576,7 @@ const LatestOrders = () => {
                                                                     fontWeight: 600,
                                                                     color: 'var(--primary-text-color)',
                                                                     fontFamily: 'var(--font-primary)',
-                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-sm)',
+                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
                                                                     whiteSpace: isMobile ? 'normal' : 'nowrap',
                                                                     overflow: 'hidden',
                                                                     textOverflow: 'ellipsis',
@@ -590,7 +590,7 @@ const LatestOrders = () => {
                                                                 sx={{
                                                                     color: 'var(--secondary-text-color)',
                                                                     fontFamily: 'var(--font-primary)',
-                                                                    fontSize: isMobile ? '0.65rem' : 'var(--font-size-xs)',
+                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
                                                                     whiteSpace: isMobile ? 'normal' : 'nowrap',
                                                                     overflow: 'hidden',
                                                                     textOverflow: 'ellipsis',
@@ -609,7 +609,7 @@ const LatestOrders = () => {
                                                                     fontWeight: 500,
                                                                     fontFamily: 'var(--font-primary)',
                                                                     color: 'var(--primary-text-color)',
-                                                                    fontSize: 'var(--font-size-sm)',
+                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
                                                                 }}
                                                             >
                                                                 {format(parseISO(order.orderTime), 'dd/MM/yyyy')}
@@ -619,7 +619,7 @@ const LatestOrders = () => {
                                                                 sx={{
                                                                     color: 'var(--secondary-text-color)',
                                                                     fontFamily: 'var(--font-primary)',
-                                                                    fontSize: 'var(--font-size-xs)',
+                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
                                                                 }}
                                                             >
                                                                 {format(parseISO(order.orderTime), 'hh:mm a')}
@@ -634,7 +634,7 @@ const LatestOrders = () => {
                                                                     fontWeight: 700,
                                                                     color: 'var(--warning-color)',
                                                                     fontFamily: 'var(--font-primary)',
-                                                                    fontSize: 'var(--font-size-sm)',
+                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
                                                                 }}
                                                             >
                                                                 ₹{getOrderAmount(order).toFixed(2)}

@@ -18,6 +18,8 @@
     width: 100% !important;
     margin: 0 auto !important;
     transition: box-shadow var(--transition-speed), transform var(--transition-speed) !important;
+    background: var(--card-background-color) !important;
+        border: 1px solid var(--border-color) !important;
 }
 
 .add-breadcrumb-banner-card:hover {

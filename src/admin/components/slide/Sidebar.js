@@ -12,6 +12,8 @@ import {
     FaClipboardList,
     FaChevronRight
 } from 'react-icons/fa';
+import { MdNotificationsActive } from "react-icons/md";
+import { FaMapMarkerAlt } from "react-icons/fa";
 import { MdMenuOpen, MdOutlineMenu } from 'react-icons/md';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MyContext } from '../../context/themeContext/themeContext';
@@ -91,14 +93,14 @@ const menuItems = [
     },
     {
         title: 'Notification',
-        icon: <FaDollarSign className="staradmin-menu-icon" />,
+        icon: <MdNotificationsActive className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Send Notification', path: '/admin/notification' },
         ],
     },
     {
         title: 'Address',
-        icon: <FaDollarSign className="staradmin-menu-icon" />,
+        icon: <FaMapMarkerAlt className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Manage Address', path: '/admin/address/manage' },
         ],

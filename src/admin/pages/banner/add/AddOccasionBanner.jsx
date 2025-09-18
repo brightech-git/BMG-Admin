@@ -1,6 +1,6 @@
-// 📁 src/pages/admin/AddBanner.js
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMediaQuery } from 'react-responsive';
 import { useUploadOccasionBannerMutation } from '../../../hooks/banners/occasionBanner/useUploadOccasionBanner';
 import FileUploader from '../../../components/banner/FileUploader';
 import {
@@ -11,66 +11,27 @@ import {
     Card,
     CardContent,
     Alert,
-    CircularProgress
+    CircularProgress,
+    MenuItem
 } from '@mui/material';
-import {
-    CloudUpload as UploadIcon,
-    CheckCircle as CheckIcon,
-    Error as ErrorIcon,
-    Add as AddIcon
-} from '@mui/icons-material';
-import { styled } from '@mui/system';
-
-// ========== STYLED COMPONENTS ==========
-const ModernCard = styled(Card)(() => ({
-    borderRadius: '16px',
-    background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-    boxShadow: '0 4px 20px rgba(30, 30, 44, 0.08)',
-    border: '1px solid rgba(255, 255, 255, 0.8)',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    '&:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 8px 32px rgba(30, 30, 44, 0.12)',
-    },
-}));
-
-const ModernButton = styled(Button)(({ variant: buttonVariant, color }) => ({
-    borderRadius: '12px',
-    textTransform: 'none',
-    fontWeight: 600,
-    padding: '12px 24px',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: buttonVariant === 'contained' ? '0 4px 16px rgba(0, 0, 0, 0.1)' : 'none',
-    '&:hover': {
-        transform: 'translateY(-1px)',
-        boxShadow: buttonVariant === 'contained' ? '0 6px 20px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-    },
-    ...(color === 'primary' && {
-        background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
-        color: 'white',
-        '&:hover': {
-            background: 'linear-gradient(135deg, #e09a3a 0%, #d48a2c 100%)',
-        }
-    }),
-    ...(color === 'secondary' && {
-        background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
-        color: 'white',
-        '&:hover': {
-            background: 'linear-gradient(135deg, #e09a3a 0%, #d48a2c 100%)',
-        }
-    }),
-}));
+import { CloudUpload as UploadIcon, CheckCircle as CheckIcon, Error as ErrorIcon, Add as AddIcon } from '@mui/icons-material';
+import { MyContext } from '../../../context/themeContext/themeContext';
+import './AddOccasionBanner.css';
 
 const AddOccasionBanner = () => {
-
+    const { themeMode } = useContext(MyContext);
     const [image, setImage] = useState(null);
-    const [title, setTitle] = useState("");
-    const [subtitle, setSubTitle] = useState("");
-    const [occasion, setOccasion] = useState("");
-    const [gender, setGender] = useState("");
+    const [title, setTitle] = useState('');
+    const [subtitle, setSubtitle] = useState('');
+    const [occasion, setOccasion] = useState('');
+    const [gender, setGender] = useState('');
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const { mutate, isPending } = useUploadOccasionBannerMutation();
+    const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
+
+    const occasionOptions = ['WEDDING', 'PARTY', 'CASUAL', 'FESTIVAL', 'DAILY_WEAR'];
+    const genderOptions = ['MALE', 'FEMALE', 'UNISEX'];
 
     const handleFileSelect = (file, error) => {
         setImage(file);
@@ -84,115 +45,66 @@ const AddOccasionBanner = () => {
         setSuccess(null);
 
         if (!image) {
-            setError('Please select an image file');
+            setError('Please select a valid image file (JPEG, PNG, WEBP, max 5MB).');
             return;
         }
-        if (!subtitle || !occasion || !gender) {
-            setError('Please enter all required ');
-            return;
-        }
-
 
         if (!title.trim()) {
-            setError('Please enter a title for your banner');
+            setError('Please enter a title for the banner.');
             return;
         }
 
-        mutate({ image, title, subtitle,occasion, gender }, {
+        if (!occasion) {
+            setError('Please select an occasion.');
+            return;
+        }
+
+        if (!gender) {
+            setError('Please select a gender.');
+            return;
+        }
+
+        const payload = {
+            image,
+            title,
+            subtitle: subtitle || null,
+            occasion,
+            gender
+        };
+
+        mutate(payload, {
             onSuccess: () => {
-                setSuccess('Banner uploaded successfully!');
+                setSuccess('Occasion Banner uploaded successfully!');
                 setImage(null);
-                setTitle("");
-                setSubTitle("");
-                setGender("");
-                setOccasion("");
-                
+                setTitle('');
+                setSubtitle('');
+                setOccasion('');
+                setGender('');
+                setTimeout(() => setSuccess(null), 3000);
             },
             onError: (err) => {
-                setError(err.message || 'Failed to upload banner');
+                setError(err.message || 'Failed to upload occasion banner.');
             }
         });
     };
 
-    const resetForm = () => {
-        setTitle('');
-        setImage(null);
-        setError(null);
-        setSuccess(null);
-    };
-
     return (
-        <Box
-            p={3}
-            sx={{
-                backgroundColor: '#f8f9fa',
-                minHeight: '100vh',
-                background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }}
-        >
-            <ModernCard sx={{
-                maxWidth: { xs: '100%', sm: 800, md: 900, lg: 1000 },
-                width: '100%',
-                margin: 'auto'
-            }}>
-                <CardContent sx={{ p: { xs: 3, sm: 5, md: 6 } }}>
-                    {/* Header Section */}
-                    <Box textAlign="center" mb={5}>
-                        <Typography
-                            variant="h3"
-                            sx={{
-                                color: '#1E1E2C',
-                                fontWeight: 800,
-                                mb: 2,
-                                fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' },
-                                background: 'linear-gradient(135deg, #1E1E2C 0%, #eba748 100%)',
-                                backgroundClip: 'text',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent'
-                            }}
-                        >
+        <div className={`add-occasion-banner-container ${themeMode}`}>
+            <Card className="add-occasion-banner-card">
+                <CardContent>
+                    <Box className="header-section" mb={3}>
+                        <Typography variant={isMobile ? 'h6' : 'h4'} className="header-title">
                             Add New Occasion Banner
                         </Typography>
-                        <Typography
-                            variant="body1"
-                            sx={{
-                                color: '#6B7280',
-                                fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
-                                maxWidth: '600px',
-                                margin: '0 auto'
-                            }}
-                        >
-                            Upload a banner image with title for your website
+                        <Typography variant="body1" className="header-subtitle">
+                            Upload a new occasion banner with title, occasion, and gender
                         </Typography>
                     </Box>
 
-                    {/* Banner Title Input */}
-                    <Box mb={4}>
-                        <Box sx={{
-                            backgroundColor: 'rgba(235, 167, 72, 0.05)',
-                            p: 2,
-                            borderRadius: '12px',
-                            border: '1px solid rgba(235, 167, 72, 0.1)'
-                        }}>
-                            {/* Banner Title */}
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    color: '#1E1E2C',
-                                    fontWeight: 700,
-                                    mb: 2,
-                                    fontSize: '1rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1
-                                }}
-                            >
-                                <AddIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
-                                Banner Title
-                                <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                    <Box mb={3}>
+                        <Box className="form-section">
+                            <Typography className="form-label">
+                                Banner Title <span className="required">*</span>
                             </Typography>
                             <TextField
                                 placeholder="Enter banner title"
@@ -200,79 +112,23 @@ const AddOccasionBanner = () => {
                                 onChange={(e) => setTitle(e.target.value)}
                                 variant="outlined"
                                 fullWidth
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '12px',
-                                        backgroundColor: '#fff',
-                                        fontSize: '1rem',
-                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#eba748',
-                                        },
-                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#eba748',
-                                            borderWidth: '2px',
-                                        },
-                                    },
-                                }}
+                                className="form-input"
                             />
 
-                            {/* Banner SubTitle */}
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    color: '#1E1E2C',
-                                    fontWeight: 700,
-                                    mb: 2,
-                                    fontSize: '1rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    marginTop: '10px'
-                                }}
-                            >
-                                <AddIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
-                                Banner SubTitle
-                                <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                            <Typography className="form-label" mt={2}>
+                                Banner Subtitle (optional)
                             </Typography>
                             <TextField
                                 placeholder="Enter banner subtitle"
                                 value={subtitle}
-                                onChange={(e) => setSubTitle(e.target.value)}
+                                onChange={(e) => setSubtitle(e.target.value)}
                                 variant="outlined"
                                 fullWidth
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '12px',
-                                        backgroundColor: '#fff',
-                                        fontSize: '1rem',
-                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#eba748',
-                                        },
-                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#eba748',
-                                            borderWidth: '2px',
-                                        },
-                                    },
-                                }}
+                                className="form-input"
                             />
 
-                            {/* Item Name Dropdown */}
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    color: '#1E1E2C',
-                                    fontWeight: 700,
-                                    mb: 2,
-                                    fontSize: '1rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    marginTop: '10px'
-                                }}
-                            >
-                                <AddIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
-                                Occasion
-                                <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                            <Typography className="form-label" mt={2}>
+                                Occasion <span className="required">*</span>
                             </Typography>
                             <TextField
                                 select
@@ -280,49 +136,18 @@ const AddOccasionBanner = () => {
                                 onChange={(e) => setOccasion(e.target.value)}
                                 variant="outlined"
                                 fullWidth
-                                SelectProps={{
-                                    native: true,
-                                }}
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '12px',
-                                        backgroundColor: '#fff',
-                                        fontSize: '1rem',
-                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#eba748',
-                                        },
-                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#eba748',
-                                            borderWidth: '2px',
-                                        },
-                                    },
-                                }}
+                                className="form-input"
                             >
-                                <option value="">Select an Occasion</option>
-                                <option value="DAILY_WEAR">Daily Wear</option>
-                                <option value="WEDDING_WEAR">Wedding Wear</option>
-                                <option value="PARTY_WEAR">Party Wear</option>
-                                <option value="OFFICE_WEAR">Office Wear</option>
-                           
+                                <MenuItem value="">Select an occasion</MenuItem>
+                                {occasionOptions.map((opt) => (
+                                    <MenuItem key={opt} value={opt}>
+                                        {opt.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                                    </MenuItem>
+                                ))}
                             </TextField>
 
-                            {/* Gender Dropdown */}
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    color: '#1E1E2C',
-                                    fontWeight: 700,
-                                    mb: 2,
-                                    fontSize: '1rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    marginTop: '10px'
-                                }}
-                            >
-                                <AddIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
-                                Gender
-                                <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                            <Typography className="form-label" mt={2}>
+                                Gender <span className="required">*</span>
                             </Typography>
                             <TextField
                                 select
@@ -330,64 +155,26 @@ const AddOccasionBanner = () => {
                                 onChange={(e) => setGender(e.target.value)}
                                 variant="outlined"
                                 fullWidth
-                                SelectProps={{
-                                    native: true,
-                                }}
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '12px',
-                                        backgroundColor: '#fff',
-                                        fontSize: '1rem',
-                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#eba748',
-                                        },
-                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#eba748',
-                                            borderWidth: '2px',
-                                        },
-                                    },
-                                }}
+                                className="form-input"
                             >
-                                <option value="">Select gender</option>
-                                <option value="MEN">Men</option>
-                                <option value="WOMEN">Women</option>
-                                <option value="KIDS">Kids</option>
+                                <MenuItem value="">Select gender</MenuItem>
+                                {genderOptions.map((opt) => (
+                                    <MenuItem key={opt} value={opt}>
+                                        {opt.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                                    </MenuItem>
+                                ))}
                             </TextField>
                         </Box>
                     </Box>
 
-                    {/* File Upload Area */}
-                    <Box mb={4}>
-                        <Box sx={{
-                            backgroundColor: 'rgba(235, 167, 72, 0.05)',
-                            p: 2,
-                            borderRadius: '12px',
-                            border: '1px solid rgba(235, 167, 72, 0.1)'
-                        }}>
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    color: '#1E1E2C',
-                                    fontWeight: 700,
-                                    mb: 2,
-                                    fontSize: '1rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1,
-                                    marginTop: '10px'
-                                }}
-                            >
-                                <UploadIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
-                                Banner Image
-                                <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                    <Box mb={3}>
+                        <Box className="form-section">
+                            <Typography className="form-label">
+                                Banner Image <span className="required">*</span>
                             </Typography>
-                            <Typography
-                                variant="body2"
-                                sx={{ color: '#6B7280', fontSize: '0.875rem', mb: 2, textAlign: 'left' }}
-                            >
+                            <Typography className="form-hint">
                                 Select a banner image (JPG, PNG, WEBP - Max 5MB)
                             </Typography>
-
                             <FileUploader
                                 onFileSelect={handleFileSelect}
                                 loading={isPending}
@@ -396,7 +183,6 @@ const AddOccasionBanner = () => {
                         </Box>
                     </Box>
 
-                    {/* Feedback Messages */}
                     <AnimatePresence>
                         {error && (
                             <motion.div
@@ -405,25 +191,11 @@ const AddOccasionBanner = () => {
                                 exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <Box mb={3}>
-                                    <Alert
-                                        severity="error"
-                                        icon={<ErrorIcon />}
-                                        sx={{
-                                            borderRadius: '12px',
-                                            backgroundColor: '#fff5f5',
-                                            color: '#d32f2f',
-                                            '& .MuiAlert-icon': { color: '#d32f2f' }
-                                        }}
-                                    >
-                                        {error}
-                                    </Alert>
-                                </Box>
+                                <Alert severity="error" icon={<ErrorIcon />} className="alert error">
+                                    {error}
+                                </Alert>
                             </motion.div>
                         )}
-                    </AnimatePresence>
-
-                    <AnimatePresence>
                         {success && (
                             <motion.div
                                 initial={{ opacity: 0, height: 0 }}
@@ -431,88 +203,27 @@ const AddOccasionBanner = () => {
                                 exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                <Box mb={3}>
-                                    <Alert
-                                        severity="success"
-                                        icon={<CheckIcon />}
-                                        sx={{
-                                            borderRadius: '12px',
-                                            backgroundColor: '#f0f9ff',
-                                            color: '#0d9488',
-                                            '& .MuiAlert-icon': { color: '#0d9488' }
-                                        }}
-                                    >
-                                        {success}
-                                    </Alert>
-                                </Box>
+                                <Alert severity="success" icon={<CheckIcon />} className="alert success">
+                                    {success}
+                                </Alert>
                             </motion.div>
                         )}
                     </AnimatePresence>
 
-                    {/* Action Buttons */}
-                    <Box display="flex" justifyContent="center" gap={3} mt={6}>
-                        <ModernButton
-                            variant="outlined"
-                            onClick={resetForm}
-                            disabled={isPending}
-                            sx={{
-                                minWidth: '140px',
-                                height: '56px',
-                                borderColor: '#eba748',
-                                color: '#eba748',
-                                fontSize: '1.1rem',
-                                fontWeight: 600,
-                                borderRadius: '12px',
-                                '&:hover': {
-                                    borderColor: '#e09a3a',
-                                    color: '#e09a3a',
-                                    backgroundColor: 'rgba(235, 167, 72, 0.05)',
-                                    transform: 'translateY(-2px)',
-                                },
-                            }}
-                        >
-                            Clear
-                        </ModernButton>
-
-                        <ModernButton
+                    <Box className="action-buttons">
+                        <Button
                             onClick={handleSubmit}
                             variant="contained"
-                            color="primary"
-                            disabled={isPending || !image || !title.trim()}
-                            startIcon={isPending ? <CircularProgress size={24} color="inherit" /> : <AddIcon />}
-                            sx={{
-                                minWidth: '220px',
-                                height: '56px',
-                                fontSize: '1.1rem',
-                                fontWeight: 700,
-                                borderRadius: '16px',
-                                background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 50%, #d48a2c 100%)',
-                                boxShadow: '0 8px 24px rgba(235, 167, 72, 0.25)',
-                                textTransform: 'none',
-                                letterSpacing: '0.5px',
-                                color: 'white',
-                                '&:hover': {
-                                    background: 'linear-gradient(135deg, #e09a3a 0%, #d48a2c 50%, #c47a1c 100%)',
-                                    transform: 'translateY(-3px)',
-                                    boxShadow: '0 12px 32px rgba(235, 167, 72, 0.4)',
-                                },
-                                '&:disabled': {
-                                    background: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)',
-                                    color: '#9e9e9e',
-                                    transform: 'none',
-                                    boxShadow: 'none',
-                                },
-                                '& .MuiButton-startIcon': {
-                                    marginRight: '10px',
-                                },
-                            }}
+                            disabled={isPending || !image || !title.trim() || !occasion || !gender}
+                            startIcon={isPending ? <CircularProgress size={24} /> : <AddIcon />}
+                            className="btn primary"
                         >
                             {isPending ? 'Uploading...' : 'Upload Banner'}
-                        </ModernButton>
+                        </Button>
                     </Box>
                 </CardContent>
-            </ModernCard>
-        </Box>
+            </Card>
+        </div>
     );
 };
 

@@ -1,5 +1,7 @@
+
 .manage-breadcrumb-banner-container {
-    font-family: var(--font-primary);
+    font-family: var(--font-secondary);
+    /* Non-title text */
     color: var(--primary-text-color);
     background-color: var(--background-color);
     min-height: calc(100vh - var(--header-height));
@@ -14,13 +16,16 @@
 }
 
 .manage-breadcrumb-banner-card {
-    background: var(--card-background-color);
+    background: var(--card-background-color) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-sm);
     max-width: 1200px;
     width: 100%;
     margin: 0 auto;
     transition: box-shadow var(--transition-speed), transform var(--transition-speed);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .manage-breadcrumb-banner-card:hover {
@@ -29,6 +34,8 @@
 }
 
 .header-title {
+    font-family: var(--font-primary) !important;
+    /* Title font */
     font-size: var(--font-size-lg);
     font-weight: 700;
     color: var(--both-text-color);
@@ -42,6 +49,8 @@
 }
 
 .header-subtitle {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     font-size: var(--font-size-md);
     color: var(--secondary-text-color);
     max-width: 500px;
@@ -58,6 +67,8 @@
     padding: var(--spacing-md);
     border-radius: var(--border-radius-md);
     border: 1px solid var(--border-color);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .summary-content {
@@ -76,9 +87,13 @@
     background-color: var(--primary-color);
     color: #ffffff;
     box-shadow: var(--shadow-sm);
+    font-family: var(--font-secondary) !important;
+    /* Icon text, if any */
 }
 
 .summary-title {
+    font-family: var(--font-primary) !important;
+    /* Title font */
     font-size: var(--font-size-lg);
     font-weight: 700;
     color: var(--primary-text-color);
@@ -86,6 +101,8 @@
 }
 
 .summary-text {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     font-size: var(--font-size-xs);
     color: var(--secondary-text-color);
 }
@@ -94,6 +111,8 @@
     border-radius: var(--border-radius-md);
     background-color: var(--card-background-color);
     font-size: var(--font-size-sm);
+    font-family: var(--font-secondary);
+    /* Input text */
 }
 
 .search-input .MuiOutlinedInput-notchedOutline {
@@ -112,6 +131,8 @@
 .search-icon {
     color: var(--secondary-text-color);
     margin-right: var(--spacing-sm);
+    font-family: var(--font-secondary);
+    /* Icon text, if any */
 }
 
 .alert {
@@ -119,6 +140,8 @@
     border-radius: var(--border-radius-md);
     font-size: var(--font-size-sm);
     border-left: 4px solid;
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .alert.error {
@@ -148,6 +171,8 @@
 .empty-state {
     text-align: center;
     padding: var(--spacing-xl);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .loading-spinner {
@@ -155,6 +180,8 @@
 }
 
 .table-info {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     font-size: var(--font-size-sm);
     color: var(--secondary-text-color);
     font-weight: 500;
@@ -165,6 +192,8 @@
     background: var(--card-background-color);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .banner-table .MuiTableHead-root {
@@ -172,6 +201,8 @@
 }
 
 .banner-table .MuiTableCell-head {
+    font-family: var(--font-secondary) !important; 
+    /* Table header as title */
     color: var(--primary-text-color);
     font-weight: 700;
     font-size: var(--font-size-xs);
@@ -193,6 +224,8 @@
     border-bottom: 1px solid var(--border-color);
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: var(--font-size-sm);
+    font-family: var(--font-secondary) !important;
+    /* Table cell text */
 }
 
 .file-chip {
@@ -200,6 +233,8 @@
     color: var(--primary-color);
     font-weight: 600;
     margin-top: var(--spacing-sm);
+    font-family: var(--font-secondary) !important;
+    /* Non-title text */
 }
 
 .banner-image {
@@ -214,9 +249,13 @@
 
 .form-input .MuiOutlinedInput-root {
     border-radius: var(--border-radius-sm);
+    font-family: var(--font-secondary);
+    /* Input text */
 }
 
 .table-text {
+    font-family: var(--font-secondary) !important;
+    /* Non-title text */
     font-weight: 500;
     color: var(--primary-text-color);
 }
@@ -225,6 +264,8 @@
     border-radius: var(--border-radius-md);
     background-color: rgba(var(--primary-color), 0.1);
     color: var(--primary-color);
+    font-family: var(--font-secondary);
+    /* Icon text, if any */
 }
 
 .action-icon:hover {
@@ -242,12 +283,15 @@
     font-weight: 600;
     text-transform: none;
     transition: background-color var(--transition-speed), box-shadow var(--transition-speed), transform var(--transition-speed);
+    font-family: var(--font-secondary);
+    /* Button text */
 }
 
 .btn.primary {
     background-color: var(--primary-color);
     color: #ffffff;
     box-shadow: var(--shadow-sm);
+    font-family: var(--font-secondary) !important;
 }
 
 .btn.primary:hover {
@@ -287,9 +331,13 @@
     justify-content: center;
     align-items: center;
     gap: var(--spacing-sm);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .loading-text {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--secondary-text-color);
@@ -298,9 +346,13 @@
 .preview-dialog .MuiDialog-paper {
     border-radius: var(--border-radius-lg);
     background: var(--card-background-color);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .dialog-title {
+    font-family: var(--font-primary);
+    /* Title font */
     background-color: var(--primary-color);
     color: #ffffff;
     font-weight: 700;
@@ -311,6 +363,8 @@
     padding: var(--spacing-md);
     max-height: 70vh;
     overflow: auto;
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .preview-header {
@@ -318,9 +372,13 @@
     background-color: var(--active-bg);
     border-radius: var(--border-radius-md);
     margin-bottom: var(--spacing-md);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .preview-title {
+    font-family: var(--font-primary);
+    /* Title font */
     font-size: var(--font-size-lg);
     font-weight: 700;
     color: var(--primary-text-color);
@@ -328,13 +386,16 @@
 }
 
 .preview-id {
+    font-family: monospace;
+    /* Preserved monospace for ID */
     font-size: var(--font-size-sm);
     color: var(--primary-color);
     font-weight: 600;
-    font-family: monospace;
 }
 
 .preview-date {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     font-size: var(--font-size-xs);
     color: var(--secondary-text-color);
     margin-top: var(--spacing-xs);
@@ -347,6 +408,8 @@
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
     text-align: center;
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .preview-image {
@@ -357,10 +420,11 @@
 }
 
 .preview-image-url {
+    font-family: monospace;
+    /* Preserved monospace for URL */
     font-size: var(--font-size-xs);
     color: var(--secondary-text-color);
     margin-top: var(--spacing-md);
-    font-family: monospace;
 }
 
 @media (max-width: 480px) {

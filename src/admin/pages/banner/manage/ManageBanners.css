@@ -1,5 +1,6 @@
 .manage-banner-container {
-    font-family: var(--font-primary);
+    font-family: var(--font-secondary);
+    /* Changed to secondary for non-title text */
     color: var(--primary-text-color);
     line-height: 1.6;
     padding: var(--spacing-lg);
@@ -14,6 +15,8 @@
     box-shadow: var(--shadow-sm);
     padding: var(--spacing-lg);
     transition: box-shadow var(--transition-speed);
+    font-family: var(--font-secondary);
+    /* Added for non-title text */
 }
 
 .card:hover {
@@ -28,6 +31,8 @@
 }
 
 .section-header h3 {
+    font-family: var(--font-primary);
+    /* Title font */
     font-size: var(--font-size-xl);
     font-weight: 600;
     color: var(--primary-text-color);
@@ -35,6 +40,8 @@
 }
 
 .section-header p {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     font-size: var(--font-size-sm);
     color: var(--secondary-text-color);
     margin: var(--spacing-sm) 0 0;
@@ -64,15 +71,21 @@
     align-items: center;
     justify-content: center;
     color: #ffffff;
+    font-family: var(--font-secondary);
+    /* Icon text, if any */
 }
 
 .banner-overview h4 {
+    font-family: var(--font-primary);
+    /* Title font */
     font-size: var(--font-size-lg);
     color: var(--primary-text-color);
     margin: 0;
 }
 
 .banner-overview p {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     font-size: var(--font-size-sm);
     color: var(--secondary-text-color);
 }
@@ -90,6 +103,8 @@
     border-radius: var(--border-radius-md);
     font-size: var(--font-size-md);
     background-color: var(--card-background-color);
+    font-family: var(--font-secondary);
+    /* Input text */
     transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
 }
 
@@ -105,9 +120,13 @@
     left: var(--spacing-md);
     transform: translateY(-50%);
     color: var(--secondary-text-color);
+    font-family: var(--font-secondary);
+    /* Icon text, if any */
 }
 
 .results-count {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     font-size: var(--font-size-sm);
     color: var(--secondary-text-color);
     margin-bottom: var(--spacing-md);
@@ -120,6 +139,8 @@
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
     font-size: var(--font-size-sm);
+    font-family: var(--font-secondary);
+    /* Table text */
 }
 
 .banner-table th,
@@ -128,6 +149,8 @@
     text-align: left;
     border-bottom: 1px solid var(--border-color);
     color: var(--primary-text-color);
+    font-family: var(--font-secondary);
+    /* Table cell text */
 }
 
 .banner-table th {
@@ -135,6 +158,8 @@
     font-weight: 600;
     font-size: var(--font-size-sm);
     text-transform: uppercase;
+    font-family: var(--font-primary);
+    /* Table header as title */
 }
 
 .banner-table tr:hover {
@@ -157,6 +182,8 @@
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-xs);
     font-weight: 600;
+    font-family: var(--font-secondary);
+    /* Chip text */
 }
 
 .action-buttons {
@@ -175,6 +202,8 @@
     cursor: pointer;
     font-size: var(--font-size-sm);
     font-weight: 500;
+    font-family: var(--font-secondary);
+    /* Button text */
     transition: background var(--transition-speed), transform var(--transition-speed), box-shadow var(--transition-speed);
     gap: var(--spacing-xs);
 }
@@ -257,6 +286,8 @@
 
 .btn .icon {
     font-size: var(--font-size-sm);
+    font-family: var(--font-secondary);
+    /* Icon text, if any */
 }
 
 .edit-image-container {
@@ -270,6 +301,8 @@
 }
 
 .image-preview-text {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     font-size: var(--font-size-xs);
     color: var(--primary-text-color);
     font-weight: 500;
@@ -282,6 +315,8 @@
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-xs);
     background-color: var(--card-background-color);
+    font-family: var(--font-secondary);
+    /* Input text */
     transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
 }
 
@@ -304,6 +339,8 @@
     padding: var(--spacing-lg);
     box-shadow: var(--shadow-sm);
     transition: transform var(--transition-speed);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .mobile-banner-card:hover {
@@ -316,6 +353,8 @@
 }
 
 .mobile-banner-header h6 {
+    font-family: var(--font-primary);
+    /* Title font */
     font-size: var(--font-size-lg);
     color: var(--primary-text-color);
     font-weight: 600;
@@ -323,6 +362,8 @@
 
 .mobile-banner-header .banner-chip {
     margin-top: var(--spacing-xs);
+    font-family: var(--font-secondary);
+    /* Chip text */
 }
 
 .mobile-banner-image {
@@ -337,12 +378,16 @@
 }
 
 .mobile-banner-details p {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     font-size: var(--font-size-sm);
     color: var(--secondary-text-color);
     margin: var(--spacing-sm) 0;
 }
 
 .mobile-banner-details strong {
+    font-family: var(--font-secondary);
+    /* Strong text is not a title */
     color: var(--primary-text-color);
     font-weight: 600;
 }
@@ -389,15 +434,21 @@
     text-align: center;
     padding: var(--spacing-xl);
     color: var(--secondary-text-color);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .loading-state p,
 .empty-state p {
     margin: var(--spacing-md) 0;
     font-size: var(--font-size-md);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .empty-state h4 {
+    font-family: var(--font-primary);
+    /* Title font */
     font-size: var(--font-size-lg);
     color: var(--primary-text-color);
 }
@@ -405,6 +456,8 @@
 .empty-state-icon {
     font-size: var(--font-size-xl);
     margin-bottom: var(--spacing-md);
+    font-family: var(--font-secondary);
+    /* Icon text, if any */
 }
 
 .spinner {
@@ -449,6 +502,8 @@
     margin-top: var(--spacing-md);
     font-size: var(--font-size-sm);
     color: var(--secondary-text-color);
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .alert {
@@ -460,6 +515,8 @@
     gap: var(--spacing-sm);
     font-size: var(--font-size-sm);
     border-left: 4px solid;
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .alert.error {
@@ -476,6 +533,8 @@
 
 .alert-icon {
     font-size: var(--font-size-md);
+    font-family: var(--font-secondary);
+    /* Icon text, if any */
 }
 
 .modal-overlay {
@@ -500,7 +559,9 @@
     box-shadow: var(--shadow-lg);
     height: 100vh;
     overflow-y: auto;
-    margin: 10px  0 ;
+    margin: 10px 0;
+    font-family: var(--font-secondary);
+    /* Non-title text */
 }
 
 .modal-view-content {
@@ -508,6 +569,8 @@
 }
 
 .modal-content h3 {
+    font-family: var(--font-primary);
+    /* Title font */
     font-size: var(--font-size-lg);
     color: var(--primary-text-color);
     margin-bottom: var(--spacing-md);
@@ -523,18 +586,24 @@
 }
 
 .image-url {
+    font-family: var(--font-secondary);
+    /* Non-title text, kept monospace */
     font-size: var(--font-size-sm);
     color: var(--secondary-text-color);
     font-family: monospace;
 }
 
 .modal-banner-details p {
+    font-family: var(--font-secondary);
+    /* Non-title text */
     margin: var(--spacing-sm) 0;
     font-size: var(--font-size-sm);
     color: var(--secondary-text-color);
 }
 
 .modal-banner-details strong {
+    font-family: var(--font-secondary);
+    /* Strong text is not a title */
     color: var(--primary-text-color);
     font-weight: 600;
 }

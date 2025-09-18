@@ -1,58 +1,26 @@
-import React, { useState } from 'react';
+import React,{ useState, useContext } from 'react';
+import { useMediaQuery } from 'react-responsive';
 import {
-    Box,
-    Button,
-    TextField,
-    Typography,
-    Paper,
-    Grid,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemSecondaryAction,
-    IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    FormControlLabel,
-    Checkbox,
-    CircularProgress,
-    useMediaQuery,
-    useTheme,
-    Snackbar,
-    Alert,
-    Card,
-    CardContent,
-    CardActions,
-    Chip,
-    LinearProgress,
-    Fade,
-    Slide,
-    Divider,
-    Avatar,
-    Stack,
+    Box, Button, TextField, Typography, Card, CardContent, CardActions, Grid,
+    Chip, CircularProgress, Divider, Avatar, Stack, Dialog, DialogTitle,
+    DialogContent, DialogActions, FormControlLabel, Checkbox, Snackbar, Alert, Fade, Slide,IconButton
 } from '@mui/material';
 import {
-    Delete,
-    Edit,
-    Add,
-    Home,
-    Phone,
-    LocationOn,
-    CheckCircle,
-    Error,
-    PersonPin,
+    Delete, Edit, Add, Home, Phone, LocationOn, CheckCircle, Error, PersonPin,
 } from '@mui/icons-material';
 import { useAddressQuery } from '../../hooks/address/useAddressQuery';
+import { MyContext } from '../../context/themeContext/themeContext';
+import './ManageAddress.css';
+
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const ManageAddress = () => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const { themeMode } = useContext(MyContext);
+    const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
+    const isSmallScreen = useMediaQuery({ query: '(max-width: 480px)' });
     const { useGetAllAddresses, useAddAddress, useUpdateAddress, useDeleteAddress } = useAddressQuery();
 
     const { data: addresses, isLoading } = useGetAllAddresses();
@@ -66,7 +34,7 @@ const ManageAddress = () => {
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
-        severity: 'success',
+        severity: 'success'
     });
     const [formData, setFormData] = useState({
         name: '',
@@ -78,17 +46,27 @@ const ManageAddress = () => {
         city: '',
         state: '',
         country: '',
-        isDefault: false,
+        isDefault: false
     });
+    const [formErrors, setFormErrors] = useState({});
 
-    const showSnackbar = (message, severity = 'success') => {
-        setSnackbar({
-            open: true,
-            message,
-            severity,
-        });
+    const validateForm = () => {
+        const errors = {};
+        if (!formData.name.trim()) errors.name = 'Full Name is required';
+        if (!formData.phone.trim() || !/^\d{10}$/.test(formData.phone)) errors.phone = 'Valid 10-digit phone number is required';
+        if (formData.alternatePhone && !/^\d{10}$/.test(formData.alternatePhone)) errors.alternatePhone = 'Valid 10-digit alternate phone number is required';
+        if (!formData.addressLine1.trim()) errors.addressLine1 = 'Address Line 1 is required';
+        if (!formData.pincode.trim() || !/^\d{6}$/.test(formData.pincode)) errors.pincode = 'Valid 6-digit pincode is required';
+        if (!formData.city.trim()) errors.city = 'City is required';
+        if (!formData.state.trim()) errors.state = 'State is required';
+        if (!formData.country.trim()) errors.country = 'Country is required';
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
+    const showSnackbar = (message, severity = 'success') => {
+        setSnackbar({ open: true, message, severity });
+    };
 
     const handleCloseSnackbar = () => {
         setSnackbar({ ...snackbar, open: false });
@@ -111,15 +89,17 @@ const ManageAddress = () => {
                 city: '',
                 state: '',
                 country: '',
-                isDefault: false,
+                isDefault: false
             });
         }
+        setFormErrors({});
         setOpen(true);
     };
 
     const handleClose = () => {
         setOpen(false);
         setCurrentAddressId(null);
+        setFormErrors({});
     };
 
     const handleInputChange = (e) => {
@@ -132,11 +112,15 @@ const ManageAddress = () => {
     };
 
     const handleSubmit = async () => {
+        if (!validateForm()) {
+            showSnackbar('Please correct the form errors.', 'error');
+            return;
+        }
         try {
             if (isEditMode) {
                 await updateAddressMutation.mutateAsync({
                     id: currentAddressId,
-                    updatedAddress: formData,
+                    updatedAddress: formData
                 });
                 showSnackbar('Address updated successfully!', 'success');
             } else {
@@ -153,91 +137,67 @@ const ManageAddress = () => {
     const handleDelete = async (id, name) => {
         try {
             await deleteAddressMutation.mutateAsync({ id });
-            showSnackbar(`Address for ${name} deleted successfully!`, 'delete'); // ✅ changed to 'delete'
+            showSnackbar(`Address for ${name} deleted successfully!`, 'error');
         } catch (error) {
             console.error('Error deleting address:', error);
             showSnackbar('Failed to delete address. Please try again.', 'error');
         }
     };
 
-
     const isFormLoading = addAddressMutation.isLoading || updateAddressMutation.isLoading;
 
     return (
-        <Box sx={{ maxWidth: 1200, mx: 'auto', p: isMobile ? 2 : 4 }}>
-            {/* Header Section */}
-            <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-                <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                    <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
-                        <Home fontSize="large" />
-                    </Avatar>
-                    <Box>
-                        <Typography variant="h4" fontWeight={600} color="text.primary">
-                            Manage Addresses
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Add, edit, and manage your delivery addresses
-                        </Typography>
+        <div className={`manage-address-container ${themeMode}`}>
+            <Card className="header-card">
+                <CardContent>
+                    <Stack direction="row" alignItems="center" spacing={2}>
+                        <Avatar className="header-avatar">
+                            <Home />
+                        </Avatar>
+                        <Box>
+                            <Typography variant={isSmallScreen ? 'h6' : 'h4'} className="header-title">
+                                Manage Addresses
+                            </Typography>
+                            <Typography variant="body2" className="header-subtitle">
+                                Add, edit, and manage your delivery addresses
+                            </Typography>
+                        </Box>
+                    </Stack>
+                    <Box mt={2}>
+                        <Button
+                            variant="contained"
+                            onClick={() => handleOpen()}
+                            startIcon={<Add />}
+                            className="btn primary"
+                        >
+                            Add New Address
+                        </Button>
                     </Box>
-                </Stack>
+                </CardContent>
+            </Card>
 
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => handleOpen()}
-                    startIcon={<Add />}
-                    sx={{
-                        borderRadius: 2,
-                        px: 3,
-                        py: 1,
-                        boxShadow: 3,
-                        '&:hover': {
-                            transform: 'translateY(-2px)',
-                            boxShadow: 6,
-                        },
-                        transition: 'all 0.3s ease',
-                    }}
-                >
-                    Add New Address
-                </Button>
-            </Paper>
-
-            {/* Loading State */}
             {isLoading ? (
-                <Paper elevation={2} sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
-                    <CircularProgress size={48} sx={{ mb: 2 }} />
-                    <Typography variant="h6" color="text.secondary">
-                        Loading your addresses...
-                    </Typography>
-                </Paper>
+                <Card className="loading-card">
+                    <CardContent className="loading-content">
+                        <CircularProgress size={48} />
+                        <Typography variant="h6" className="loading-text">
+                            Loading your addresses...
+                        </Typography>
+                    </CardContent>
+                </Card>
             ) : (
-                /* Address Cards */
                 <Grid container spacing={3}>
                     {addresses && addresses.length > 0 ? (
                         addresses.map((address, index) => (
                             <Grid item xs={12} md={6} lg={4} key={address.id}>
                                 <Fade in={true} timeout={300 + index * 100}>
-                                    <Card
-                                        elevation={3}
-                                        sx={{
-                                            height: '100%',
-                                            borderRadius: 3,
-                                            transition: 'all 0.3s ease',
-                                            '&:hover': {
-                                                transform: 'translateY(-4px)',
-                                                boxShadow: 8,
-                                            },
-                                            border: address.isDefault ? '2px solid' : '1px solid',
-                                            borderColor: address.isDefault ? 'primary.main' : 'divider',
-                                        }}
-                                    >
-                                        <CardContent sx={{ p: 3 }}>
+                                    <Card className={`address-card ${address.isDefault ? 'default' : ''}`}>
+                                        <CardContent>
                                             <Stack spacing={2}>
-                                                {/* Header with name and default badge */}
                                                 <Stack direction="row" alignItems="center" justifyContent="space-between">
                                                     <Stack direction="row" alignItems="center" spacing={1}>
-                                                        <PersonPin color="primary" />
-                                                        <Typography variant="h6" fontWeight={600}>
+                                                        <PersonPin className="icon" />
+                                                        <Typography variant="h6" className="address-name">
                                                             {address.name}
                                                         </Typography>
                                                     </Stack>
@@ -246,35 +206,28 @@ const ManageAddress = () => {
                                                             label="Default"
                                                             size="small"
                                                             icon={<CheckCircle />}
-                                                            color="primary"
-                                                            variant="filled"
+                                                            className="chip default"
                                                         />
                                                     )}
                                                 </Stack>
-
                                                 <Divider />
-
-                                                {/* Address Details */}
                                                 <Stack spacing={1}>
                                                     <Stack direction="row" spacing={1}>
-                                                        <LocationOn color="action" fontSize="small" />
-                                                        <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+                                                        <LocationOn className="icon" />
+                                                        <Typography variant="body2" className="address-text">
                                                             {address.addressLine1}
                                                             {address.addressLine2 && `, ${address.addressLine2}`}
                                                         </Typography>
                                                     </Stack>
-
-                                                    <Typography variant="body2" color="text.secondary" sx={{ ml: 3 }}>
+                                                    <Typography variant="body2" className="address-text" sx={{ ml: 3 }}>
                                                         {address.city}, {address.state}
                                                     </Typography>
-
-                                                    <Typography variant="body2" color="text.secondary" sx={{ ml: 3 }}>
+                                                    <Typography variant="body2" className="address-text" sx={{ ml: 3 }}>
                                                         {address.country} - {address.pincode}
                                                     </Typography>
-
-                                                    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                                                        <Phone color="action" fontSize="small" />
-                                                        <Typography variant="body2" color="text.secondary">
+                                                    <Stack direction="row" spacing={1}>
+                                                        <Phone className="icon" />
+                                                        <Typography variant="body2" className="address-text">
                                                             {address.phone}
                                                             {address.alternatePhone && ` | ${address.alternatePhone}`}
                                                         </Typography>
@@ -282,40 +235,23 @@ const ManageAddress = () => {
                                                 </Stack>
                                             </Stack>
                                         </CardContent>
-
                                         <Divider />
-
-                                        <CardActions sx={{ p: 2, justifyContent: 'space-between' }}>
-                                            <Box sx={{ flexGrow: 1 }} />
-                                            <Stack direction="row" spacing={1}>
-                                                <IconButton
-                                                    onClick={() => handleOpen(address)}
-                                                    sx={{
-                                                        color: 'primary.main',
-                                                        '&:hover': {
-                                                            backgroundColor: 'primary.light',
-                                                            color: 'white',
-                                                        },
-                                                    }}
-                                                    size="small"
-                                                >
-                                                    <Edit fontSize="small" />
-                                                </IconButton>
-                                                <IconButton
-                                                    onClick={() => handleDelete(address.id, address.name)}
-                                                    sx={{
-                                                        color: 'error.main',
-                                                        '&:hover': {
-                                                            backgroundColor: 'error.light',
-                                                            color: 'white',
-                                                        },
-                                                    }}
-                                                    size="small"
-                                                    disabled={deleteAddressMutation.isLoading}
-                                                >
-                                                    <Delete fontSize="small" />
-                                                </IconButton>
-                                            </Stack>
+                                        <CardActions className="card-actions">
+                                            <IconButton
+                                                onClick={() => handleOpen(address)}
+                                                className="icon-btn edit"
+                                                size="small"
+                                            >
+                                                <Edit />
+                                            </IconButton>
+                                            <IconButton
+                                                onClick={() => handleDelete(address.id, address.name)}
+                                                className="icon-btn delete"
+                                                size="small"
+                                                disabled={deleteAddressMutation.isLoading}
+                                            >
+                                                <Delete />
+                                            </IconButton>
                                         </CardActions>
                                     </Card>
                                 </Fade>
@@ -323,37 +259,30 @@ const ManageAddress = () => {
                         ))
                     ) : (
                         <Grid item xs={12}>
-                            <Paper
-                                elevation={2}
-                                sx={{
-                                    p: 6,
-                                    textAlign: 'center',
-                                    borderRadius: 3,
-                                    bgcolor: 'grey.50',
-                                }}
-                            >
-                                <Home sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
-                                <Typography variant="h6" color="text.secondary" gutterBottom>
-                                    No addresses found
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                                    Start by adding your first delivery address
-                                </Typography>
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    onClick={() => handleOpen()}
-                                    startIcon={<Add />}
-                                >
-                                    Add Your First Address
-                                </Button>
-                            </Paper>
+                            <Card className="no-address-card">
+                                <CardContent className="no-address-content">
+                                    <Home className="no-address-icon" />
+                                    <Typography variant="h6" className="no-address-title">
+                                        No addresses found
+                                    </Typography>
+                                    <Typography variant="body2" className="no-address-text">
+                                        Start by adding your first delivery address
+                                    </Typography>
+                                    <Button
+                                        variant="outlined"
+                                        onClick={() => handleOpen()}
+                                        startIcon={<Add />}
+                                        className="btn secondary"
+                                    >
+                                        Add Your First Address
+                                    </Button>
+                                </CardContent>
+                            </Card>
                         </Grid>
                     )}
                 </Grid>
             )}
 
-            {/* Address Form Dialog */}
             <Dialog
                 open={open}
                 onClose={handleClose}
@@ -361,30 +290,25 @@ const ManageAddress = () => {
                 fullWidth
                 maxWidth="md"
                 fullScreen={isMobile}
-                PaperProps={{
-                    sx: { borderRadius: isMobile ? 0 : 3 },
-                }}
+                PaperProps={{ className: 'dialog-paper' }}
             >
-                {isFormLoading && <LinearProgress />}
-
-                <DialogTitle sx={{ pb: 1 }}>
+                <DialogTitle>
                     <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar sx={{ bgcolor: isEditMode ? 'warning.main' : 'primary.main' }}>
+                        <Avatar className={isEditMode ? 'avatar edit' : 'avatar add'}>
                             {isEditMode ? <Edit /> : <Add />}
                         </Avatar>
                         <Box>
-                            <Typography variant="h5" fontWeight={600}>
+                            <Typography variant={isSmallScreen ? 'h6' : 'h5'} className="dialog-title">
                                 {isEditMode ? 'Edit Address' : 'Add New Address'}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" className="dialog-subtitle">
                                 {isEditMode ? 'Update your address details' : 'Fill in your address information'}
                             </Typography>
                         </Box>
                     </Stack>
                 </DialogTitle>
-
-                <DialogContent sx={{ pt: 3 }}>
-                    <Grid container spacing={3}>
+                <DialogContent>
+                    <Grid container spacing={2}>
                         <Grid item xs={12} sm={6}>
                             <TextField
                                 fullWidth
@@ -394,8 +318,12 @@ const ManageAddress = () => {
                                 onChange={handleInputChange}
                                 required
                                 variant="outlined"
+                                size="small"
+                                className="form-input"
+                                error={!!formErrors.name}
+                                helperText={formErrors.name}
                                 InputProps={{
-                                    startAdornment: <PersonPin color="action" sx={{ mr: 1 }} />,
+                                    startAdornment: <PersonPin className="input-icon" />
                                 }}
                             />
                         </Grid>
@@ -408,8 +336,12 @@ const ManageAddress = () => {
                                 onChange={handleInputChange}
                                 required
                                 variant="outlined"
+                                size="small"
+                                className="form-input"
+                                error={!!formErrors.phone}
+                                helperText={formErrors.phone}
                                 InputProps={{
-                                    startAdornment: <Phone color="action" sx={{ mr: 1 }} />,
+                                    startAdornment: <Phone className="input-icon" />
                                 }}
                             />
                         </Grid>
@@ -421,8 +353,12 @@ const ManageAddress = () => {
                                 value={formData.alternatePhone}
                                 onChange={handleInputChange}
                                 variant="outlined"
+                                size="small"
+                                className="form-input"
+                                error={!!formErrors.alternatePhone}
+                                helperText={formErrors.alternatePhone}
                                 InputProps={{
-                                    startAdornment: <Phone color="action" sx={{ mr: 1 }} />,
+                                    startAdornment: <Phone className="input-icon" />
                                 }}
                             />
                         </Grid>
@@ -435,10 +371,14 @@ const ManageAddress = () => {
                                 onChange={handleInputChange}
                                 required
                                 variant="outlined"
+                                size="small"
+                                className="form-input"
                                 multiline
                                 rows={2}
+                                error={!!formErrors.addressLine1}
+                                helperText={formErrors.addressLine1}
                                 InputProps={{
-                                    startAdornment: <LocationOn color="action" sx={{ mr: 1, mt: 1 }} />,
+                                    startAdornment: <LocationOn className="input-icon" sx={{ mt: 1 }} />
                                 }}
                             />
                         </Grid>
@@ -450,6 +390,8 @@ const ManageAddress = () => {
                                 value={formData.addressLine2}
                                 onChange={handleInputChange}
                                 variant="outlined"
+                                size="small"
+                                className="form-input"
                                 multiline
                                 rows={1}
                             />
@@ -463,6 +405,10 @@ const ManageAddress = () => {
                                 onChange={handleInputChange}
                                 required
                                 variant="outlined"
+                                size="small"
+                                className="form-input"
+                                error={!!formErrors.pincode}
+                                helperText={formErrors.pincode}
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -474,6 +420,10 @@ const ManageAddress = () => {
                                 onChange={handleInputChange}
                                 required
                                 variant="outlined"
+                                size="small"
+                                className="form-input"
+                                error={!!formErrors.city}
+                                helperText={formErrors.city}
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -485,6 +435,10 @@ const ManageAddress = () => {
                                 onChange={handleInputChange}
                                 required
                                 variant="outlined"
+                                size="small"
+                                className="form-input"
+                                error={!!formErrors.state}
+                                helperText={formErrors.state}
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -496,6 +450,10 @@ const ManageAddress = () => {
                                 onChange={handleInputChange}
                                 required
                                 variant="outlined"
+                                size="small"
+                                className="form-input"
+                                error={!!formErrors.country}
+                                helperText={formErrors.country}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -505,21 +463,21 @@ const ManageAddress = () => {
                                         checked={formData.isDefault}
                                         onChange={handleCheckboxChange}
                                         name="isDefault"
-                                        color="primary"
+                                        className="checkbox"
                                     />
                                 }
                                 label="Set as default address"
-                                sx={{ mt: 1 }}
+                                className="checkbox-label"
                             />
                         </Grid>
                     </Grid>
                 </DialogContent>
-
-                <DialogActions sx={{ p: 3, pt: 1 }}>
+                <DialogActions className="dialog-actions">
                     <Button
                         onClick={handleClose}
                         variant="outlined"
                         disabled={isFormLoading}
+                        className="btn secondary"
                     >
                         Cancel
                     </Button>
@@ -527,19 +485,13 @@ const ManageAddress = () => {
                         onClick={handleSubmit}
                         variant="contained"
                         disabled={isFormLoading}
-                        sx={{ minWidth: 120 }}
+                        startIcon={isFormLoading ? <CircularProgress size={16} /> : null}
+                        className="btn primary"
                     >
-                        {isFormLoading ? (
-                            <CircularProgress size={20} color="inherit" />
-                        ) : (
-                            isEditMode ? 'Update Address' : 'Save Address'
-                        )}
+                        {isEditMode ? 'Update Address' : 'Save Address'}
                     </Button>
                 </DialogActions>
             </Dialog>
-
-            {/* Success/Error Snackbar */}
-          
 
             <Snackbar
                 open={snackbar.open}
@@ -549,34 +501,13 @@ const ManageAddress = () => {
             >
                 <Alert
                     onClose={handleCloseSnackbar}
-                    severity={
-                        snackbar.severity === 'update'
-                            ? 'warning'
-                            : snackbar.severity === 'delete'
-                                ? 'error'
-                                : snackbar.severity
-                    }
-                    variant="filled"
-                    sx={{
-                        width: '100%',
-                        backgroundColor: {
-                            success: 'green',
-                            update: 'orange',
-                            delete: 'red',
-                        }[snackbar.severity] || undefined,
-                        color: '#fff',
-                    }}
-                    icon={{
-                        success: <CheckCircle />,
-                        delete: <Error />,
-                        update: <Edit />,
-                    }[snackbar.severity] || undefined}
+                    severity={snackbar.severity}
+                    className={`alert ${snackbar.severity}`}
                 >
                     {snackbar.message}
                 </Alert>
             </Snackbar>
-
-        </Box>
+        </div>
     );
 };
 

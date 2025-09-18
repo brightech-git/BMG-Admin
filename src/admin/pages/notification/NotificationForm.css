@@ -1,4 +1,4 @@
-.add-rates-container {
+.notification-form-container {
     font-family: var(--font-primary);
     color: var(--primary-text-color);
     background-color: var(--background-color);
@@ -10,29 +10,29 @@
 }
 
 @media (max-width: 768px) {
-    .add-rates-container {
+    .notification-form-container {
         padding: var(--spacing-md);
     }
 }
 
 @media (max-width: 480px) {
-    .add-rates-container {
+    .notification-form-container {
         padding: var(--spacing-sm);
     }
 }
 
-.add-rates-card {
+.notification-form-card {
     background: var(--card-background-color) !important;
     border: 1px solid var(--border-color) !important;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-sm);
-    max-width: 1000px;
+    max-width: 600px;
     width: 100%;
     margin: 0 auto;
     transition: box-shadow var(--transition-speed), transform var(--transition-speed);
 }
 
-.add-rates-card:hover {
+.notification-form-card:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
 }
@@ -47,30 +47,15 @@
     color: var(--primary-text-color);
 }
 
-.header-subtitle {
-    font-size: var(--font-size-md);
-    color: var(--secondary-text-color);
-    max-width: 600px;
-    margin: 0 auto;
-}
-
 @media (max-width: 768px) {
     .header-title {
         font-size: var(--font-size-lg);
-    }
-
-    .header-subtitle {
-        font-size: var(--font-size-sm);
     }
 }
 
 @media (max-width: 480px) {
     .header-title {
         font-size: var(--font-size-md);
-    }
-
-    .header-subtitle {
-        font-size: var(--font-size-xs);
     }
 }
 
@@ -118,31 +103,26 @@
     gap: var(--spacing-xs);
 }
 
-.input-label .MuiSvgIcon-root {
-    font-size: var(--font-size-md);
-    color: var(--primary-color);
-}
-
 .required {
     color: var(--error-color);
 }
 
-.rate-input .MuiOutlinedInput-root {
+.form-input .MuiOutlinedInput-root {
     border-radius: var(--border-radius-md);
     background-color: var(--card-background-color);
     font-size: var(--font-size-sm);
     color: var(--primary-text-color);
 }
 
-.rate-input .MuiOutlinedInput-notchedOutline {
+.form-input .MuiOutlinedInput-notchedOutline {
     border-color: var(--border-color);
 }
 
-.rate-input .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+.form-input .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
     border-color: var(--primary-color);
 }
 
-.rate-input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+.form-input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
     border-color: var(--primary-color);
     border-width: 2px;
 }
@@ -150,84 +130,6 @@
 .input-adornment {
     color: var(--primary-color);
     margin-right: var(--spacing-sm);
-}
-
-.input-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: var(--spacing-sm);
-}
-
-.input-info .MuiTypography-caption {
-    font-size: var(--font-size-xs);
-    color: var(--secondary-text-color);
-}
-
-.rate-summary {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-md);
-    background-color: var(--active-bg);
-    border-radius: var(--border-radius-md);
-    border: 1px solid var(--border-color);
-}
-
-.summary-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-.summary-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: var(--primary-color);
-}
-
-.summary-icon .MuiSvgIcon-root {
-    font-size: var(--font-size-md);
-    color: #ffffff;
-}
-
-.summary-title {
-    font-size: var(--font-size-md);
-    font-weight: 600;
-    color: var(--primary-text-color);
-}
-
-.summary-text {
-    font-size: var(--font-size-sm);
-    color: var(--secondary-text-color);
-}
-
-.summary-chips {
-    display: flex;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-}
-
-.chip {
-    background-color: var(--active-bg);
-    color: var(--primary-color);
-    font-size: var(--font-size-xs);
-    border-radius: var(--border-radius-sm);
-    font-weight: 600;
-}
-
-.chip.gold {
-    background-color: rgba(var(--primary-color), 0.1);
-    color: var(--primary-color);
-}
-
-.chip.silver {
-    background-color: rgba(var(--secondary-color), 0.1);
-    color: var(--secondary-color);
 }
 
 .action-buttons {
@@ -248,25 +150,12 @@
     background-color: var(--primary-color);
     color: #ffffff;
     box-shadow: var(--shadow-sm);
-    min-width: 160px;
+    min-width: 120px;
 }
 
 .btn.primary:hover {
     background-color: var(--active-border);
     box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-}
-
-.btn.secondary {
-    background-color: transparent;
-    color: var(--secondary-text-color);
-    border: 1px solid var(--border-color);
-    min-width: 120px;
-}
-
-.btn.secondary:hover {
-    background-color: var(--active-bg);
-    border-color: var(--primary-color);
     transform: translateY(-2px);
 }
 
@@ -284,12 +173,7 @@
 
 @media (max-width: 768px) {
     .action-buttons {
-        flex-direction: column;
-        gap: var(--spacing-sm);
-    }
-
-    .btn {
-        width: 100%;
+        justify-content: center;
     }
 
     .input-container {
@@ -302,19 +186,7 @@
         font-size: var(--font-size-xs);
     }
 
-    .rate-input .MuiOutlinedInput-root {
-        font-size: var(--font-size-xs);
-    }
-
-    .chip {
-        font-size: var(--font-size-xxs);
-    }
-
-    .summary-title {
-        font-size: var(--font-size-sm);
-    }
-
-    .summary-text {
+    .form-input .MuiOutlinedInput-root {
         font-size: var(--font-size-xs);
     }
 }

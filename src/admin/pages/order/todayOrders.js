@@ -3,6 +3,7 @@ import { MyContext } from '../../context/themeContext/themeContext';
 import { useOrdersByDateRange } from '../../hooks/order/useAllOrder';
 import { format, subDays, parseISO, isWithinInterval } from 'date-fns';
 import { useMediaQuery } from 'react-responsive';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import {
     Box,
     Typography,
@@ -325,7 +326,7 @@ const OrderHistoryPage = () => {
                                     <Link to="/">Dashboard</Link>
                                 </li>
                                 <li className="breadcrumb-item active" aria-current="page">
-                                    Manage Orders
+                                    Manage Today Orders
                                 </li>
                             </ol>
                         </nav>
@@ -359,7 +360,7 @@ const OrderHistoryPage = () => {
                                         color: themeMode === 'dark' ? 'var(--text-dark)' : '#3B8FF3',
                                         fontWeight: 600,
                                         fontSize: 'var(--font-size-xs)',
-                                        fontFamily: 'var(--font-primary)',
+                                        fontFamily: 'var(--font-secondary)',
                                     }}
                                 />
                             </Box>
@@ -404,7 +405,7 @@ const OrderHistoryPage = () => {
                                             '& .MuiOutlinedInput-input': {
                                                 color: themeMode === 'dark' ? 'var(--text-dark)' : 'var(--primary-text-color)',
                                                 fontSize: 'var(--font-size-md)',
-                                                fontFamily: 'var(--font-primary)',
+                                                fontFamily: 'var(--font-secondary)',
                                                 // Make native calendar icon visible in dark mode
                                                 '&::-webkit-calendar-picker-indicator': {
                                                     filter: themeMode === 'dark' ? 'invert(1)' : 'none',
@@ -413,7 +414,7 @@ const OrderHistoryPage = () => {
                                             },
                                             '& .MuiInputLabel-root': {
                                                 color: themeMode === 'dark' ? 'var(--secondary-text-color)' : 'var(--secondary-text-color)',
-                                                fontFamily: 'var(--font-primary)',
+                                                fontFamily: 'var(--font-secondary)',
                                             },
                                         }}
                                     />
@@ -423,7 +424,7 @@ const OrderHistoryPage = () => {
                                         sx={{
                                             color: 'var(--secondary-text-color)',
                                             fontSize: 'var(--font-size-md)',
-                                            fontFamily: 'var(--font-primary)',
+                                            fontFamily: 'var(--font-secondary)',
                                         }}
                                     >
                                         to
@@ -459,7 +460,7 @@ const OrderHistoryPage = () => {
                                             '& .MuiOutlinedInput-input': {
                                                 color: themeMode === 'dark' ? 'var(--text-dark)' : 'var(--primary-text-color)',
                                                 fontSize: 'var(--font-size-md)',
-                                                fontFamily: 'var(--font-primary)',
+                                                fontFamily: 'var(--font-secondary)',
                                                 '&::-webkit-calendar-picker-indicator': {
                                                     filter: themeMode === 'dark' ? 'invert(1)' : 'none',
                                                     cursor: 'pointer',
@@ -467,7 +468,7 @@ const OrderHistoryPage = () => {
                                             },
                                             '& .MuiInputLabel-root': {
                                                 color: themeMode === 'dark' ? 'var(--secondary-text-color)' : 'var(--secondary-text-color)',
-                                                fontFamily: 'var(--font-primary)',
+                                                fontFamily: 'var(--font-secondary)',
                                             },
                                         }}
                                     />
@@ -490,6 +491,7 @@ const OrderHistoryPage = () => {
                                             '&:hover': {
                                                 borderColor: themeMode === 'dark' ? 'var(--active-border)' : 'var(--primary-color)',
                                             },
+                                            fontFamily:'var(--font-secondary)'
                                         }}
                                     >
                                         Today
@@ -508,6 +510,7 @@ const OrderHistoryPage = () => {
                                             '&:hover': {
                                                 borderColor: themeMode === 'dark' ? 'var(--active-border)' : 'var(--primary-color)',
                                             },
+                                            fontFamily: 'var(--font-secondary)'
                                         }}
                                     >
                                         7 Days
@@ -526,6 +529,7 @@ const OrderHistoryPage = () => {
                                             '&:hover': {
                                                 borderColor: themeMode === 'dark' ? 'var(--active-border)' : 'var(--primary-color)',
                                             },
+                                            fontFamily: 'var(--font-secondary)'
                                         }}
                                     >
                                         30 Days
@@ -538,9 +542,9 @@ const OrderHistoryPage = () => {
                                     size="small"
                                     mode={themeMode}
                                     InputProps={{
-                                        startAdornment: <SearchIcon sx={{ color: 'var(--secondary-text-color)', mr: 1 }} />,
+                                        startAdornment: <SearchIcon sx={{ color: 'var(--secondary-text-color)', fontFamily: 'var(--font-secondary)', mr: 1 }} />,
                                     }}
-                                    sx={{ width: isMobile ? '100%' : 300 }}
+                                    sx={{ width: isMobile ? '100%' : 300, fontFamily: 'var(--font-secondary)' }}
                                 />
                             </Box>
                         </Box>
@@ -554,7 +558,7 @@ const OrderHistoryPage = () => {
                                     variant="body1"
                                     sx={{
                                         color: 'var(--secondary-text-color)',
-                                        fontFamily: 'var(--font-primary)',
+                                        fontFamily: 'var(--font-secondary)',
                                         fontSize: 'var(--font-size-md)',
                                     }}
                                 >
@@ -566,17 +570,17 @@ const OrderHistoryPage = () => {
                                 <Table stickyHeader>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)' }}>Order ID</TableCell>
-                                            <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)' }}>Customer</TableCell>
-                                            <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)' }}>Date & Time</TableCell>
-                                            <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)' }}>Products</TableCell>
-                                            <TableCell align="right" sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)' }}>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-primary)', }}>Order ID</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-primary)', }}>Customer</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-primary)', }}>Date & Time</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-primary)', }}>Products</TableCell>
+                                                <TableCell align="right" sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-primary)', }}>
                                                 Amount
                                             </TableCell>
-                                            <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)' }}>
+                                                <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-primary)', }}>
                                                 Status
                                             </TableCell>
-                                            <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)' }}>
+                                                <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-primary)', }}>
                                                 Tracking
                                             </TableCell>
                                         </TableRow>
@@ -593,6 +597,7 @@ const OrderHistoryPage = () => {
                                                                     fontWeight: 600,
                                                                     color: themeMode === 'dark' ? 'var(--active-border)' : '#3B8FF3',
                                                                     fontSize: 'var(--font-size-xs)',
+                                                                    fontFamily:'var(--font-secondary)'
                                                                 }}
                                                             >
                                                                 #{order.orderId}
@@ -606,6 +611,7 @@ const OrderHistoryPage = () => {
                                                                         fontWeight: 600,
                                                                         color: 'var(--primary-text-color)',
                                                                         fontSize: 'var(--font-size-xs)',
+                                                                        fontFamily: 'var(--font-secondary)'
                                                                     }}
                                                                 >
                                                                     {order.customerName}
@@ -615,6 +621,7 @@ const OrderHistoryPage = () => {
                                                                     sx={{
                                                                         color: 'var(--secondary-text-color)',
                                                                         fontSize: 'var(--font-size-xs)',
+                                                                        fontFamily: 'var(--font-secondary)'
                                                                     }}
                                                                 >
                                                                     {order.email}
@@ -628,6 +635,7 @@ const OrderHistoryPage = () => {
                                                                     fontWeight: 500,
                                                                     fontSize: 'var(--font-size-xs)',
                                                                     color: 'var(--primary-text-color)',
+                                                                    fontFamily: 'var(--font-secondary)'
                                                                 }}
                                                             >
                                                                 {format(parseISO(order.orderTime), 'dd/MM/yyyy')}
@@ -637,6 +645,7 @@ const OrderHistoryPage = () => {
                                                                 sx={{
                                                                     color: 'var(--secondary-text-color)',
                                                                     fontSize: 'var(--font-size-xs)',
+                                                                    fontFamily: 'var(--font-secondary)'
                                                                 }}
                                                             >
                                                                 {format(parseISO(order.orderTime), 'hh:mm a')}
@@ -652,6 +661,7 @@ const OrderHistoryPage = () => {
                                                                         color: themeMode === 'dark' ? 'var(--text-dark)' : '#34B1AA',
                                                                         fontWeight: 600,
                                                                         fontSize: 'var(--font-size-xs)',
+                                                                        fontFamily: 'var(--font-secondary)'
                                                                     }}
                                                                 />
                                                                 <IconButton
@@ -674,6 +684,7 @@ const OrderHistoryPage = () => {
                                                                     fontWeight: 700,
                                                                     color: themeMode === 'dark' ? 'var(--primary-color)' : '#F29F67',
                                                                     fontSize: 'var(--font-size-md)',
+                                                                    fontFamily: 'var(--font-secondary)'
                                                                 }}
                                                             >
                                                                 ₹{order.totalAmount.toFixed(2)}
@@ -685,6 +696,8 @@ const OrderHistoryPage = () => {
                                                                 status={order.status}
                                                                 mode={themeMode}
                                                                 size="small"
+                                                                sx={{ fontFamily: 'var(--font-secondary)' }}
+                                
                                                             />
                                                         </TableCell>
                                                         <TableCell align="center">
@@ -700,6 +713,7 @@ const OrderHistoryPage = () => {
                                                                             backgroundColor: themeMode === 'dark' ? 'var(--active-bg)' : 'rgba(52, 177, 170, 0.2)',
                                                                             transform: 'scale(1.05)',
                                                                         },
+                                                                        fontFamily: 'var(--font-secondary)'
                                                                     }}
                                                                 >
                                                                     <RemoveRedEye fontSize="small" />
@@ -750,6 +764,7 @@ const OrderHistoryPage = () => {
                                                                                         color: themeMode === 'dark' ? 'var(--active-border)' : '#3B8FF3',
                                                                                         fontSize: 'var(--font-size-xs)',
                                                                                         width: '40%',
+                                                                                        fontFamily: 'var(--font-primary)'
                                                                                     }}
                                                                                 >
                                                                                     Product
@@ -760,6 +775,7 @@ const OrderHistoryPage = () => {
                                                                                         color: themeMode === 'dark' ? 'var(--active-border)' : '#3B8FF3',
                                                                                         fontSize: 'var(--font-size-xs)',
                                                                                         width: '20%',
+                                                                                        fontFamily: 'var(--font-primary)'
                                                                                     }}
                                                                                 >
                                                                                     SKU
@@ -771,6 +787,7 @@ const OrderHistoryPage = () => {
                                                                                         color: themeMode === 'dark' ? 'var(--active-border)' : '#3B8FF3',
                                                                                         fontSize: 'var(--font-size-xs)',
                                                                                         width: '20%',
+                                                                                        fontFamily: 'var(--font-primary)'
                                                                                     }}
                                                                                 >
                                                                                     Unit Price
@@ -782,6 +799,7 @@ const OrderHistoryPage = () => {
                                                                                         color: themeMode === 'dark' ? 'var(--active-border)' : '#3B8FF3',
                                                                                         fontSize: 'var(--font-size-xs)',
                                                                                         width: '20%',
+                                                                                        fontFamily: 'var(--font-primary)'
                                                                                     }}
                                                                                 >
                                                                                     Total
@@ -816,6 +834,7 @@ const OrderHistoryPage = () => {
                                                                                                             justifyContent: 'center',
                                                                                                             flexShrink: 0,
                                                                                                             border: '1px solid var(--border-color)',
+                                                                                                            fontFamily: 'var(--font-secondary)'
                                                                                                         }}
                                                                                                     >
                                                                                                         <img
@@ -832,6 +851,7 @@ const OrderHistoryPage = () => {
                                                                                                         color: 'var(--primary-text-color)',
                                                                                                         lineHeight: 1.4,
                                                                                                         fontSize: 'var(--font-size-xs)',
+                                                                                                        fontFamily: 'var(--font-secondary)'
                                                                                                     }}
                                                                                                 >
                                                                                                     {item.productName}
@@ -844,7 +864,7 @@ const OrderHistoryPage = () => {
                                                                                                 sx={{
                                                                                                     color: themeMode === 'dark' ? 'var(--active-border)' : '#34B1AA',
                                                                                                     fontWeight: 500,
-                                                                                                    fontFamily: 'var(--font-mono)',
+                                                                                                    fontFamily: 'var(--font-secondary)',
                                                                                                     fontSize: 'var(--font-size-xs)',
                                                                                                     backgroundColor: themeMode === 'dark' ? 'var(--active-bg)' : 'rgba(52, 177, 170, 0.1)',
                                                                                                     padding: 'var(--spacing-xs) var(--spacing-sm)',
@@ -862,6 +882,7 @@ const OrderHistoryPage = () => {
                                                                                                     color: 'var(--secondary-text-color)',
                                                                                                     fontWeight: 500,
                                                                                                     fontSize: 'var(--font-size-xs)',
+                                                                                                    fontFamily: 'var(--font-secondary)'
                                                                                                 }}
                                                                                             >
                                                                                                 ₹{item.price.toFixed(2)}
@@ -874,6 +895,7 @@ const OrderHistoryPage = () => {
                                                                                                     color: themeMode === 'dark' ? 'var(--primary-color)' : '#F29F67',
                                                                                                     fontWeight: 700,
                                                                                                     fontSize: 'var(--font-size-xs)',
+                                                                                                    fontFamily: 'var(--font-secondary)'
                                                                                                 }}
                                                                                             >
                                                                                                 ₹{(item.price * item.quantity).toFixed(2)}
@@ -896,6 +918,7 @@ const OrderHistoryPage = () => {
                                                                                             color: 'var(--primary-text-color)',
                                                                                             textAlign: 'right',
                                                                                             fontSize: 'var(--font-size-xs)',
+                                                                                            fontFamily: 'var(--font-primary)'
                                                                                         }}
                                                                                     >
                                                                                         Order Total:
@@ -908,6 +931,7 @@ const OrderHistoryPage = () => {
                                                                                             color: themeMode === 'dark' ? 'var(--primary-color)' : '#F29F67',
                                                                                             fontWeight: 700,
                                                                                             fontSize: 'var(--font-size-md)',
+                                                                                            fontFamily: 'var(--font-secondary)'
                                                                                         }}
                                                                                     >
                                                                                         ₹{order.totalAmount.toFixed(2)}
@@ -1007,6 +1031,8 @@ const OrderHistoryPage = () => {
                                     const failedStatuses = ['DELIVERY_FAILED'];
                                     const successStatuses = ['DELIVERED'];
                                     const statusOrder = [
+                                        'PAYMENT_PENDING',
+                                        'PENDING',
                                         'PLACED',
                                         'IN_PROCESSING',
                                         'MOVE TO PACK',
@@ -1016,19 +1042,31 @@ const OrderHistoryPage = () => {
                                         'OUT_FOR_DELIVERY',
                                         'DELIVERED',
                                     ];
-                                    let currentStatus = trackingData.current_status && statusOrder.includes(trackingData.current_status)
-                                        ? trackingData.current_status
-                                        : latestHistoryStatus || 'PLACED';
+
+                                    let currentStatus =
+                                        trackingData.current_status && statusOrder.includes(trackingData.current_status)
+                                            ? trackingData.current_status
+                                            : latestHistoryStatus || 'PLACED';
+
                                     const isCancelled = cancelledStatuses.includes(currentStatus);
                                     const isFailed = failedStatuses.includes(currentStatus);
                                     const isSuccess = successStatuses.includes(currentStatus);
 
-                                    if (!statusOrder.includes(currentStatus) && !isCancelled) {
+                                    // ✅ Add pending states
+                                    const isPending = currentStatus === 'PENDING';
+                                    console.log(isPending ,'isPending')
+                                    const isPaymentPending = currentStatus === 'PAYMENT_PENDING';
+
+                                    if (!statusOrder.includes(currentStatus) && !isCancelled ) {
                                         console.warn(`Invalid status: ${currentStatus}. Defaulting to PLACED.`);
                                         currentStatus = 'PLACED';
                                     }
 
-                                    const currentStepIndex = isCancelled ? statusOrder.length : statusOrder.indexOf(currentStatus);
+                                    const currentStepIndex =
+                                        isCancelled || isPending || isPaymentPending
+                                            ? -1 // ✅ -1 means don't start the bar
+                                            : statusOrder.indexOf(currentStatus);
+
 
                                     const getStatusLabel = (status) => {
                                         return STATUS_OPTIONS[status] || status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
@@ -1039,24 +1077,44 @@ const OrderHistoryPage = () => {
                                             ? 'var(--error-color)'
                                             : isFailed
                                                 ? 'var(--warning-color)'
-                                                : 'var(--success-color)',
+                                                : isPending || isPaymentPending
+                                                    ? 'var(--warning-color)' // 🟡 yellow for pending
+                                                    : 'var(--success-color)',
+
                                         backgroundColor: isCancelled
                                             ? 'var(--error-color)'
                                             : isFailed
                                                 ? 'var(--warning-color)'
-                                                : 'var(--success-color)',
+                                                : isPending || isPaymentPending
+                                                    ? 'var(--warning-color)' // 🟡 yellow bg
+                                                    : 'var(--success-color)',
+
                                         borderColor: isCancelled
                                             ? themeMode === 'dark' ? '#DC2626' : '#e04545'
                                             : isFailed
                                                 ? themeMode === 'dark' ? '#D97706' : '#F59E0B'
-                                                : themeMode === 'dark' ? '#059669' : '#10B981',
-                                        icon: isCancelled ? CancelIcon : isFailed ? WarningIcon : CheckIcon,
+                                                : isPending || isPaymentPending
+                                                    ? themeMode === 'dark' ? '#CA8A04' : '#EAB308' // 🟡 yellow border
+                                                    : themeMode === 'dark' ? '#059669' : '#10B981',
+
+                                        icon: isCancelled
+                                            ? CancelIcon
+                                            : isFailed
+                                                ? WarningIcon
+                                                : isPending || isPaymentPending
+                                                    ? HourglassEmptyIcon // ⏳ pending indicator
+                                                    : CheckIcon,
+
                                         shadowColor: isCancelled
                                             ? 'rgba(239, 68, 68, 0.3)'
                                             : isFailed
                                                 ? 'rgba(245, 158, 11, 0.3)'
-                                                : 'rgba(16, 185, 129, 0.2)',
+                                                : isPending || isPaymentPending
+                                                    ? 'rgba(234, 179, 8, 0.3)' // 🟡 yellow glow
+                                                    : 'rgba(16, 185, 129, 0.2)',
                                     };
+
+
 
                                     if (isMobile) {
                                         return (

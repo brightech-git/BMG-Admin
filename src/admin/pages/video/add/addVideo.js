@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useUploadVideoMutation } from '../../../hooks/video/useVideoQuery';
 import {
     Box,
@@ -9,7 +10,8 @@ import {
     CardContent,
     Alert,
     Chip,
-    CircularProgress
+    CircularProgress,
+    InputAdornment
 } from '@mui/material';
 import {
     CheckCircle as CheckIcon,
@@ -17,140 +19,59 @@ import {
     Add as AddIcon,
     VideoLibrary as VideoIcon
 } from '@mui/icons-material';
-import { styled } from '@mui/system';
-
-// ========== ENHANCED STYLED COMPONENTS ==========
-const ModernCard = styled(Card)(() => ({
-    borderRadius: '16px',
-    background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-    boxShadow: '0 4px 20px rgba(30, 30, 44, 0.08)',
-    border: '1px solid rgba(255, 255, 255, 0.8)',
-    marginBottom: '24px',
-    position: 'relative',
-    overflow: 'hidden',
-    '&::before': {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '4px',
-        background: 'linear-gradient(90deg, #3B8FF3 0%, #F29F67 50%, #34B1AA 100%)',
-    },
-}));
-
-const ModernButton = styled(Button)(({ variant: buttonVariant, color }) => ({
-    borderRadius: '12px',
-    textTransform: 'none',
-    fontWeight: 600,
-    padding: '12px 24px',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    boxShadow: buttonVariant === 'contained' ? '0 4px 16px rgba(0, 0, 0, 0.1)' : 'none',
-    '&:hover': {
-        transform: 'translateY(-1px)',
-        boxShadow: buttonVariant === 'contained' ? '0 6px 20px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-    },
-    ...(color === 'primary' && {
-        background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 100%)',
-        color: 'white',
-        '&:hover': {
-            background: 'linear-gradient(135deg, #e09a3a 0%, #d48a2c 100%)',
-        }
-    }),
-    ...(color === 'secondary' && {
-        background: 'linear-gradient(135deg, #F29F67 0%, #e08f5a 100%)',
-        '&:hover': {
-            background: 'linear-gradient(135deg, #e08f5a 0%, #cc7a45 100%)',
-        }
-    }),
-}));
-
-const UploadArea = styled(Box)(() => ({
-    borderRadius: '12px',
-    border: '2px dashed rgba(235, 167, 72, 0.3)',
-    background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-    padding: '2rem',
-    textAlign: 'center',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    '&:hover': {
-        borderColor: '#eba748',
-        backgroundColor: 'rgba(235, 167, 72, 0.05)',
-        transform: 'translateY(-2px)',
-        boxShadow: '0 4px 16px rgba(235, 167, 72, 0.15)',
-    },
-}));
-
-const VideoPreview = styled('video')(() => ({
-    width: '100%',
-    maxHeight: '200px',
-    borderRadius: '8px',
-    objectFit: 'cover',
-    border: '1px solid rgba(30, 30, 44, 0.06)',
-    boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
-}));
+import { MyContext } from '../../../context/themeContext/themeContext';
+import './AddVideos.css';
 
 const AddVideos = () => {
+    const { themeMode } = useContext(MyContext);
     const [title, setTitle] = useState('');
     const [video, setVideo] = useState(null);
     const [preview, setPreview] = useState(null);
     const [error, setError] = useState(null);
     const fileInputRef = useRef(null);
+    const { mutate: uploadVideo, isLoading, isError, error: mutationError, isSuccess, reset } = useUploadVideoMutation();
 
-    const {
-        mutate: uploadVideo,
-        isLoading,
-        isError,
-        error: mutationError,
-        isSuccess,
-        reset,
-    } = useUploadVideoMutation();
-
-    // Reset success state after 5 seconds
     useEffect(() => {
         if (isSuccess) {
             const timer = setTimeout(() => {
+                setTitle('');
+                setVideo(null);
+                setPreview(null);
+                if (fileInputRef.current) fileInputRef.current.value = '';
                 reset();
-            }, 5000);
+            }, 3000);
             return () => clearTimeout(timer);
         }
     }, [isSuccess, reset]);
 
-    // Clean up preview URL to prevent memory leaks
     useEffect(() => {
         return () => {
-            if (preview) {
-                URL.revokeObjectURL(preview);
-            }
+            if (preview) URL.revokeObjectURL(preview);
         };
     }, [preview]);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (!selectedFile) {
-            setError('No file selected');
+            setError('No file selected.');
             return;
         }
 
-        // Validate file type
         if (!selectedFile.type.match('video.*')) {
-            setError('Please select a video file (MP4, WebM, or QuickTime format)');
+            setError('Please select a video file (MP4, WebM, or QuickTime format).');
             return;
         }
 
-        // Validate file size (max 100MB)
-        if (selectedFile.size > 100 * 1024 * 1024) {
-            setError('File size exceeds maximum limit of 100MB');
+        const maxSize = 100 * 1024 * 1024; // 100MB
+        if (selectedFile.size > maxSize) {
+            setError('File size exceeds maximum limit of 100MB.');
             return;
         }
 
         setVideo(selectedFile);
         setError(null);
 
-        // Create preview URL
-        if (preview) {
-            URL.revokeObjectURL(preview); // Clean up previous preview
-        }
+        if (preview) URL.revokeObjectURL(preview);
         const url = URL.createObjectURL(selectedFile);
         setPreview(url);
     };
@@ -160,38 +81,27 @@ const AddVideos = () => {
         setError(null);
 
         if (!title.trim()) {
-            setError('Video title is required');
+            setError('Video title is required.');
             return;
         }
 
         if (title.length > 100) {
-            setError('Title must be less than 100 characters');
+            setError('Title must be less than 100 characters.');
             return;
         }
 
         if (!video) {
-            setError('Please select a video file to upload');
+            setError('Please select a video file to upload.');
             return;
         }
 
-        // ✅ Correct way to call mutation
         uploadVideo({ title, video }, {
             onSuccess: () => {
-                setTitle('');
-                setVideo(null);
-                setPreview(null);
-                if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
-                }
+                // Handled by useEffect
             },
             onError: (err) => {
-                console.error('Upload error:', err);
-                setError(
-                    err.response?.data?.error ||
-                    err.message ||
-                    'An error occurred during video upload'
-                );
-            },
+                setError(err.response?.data?.error || err.message || 'Failed to upload video.');
+            }
         });
     };
 
@@ -212,77 +122,22 @@ const AddVideos = () => {
     };
 
     return (
-        <Box
-            p={3}
-            sx={{
-                backgroundColor: '#f8f9fa',
-                minHeight: '100vh',
-                background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: { xs: 2, sm: 4, md: 6 },
-            }}
-        >
-            <ModernCard sx={{ 
-                maxWidth: { xs: '100%', sm: 800, md: 900, lg: 1000 }, 
-                width: '100%',
-                margin: 'auto'
-            }}>
-                <CardContent sx={{ p: { xs: 3, sm: 5, md: 6 } }}>
-                    {/* Header Section */}
-                    <Box textAlign="center" mb={5}>
-                        <Typography 
-                            variant="h3" 
-                            sx={{ 
-                                color: '#1E1E2C', 
-                                fontWeight: 800, 
-                                mb: 2,
-                                fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' },
-                                background: 'linear-gradient(135deg, #1E1E2C 0%, #eba748 100%)',
-                                backgroundClip: 'text',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent'
-                            }}
-                        >
+        <div className={`add-videos-container ${themeMode}`}>
+            <Card className="add-videos-card">
+                <CardContent>
+                    <Box textAlign="center" mb={3}>
+                        <Typography variant="h4" className="header-title">
                             Upload New Video
                         </Typography>
-                        <Typography 
-                            variant="body1" 
-                            sx={{ 
-                                color: '#6B7280', 
-                                fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
-                                maxWidth: '600px',
-                                margin: '0 auto'
-                            }}
-                        >
+                        <Typography variant="body1" className="header-subtitle">
                             Add your video content to the platform with comprehensive details
                         </Typography>
                     </Box>
 
-                    {/* Video Title Input */}
                     <Box mb={4}>
-                        <Box sx={{ 
-                            backgroundColor: 'rgba(235, 167, 72, 0.05)', 
-                            p: 2, 
-                            borderRadius: '12px',
-                            border: '1px solid rgba(235, 167, 72, 0.1)'
-                        }}>
-                            <Typography
-                                variant="body2"
-                                sx={{ 
-                                    color: '#1E1E2C', 
-                                    fontWeight: 700, 
-                                    mb: 2, 
-                                    fontSize: '1rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1
-                                }}
-                            >
-                                <VideoIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
-                                Video Title
-                                <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                        <Box className="form-section">
+                            <Typography variant="body2" className="section-title">
+                                <VideoIcon /> Video Title <span className="required">*</span>
                             </Typography>
                             <TextField
                                 placeholder="Enter a descriptive title for your video"
@@ -291,240 +146,128 @@ const AddVideos = () => {
                                 variant="outlined"
                                 fullWidth
                                 inputProps={{ maxLength: 100 }}
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: '12px',
-                                        backgroundColor: '#fff',
-                                        fontSize: '1rem',
-                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#eba748',
-                                        },
-                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                            borderColor: '#eba748',
-                                            borderWidth: '2px',
-                                        },
-                                    },
-                                    '& .MuiInputLabel-root': {
-                                        color: '#6B7280',
-                                        fontWeight: 500,
-                                    },
+                                className="form-input"
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <AddIcon />
+                                        </InputAdornment>
+                                    )
                                 }}
                             />
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                                <Typography variant="caption" sx={{ color: '#6B7280' }}>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                                <Typography variant="caption" className="form-caption">
                                     {title.length}/100 characters
                                 </Typography>
                             </Box>
                         </Box>
                     </Box>
 
-                    {/* Video Upload Area */}
                     <Box mb={4}>
-                        <Box sx={{ 
-                            backgroundColor: 'rgba(235, 167, 72, 0.05)', 
-                            p: 2, 
-                            borderRadius: '12px',
-                            border: '1px solid rgba(235, 167, 72, 0.1)'
-                        }}>
-                            <Typography
-                                variant="body2"
-                                sx={{ 
-                                    color: '#1E1E2C', 
-                                    fontWeight: 700, 
-                                    mb: 2, 
-                                    fontSize: '1rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 1
-                                }}
-                            >
-                                <VideoIcon sx={{ color: '#eba748', fontSize: '1.2rem' }} />
-                                Video File
-                                <span style={{ color: '#dc3545', marginLeft: '4px' }}>*</span>
+                        <Box className="form-section">
+                            <Typography variant="body2" className="section-title">
+                                <VideoIcon /> Video File <span className="required">*</span>
                             </Typography>
-                            <Typography
-                                variant="body2"
-                                sx={{ color: '#6B7280', fontSize: '0.875rem', mb: 2, textAlign: 'left' }}
-                            >
-                                MP4, WebM or QuickTime • Max 100MB
+                            <Typography variant="body2" className="form-caption">
+                                MP4, WebM, or QuickTime (Max 100MB)
                             </Typography>
-                        
-                        {preview ? (
-                            <Box sx={{ position: 'relative' }}>
-                                <VideoPreview
-                                    src={preview}
-                                    muted
-                                    controls={false}
-                                    aria-label="Video preview"
-                                />
-                                <Box sx={{
-                                    position: 'absolute',
-                                    top: '50%',
-                                    left: '50%',
-                                    transform: 'translate(-50%, -50%)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    gap: 1
-                                }}>
-                                    <Chip
-                                        label={`${(video?.size / (1024 * 1024)).toFixed(2)} MB`}
-                                        color="primary"
-                                        sx={{
-                                            backgroundColor: 'rgba(59, 143, 243, 0.9)',
-                                            color: 'white',
-                                            fontWeight: 600,
-                                        }}
+                            {preview ? (
+                                <Box className="video-preview-container">
+                                    <video
+                                        src={preview}
+                                        muted
+                                        controls={false}
+                                        className="video-preview"
+                                        aria-label="Video preview"
                                     />
-                                    <Button
-                                        size="small"
-                                        variant="contained"
-                                        onClick={() => document.getElementById('videoInput').click()}
-                                        sx={{
-                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                            color: '#3B8FF3',
-                                            fontWeight: 600,
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(255, 255, 255, 1)',
-                                            }
-                                        }}
-                                    >
-                                        Replace Video
-                                    </Button>
+                                    <Box className="video-preview-overlay">
+                                        <Chip
+                                            label={`${(video?.size / (1024 * 1024)).toFixed(2)} MB`}
+                                            className="image-chip"
+                                        />
+                                        <Button
+                                            size="small"
+                                            variant="contained"
+                                            onClick={() => document.getElementById('videoInput').click()}
+                                            className="btn replace"
+                                        >
+                                            Replace Video
+                                        </Button>
+                                    </Box>
                                 </Box>
-                            </Box>
-                        ) : (
-                            <UploadArea
-                                onClick={() => document.getElementById('videoInput').click()}
-                                onDragOver={handleDragOver}
-                                onDrop={handleDrop}
-                                sx={{
-                                    width: '100%',
-                                    minHeight: 200,
-                                    border: '2px dashed #3B8FF3',
-                                    background: '#f8f9fa',
-                                    boxShadow: 'none',
-                                    mb: 0,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s',
-                                    '&:hover': {
-                                        borderColor: '#2a7bd9',
-                                        backgroundColor: '#f0f6ff',
-                                    },
-                                }}
-                            >
-                                <input
-                                    id="videoInput"
-                                    type="file"
-                                    accept="video/mp4,video/webm,video/quicktime"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    style={{ display: 'none' }}
-                                />
-                                <VideoIcon sx={{ fontSize: 48, color: '#3B8FF3', mb: 2 }} />
-                                <Typography variant="h6" sx={{ color: '#1E1E2C', fontWeight: 600, mb: 0.5, textAlign: 'center' }}>
-                                    Select a video to upload
-                                </Typography>
-                                <Typography variant="body2" sx={{ color: '#6B7280', textAlign: 'center', mb: 1 }}>
-                                    or drag and drop here
-                                </Typography>
-                                <Typography variant="caption" sx={{ color: '#6B7280', textAlign: 'center' }}>
-                                    MP4, WebM or QuickTime • Max 100MB
-                                </Typography>
-                            </UploadArea>
-                        )}
+                            ) : (
+                                <Box
+                                    className="upload-area"
+                                    onClick={() => document.getElementById('videoInput').click()}
+                                    onDragOver={handleDragOver}
+                                    onDrop={handleDrop}
+                                >
+                                    <input
+                                        id="videoInput"
+                                        type="file"
+                                        accept="video/mp4,video/webm,video/quicktime"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        style={{ display: 'none' }}
+                                    />
+                                    <VideoIcon />
+                                    <Typography variant="h6" className="upload-title">
+                                        Select a video to upload
+                                    </Typography>
+                                    <Typography variant="body2" className="upload-subtitle">
+                                        or drag and drop here
+                                    </Typography>
+                                    <Typography variant="caption" className="upload-caption">
+                                        MP4, WebM, or QuickTime (Max 100MB)
+                                    </Typography>
+                                </Box>
+                            )}
                         </Box>
                     </Box>
 
-                    {/* Video Selection Counter */}
                     {video && (
                         <Box mb={3}>
-                            <Box sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                p: 2,
-                                background: 'linear-gradient(135deg, #f0f6ff 0%, #e6f3ff 100%)',
-                                borderRadius: '12px',
-                                border: '1px solid rgba(59, 143, 243, 0.2)',
-                                boxShadow: '0 2px 8px rgba(59, 143, 243, 0.1)'
-                            }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Box sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        width: '48px',
-                                        height: '48px',
-                                        borderRadius: '50%',
-                                        background: 'linear-gradient(135deg, #3B8FF3 0%, #34B1AA 100%)',
-                                        boxShadow: '0 4px 12px rgba(59, 143, 243, 0.3)'
-                                    }}>
-                                        <VideoIcon sx={{ color: 'white', fontSize: 24 }} />
-                                    </Box>
-                                    <Box>
-                                        <Typography variant="h6" sx={{ 
-                                            color: '#1E1E2C', 
-                                            fontWeight: 600,
-                                            mb: 0.5
-                                        }}>
-                                            Video Selected
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ 
-                                            color: '#6B7280',
-                                            fontSize: '0.875rem'
-                                        }}>
-                                            {video.name} ({(video.size / (1024 * 1024)).toFixed(2)} MB)
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </Box>
+                            <Chip
+                                label={`${video.name} (${(video.size / (1024 * 1024)).toFixed(2)} MB)`}
+                                className="image-chip"
+                            />
                         </Box>
                     )}
 
-                    {/* Error Messages */}
-                    {(isError || error) && (
-                        <Box mb={3}>
-                            <Alert
-                                severity="error"
-                                icon={<ErrorIcon />}
-                                sx={{
-                                    borderRadius: '12px',
-                                    backgroundColor: '#fff5f5',
-                                    color: '#d32f2f',
-                                    '& .MuiAlert-icon': { color: '#d32f2f' }
-                                }}
+                    <AnimatePresence>
+                        {(isError || error || isSuccess) && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.2 }}
                             >
-                                {error || mutationError?.message || 'Failed to upload video'}
-                            </Alert>
-                        </Box>
-                    )}
+                                {(isError || error) && (
+                                    <Alert
+                                        severity="error"
+                                        icon={<ErrorIcon />}
+                                        onClose={() => setError(null)}
+                                        className="alert error"
+                                    >
+                                        {error || mutationError?.message || 'Failed to upload video.'}
+                                    </Alert>
+                                )}
+                                {isSuccess && (
+                                    <Alert
+                                        severity="success"
+                                        icon={<CheckIcon />}
+                                        onClose={() => reset()}
+                                        className="alert success"
+                                    >
+                                        Video uploaded successfully! Processing may take a few minutes.
+                                    </Alert>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                    {/* Success Messages */}
-                    {isSuccess && (
-                        <Box mb={3}>
-                            <Alert
-                                severity="success"
-                                icon={<CheckIcon />}
-                                sx={{
-                                    borderRadius: '12px',
-                                    backgroundColor: '#f0f9ff',
-                                    color: '#0d9488',
-                                    '& .MuiAlert-icon': { color: '#0d9488' }
-                                }}
-                            >
-                                Video uploaded successfully! Processing may take a few minutes.
-                            </Alert>
-                        </Box>
-                    )}
-
-                    {/* Action Buttons */}
-                    <Box display="flex" justifyContent="center" gap={3} mt={6}>
-                        <ModernButton
+                    <Box display="flex" justifyContent="center" gap={2} mt={4}>
+                        <Button
                             variant="outlined"
                             onClick={() => {
                                 setTitle('');
@@ -533,64 +276,23 @@ const AddVideos = () => {
                                 if (fileInputRef.current) fileInputRef.current.value = '';
                             }}
                             disabled={isLoading}
-                            sx={{
-                                minWidth: '140px',
-                                height: '56px',
-                                borderColor: '#eba748',
-                                color: '#eba748',
-                                fontSize: '1.1rem',
-                                fontWeight: 600,
-                                borderRadius: '12px',
-                                '&:hover': {
-                                    borderColor: '#e09a3a',
-                                    color: '#e09a3a',
-                                    backgroundColor: 'rgba(235, 167, 72, 0.05)',
-                                    transform: 'translateY(-2px)',
-                                },
-                            }}
+                            className="btn secondary"
                         >
                             Cancel
-                        </ModernButton>
-
-                        <ModernButton
-                            onClick={handleSubmit}
+                        </Button>
+                        <Button
                             variant="contained"
-                            color="primary"
+                            onClick={handleSubmit}
                             disabled={isLoading || !title.trim() || !video}
-                            startIcon={isLoading ? <CircularProgress size={24} color="inherit" /> : <AddIcon />}
-                            sx={{
-                                minWidth: '220px',
-                                height: '56px',
-                                fontSize: '1.1rem',
-                                fontWeight: 700,
-                                borderRadius: '16px',
-                                background: 'linear-gradient(135deg, #eba748 0%, #e09a3a 50%, #d48a2c 100%)',
-                                boxShadow: '0 8px 24px rgba(235, 167, 72, 0.25)',
-                                textTransform: 'none',
-                                letterSpacing: '0.5px',
-                                color: 'white',
-                                '&:hover': {
-                                    background: 'linear-gradient(135deg, #e09a3a 0%, #d48a2c 50%, #c47a1c 100%)',
-                                    transform: 'translateY(-3px)',
-                                    boxShadow: '0 12px 32px rgba(235, 167, 72, 0.4)',
-                                },
-                                '&:disabled': {
-                                    background: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)',
-                                    color: '#9e9e9e',
-                                    transform: 'none',
-                                    boxShadow: 'none',
-                                },
-                                '& .MuiButton-startIcon': {
-                                    marginRight: '10px',
-                                },
-                            }}
+                            startIcon={isLoading ? <CircularProgress size={24} /> : <AddIcon />}
+                            className="btn primary"
                         >
                             {isLoading ? 'Uploading...' : 'Upload Video'}
-                        </ModernButton>
+                        </Button>
                     </Box>
                 </CardContent>
-            </ModernCard>
-        </Box>
+            </Card>
+        </div>
     );
 };
 

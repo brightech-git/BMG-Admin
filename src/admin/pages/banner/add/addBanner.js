@@ -100,7 +100,7 @@ const AddBanner = () => {
 
                     <Box className="form-section" mb={3}>
                         <Typography variant="body2" className="form-label">
-                            <AddIcon className="form-icon" />
+                            
                             Banner Title <span className="required">*</span>
                         </Typography>
                         <TextField
@@ -114,7 +114,7 @@ const AddBanner = () => {
                         />
 
                         <Typography variant="body2" className="form-label" mt={2}>
-                            <AddIcon className="form-icon" />
+                            
                             Banner Subtitle <span className="required">*</span>
                         </Typography>
                         <TextField
@@ -128,7 +128,7 @@ const AddBanner = () => {
                         />
 
                         <Typography variant="body2" className="form-label" mt={2}>
-                            <AddIcon className="form-icon" />
+                           
                             Item Category <span className="required">*</span>
                         </Typography>
                         <TextField
@@ -152,7 +152,7 @@ const AddBanner = () => {
                         </TextField>
 
                         <Typography variant="body2" className="form-label" mt={2}>
-                            <AddIcon className="form-icon" />
+                            
                             Gender <span className="required">*</span>
                         </Typography>
                         <TextField

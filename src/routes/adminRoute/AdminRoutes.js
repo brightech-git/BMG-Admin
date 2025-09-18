@@ -47,7 +47,7 @@ import ManageBreadCrumbBanner from '../../admin/pages/banner/manage/manageBreadC
 import NotificationForm from '../../admin/pages/notification/PushNotification';
 import ManageAddress from '../../admin/pages/address/manageAddress';
 import './AdminRoutes.css';
-import ShippedOrders from '../../admin/pages/order/shippedOreders';
+import ShippedOrders from '../../admin/pages/order/shippedOrders';
 import DeliveredOrders from '../../admin/pages/order/DeliveredOrders';
 import TransitOrders from '../../admin/pages/order/TransitOrders';
 import RefundedOrders from '../../admin/pages/order/RefundedOrders';

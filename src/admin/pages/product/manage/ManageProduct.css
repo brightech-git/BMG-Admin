@@ -2,7 +2,7 @@
     font-family: var(--font-primary);
     color: var(--primary-text-color);
     line-height: 1.6;
-    padding: var(--spacing-lg);
+    padding: var(--spacing-sm);
     max-width: 1440px;
     margin: 40px auto 0;
     background: var(--card-background-color);
@@ -10,7 +10,7 @@
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
 .breadcrumb {
@@ -27,6 +27,7 @@
     color: var(--secondary-text-color);
     display: flex;
     align-items: center;
+    
 }
 
 .breadcrumb-item+.breadcrumb-item::before {
@@ -48,14 +49,18 @@
 .breadcrumb-item.active {
     color: var(--primary-text-color);
     font-weight: 500;
+    font-family: var(--font-secondary);
 }
 
 .card {
+   
     background: var(--card-background-color);
     border-radius: var(--border-radius-md);
     box-shadow: var(--shadow-sm);
     transition: box-shadow var(--transition-speed);
     overflow: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .card:hover {
@@ -63,7 +68,7 @@
 }
 
 .search-section {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-sm) !important;
 }
 
 .section-header {
@@ -74,10 +79,10 @@
 }
 
 .section-header h3 {
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg) !important;
     font-weight: 600;
-    color: var(--primary-text-color);
-    margin: 0;
+    color: var(--primary-text-color) ;
+    margin: 0 !important;
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--active-border) 100%);
     background-clip: text;
     -webkit-background-clip: text;
@@ -92,18 +97,19 @@
 .search-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     align-items: center;
 }
 
 .search-input {
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-xs) !important;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm) !important;
     background-color: var(--card-background-color);
     transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
     color: var(--primary-text-color);
+    height: 40px !important;
 }
 
 .search-input:focus {
@@ -131,15 +137,13 @@
 }
 
 .search-button {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    font-size: var(--font-size-md);
+    padding: var(--spacing-sm) !important;
+    font-size: var(--font-size-sm);
 }
 
 .pagination-controls {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    justify-content: center;
 }
 
 .page-size-select {
@@ -248,7 +252,8 @@
 .action-buttons {
     display: flex;
     gap: var(--spacing-sm);
-    justify-content: flex-end;
+    justify-content: center !important;
+
 }
 
 .product-table {

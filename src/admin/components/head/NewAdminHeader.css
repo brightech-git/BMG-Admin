@@ -90,10 +90,12 @@
   font-weight: 600;
   color: var(--primary-text-color);
   margin: 0;
+  font-family: var(--font-primary);
 }
 
 .dark .staradmin-company-name {
   color: var(--primary-text-color);
+  font-family: var(--font-primary);
 }
 
 /* Right Section - Actions & Profile */
@@ -193,6 +195,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-primary);
 }
 
 .dark .staradmin-profile-name {
