@@ -193,6 +193,8 @@ const SearchInput = styled(TextField)(({ mode }) => ({
 }));
 
 const STATUS_OPTIONS = {
+    PENDING: 'Pending',
+    PAYMENT_PENDING:'Payment Pending',
     PLACED: 'Placed',
     IN_PROCESSING: 'Processing',
     READY: 'Move to ship',
