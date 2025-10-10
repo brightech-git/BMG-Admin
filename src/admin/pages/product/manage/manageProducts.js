@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback, useRef, useMemo, useContext } 
 import PropTypes from 'prop-types';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useProductContext } from '../../../context/product/productContext';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+
 import { motion, AnimatePresence } from 'framer-motion';
-import { jsPDF } from 'jspdf';
+
 import 'jspdf-autotable';
 import { useFilterItemsQuery } from '../../../hooks/products/useProductsQuery';
 import { MyContext } from '../../../context/themeContext/themeContext';
+import { useFilters } from '../../../context/product/FilterContext';
 import './ManageProduct.css';
 
 const MAX_RETRIES = 3;
@@ -16,6 +16,8 @@ const RETRY_DELAY_MS = 1000;
 
 const ManageProduct = ({ baseUrl = 'https://app.bmgjewellers.com' }) => {
     const navigate = useNavigate();
+    const { filters, updateFilter, resetFilters } = useFilters();
+
     const { tagkey } = useParams();
     const { themeMode } = useContext(MyContext);
     const { images, description, getImages, updateImage, deleteImage, updateDescription } = useProductContext();
@@ -24,14 +26,10 @@ const ManageProduct = ({ baseUrl = 'https://app.bmgjewellers.com' }) => {
     const [searchInput, setSearchInput] = useState('');
     const [itemName, setItemName] = useState('');
     const [subItemName, setSubItemName] = useState('');
-    const { data: productdata, isLoading, error } = useFilterItemsQuery({
-        page,
-        pageSize,
-        itemName: itemName || undefined,
-        subItemName: subItemName || undefined,
-        tagNo: searchInput.includes('-') ? undefined : searchInput || undefined,
-        itemId: searchInput.includes('-') ? searchInput.split('-')[0]?.trim() : undefined,
-    });
+    console.log(searchInput,itemName,subItemName ,' filter')
+
+    const { data: productdata, isLoading } = useFilterItemsQuery(filters);
+    console.log(productdata,'product data')
 
     // State management
     const [selectedImages, setSelectedImages] = useState([]);
@@ -260,16 +258,18 @@ const ManageProduct = ({ baseUrl = 'https://app.bmgjewellers.com' }) => {
         }
     };
 
-    const handleDeleteImage = useCallback(async (imagePath) => {
+    const handleDeleteImage = useCallback(async (tagkey,imagePath) => {
+        console.log(tagkey,imagePath,'data for delete')
         if (!window.confirm('Are you sure you want to permanently delete this image?')) return;
         try {
-            await deleteImage(sno, imagePath);
+            
+            await deleteImage(tagkey, imagePath);
             setFeedback({ error: '', success: 'Image deleted successfully' });
         } catch (err) {
             console.error('Error deleting image:', err);
             setFeedback({ error: 'Failed to delete image. Please try again.', success: '' });
         }
-    }, [deleteImage, sno]);
+    }, [deleteImage, tagkey]);
 
     const handleBulkDelete = useCallback(async () => {
         if (selectedImages.length === 0) {
@@ -819,7 +819,7 @@ const ManageProduct = ({ baseUrl = 'https://app.bmgjewellers.com' }) => {
                                         />
                                         <button
                                             className="btn small danger delete-image-btn"
-                                            onClick={() => handleDeleteImage(img)}
+                                            onClick={() => handleDeleteImage(editProduct?.TAGKEY , img)}
                                             aria-label={`Delete image ${idx + 1}`}
                                         >
                                             <span className="icon" aria-hidden="true">🗑️</span>

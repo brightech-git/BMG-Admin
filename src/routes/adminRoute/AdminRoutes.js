@@ -52,6 +52,7 @@ import DeliveredOrders from '../../admin/pages/order/DeliveredOrders';
 import TransitOrders from '../../admin/pages/order/TransitOrders';
 import RefundedOrders from '../../admin/pages/order/RefundedOrders';
 import ReturnedOrders from '../../admin/pages/order/ReturnedOrders';
+import ManageSingleProduct from '../../admin/pages/product/manage/ManageSingleProduct';
 
 
 
@@ -92,6 +93,8 @@ const AdminRoutes = () => {
                         <Route path="/" element={<ProtectedRoute allowedRoles={allowedRoles}><MainContent /></ProtectedRoute>} />
                         <Route path="product/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddProduct /></ProtectedRoute>} />
                         <Route path="product/manage/:tagKey" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageProduct /></ProtectedRoute>} />
+                        <Route path="product/manage/single" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageSingleProduct /></ProtectedRoute>} />
+
                         <Route path="product/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageProduct /></ProtectedRoute>} />
                         <Route path="address/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageAddress /></ProtectedRoute>} />
                         <Route path="breadcrumbbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddBreadCrumbBanner /></ProtectedRoute>} />

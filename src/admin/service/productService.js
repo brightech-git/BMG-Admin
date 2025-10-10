@@ -55,8 +55,8 @@ const productService = {
 
     deleteImage: async (tagkey, imagePath) => {
         try {
-            const response = await axiosInstance.delete(`product_image/images/${tagkey}`, {
-                data: { imagePath },
+            const response = await axiosInstance.delete(`/product_image/delete-image`, {
+                params: { tagkey, imagePath },
             });
             return response.data;
         } catch (error) {
@@ -64,41 +64,66 @@ const productService = {
             throw error.response?.data || { error: error.message || 'Failed to delete image' };
         }
     },
-
-    updateImage: async (tagkey, oldImagePath, newImageFile) => {
+    updateImage: async (tagkey, description, newImageFile) => {
         try {
             const formData = new FormData();
-            formData.append('tagkey', tagkey);
-            formData.append('oldImagePath', oldImagePath);
-            formData.append('newImage', newImageFile);
+            formData.append("tagkey", tagkey);
+            if (description) formData.append("newDescription", description);
+            if (newImageFile) formData.append("newImage", newImageFile); // optional
 
-            const response = await axiosInstance.put(`product_image/images/${tagkey}/update`, formData);
+            const response = await axiosInstance.put(
+                `/product_image/update-image-description`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
             return response.data;
         } catch (error) {
-            console.error('Update image error:', error);
-            throw error.response?.data || { error: error.message || 'Failed to update image' };
+            console.error("Update description error:", error);
+            throw error.response?.data || { error: error.message || "Failed to update description" };
         }
     },
 
-    updateDescription: async (tagkey, description) => {
+    updateDescription: async (tagkey, description, newImageFile) => {
         try {
-            const response = await axiosInstance.put(`/product_image/images/${tagkey}/description`, { description });
+            const formData = new FormData();
+            formData.append("tagkey", tagkey);
+            if (description) formData.append("newDescription", description);
+            if (newImageFile) formData.append("newImage", newImageFile); // optional
+
+            const response = await axiosInstance.put(
+                `/product_image/update-image-description`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
             return response.data;
         } catch (error) {
-            console.error('Update description error:', error);
-            throw error.response?.data || { error: error.message || 'Failed to update description' };
+            console.error("Update description error:", error);
+            throw error.response?.data || { error: error.message || "Failed to update description" };
         }
     },
 
     getProductDetails: async (tagkey) => {
         try {
-            const response = await axiosInstance.get(`/product_image/product-details/${tagkey}`);
+            const response = await axiosInstance.get('/product/getTagkeyFilter', {
+                params: { tagkey }
+            });
             return response.data;
         } catch (error) {
             console.error('Get product details error:', error);
             throw error.response?.data || { error: error.message || 'Failed to fetch product details' };
         }
     },
+
 
     updateProductAttributes: async (tagkey, trendingOptions, productAttributes, description) => {
         try {

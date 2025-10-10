@@ -1,7 +1,6 @@
 // ProductContext.js
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import productService from '../../service/productService';
-import axiosInstance from '../../api/axiosInstance';
 
 const ProductContext = createContext();
 

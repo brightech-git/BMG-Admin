@@ -17,6 +17,7 @@ import { UserAuthProvider } from './public/context/authContext/UserAuthContext';
 // Toast notifications
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FilterProvider } from './admin/context/product/FilterContext';
 
 function App() {
   const queryClient = new QueryClient(); // Initializes React Query client
@@ -37,10 +38,12 @@ function App() {
               <AuthProvider>
                 {/* Public user authentication context */}
                 <UserAuthProvider>
+                  <FilterProvider>
 
                   {/* Defines all routes of the app */}
                   <AppRoutes />
-
+                  
+                  </FilterProvider>
                   {/* Toast notifications */}
                   <ToastContainer position="top-center" autoClose={3000} />
 
