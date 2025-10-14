@@ -309,7 +309,7 @@ const ManageAddress = () => {
                 </DialogTitle>
                 <DialogContent>
                     <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{xs:12 ,md:6}}>
                             <TextField
                                 fullWidth
                                 label="Full Name"
@@ -327,7 +327,7 @@ const ManageAddress = () => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 label="Phone Number"
@@ -345,7 +345,7 @@ const ManageAddress = () => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 label="Alternate Phone"
@@ -362,7 +362,7 @@ const ManageAddress = () => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 label="Address Line 1"
@@ -382,7 +382,7 @@ const ManageAddress = () => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 label="Address Line 2 (Optional)"
@@ -396,7 +396,7 @@ const ManageAddress = () => {
                                 rows={1}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 label="Pincode"
@@ -411,7 +411,7 @@ const ManageAddress = () => {
                                 helperText={formErrors.pincode}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 label="City"
@@ -426,7 +426,7 @@ const ManageAddress = () => {
                                 helperText={formErrors.city}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 label="State"
@@ -441,7 +441,7 @@ const ManageAddress = () => {
                                 helperText={formErrors.state}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 label="Country"
@@ -456,7 +456,7 @@ const ManageAddress = () => {
                                 helperText={formErrors.country}
                             />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <FormControlLabel
                                 control={
                                     <Checkbox

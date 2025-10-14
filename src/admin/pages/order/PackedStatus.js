@@ -446,7 +446,7 @@ const PackedStatus = () => {
                     </nav>
                     <Box display="flex" alignItems="center" justifyContent="space-between" mb={0}>
                         <Box display="flex" alignItems="center" gap={2}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, fontFamily: 'var(--font-primary)', color: 'var(--primary-text-color)' }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700, fontFamily: 'var(--font-secondary)', color: 'var(--primary-text-color)' }}>
                                 Order Management
                             </Typography>
                             <Chip
@@ -483,11 +483,11 @@ const PackedStatus = () => {
                                     fontSize: 'var(--font-size-sm)',
                                     '& .MuiOutlinedInput-notchedOutline': {
                                         borderColor: 'var(--border-color)',
-                                         fontFamily: 'var(--font-primary)'
+                                         fontFamily: 'var(--font-secondary)'
                                     },
                                     '&:hover .MuiOutlinedInput-notchedOutline': {
                                         borderColor: 'var(--active-border)',
-                                         fontFamily: 'var(--font-primary)'
+                                         fontFamily: 'var(--font-secondary)'
                                     },
                                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                                         borderColor: 'var(--active-border)',
@@ -509,13 +509,13 @@ const PackedStatus = () => {
                         <Table stickyHeader>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Order ID</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Customer</TableCell>
-                                    <TableCell align="right" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Amount</TableCell>
-                                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Status</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Order Date</TableCell>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Payment Mode</TableCell>
-                                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Actions</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-secondary)' }}>Order ID</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-secondary)' }}>Customer</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-secondary)' }}>Amount</TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-secondary)' }}>Status</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-secondary)' }}>Order Date</TableCell>
+                                    <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-secondary)' }}>Payment Mode</TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-secondary)' }}>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -1461,14 +1461,14 @@ const PackedStatus = () => {
                                                     },
                                                 }}
                                             >
-                                                <MenuItem value="In Processing" disabled>In Process</MenuItem>
-                                                <MenuItem value="PACKED">Packed</MenuItem>
+                                                <MenuItem value="Packed" disabled>Packed</MenuItem>
+                                                <MenuItem value="SHIPPED">Ready to Ship</MenuItem>
                                                 <MenuItem value="CANCELLED">To Cancel</MenuItem>
                                             </Select>
                                         </FormControl>
                                     </Grid>
 
-                                    <Grid item xs={12} sm={10}>
+                                    {/* <Grid item xs={12} sm={10}>
                                         <FormControl fullWidth size="small">
                                             <InputLabel sx={{ color: 'var(--primary-text-color)' }}>Payment Mode</InputLabel>
                                             <Select
@@ -1496,7 +1496,7 @@ const PackedStatus = () => {
                                                 <MenuItem value="ONLINE">Online Payment</MenuItem>
                                             </Select>
                                         </FormControl>
-                                    </Grid>
+                                    </Grid> */}
 
                                     <Grid item xs={12} sm={10}>
                                         <TextField

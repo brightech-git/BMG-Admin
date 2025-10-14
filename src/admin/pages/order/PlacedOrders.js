@@ -61,8 +61,6 @@ import {
 import { styled } from '@mui/system';
 import './OrderManagement.css';
 import { useLocation } from 'react-router-dom';
-import { useCreateConsignment } from '../../hooks/shipping/useCreateConsignment';
-import { useAddressQuery } from '../../hooks/address/useAddressQuery';
 
 // ========== ENHANCED STYLED COMPONENTS ==========
 const StyledTableContainer = styled(TableContainer)(() => ({
@@ -227,7 +225,7 @@ const getStatusColor = (status) => {
 };
 
 // Rest of the component remains the same, with updates to `sx` props
-const QualityChecking = () => {
+const PlacedOrders = () => {
     const location = useLocation();
     const { key, values } = location.state || {};
     console.log(key, values, 'key');
@@ -251,34 +249,12 @@ const QualityChecking = () => {
     });
     const [formError, setFormError] = useState('');
     const [expandedRows, setExpandedRows] = useState({});
-    const createConsignmentMutation = useCreateConsignment();
 
     const { data, isLoading, isError, error, refetch } = useOrdersByStatus(status, page, rowsPerPage);
     console.log(data, 'datastatus');
     const updateOrderStatus = useUpdateOrderStatus();
-    const id = 10005;
-    const { useGetAddressById } = useAddressQuery();
-    const { data: addresses } = useGetAddressById(id);
 
-    const [address, setAddress] = useState({
-        addressLine1: '',
-        addressLine2: '',
-        alternatePhone: '',
-        city: '',
-        country: '',
-        default: false,
-        id: null,
-        name: '',
-        phone: '',
-        pincode: '',
-        state: '',
-    });
-
-    useEffect(() => {
-        if (addresses) {
-            setAddress(addresses);
-        }
-    }, [addresses]);
+  
 
     const normalizeOrder = (order = {}) => ({
         id: order.order_id || order.orderId || 'N/A',
@@ -470,84 +446,11 @@ const QualityChecking = () => {
                 return;
             }
 
-            const consignment =
-                address && selectedOrder
-                    ? {
-                        customer_code: 'EO2243',
-                        service_type_id: 'B2C SMART EXPRESS',
-                        load_type: 'NON-DOCUMENT',
-                        description: 'Ring',
-                        dimension_unit: 'cm',
-                        length: '3',
-                        width: '5',
-                        declared_value: '1000',
-                        num_pieces: '1',
-                        origin_details: {
-                            name: address?.name || 'Bmg Jewellers',
-                            phone: address?.phone || '9514333601',
-                            alternate_phone: address?.alternatePhone || '9514333609',
-                            address_line_1: address?.addressLine1 || '160, Melamasi St',
-                            address_line_2: address?.addressLine2 || 'Madurai',
-                            pincode: address?.pincode || '625018',
-                            city: address?.city || 'Madurai',
-                            state: address?.state || 'Tamilnadu',
-                        },
-                        destination_details: {
-                            name: selectedOrder.address.name,
-                            phone: selectedOrder.contact,
-                            alternate_phone: selectedOrder.address.alternatePhone || selectedOrder.address.phone,
-                            address_line_1: selectedOrder.address.addressLine,
-                            address_line_2: selectedOrder.address.landmark,
-                            city: selectedOrder.address.city,
-                            state: selectedOrder.address.state,
-                            pincode: selectedOrder.address.pincode,
-                        },
-                        return_details: {
-                            name: address?.name || 'Bmg Jewellers',
-                            phone: address?.phone || '9514333601',
-                            alternate_phone: address?.alternatePhone || '9514333609',
-                            address_line_1: address?.addressLine1 || '160, Melamasi St',
-                            address_line_2: address?.addressLine2 || 'Madurai',
-                            pincode: address?.pincode || '625018',
-                            city: address?.city || 'Madurai',
-                            state: address?.state || 'Tamilnadu',
-                        },
-                        customer_reference_number: selectedOrder.order_id,
-                        commodity_id: 'COM005',
-                        is_risk_surcharge_applicable: false,
-                        invoice_number: 'INV123',
-                        invoice_date: '2025-08-20',
-                        pieces_detail: [
-                            {
-                                description: 'Piece 1',
-                                declared_value: '1000',
-                                weight: '5',
-                                length: '30',
-                                width: '20',
-                                height: '15',
-                            },
-                        ],
-                    }
-                    : null;
 
-            if (selectedOrder.payment_mode !== 'ONLINE' && consignment) {
-                consignment.cod_collection_mode = 'cash';
-                consignment.cod_amount = selectedOrder.total_amount || selectedOrder.totalAmount;
-            }
 
-            const consignmentPayload = { consignments: [consignment] };
-            const consignmentResponse = await createConsignmentMutation.mutateAsync(consignmentPayload);
+           
 
-            if (!consignmentResponse) {
-                throw new Error('Consignment creation failed: No response received');
-            }
-
-            const result = consignmentResponse?.data?.[0];
-
-            if (result?.success === false && !result?.reference_number) {
-                setFormError(result?.message || 'Consignment creation failed');
-                return;
-            }
+           
 
             const payload = {
                 orderId: selectedOrder.order_id,
@@ -556,7 +459,6 @@ const QualityChecking = () => {
                 paymentMode: editForm.paymentMode,
                 paymentStatus: editForm.payment_status,
             };
-            console.log(payload, 'order payload')
 
             await updateOrderStatus.mutateAsync(payload);
             refetch();
@@ -1984,11 +1886,11 @@ const QualityChecking = () => {
                                                     onChange={handleEditFormChange}
                                                 >
                                                     <FormControlLabel
-                                                        value="PACKING"
+                                                        value="IN_PROCESSING"
                                                         control={<Radio sx={{ color: 'var(--primary-color)', '& .MuiSvgIcon-root': { fontSize: 'var(--font-size-xs)' } }} />}
                                                         label={
                                                             <Typography sx={{ fontFamily: 'var(--font-secondary)', fontSize: 'var(--font-size-xs)' , color: 'var(--primary-text-color)' }}>
-                                                                Move to Packing
+                                                                Move to Quality Checking
                                                             </Typography>
                                                         }
                                                     />
@@ -2136,7 +2038,7 @@ const QualityChecking = () => {
                                                         />
                                                     )}
                                                 </Box>
-                                                {editForm.status && (
+                                                {/* {editForm.status && (
                                                     <Box sx={{ mt: 2, p: 2, backgroundColor: 'var(--card-background-color)', borderRadius: 'var(--border-radius-sm)' }}>
                                                         <Typography
                                                             variant="caption"
@@ -2150,7 +2052,7 @@ const QualityChecking = () => {
                                                             Impact: {getStatusImpactText(editForm.status)}
                                                         </Typography>
                                                     </Box>
-                                                )}
+                                                )} */}
                                             </Box>
                                         </Grid>
                                     </Grid>
@@ -2168,7 +2070,7 @@ const QualityChecking = () => {
                     >
                         <Button
                             onClick={handleCloseEditModal}
-                            disabled={updateOrderStatus.isLoading || createConsignmentMutation.isPending}
+                            disabled={updateOrderStatus.isLoading }
                             variant="outlined"
                             sx={{
                                 textTransform: 'none',
@@ -2192,12 +2094,11 @@ const QualityChecking = () => {
                             variant="contained"
                             disabled={
                                 updateOrderStatus.isLoading ||
-                                createConsignmentMutation.isPending ||
                                 !editForm.status ||
                                 editForm.status === selectedOrder.status
                             }
                             startIcon={
-                                (updateOrderStatus.isLoading || createConsignmentMutation.isPending) ? (
+                                (updateOrderStatus.isLoading ) ? (
                                     <CircularProgress size={16} sx={{ color: 'var(--text-dark)' }} />
                                 ) : null
                             }
@@ -2215,11 +2116,11 @@ const QualityChecking = () => {
                                 },
                             }}
                         >
-                            {(updateOrderStatus.isLoading || createConsignmentMutation.isPending)
+                            {(updateOrderStatus.isLoading )
                                 ? 'Processing...'
                                 : editForm.status?.toUpperCase() === 'CANCELLED'
                                     ? 'Cancel Order'
-                                    : 'Update Status & Create Consignment'}
+                                    : 'Update Status'}
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -2228,4 +2129,4 @@ const QualityChecking = () => {
     );
 };
 
-export default QualityChecking;
+export default PlacedOrders;

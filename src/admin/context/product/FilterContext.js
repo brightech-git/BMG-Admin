@@ -4,28 +4,12 @@ import React, { createContext, useContext, useState, useMemo, useCallback } from
 const defaultFilters = {
     itemName: '',
     subItemName: '',
-    metalId: '',
-    sizeId: '',
     tagKey: '',
-    sizeName: '',
-    catName: '',
-    gender: '',
-    sortBy: '',
-    sortDirection: 'ASC',
     minGrandTotal: '',
     maxGrandTotal: '',
     priceRange: '',
-    occasion: '',
-    materialFinish: '',
-    colorAccent: '',
-    stoneType: '',
-    availability: '',
-    new_arrival: '',
-    top_trending: false,
-    featured_products: false,
-    best_design: false,
     page: 0,
-    pageSize: 12,
+    pageSize: 10,
 };
 
 const FilterContext = createContext(null);
@@ -41,7 +25,10 @@ export const FilterProvider = ({ children }) => {
         setFilters(defaultFilters);
     }, []);
 
-    const value = useMemo(() => ({ filters, updateFilter, resetFilters, setFilters }), [filters]);
+    const value = useMemo(
+        () => ({ filters, updateFilter, resetFilters, setFilters }),
+        [filters]
+    );
 
     return <FilterContext.Provider value={value}>{children}</FilterContext.Provider>;
 };

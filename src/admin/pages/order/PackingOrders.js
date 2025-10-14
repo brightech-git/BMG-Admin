@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUpdateOrderStatus, useOrdersByStatus } from '../../hooks/order/useAllOrder';
 import { orderService } from '../../service/orderService';
+import { useLabelQuery } from '../../hooks/shipping/useLabelQuery';
 import { Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -61,8 +62,6 @@ import {
 import { styled } from '@mui/system';
 import './OrderManagement.css';
 import { useLocation } from 'react-router-dom';
-import { useCreateConsignment } from '../../hooks/shipping/useCreateConsignment';
-import { useAddressQuery } from '../../hooks/address/useAddressQuery';
 
 // ========== ENHANCED STYLED COMPONENTS ==========
 const StyledTableContainer = styled(TableContainer)(() => ({
@@ -227,7 +226,7 @@ const getStatusColor = (status) => {
 };
 
 // Rest of the component remains the same, with updates to `sx` props
-const QualityChecking = () => {
+const PackingOrders = () => {
     const location = useLocation();
     const { key, values } = location.state || {};
     console.log(key, values, 'key');
@@ -251,34 +250,12 @@ const QualityChecking = () => {
     });
     const [formError, setFormError] = useState('');
     const [expandedRows, setExpandedRows] = useState({});
-    const createConsignmentMutation = useCreateConsignment();
 
     const { data, isLoading, isError, error, refetch } = useOrdersByStatus(status, page, rowsPerPage);
     console.log(data, 'datastatus');
     const updateOrderStatus = useUpdateOrderStatus();
-    const id = 10005;
-    const { useGetAddressById } = useAddressQuery();
-    const { data: addresses } = useGetAddressById(id);
 
-    const [address, setAddress] = useState({
-        addressLine1: '',
-        addressLine2: '',
-        alternatePhone: '',
-        city: '',
-        country: '',
-        default: false,
-        id: null,
-        name: '',
-        phone: '',
-        pincode: '',
-        state: '',
-    });
-
-    useEffect(() => {
-        if (addresses) {
-            setAddress(addresses);
-        }
-    }, [addresses]);
+    
 
     const normalizeOrder = (order = {}) => ({
         id: order.order_id || order.orderId || 'N/A',
@@ -291,6 +268,7 @@ const QualityChecking = () => {
         order_time: order.order_time || order.orderTime || order.date || 'N/A',
         payment_mode: order.paymentMode || order.payment_mode || 'payment',
         payment_status: order.paymentStatus || 'N/A',
+        courierTrackingId: order.courierTrackingId || 'N/A',
         address: order.address
             ? {
                 addressLine: order.address.addressLine || '',
@@ -327,13 +305,38 @@ const QualityChecking = () => {
 
     console.log(orders, 'normalizeOrder');
 
+    const labelPayload = {
+        reference_number: selectedOrder?.courierTrackingId || 'NA',
+        label_code: "SHIP_LABEL_4X6",
+        label_format: "pdf"
+    };
+    console.log(labelPayload, 'labelPayload')
+
+    const {
+        data: labelData,
+        isLoading: isLabelLoading,
+        isError: isLabelError,
+        error: labelError,
+    } = useLabelQuery(labelPayload);
+
+    console.log(labelData, 'labelData');
+
     const toggleRowExpansion = (orderId) => {
         setExpandedRows((prev) => ({
             ...prev,
             [orderId]: !prev[orderId],
         }));
     };
-
+    const handleDownloadLabel = () => {
+        if (!labelData) return;
+        window.open(labelData, "_blank");
+        const link = document.createElement("a");
+        link.href = labelData;
+        link.download = `label_${labelPayload.reference_number}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
     const fetchFullOrderList = async () => {
         setIsFetchingFullList(true);
         try {
@@ -424,7 +427,7 @@ const QualityChecking = () => {
     const handleEditOrder = (order) => {
         setSelectedOrder(order);
         setEditForm({
-            status: status,
+            status: order.status,
             remarks: '',
             paymentMode: order.paymentMode || order.payment_mode || 'ONLINE',
         });
@@ -470,84 +473,11 @@ const QualityChecking = () => {
                 return;
             }
 
-            const consignment =
-                address && selectedOrder
-                    ? {
-                        customer_code: 'EO2243',
-                        service_type_id: 'B2C SMART EXPRESS',
-                        load_type: 'NON-DOCUMENT',
-                        description: 'Ring',
-                        dimension_unit: 'cm',
-                        length: '3',
-                        width: '5',
-                        declared_value: '1000',
-                        num_pieces: '1',
-                        origin_details: {
-                            name: address?.name || 'Bmg Jewellers',
-                            phone: address?.phone || '9514333601',
-                            alternate_phone: address?.alternatePhone || '9514333609',
-                            address_line_1: address?.addressLine1 || '160, Melamasi St',
-                            address_line_2: address?.addressLine2 || 'Madurai',
-                            pincode: address?.pincode || '625018',
-                            city: address?.city || 'Madurai',
-                            state: address?.state || 'Tamilnadu',
-                        },
-                        destination_details: {
-                            name: selectedOrder.address.name,
-                            phone: selectedOrder.contact,
-                            alternate_phone: selectedOrder.address.alternatePhone || selectedOrder.address.phone,
-                            address_line_1: selectedOrder.address.addressLine,
-                            address_line_2: selectedOrder.address.landmark,
-                            city: selectedOrder.address.city,
-                            state: selectedOrder.address.state,
-                            pincode: selectedOrder.address.pincode,
-                        },
-                        return_details: {
-                            name: address?.name || 'Bmg Jewellers',
-                            phone: address?.phone || '9514333601',
-                            alternate_phone: address?.alternatePhone || '9514333609',
-                            address_line_1: address?.addressLine1 || '160, Melamasi St',
-                            address_line_2: address?.addressLine2 || 'Madurai',
-                            pincode: address?.pincode || '625018',
-                            city: address?.city || 'Madurai',
-                            state: address?.state || 'Tamilnadu',
-                        },
-                        customer_reference_number: selectedOrder.order_id,
-                        commodity_id: 'COM005',
-                        is_risk_surcharge_applicable: false,
-                        invoice_number: 'INV123',
-                        invoice_date: '2025-08-20',
-                        pieces_detail: [
-                            {
-                                description: 'Piece 1',
-                                declared_value: '1000',
-                                weight: '5',
-                                length: '30',
-                                width: '20',
-                                height: '15',
-                            },
-                        ],
-                    }
-                    : null;
 
-            if (selectedOrder.payment_mode !== 'ONLINE' && consignment) {
-                consignment.cod_collection_mode = 'cash';
-                consignment.cod_amount = selectedOrder.total_amount || selectedOrder.totalAmount;
-            }
 
-            const consignmentPayload = { consignments: [consignment] };
-            const consignmentResponse = await createConsignmentMutation.mutateAsync(consignmentPayload);
+           
 
-            if (!consignmentResponse) {
-                throw new Error('Consignment creation failed: No response received');
-            }
-
-            const result = consignmentResponse?.data?.[0];
-
-            if (result?.success === false && !result?.reference_number) {
-                setFormError(result?.message || 'Consignment creation failed');
-                return;
-            }
+           
 
             const payload = {
                 orderId: selectedOrder.order_id,
@@ -556,7 +486,6 @@ const QualityChecking = () => {
                 paymentMode: editForm.paymentMode,
                 paymentStatus: editForm.payment_status,
             };
-            console.log(payload, 'order payload')
 
             await updateOrderStatus.mutateAsync(payload);
             refetch();
@@ -1667,565 +1596,268 @@ const QualityChecking = () => {
             )}
 
             {selectedOrder && (
-                <Dialog
-                    open={openEditModal}
-                    onClose={handleCloseEditModal}
-                    maxWidth="lg"
-                    fullWidth
-                    PaperProps={{
-                        sx: {
-                            borderRadius: 'var(--border-radius-lg)',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                            maxHeight: '90vh',
-                            backgroundColor: 'var(--card-background-color)',
-                        },
-                    }}
-                >
-                    <DialogTitle sx={{ pb: 1 }}>
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
-                            <Box>
-                                <Typography
-                                    variant="h5"
-                                    sx={{
-                                        fontWeight: 600,
-                                        color: 'var(--primary-text-color)',
-                                        fontFamily: 'var(--font-primary)',
-                                        fontSize: 'var(--font-size-lg)', // Keep larger for heading
-                                        mb: 0.5,
-                                    }}
-                                >
-                                    Edit Order
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    sx={{
-                                        color: 'var(--secondary-text-color)',
-                                        fontFamily: 'var(--font-primary)',
-                                        fontSize: 'var(--font-size-xs)', // Use xs for secondary text
-                                    }}
-                                >
-                                    Order ID: {selectedOrder.order_id}
-                                </Typography>
-                            </Box>
-                            <IconButton
-                                onClick={handleCloseEditModal}
-                                sx={{
-                                    color: 'var(--secondary-text-color)',
-                                    '&:hover': {
-                                        backgroundColor: 'var(--active-bg)',
-                                        color: 'var(--primary-text-color)',
-                                    },
-                                }}
-                            >
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
-                        </Box>
-                    </DialogTitle>
-
-                    <DialogContent dividers sx={{ p: 0 }}>
-                        <Box sx={{ p: 'var(--spacing-lg)' }}>
-                            <Card
-                                sx={{
-                                    mb: 4,
-                                    border: '1px solid var(--border-color)',
-                                    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-                                    backgroundColor: 'var(--card-background-color)',
-                                }}
-                            >
-                                <CardHeader
-                                    title={
-                                        <Typography
-                                            variant="h6"
-                                            sx={{
-                                                color: 'var(--primary-text-color)',
-                                                fontWeight: 600,
-                                                fontFamily: 'var(--font-primary)',
-                                                fontSize: 'var(--font-size-md)', // Slightly larger for card header
-                                            }}
-                                        >
-                                            Order Overview
-                                        </Typography>
-                                    }
-                                    sx={{ pb: 2 }}
-                                />
-                                <CardContent sx={{ pt: 0 }}>
-                                    <Grid container spacing={3}>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Customer Name
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        color: 'var(--primary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    {selectedOrder.user_name}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Current Status
-                                                </Typography>
-                                                <Box sx={{ mt: 0.5 }}>
-                                                    <Chip
-                                                        label={selectedOrder.status}
-                                                        color={getStatusColor(selectedOrder.status)}
-                                                        size="small"
-                                                        sx={{
-                                                            fontWeight: 600,
-                                                            fontFamily: 'var(--font-secondary)',
-                                                            fontSize: 'var(--font-size-xs)',
-                                                            backgroundColor: `var(--warning-color)`,
-                                                            color: 'var(--secondary-text-color)',
-                                                        }}
-                                                    />
-                                                </Box>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Payment Mode
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        color: 'var(--primary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    {selectedOrder.payment_mode || selectedOrder.paymentMode}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Payment Status
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    {selectedOrder.payment_status || selectedOrder.paymentStatus}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Total Amount
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        color: 'var(--success-color)',
-                                                        fontWeight: 600,
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    ₹{selectedOrder.total_amount.toFixed(2)}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Order Date
-                                                </Typography>
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{
-                                                        color: 'var(--primary-text-color)',
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    {new Date(selectedOrder.order_time).toLocaleString()}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
-
-                            <Card
-                                sx={{
-                                    border: '1px solid var(--border-color)',
-                                    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-                                    backgroundColor: 'var(--card-background-color)',
-                                }}
-                            >
-                                <CardHeader
-                                    title={
-                                        <Typography
-                                            variant="h6"
-                                            sx={{
-                                                color: 'var(--primary-text-color)',
-                                                fontWeight: 600,
-                                                fontFamily: 'var(--font-primary)',
-                                                fontSize: 'var(--font-size-md)', // Slightly larger for card header
-                                            }}
-                                        >
-                                            Update Order Status
-                                        </Typography>
-                                    }
-                                    subheader={
-                                        <Typography
-                                            variant="body2"
-                                            sx={{
-                                                color: 'var(--secondary-text-color)',
-                                                fontFamily: 'var(--font-secondary)',
-                                                fontSize: 'var(--font-size-xs)',
-                                            }}
-                                        >
-                                            Change the order status and add relevant remarks
-                                        </Typography>
-                                    }
-                                    sx={{ pb: 2 }}
-                                />
-                                <CardContent sx={{ pt: 0 }}>
-                                    {formError && (
-                                        <Alert
-                                            severity="error"
-                                            sx={{
-                                                mb: 3,
-                                                backgroundColor: 'var(--error-color)',
-                                                color: 'var(--text-dark)',
-                                                borderRadius: 'var(--border-radius-md)',
-                                                fontFamily: 'var(--font-secondary)',
-                                                fontSize: 'var(--font-size-xs)',
-                                                '& .MuiAlert-icon': { fontSize: 'var(--font-size-xs)' },
-                                            }}
-                                        >
-                                            {formError}
-                                        </Alert>
-                                    )}
-
-                                    <Grid container spacing={3}>
-                                        <Grid item xs={12} md={6}>
-                                            <FormControl component="fieldset">
-                                                <FormLabel
-                                                    component="legend"
-                                                    sx={{
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    }}
-                                                >
-                                                    Select New Status
-                                                </FormLabel>
-                                                <RadioGroup
-                                                    name="status"
-                                                    value={editForm.status}
-                                                    onChange={handleEditFormChange}
-                                                >
-                                                    <FormControlLabel
-                                                        value="PACKING"
-                                                        control={<Radio sx={{ color: 'var(--primary-color)', '& .MuiSvgIcon-root': { fontSize: 'var(--font-size-xs)' } }} />}
-                                                        label={
-                                                            <Typography sx={{ fontFamily: 'var(--font-secondary)', fontSize: 'var(--font-size-xs)' , color: 'var(--primary-text-color)' }}>
-                                                                Move to Packing
-                                                            </Typography>
-                                                        }
-                                                    />
-                                                    <FormControlLabel
-                                                        value="CANCELLED"
-                                                        control={<Radio sx={{ color: 'var(--primary-color)', '& .MuiSvgIcon-root': { fontSize: 'var(--font-size-xs)' } }} />}
-                                                        label={
-                                                            <Typography sx={{ fontFamily: 'var(--font-secondary)', fontSize: 'var(--font-size-xs)', color: 'var(--primary-text-color)' }}>
-                                                                Cancel Order
-                                                            </Typography>
-                                                        }
-                                                    />
-                                                </RadioGroup>
-                                            </FormControl>
-                                        </Grid>
-
-                                        <Grid item xs={12}>
-                                            <TextField
-                                                fullWidth
-                                                label="Remarks & Notes"
-                                                name="remarks"
-                                                value={editForm.remarks}
-                                                onChange={handleEditFormChange}
-                                                multiline
-                                                rows={4}
-                                                placeholder="Enter detailed remarks about this status change..."
-                                                disabled={updateOrderStatus.isLoading}
-                                                helperText="Provide specific details about the status change (required for cancellations)"
-                                                sx={{
-                                                    '& .MuiInputLabel-root': {
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    },
-                                                    '& .MuiInputBase-root': {
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    },
-                                                    '& .MuiFormHelperText-root': {
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--secondary-text-color)',
-                                                    },
-                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: 'var(--border-color)',
-                                                    },
-                                                }}
-                                            />
-                                        </Grid>
-
-                                        <Grid item xs={12}>
-                                            <Box
-                                                sx={{
-                                                    p: 3,
-                                                    backgroundColor: 'var(--card-background-color)',
-                                                    borderRadius: 'var(--border-radius-md)',
-                                                    border: '1px solid var(--border-color)',
-                                                }}
-                                            >
-                                                <Typography
-                                                    variant="subtitle2"
-                                                    sx={{
-                                                        fontWeight: 600,
-                                                        mb: 2,
-                                                        color: 'var(--primary-text-color)',
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Status Change Preview
-                                                </Typography>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                color: 'var(--secondary-text-color)',
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            Current:
-                                                        </Typography>
-                                                        <Chip
-                                                            label={selectedOrder.status}
-                                                            color={getStatusColor(selectedOrder.status)}
-                                                            size="small"
-                                                            sx={{
-                                                                fontWeight: 600,
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                                backgroundColor: `var(--${getStatusColor(selectedOrder.status)}-color)`,
-                                                                color: 'var(--primary-text-color)',
-                                                            }}
-                                                        />
-                                                    </Box>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', color: 'var(--secondary-text-color)' }}>
-                                                        →
-                                                    </Box>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                color: 'var(--secondary-text-color)',
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            New:
-                                                        </Typography>
-                                                        <Chip
-                                                            label={editForm.status || 'Select Status'}
-                                                            color={editForm.status ? getStatusColor(editForm.status) : 'default'}
-                                                            size="small"
-                                                            sx={{
-                                                                fontWeight: 600,
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                                backgroundColor: editForm.status ? `var(--${getStatusColor(editForm.status)}-color)` : 'var(--secondary-color)',
-                                                                color: 'var(--primary-text-color)',
-                                                                border: editForm.status ? 'none' : '1px solid var(--border-color)',
-                                                            }}
-                                                            variant={editForm.status ? 'filled' : 'outlined'}
-                                                        />
-                                                    </Box>
-                                                    {editForm.status && editForm.status !== selectedOrder.status && (
-                                                        <Chip
-                                                            label="WILL UPDATE"
-                                                            color="warning"
-                                                            size="small"
-                                                            sx={{
-                                                                fontWeight: 600,
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                                backgroundColor: 'var(--warning-color)',
-                                                                color: 'var(--primary-text-color)',
-                                                                animation: 'pulse 2s infinite',
-                                                                '@keyframes pulse': {
-                                                                    '0%, 100%': { opacity: 1 },
-                                                                    '50%': { opacity: 0.5 },
-                                                                },
-                                                            }}
-                                                        />
-                                                    )}
-                                                </Box>
-                                                {editForm.status && (
-                                                    <Box sx={{ mt: 2, p: 2, backgroundColor: 'var(--card-background-color)', borderRadius: 'var(--border-radius-sm)' }}>
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                color: 'var(--secondary-text-color)',
-                                                                fontWeight: 500,
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            Impact: {getStatusImpactText(editForm.status)}
-                                                        </Typography>
-                                                    </Box>
-                                                )}
-                                            </Box>
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
-                        </Box>
-                    </DialogContent>
-
-                    <DialogActions
-                        sx={{
-                            p: 3,
-                            backgroundColor: 'var(--background-color)',
-                            borderTop: '1px solid var(--border-color)',
-                        }}
-                    >
-                        <Button
-                            onClick={handleCloseEditModal}
-                            disabled={updateOrderStatus.isLoading || createConsignmentMutation.isPending}
-                            variant="outlined"
-                            sx={{
-                                textTransform: 'none',
-                                fontWeight: 500,
-                                fontFamily: 'var(--font-secondary)',
-                                fontSize: 'var(--font-size-xs)',
-                                borderRadius: 'var(--border-radius-md)',
-                                color: 'var(--primary-text-color)',
-                                borderColor: 'var(--border-color)',
-                                '&:hover': {
-                                    backgroundColor: 'var(--active-bg)',
-                                    borderColor: 'var(--active-border)',
-                                },
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleEditSubmit}
-                            color={editForm.status?.toUpperCase() === 'CANCELLED' ? 'error' : 'primary'}
-                            variant="contained"
-                            disabled={
-                                updateOrderStatus.isLoading ||
-                                createConsignmentMutation.isPending ||
-                                !editForm.status ||
-                                editForm.status === selectedOrder.status
-                            }
-                            startIcon={
-                                (updateOrderStatus.isLoading || createConsignmentMutation.isPending) ? (
-                                    <CircularProgress size={16} sx={{ color: 'var(--text-dark)' }} />
-                                ) : null
-                            }
-                            sx={{
-                                minWidth: 180,
-                                textTransform: 'none',
-                                fontWeight: 600,
-                                fontFamily: 'var(--font-secondary)',
-                                fontSize: 'var(--font-size-xs)',
-                                borderRadius: 'var(--border-radius-md)',
-                                backgroundColor: editForm.status?.toUpperCase() === 'CANCELLED' ? 'var(--error-color)' : 'var(--primary-color)',
-                                color: 'var(--text-dark)',
-                                '&:hover': {
-                                    backgroundColor: editForm.status?.toUpperCase() === 'CANCELLED' ? 'var(--error-color)' : 'var(--active-border)',
-                                },
-                            }}
-                        >
-                            {(updateOrderStatus.isLoading || createConsignmentMutation.isPending)
-                                ? 'Processing...'
-                                : editForm.status?.toUpperCase() === 'CANCELLED'
-                                    ? 'Cancel Order'
-                                    : 'Update Status & Create Consignment'}
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-            )}
+                           <Dialog
+                               open={openEditModal}
+                               onClose={handleCloseEditModal}
+                               maxWidth="md"
+                               fullWidth
+                               PaperProps={{
+                                   sx: {
+                                       backgroundColor: 'var(--card-background-color)',
+                                       color: 'var(--primary-text-color)',
+                                   }
+                               }}
+                           >
+                               <DialogTitle>
+                                   <Box display="flex" justifyContent="space-between" alignItems="center">
+                                       <Typography variant="h6 " sx={{ color: 'var(--primary-text-color)' }}>Edit Order - {selectedOrder.order_id}</Typography>
+                                       {!isLabelLoading && !isLabelError && (
+                                           <ModernButton
+                                               onClick={handleDownloadLabel}
+                                               variant="contained"
+                                               sx={{ color: 'var(--primary-text-color)' }}
+                                           >
+                                               Download Label
+                                           </ModernButton>
+                                       )}
+                                       {isLabelLoading && <CircularProgress size={20} sx={{ color: 'var(--primary-text-color)' }} />}
+                                       {isLabelError && <Typography sx={{ color: 'var(--error-color)' }}>{labelError.message}</Typography>}
+                                       <IconButton onClick={handleCloseEditModal}>
+                                           <CloseIcon sx={{ color: 'var(--primary-text-color)' }} />
+                                       </IconButton>
+                                   </Box>
+                               </DialogTitle>
+                               <DialogContent dividers sx={{ backgroundColor: 'var(--background-color)' }}>
+                                   <Box mb={3}>
+                                       <Typography variant="h6" gutterBottom sx={{ color: 'var(--primary-text-color)', textAlign: 'center', mb: 2 }}>
+                                           Current Order Information
+                                       </Typography>
+                                       <TableContainer component={Paper} sx={{ backgroundColor: 'var(--card-background-color)', border: `1px solid var(--border-color)` }}>
+                                           <Table size="small">
+                                               <TableBody>
+                                                   <TableRow>
+                                                       <TableCell sx={{ fontWeight: 'bold', width: '25%', backgroundColor: 'var(--active-bg)', color: 'var(--primary-text-color)' }}>
+                                                           Order ID
+                                                       </TableCell>
+                                                       <TableCell sx={{ width: '25%', color: 'var(--primary-text-color)' }}>{selectedOrder.order_id}</TableCell>
+                                                       <TableCell sx={{ fontWeight: 'bold', width: '25%', backgroundColor: 'var(--active-bg)', color: 'var(--primary-text-color)' }}>
+                                                           Customer Name
+                                                       </TableCell>
+                                                       <TableCell sx={{ width: '25%', color: 'var(--primary-text-color)' }}>{selectedOrder.user_name}</TableCell>
+                                                   </TableRow>
+                                                   <TableRow>
+                                                       <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'var(--active-bg)', color: 'var(--primary-text-color)' }}>
+                                                           Current Status
+                                                       </TableCell>
+                                                       <TableCell>
+                                                           <Chip
+                                                               label={selectedOrder.status}
+                                                               color={getStatusColor(selectedOrder.status)}
+                                                               size="small"
+                                                               sx={{ backgroundColor: 'var(--primary-color)', color: 'var(--primary-text-color)', }}
+                                                           />
+                                                       </TableCell>
+                                                       <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'var(--active-bg)',color: 'var(--primary-text-color)' }}>
+                                                           Payment Mode
+                                                       </TableCell>
+                                                       <TableCell sx={{ color: 'var(--primary-text-color)' }}>{selectedOrder.payment_mode}</TableCell>
+                                                   </TableRow>
+                                                   <TableRow>
+                                                       <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'var(--active-bg)', color: 'var(--primary-text-color)' }}>
+                                                           Order Date
+                                                       </TableCell>
+                                                       <TableCell sx={{ color: 'var(--primary-text-color)' }}>{new Date(selectedOrder.order_time).toLocaleString()}</TableCell>
+                                                       <TableCell sx={{ fontWeight: 'bold', backgroundColor: 'var(--active-bg)', color: 'var(--primary-text-color)' }}>
+                                                           Total Amount
+                                                       </TableCell>
+                                                       <TableCell sx={{ color: 'var(--primary-text-color)' }}>₹{selectedOrder.total_amount.toFixed(2)}</TableCell>
+                                                   </TableRow>
+                                               </TableBody>
+                                           </Table>
+                                       </TableContainer>
+                                   </Box>
+           
+                                   <Box display="flex" flexDirection="column" alignItems="center">
+                                       <Typography variant="h6" gutterBottom sx={{ color: 'var(--primary-text-color)', textAlign: 'center', mb: 2 }}>
+                                           Update Order Information
+                                       </Typography>
+                                       <Paper sx={{ p: 3, width: '100%', maxWidth: 600, backgroundColor: 'var(--card-background-color)', border: `1px solid var(--border-color)` }}>
+                                           <Grid container spacing={2} justifyContent="center">
+                                               {formError && (
+                                                   <Grid item xs={12}>
+                                                       <Alert severity="error" sx={{ backgroundColor: 'var(--error-color)', color: 'var(--priamry-text-color)' }}>
+                                                           {formError}
+                                                       </Alert>
+                                                   </Grid>
+                                               )}
+                                               <Grid item xs={12} sm={10}>
+                                                   <FormControl fullWidth size="small">
+                                                       <InputLabel sx={{ color: 'var(--primary-text-color)' }}>Status</InputLabel>
+                                                       <Select
+                                                           name="status"
+                                                           value={editForm.status}
+                                                           onChange={handleEditFormChange}
+                                                           label="Status"
+                                                           disabled={updateOrderStatus.isLoading}
+                                                           sx={{
+                                                               backgroundColor: 'var(--card-background-color)',
+                                                               borderRadius: 'var(--border-radius-md)',
+                                                               color: 'var(--primary-text-color)',
+                                                               '& .MuiOutlinedInput-notchedOutline': {
+                                                                   borderColor: 'var(--border-color)',
+                                                               },
+                                                               '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                   borderColor: 'var(--primary-text-color)', // highlight on hover
+                                                               },
+                                                               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                   borderColor: 'var(--primary-text-color)', // active border
+                                                               },
+                                                           }}
+                                                       >
+                                                           <MenuItem value="Packing" disabled>Packing</MenuItem>
+                                                           <MenuItem value="PACKED">Packed</MenuItem>
+                                                           <MenuItem value="CANCELLED">To Cancel</MenuItem>
+                                                       </Select>
+                                                   </FormControl>
+                                               </Grid>
+           
+                                               {/* <Grid item xs={12} sm={10}>
+                                                   <FormControl fullWidth size="small">
+                                                       <InputLabel sx={{ color: 'var(--primary-text-color)' }}>Payment Mode</InputLabel>
+                                                       <Select
+                                                           name="paymentMode"
+                                                           value={editForm.paymentMode}
+                                                           onChange={handleEditFormChange}
+                                                           label="Payment Mode"
+                                                           disabled={updateOrderStatus.isLoading}
+                                                           sx={{
+                                                               backgroundColor: 'var(--card-background-color)',
+                                                               borderRadius: 'var(--border-radius-md)',
+                                                               color: 'var(--primary-text-color)',
+                                                               '& .MuiOutlinedInput-notchedOutline': {
+                                                                   borderColor: 'var(--border-color)',
+                                                               },
+                                                               '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                   borderColor: 'var(--primary-text-color)', // hover state
+                                                               },
+                                                               '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                   borderColor: 'var(--primary-text-color)', // focus state
+                                                               },
+                                                           }}
+                                                       >
+                                                           <MenuItem value="COD">Cash on Delivery</MenuItem>
+                                                           <MenuItem value="ONLINE">Online Payment</MenuItem>
+                                                       </Select>
+                                                   </FormControl>
+                                               </Grid> */}
+           
+                                               <Grid item xs={12} sm={10}>
+                                                   <TextField
+                                                       fullWidth
+                                                       size="medium"
+                                                       label="Remarks"
+                                                       name="remarks"
+                                                       value={editForm.remarks}
+                                                       onChange={handleEditFormChange}
+                                                       multiline
+                                                       rows={4}
+                                                       placeholder="Enter any remarks about this status change"
+                                                       disabled={updateOrderStatus.isLoading}
+                                                       helperText="Add specific notes or reasons for the status change"
+                                                       sx={{
+                                                           backgroundColor: 'var(--card-background-color)',
+                                                           borderRadius: 'var(--border-radius-md)',
+                                                           '& .MuiOutlinedInput-notchedOutline': {
+                                                               borderColor: 'var(--border-color)',
+                                                           },
+                                                           '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                               borderColor: 'var(--primary-text-color)', // hover state
+                                                           },
+                                                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                               borderColor: 'var(--primary-text-color)', // focused state
+                                                           },
+                                                           '& .MuiInputBase-input': {
+                                                               color: 'var(--primary-text-color)', // text color
+                                                           },
+                                                           '& .MuiFormLabel-root': {
+                                                               color: 'var(--primary-text-color)', // label color
+                                                           },
+                                                           '& .MuiFormHelperText-root': {
+                                                               color: 'var(--secondary-text-color)', // helper text color
+                                                           },
+                                                       }}
+                                                   />
+                                               </Grid>
+                                               <Grid item xs={12} sm={10}>
+                                                   <Box sx={{
+                                                       p: 2,
+                                                       backgroundColor: 'var(--active-bg)',
+                                                       borderRadius: 'var(--border-radius-sm)',
+                                                       textAlign: 'center'
+                                                   }}>
+                                                       <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', color: 'var(--primary-text-color)' }}>
+                                                           Update Summary:
+                                                       </Typography>
+                                                       <Typography variant="body2" sx={{
+                                                           display: 'flex',
+                                                           alignItems: 'center',
+                                                           justifyContent: 'center',
+                                                           flexWrap: 'wrap',
+                                                           gap: 1,
+                                                           color: 'var(--secondary-text-color)'
+                                                       }}>
+                                                           Status:
+                                                           <Chip
+                                                               label={selectedOrder.status}
+                                                               color={getStatusColor(selectedOrder.status)}
+                                                               size="small"
+                                                               sx={{ backgroundColor: 'var(--primary-color)', color: 'var(--text-dark)' }}
+                                                           />
+                                                           →
+                                                           <Chip
+                                                               label={editForm.status || 'Select Status'}
+                                                               color={getStatusColor(editForm.status)}
+                                                               size="small"
+                                                               sx={{ backgroundColor: 'var(--primary-color)', color: 'var(--text-dark)' }}
+                                                           />
+                                                           {editForm.status !== selectedOrder.status && (
+                                                               <Chip
+                                                                   label="WILL BE UPDATED"
+                                                                   color="warning"
+                                                                   size="small"
+                                                                   sx={{ backgroundColor: 'var(--warning-color)', color: 'var(--text-dark)' }}
+                                                               />
+                                                           )}
+                                                       </Typography>
+                                                   </Box>
+                                               </Grid>
+                                           </Grid>
+                                       </Paper>
+                                   </Box>
+                               </DialogContent>
+                               <DialogActions sx={{ p: 2 }}>
+                                   <ModernButton
+                                       onClick={handleCloseEditModal}
+                                       disabled={updateOrderStatus.isLoading}
+                                       variant="outlined"
+                                       sx={{ borderColor: 'var(--border-color)', color: 'var(--primary-text-color)' }}
+                                   >
+                                       Cancel
+                                   </ModernButton>
+                                   <ModernButton
+                                       onClick={handleEditSubmit}
+                                       variant="contained"
+                                       disabled={updateOrderStatus.isLoading}
+                                       startIcon={updateOrderStatus.isLoading ? <CircularProgress size={20} sx={{ color: 'var(--text-dark)' }} /> : null}
+                                       sx={{ minWidth: 120 }}
+                                   >
+                                       {updateOrderStatus.isLoading ? 'Saving...' : 'Save Changes'}
+                                   </ModernButton>
+                               </DialogActions>
+                           </Dialog>
+                       )}
         </Box>
     );
 };
 
-export default QualityChecking;
+export default PackingOrders;

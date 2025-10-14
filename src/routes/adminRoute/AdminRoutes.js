@@ -54,7 +54,8 @@ import RefundedOrders from '../../admin/pages/order/RefundedOrders';
 import ReturnedOrders from '../../admin/pages/order/ReturnedOrders';
 import ManageSingleProduct from '../../admin/pages/product/manage/ManageSingleProduct';
 
-
+import PlacedOrders from '../../admin/pages/order/PlacedOrders';
+import PackingOrders from '../../admin/pages/order/PackingOrders';
 
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
@@ -126,7 +127,8 @@ const AdminRoutes = () => {
                         <Route path="order/today" element={<OrderHistoryPage />} />
                         <Route path="order/status" element={<OrderStatusManagement />} />
                         <Route path="order/status/prepare" element={<PrepareOrder />} />
-
+                        <Route path='order/status/placed' element={<PlacedOrders />} />
+                        <Route path='order/status/packing' element={<PackingOrders />} />
                         <Route path="order/status/in-transit" element={<TransitOrders />} />
                         <Route path="order/status/refunded" element={<RefundedOrders />} />
                         <Route path="order/status/returned" element={<ReturnedOrders />} />

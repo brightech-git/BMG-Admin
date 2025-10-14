@@ -51,9 +51,10 @@ const DashboardCards = () => {
 
     const page = 0;
     const size = 100000;
-    // const { data: pendingOrders, isLoading: loadingPending } = useOrdersByStatus("PAYMENT_PENDING", page, size);
+    const { data: pendingOrders, isLoading: loadingPending } = useOrdersByStatus("PAYMENT_PENDING", page, size);
     const { data: placedOrders, isLoading: loadingPlaced } = useOrdersByStatus("PLACED", page, size);
     const { data: inProcessingOrders, isLoading: loadingProcessing } = useOrdersByStatus("IN_PROCESSING", page, size);
+    const { data: PackingOrders, isLoading: loadingPacking } = useOrdersByStatus("PACKING", page, size);
     const { data: packedOrders, isLoading: loadingPacked } = useOrdersByStatus("PACKED", page, size);
     const { data: shippedOrders, isLoading: loadingShipped } = useOrdersByStatus("SHIPPED", page, size);
     const { data: inTransitOrders, isLoading: loadingTransit } = useOrdersByStatus("IN_TRANSIT", page, size);
@@ -165,11 +166,12 @@ const DashboardCards = () => {
     const orderStatusCards = useMemo(() => {
         if (!dashboardData) return [];
         return [
-            // { id: 'pending', title: 'Order Pending', value: dashboardData.pendingOrders || 0, icon: <FaShoppingBag />, detail: 'Orders not placed', status: 'PAYMENT_PENDING', path: '/admin/order/status/pending', key: 'PAYMENT_PENDING', values: ['IN_PROCESSING', 'CANCELLED'] },
-            { id: 'placed', title: 'Order Placed', value: dashboardData.placedOrders || 0, icon: <FaShoppingBag />, detail: 'Orders recently placed', status: 'PLACED' , path: '/admin/order/status/qc', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
-            { id: 'inProcessing', title: 'QC Check', value: dashboardData.inProcessingOrders || 0, icon: <FaCogs />, detail: 'Orders being processed', status: 'IN_PROCESSING', path: '/admin/order/status/packed', key: 'IN_PROCESSING', values: ['PACKED', 'CANCELLED'] },
-            { id: 'packed', title: 'Packed', value: dashboardData.packedOrders || 0, icon: <FaBoxes />, detail: 'Orders packed and ready', status: 'PACKED', path: '/admin/order/status/shipped', key: 'PACKED', values: ['SHIPPED', 'CANCELLED'] },
-            { id: 'shipped', title: 'Shipped', value: dashboardData.shippedOrders || 0, icon: <FaRocket />, detail: 'Orders in transit', status: 'SHIPPED', path: '/admin/order/status/shipping', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
+            { id: 'pending', title: 'Order Pending', value: dashboardData.pendingOrders || 0, icon: <FaShoppingBag />, detail: 'Orders not placed', status: 'PAYMENT_PENDING', path: '/admin/order/status/pending', key: 'PAYMENT_PENDING', values: ['IN_PROCESSING', 'CANCELLED'] },
+            { id: 'placed', title: 'Order Placed', value: dashboardData.placedOrders || 0, icon: <FaShoppingBag />, detail: 'Orders recently placed', status: 'PLACED' , path: '/admin/order/status/placed', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
+            { id: 'inProcessing', title: 'QC Check', value: dashboardData.inProcessingOrders || 0, icon: <FaCogs />, detail: 'Orders being processed', status: 'IN_PROCESSING', path: '/admin/order/status/qc', key: 'IN_PROCESSING', values: ['PACKING', 'CANCELLED'] },
+            { id: 'Packing', title: 'Order Packing', value: dashboardData.PackingOrders || 0, icon: <FaShoppingBag />, detail: 'Orders move to pack', status: 'PACKING', path: '/admin/order/status/packing', key: 'PACKING', values: ['PACKED', 'CANCELLED'] },
+            { id: 'packed', title: 'Packed', value: dashboardData.packedOrders || 0, icon: <FaBoxes />, detail: 'Orders packed and ready', status: 'PACKED', path: '/admin/order/status/packed', key: 'PACKED', values: ['SHIPPED', 'CANCELLED'] },
+            { id: 'shipped', title: 'Shipped', value: dashboardData.shippedOrders || 0, icon: <FaRocket />, detail: 'Orders in transit', status: 'SHIPPED', path: '/admin/order/status/shipped', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
             { id: 'inTransit', title: 'In Transit', value: dashboardData.inTransitOrders || 0, icon: <FaPlane />, detail: 'Orders on the way', status: 'IN_TRANSIT', path: '/admin/order/status/shipped', key: 'IN_TRANSIT', values: ['SHIPPED', 'CANCELLED'] },
             { id: 'delivered', title: 'Delivered', value: dashboardData.inTransitOrders || 0, icon: <FaPlane />, detail: 'Orders on the way', status: 'DELIVERED', path: '/admin/order/status/shipped', key: 'DELIVERED', values: ['SHIPPED', 'CANCELLED'] },
             { id: 'cancelled', title: 'Cancelled', value: dashboardData.cancelledOrders || 0, icon: <FaBan />, detail: 'Cancelled orders', status: 'CANCELLED', path: '/admin/order/status/shipped', key: 'CANCELLED', values: ['SHIPPED', 'CANCELLED'] },
@@ -180,9 +182,10 @@ const DashboardCards = () => {
 
     useEffect(() => {
         if (
-         
+            !pendingOrders &&
             !placedOrders &&
             !inProcessingOrders &&
+            !PackingOrders &&
             !packedOrders &&
             !shippedOrders &&
             !inTransitOrders &&
@@ -195,9 +198,11 @@ const DashboardCards = () => {
         const transformedData = {
             totalUsers: totalUsers || 0,
             totalOrders:
-           
+
+                (pendingOrders?.totalByStatus || 0)+ 
                 (placedOrders?.totalByStatus || 0) +
                 (inProcessingOrders?.totalByStatus || 0) +
+                (PackingOrders?.totalByStatus) +
                 (packedOrders?.totalByStatus || 0) +
                 (shippedOrders?.totalByStatus || 0) +
                 (inTransitOrders?.totalByStatus || 0) +
@@ -205,9 +210,11 @@ const DashboardCards = () => {
                 (cancelledOrders?.totalByStatus || 0) +
                 (returnedOrders?.totalByStatus || 0) +
                 (refundedOrders?.totalByStatus || 0),
-          
+
+            pendingOrders:pendingOrders?.totalByStatus ||0,
             placedOrders: placedOrders?.totalByStatus || 0,
             inProcessingOrders: inProcessingOrders?.totalByStatus || 0,
+            PackingOrders: PackingOrders?.totalByStatus || 0,
             packedOrders: packedOrders?.totalByStatus || 0,
             shippedOrders: shippedOrders?.totalByStatus || 0,
             inTransitOrders: inTransitOrders?.totalByStatus || 0,
@@ -225,9 +232,10 @@ const DashboardCards = () => {
         setLastUpdated(new Date());
         setIsLoading(false);
     }, [
-    
+        pendingOrders,
         placedOrders,
         inProcessingOrders,
+        PackingOrders,
         packedOrders,
         shippedOrders,
         inTransitOrders,

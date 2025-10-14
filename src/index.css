@@ -25,8 +25,8 @@
   --both-text-color:#041f60;
 
   /* Fonts */
-  --font-primary: 'Saira','Trajan Pro','Poppins', 'Roboto', 'Open Sans', Arial, sans-serif;
-  --font-secondary:  'Domine','Inter', 'Inter', 'Open Sans', Arial, sans-serif;
+  --font-primary: 'Domine','Saira','Trajan Pro','Poppins', 'Roboto', 'Open Sans', Arial, sans-serif;
+  --font-secondary:  'Saira','Inter', 'Inter', 'Open Sans', Arial, sans-serif;
 
   /* Font Sizes */
   --font-size-xxs:12px;
@@ -93,7 +93,7 @@
 
 /* Global styles */
 body {
-  font-family: 'Domine','Source Code Pro','Inter', 'Inter','Open Sans',Arial,sans-serif; 
+  font-family: 'Domine','Source Code Pro','Inter', 'Inter','Open Sans',Arial,sans-serif !important; 
   color: #041f60;;
   background-color: #02021d;
 }

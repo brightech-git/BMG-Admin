@@ -1,166 +1,19 @@
 import React, { useState, useCallback, useRef, useContext } from 'react';
 import { useProductContext } from '../../../context/product/productContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MyContext } from '../../../context/themeContext/themeContext';
-import {
-    Box,
-    Typography,
-    TextField,
-    Button,
-    Card,
-    CardContent,
-    Alert,
-    Chip,
-    CircularProgress,
-    FormControl,
-    Checkbox,
-    FormControlLabel,
-    Select,
-    MenuItem,
-    Grid,
-    Divider,
-    Snackbar,
-    LinearProgress,
-    Backdrop,
-    InputLabel,
-    FormGroup,
-} from '@mui/material';
-import {
-    CloudUpload as UploadIcon,
-    CheckCircle as CheckIcon,
-    Error as ErrorIcon,
-    Refresh as RefreshIcon,
-    Info as InfoIcon,
-    Delete as DeleteIcon,
-    Category,
-    Palette,
-    Woman,
-    Cake,
-    TrendingUp,
-} from '@mui/icons-material';
-import { styled } from '@mui/system';
-
-// ========== STYLED COMPONENTS ==========
-const ProfessionalCard = styled(Card)({
-    borderRadius: '12px',
-    backgroundColor: 'var(--card-background-color)',
-    border: `1px solid var(--border-color)`,
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-    transition: 'all 0.3s ease',
-    width: '100%',
-    overflow: 'visible',
-});
-
-const ProfessionalButton = styled(Button)(({ color, disabled }) => ({
-    borderRadius: '8px',
-    textTransform: 'none',
-    fontWeight: 600,
-    fontSize: '14px',
-    padding: '10px 24px',
-    transition: 'all 0.3s ease',
-    boxShadow: 'none',
-    ...(color === 'primary' && {
-        backgroundColor: 'var(--primary-color)',
-        color: 'var(--text-dark)',
-        '&:hover': {
-            backgroundColor: 'var(--active-border)',
-            transform: disabled ? 'none' : 'translateY(-2px)',
-            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-        },
-        '&:disabled': {
-            backgroundColor: 'var(--disabled-bg)',
-            color: 'var(--disabled-text)',
-        },
-    }),
-    ...(color === 'secondary' && {
-        borderColor: 'var(--primary-color)',
-        color: 'var(--primary-color)',
-        backgroundColor: 'transparent',
-        '&:hover': {
-            backgroundColor: 'var(--active-bg)',
-            transform: disabled ? 'none' : 'translateY(-2px)',
-            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.15)',
-        },
-        '&:disabled': {
-            borderColor: 'var(--disabled-bg)',
-            color: 'var(--disabled-text)',
-        },
-    }),
-}));
-
-const UploadZone = styled(Box)(({ isDragOver, hasFiles }) => ({
-    borderRadius: '8px',
-    border: `2px dashed ${isDragOver ? 'var(--primary-color)' : hasFiles ? 'var(--success-color)' : 'var(--border-color)'}`,
-    backgroundColor: isDragOver ? 'var(--active-bg)' : hasFiles ? 'var(--success-bg)' : 'var(--card-background-color)',
-    padding: '32px 24px',
-    textAlign: 'center',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    minHeight: '140px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    '&:hover': {
-        borderColor: hasFiles ? 'var(--success-color)' : 'var(--primary-color)',
-        backgroundColor: hasFiles ? 'var(--success-bg)' : 'var(--active-bg)',
-        transform: 'translateY(-1px)',
-    },
-}));
-
-const FormSection = styled(Box)({
-    backgroundColor: 'var(--card-background-color)',
-    borderRadius: '8px',
-    padding: '24px',
-    marginBottom: '24px',
-    border: '1px solid var(--border-color)',
-    transition: 'all 0.3s ease',
-    '&:hover': {
-        borderColor: 'var(--primary-color)',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-    },
-});
-
-const StatusIndicator = styled(Box)(({ status }) => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
-    borderRadius: '20px',
-    fontSize: '14px',
-    fontWeight: 600,
-    ...(status === 'complete' && {
-        backgroundColor: 'var(--success-bg)',
-        color: 'var(--success-color)',
-        border: '1px solid var(--success-color)',
-    }),
-    ...(status === 'incomplete' && {
-        backgroundColor: 'var(--error-bg)',
-        color: 'var(--error-color)',
-        border: '1px solid var(--error-color)',
-    }),
-    ...(status === 'partial' && {
-        backgroundColor: 'var(--warning-bg)',
-        color: 'var(--warning-color)',
-        border: '1px solid var(--warning-color)',
-    }),
-}));
-
-const AttributeIcon = styled(Box)({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '8px 0',
-});
 
 const AddProducts = () => {
+    const location = useLocation();
+    const { tagkey, itemName, subItemName } = location.state || {};
+    console.log("Received:", tagkey, itemName, subItemName);
     const { uploadImages, createFormData, loading, error, setError } = useProductContext();
     const { themeMode } = useContext(MyContext);
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
 
     const [formData, setFormData] = useState({
-        tagKey: '',
+        tagKey: tagkey || '',
         description: '',
         selectedFiles: [],
         trendingOptions: { topTrending: false, featuredProducts: false, bestDesign: false },
@@ -194,11 +47,31 @@ const AddProducts = () => {
     };
 
     const ATTRIBUTE_ICONS = {
-        gender: <Woman sx={{ fontSize: 18, color: 'var(--primary-color)' }} />,
-        occasion: <Cake sx={{ fontSize: 18, color: 'var(--primary-color)' }} />,
-        collectionType: <Category sx={{ fontSize: 18, color: 'var(--primary-color)' }} />,
-        materialFinish: <Palette sx={{ fontSize: 18, color: 'var(--primary-color)' }} />,
-        colorAccents: <TrendingUp sx={{ fontSize: 18, color: 'var(--primary-color)' }} />,
+        gender: (
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+        ),
+        occasion: (
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+        ),
+        collectionType: (
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+        ),
+        materialFinish: (
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+        ),
+        colorAccents: (
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+        ),
     };
 
     const clearAllFeedback = useCallback(() => {
@@ -384,225 +257,189 @@ const AddProducts = () => {
 
     const completionStatus = getCompletionStatus();
 
+    const getStatusStyles = (status) => {
+        const baseStyles = "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border";
+        switch (status) {
+            case 'complete':
+                return `${baseStyles} bg-green-50 text-green-700 border-green-200`;
+            case 'incomplete':
+                return `${baseStyles} bg-red-50 text-red-700 border-red-200`;
+            case 'partial':
+                return `${baseStyles} bg-yellow-50 text-yellow-700 border-yellow-200`;
+            default:
+                return baseStyles;
+        }
+    };
+
+    const getStatusIcon = (status) => {
+        switch (status) {
+            case 'complete':
+                return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>;
+            case 'incomplete':
+                return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>;
+            case 'partial':
+                return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>;
+            default:
+                return null;
+        }
+    };
+
     return (
-        <Box sx={{
-            backgroundColor: 'var(--background-color)',
-     
-            py: { xs: 3, md: 4 },
-            px: { xs: 2, sm: 3, md: 4 },
-        }}>
-            {/* Upload Progress Backdrop */}
-            <Backdrop open={uiState.isUploading} sx={{ zIndex: 1300, bgcolor: 'rgba(0, 0, 0, 0.8)' }}>
-                <Box textAlign="center" sx={{ color: 'white', p: 4, borderRadius: 2, bgcolor: 'var(--card-background-color)' }}>
-                    <CircularProgress sx={{ color: 'var(--primary-color)', mb: 2 }} size={40} />
-                    <Typography variant="h6" sx={{ mb: 2, color: 'var(--primary-text-color)' }}>
-                        Uploading Product Images...
-                    </Typography>
-                    <LinearProgress
-                        variant="determinate"
-                        value={uiState.uploadProgress}
-                        sx={{
-                            width: 300,
-                            height: 8,
-                            borderRadius: 4,
-                            bgcolor: 'var(--border-color)',
-                            '& .MuiLinearProgress-bar': {
-                                bgcolor: 'var(--primary-color)',
-                                borderRadius: 4,
-                            }
-                        }}
-                    />
-                    <Typography variant="body2" sx={{ mt: 1, color: 'var(--secondary-text-color)' }}>
-                        {uiState.uploadProgress}% Complete
-                    </Typography>
-                </Box>
-            </Backdrop>
+        <div className="min-h-screen  py-6 px-4 sm:px-6 lg:px-8">
+            {/* Upload Progress Overlay */}
+            {uiState.isUploading && (
+                <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
+                    <div className="bg-white rounded-2xl p-8 text-center max-w-md w-full mx-4">
+                        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Uploading Product Images...</h3>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${uiState.uploadProgress}%` }}
+                            ></div>
+                        </div>
+                        <p className="text-sm text-gray-600">{uiState.uploadProgress}% Complete</p>
+                    </div>
+                </div>
+            )}
 
             {/* Main Content */}
-            <ProfessionalCard>
-                <CardContent sx={{ p: { xs: 3, md: 2 } }}>
-                    {/* Header Section */}
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                        <Box>
-                            <Typography
-                                variant="h5"
-                                sx={{
-                                    fontFamily: 'var(--font-primary)',
-                                    fontWeight: 700,
-                                    color: 'var(--primary-color)',
-                                    mb: 0.5
-                                }}
-                            >
-                                Add Product Images
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    color: 'var(--secondary-text-color)',
-                                    fontSize: '16px'
-                                }}
-                            >
-                                Upload a images and specifications for a product
-                            </Typography>
-                        </Box>
-                        <StatusIndicator status={completionStatus.status}>
-                            {completionStatus.status === 'complete' && <CheckIcon sx={{ fontSize: 20 }} />}
-                            {completionStatus.status === 'incomplete' && <ErrorIcon sx={{ fontSize: 20 }} />}
-                            {completionStatus.status === 'partial' && <InfoIcon sx={{ fontSize: 20 }} />}
-                            {completionStatus.text} ({completionStatus.count})
-                        </StatusIndicator>
-                    </Box>
+            <div className="max-w-8xl mx-auto mt-2 ">
+                <div className=" rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div className="p-2 sm:p-8">
+                        {/* Header Section */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-1">
+                            <div>
+                                <h1 className="text-xl sm:text-xl font-bold text-600 mb-1">
+                                    Add Product Images
+                                </h1>
+                                <p className=" text-sm">
+                                    Upload images and specifications for a product
+                                </p>
+                            </div>
+                            <div className={getStatusStyles(completionStatus.status)}>
+                                {getStatusIcon(completionStatus.status)}
+                                {completionStatus.text} ({completionStatus.count})
+                            </div>
+                        </div>
 
-                    {/* Feedback Alerts */}
-                    <Box sx={{ mb: 2 }}>
-                        {uiState.feedback.error && (
-                            <Alert
-                                severity="error"
-                                onClose={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, error: '' } }))}
-                                sx={{ mb: 2, borderRadius: '8px', fontSize: '14px' }}
-                            >
-                                {uiState.feedback.error}
-                            </Alert>
-                        )}
-                        {uiState.feedback.success && (
-                            <Alert
-                                severity="success"
-                                onClose={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, success: '' } }))}
-                                sx={{ mb: 2, borderRadius: '8px', fontSize: '14px' }}
-                            >
-                                {uiState.feedback.success}
-                            </Alert>
-                        )}
-                        {uiState.feedback.info && (
-                            <Alert
-                                severity="info"
-                                onClose={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, info: '' } }))}
-                                sx={{ mb: 2, borderRadius: '8px', fontSize: '14px' }}
-                            >
-                                {uiState.feedback.info}
-                            </Alert>
-                        )}
-                    </Box>
+                        {/* Feedback Alerts */}
+                        <div className="space-y-1 mb-2">
+                            {uiState.feedback.error && (
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
+                                        <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                        </svg>
+                                        <span className="text-red-700 font-medium">{uiState.feedback.error}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, error: '' } }))}
+                                        className="text-red-600 hover:text-red-800"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+                            {uiState.feedback.success && (
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
+                                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                        </svg>
+                                        <span className="text-green-700 font-medium">{uiState.feedback.success}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, success: '' } }))}
+                                        className="text-green-600 hover:text-green-800"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+                            {uiState.feedback.info && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
+                                        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                        </svg>
+                                        <span className="text-blue-700 font-medium">{uiState.feedback.info}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, info: '' } }))}
+                                        className="text-blue-600 hover:text-blue-800"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
 
-                    {/* SECTION 1: Basic Information & Images - Full Width */}
-                    <Grid container spacing={1}>
-                        {/* Basic Information - Full Width */}
-                        <Grid size={{xs:12 ,md:6 ,lg:6}} >
-                            <FormSection>
-                                <Typography
-                                    variant="h6"
-                                    sx={{
-                                        fontFamily: 'var(--font-primary)',
-                                        fontWeight: 600,
-                                        color: 'var(--primary-text-color)',
-                                        mb: 1,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1
-                                    }}
-                                >
-                                    <InfoIcon sx={{ color: 'var(--primary-color)' }} />
-                                    Basic Information
-                                </Typography>
+                        {/* Form Sections */}
+                        <div className="space-y-2">
+                            {/* SECTION 1: Basic Information & Images */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Basic Information */}
+                                <div className=" border border-gray-200 rounded-lg p-2 hover:border-blue-500 transition-all duration-300">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <h2 className="text-lg font-semibold ">Basic Information</h2>
+                                    </div>
 
-                                <Grid container spacing={1}>
-                                    <Grid size={{ xs: 12, md: 6, lg: 6 }}>
-                                        <TextField
-                                            label="Product Tag Key "
-                                            placeholder="e.g., GOLD-EARRINGS-001"
-                                            value={formData.tagKey}
-                                            onChange={e => handleInputChange('tagKey', e.target.value)}
-                                            fullWidth
-                                            required
-                                            InputLabelProps={{
-                                                sx: {
-                                                    color: 'var(--secondary-text-color)',
-                                                    '&.Mui-focused': { color: 'var(--primary-color)' }
-                                                }
-                                            }}
-                                            sx={{
-                                                '& .MuiInputBase-root': {
-                                                    fontSize: '16px',
-                                                    color: 'var(--primary-text-color)',
-                                                    backgroundColor: 'var(--card-background-color)',
-                                                    borderRadius: '8px',
-                                                },
-                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: 'var(--border-color)',
-                                                },
-                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: 'var(--primary-color)',
-                                                },
-                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: 'var(--primary-color)',
-                                                },
-                                            }}
-                                        />
-                                    </Grid>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium  mb-1">
+                                                Product Tag Key *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g., GOLD-EARRINGS-001"
+                                                value={formData.tagKey}
+                                                onChange={e => handleInputChange('tagKey', e.target.value)}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-black  transition-colors duration-200"
+                                            />
+                                        </div>
 
-                                    <Grid size={{xs:12 ,md:6 ,lg:12}}>
-                                        <TextField
-                                            label="Product Description"
-                                            placeholder="Provide a detailed description of the product..."
-                                            value={formData.description}
-                                            onChange={e => handleInputChange('description', e.target.value)}
-                                            multiline
-                                            rows={4}
-                                            fullWidth
-                                            InputLabelProps={{
-                                                sx: {
-                                                    color: 'var(--secondary-text-color)',
-                                                    '&.Mui-focused': { color: 'var(--primary-color)' }
-                                                }
-                                            }}
-                                            sx={{
-                                                '& .MuiInputBase-root': {
-                                                    fontSize: '16px',
-                                                    color: 'var(--primary-text-color)',
-                                                    backgroundColor: 'var(--card-background-color)',
-                                                    borderRadius: '8px',
-                                                },
-                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: 'var(--border-color)',
-                                                },
-                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: 'var(--primary-color)',
-                                                },
-                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                    borderColor: 'var(--primary-color)',
-                                                },
-                                            }}
-                                        />
-                                    </Grid>
-                                </Grid>
-                            </FormSection>
-                        </Grid>
+                                        <div>
+                                            <label className="block text-sm font-medium ">
+                                                Product Description
+                                            </label>
+                                            <textarea
+                                                placeholder="Provide a detailed description of the product..."
+                                                value={formData.description}
+                                                onChange={e => handleInputChange('description', e.target.value)}
+                                                rows={4}
+                                                className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-none"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
 
-                        {/* Image Upload - Full Width */}
-                        <Grid size={{ xs: 12, md: 6, lg: 6 }}>
-                            <FormSection>
-                               
+                                {/* Image Upload */}
+                                <div className=" border border-gray-200 rounded-lg p-2 hover:border-blue-500 transition-all duration-300">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                        </svg>
+                                        <h2 className="text-lg font-semibold">Product Images</h2>
+                                    </div>
 
-                                <Grid container spacing={3}>
-                                    <Grid size={{ xs: 12, md: 6, lg: 6 }}>
-                                        <Typography
-                                            variant="h6"
-                                            sx={{
-                                                fontFamily: 'var(--font-primary)',
-                                                fontWeight: 600,
-                                                color: 'var(--primary-text-color)',
-                                                mb: 1,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 1
-                                            }}
-                                        >
-                                            <UploadIcon sx={{ color: 'var(--primary-color)' }} />
-                                            Product Images
-                                        </Typography>
-                                        <UploadZone
-                                            isDragOver={uiState.isDragOver}
-                                            hasFiles={formData.selectedFiles.length > 0}
+                                    <div className="space-y-4">
+                                        <div
+                                            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-300 ${uiState.isDragOver
+                                                    ? 'border-blue-500 bg-blue-50'
+                                                    : formData.selectedFiles.length > 0
+                                                        ? 'border-green-500 bg-green-50'
+                                                        : 'border-gray-300 bg-gray-50 hover:border-blue-500 hover:bg-blue-50'
+                                                }`}
                                             onClick={() => fileInputRef.current?.click()}
                                             onDragEnter={handleDragEnter}
                                             onDragLeave={handleDragLeave}
@@ -615,365 +452,235 @@ const AddProducts = () => {
                                                 accept="image/jpeg,image/png,image/webp"
                                                 multiple
                                                 onChange={handleFileChange}
-                                                style={{ display: 'none' }}
+                                                className="hidden"
                                             />
                                             {formData.selectedFiles.length > 0 ? (
                                                 <>
-                                                    <CheckIcon sx={{ fontSize: 48, color: 'var(--success-color)', mb: 1 }} />
-                                                    <Typography sx={{ fontWeight: 600, fontSize: '18px', color: 'var(--primary-text-color)', mb: 0.5 }}>
+                                                    <svg className="w-12 h-12 text-green-500 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                    </svg>
+                                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
                                                         {formData.selectedFiles.length} Files Selected
-                                                    </Typography>
-                                                    <Typography variant="body2" sx={{ fontSize: '14px', color: 'var(--secondary-text-color)' }}>
+                                                    </h3>
+                                                    <p className="text-gray-600 text-sm">
                                                         Click or drag to add more files
-                                                    </Typography>
+                                                    </p>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <UploadIcon sx={{ fontSize: 48, color: 'var(--primary-color)', mb: 1 }} />
-                                                    <Typography sx={{ fontWeight: 600, fontSize: '18px', color: 'var(--primary-text-color)', mb: 0.5 }}>
+                                                    <svg className="w-12 h-12 text-blue-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                    </svg>
+                                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
                                                         Upload Product Images
-                                                    </Typography>
-                                                    <Typography variant="body2" sx={{ fontSize: '14px', color: 'var(--secondary-text-color)' }}>
+                                                    </h3>
+                                                    <p className="text-gray-600 text-sm">
                                                         JPG, PNG, WEBP • 3-10 files • Max 10MB each
-                                                    </Typography>
+                                                    </p>
                                                 </>
                                             )}
-                                        </UploadZone>
-                                    </Grid>
+                                        </div>
 
-                                    {/* File List - Full Width when files exist */}
-                                    {formData.selectedFiles.length > 0 && (
-                                        <Grid size={{xs:12 ,md:6 ,lg:6}}>
-                                            <Box>
-                                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1, color: 'var(--primary-text-color)' }}>
+                                        {/* File List */}
+                                        {formData.selectedFiles.length > 0 && (
+                                            <div>
+                                                <h4 className="text-sm font-semibold text-900 mb-1">
                                                     Selected Files ({formData.selectedFiles.length})
-                                                </Typography>
-                                                <Box sx={{
-                                                    display: 'grid',
-                                                    gap: 1,
-                                                    gridTemplateColumns: { xs: '1fr', sm: '1fr', md: '1fr' },
-                                                    maxHeight: uiState.showAllFiles ? 'none' : 200,
-                                                    overflow: 'auto'
-                                                }}>
-                                                    {(uiState.showAllFiles ? formData.selectedFiles : formData.selectedFiles.slice(0, 8)).map((file, index) => (
-                                                        <Box
+                                                </h4>
+
+                                                <div
+                                                    className={`flex flex-wrap gap-2 ${uiState.showAllFiles ? '' : 'max-h-48 overflow-y-auto'
+                                                        }`}
+                                                >
+                                                    {(uiState.showAllFiles
+                                                        ? formData.selectedFiles
+                                                        : formData.selectedFiles.slice(0, 8)
+                                                    ).map((file, index) => (
+                                                        <div
                                                             key={index}
-                                                            sx={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                border: `1px solid var(--border-color)`,
-                                                                borderRadius: '6px',
-                                                                p: 1.5,
-                                                                bgcolor: 'var(--card-background-color)',
-                                                                transition: 'all 0.2s ease',
-                                                                '&:hover': {
-                                                                    borderColor: 'var(--primary-color)',
-                                                                    bgcolor: 'var(--active-bg)'
-                                                                }
-                                                            }}
+                                                            className="flex items-center justify-between px-2 py-1 border border-gray-200 rounded-lg transition-colors duration-200 bg-gray-50"
                                                         >
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{
-                                                                    flex: 1,
-                                                                    fontSize: '13px',
-                                                                    color: 'var(--primary-text-color)',
-                                                                    overflow: 'hidden',
-                                                                    textOverflow: 'ellipsis',
-                                                                    whiteSpace: 'nowrap'
-                                                                }}
-                                                            >
+                                                            <span className="text-xs sm:text-sm text-gray-700 truncate max-w-[120px] sm:max-w-[200px]">
                                                                 {file.name}
-                                                            </Typography>
-                                                            <Button
-                                                                size="small"
+                                                            </span>
+                                                            <button
                                                                 onClick={() => removeFile(index)}
-                                                                sx={{
-                                                                    minWidth: 0,
-                                                                    color: 'var(--error-color)',
-                                                                    p: 0.5
-                                                                }}
+                                                                className="text-red-600 hover:text-red-800 ml-2 p-1 transition-colors duration-200"
                                                             >
-                                                                <DeleteIcon sx={{ fontSize: '18px' }} />
-                                                            </Button>
-                                                        </Box>
+                                                                <svg
+                                                                    className="w-4 h-4"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
                                                     ))}
-                                                </Box>
+                                                </div>
+
                                                 {formData.selectedFiles.length > 8 && (
-                                                    <Button
-                                                        variant="text"
-                                                        onClick={() => setUiState(prev => ({ ...prev, showAllFiles: !prev.showAllFiles }))}
-                                                        sx={{
-                                                            color: 'var(--primary-color)',
-                                                            fontSize: '14px',
-                                                            mt: 2,
-                                                            fontWeight: 500
-                                                        }}
+                                                    <button
+                                                        onClick={() =>
+                                                            setUiState((prev) => ({ ...prev, showAllFiles: !prev.showAllFiles }))
+                                                        }
+                                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2 transition-colors duration-200"
                                                     >
                                                         {uiState.showAllFiles ? 'Show Less' : `View All ${formData.selectedFiles.length} Files`}
-                                                    </Button>
+                                                    </button>
                                                 )}
-                                            </Box>
-                                        </Grid>
-                                    )}
-                                </Grid>
-                            </FormSection>
-                        </Grid>
-                        {/* SECTION 2: Product Specifications - Full Width */}
-                        <Grid size={{ xs: 12, md: 12, lg: 12 }}>
-                            <FormSection>
-                                <Typography
-                                    variant="h6"
-                                    sx={{
-                                        fontFamily: 'var(--font-primary)',
-                                        fontWeight: 600,
-                                        color: 'var(--primary-text-color)',
-                                        mb: 1,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1
-                                    }}
-                                >
-                                    <Category sx={{ color: 'var(--primary-color)' }} />
-                                    Product Specifications
-                                </Typography>
+                                            </div>
+                                        )}
 
-                                <Grid container spacing={3}>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* SECTION 2: Product Specifications */}
+                            <div className=" border border-gray-200 rounded-lg p-2  transition-all duration-300">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                    </svg>
+                                    <h2 className="text-lg font-semibold text-900">Product Specifications</h2>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
                                     {Object.keys(ENUM_OPTIONS).map((attr) => (
-                                        <Grid size={{ xs: 12, sm:6,md: 6, lg: 2 }} key={attr}>
-                                            <FormControl fullWidth size="medium">
-                                                <InputLabel
-                                                    sx={{
-                                                        fontSize: '14px',
-                                                        color: 'var(--secondary-text-color)',
-                                                        '&.Mui-focused': {
-                                                            color: 'var(--primary-color)'
-                                                        }
-                                                    }}
-                                                >
-                                                    {attr.replace(/([A-Z])/g, ' $1').trim()}
-                                                </InputLabel>
-                                                <Select
-                                                    name={attr}
-                                                    value={formData.productAttributes[attr] || ''}
-                                                    onChange={handleAttributeChange}
-                                                    label={attr.replace(/([A-Z])/g, ' $1').trim()}
-                                                    sx={{
-                                                        fontSize: '14px',
-                                                        color: 'var(--primary-text-color)',
-                                                        height: '48px',
-                                                        backgroundColor: 'var(--card-background-color)',
-                                                        borderRadius: '8px',
-                                                        '& .MuiOutlinedInput-notchedOutline': {
-                                                            borderColor: 'var(--border-color)',
-                                                        },
-                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                            borderColor: 'var(--primary-color)',
-                                                        },
-                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                            borderColor: 'var(--primary-color)',
-                                                        },
-                                                    }}
-                                                >
-                                                    <MenuItem value="">
-                                                        <em>Select</em>
-                                                    </MenuItem>
-                                                    {ENUM_OPTIONS[attr].map((option) => (
-                                                        <MenuItem
-                                                            key={option}
-                                                            value={option}
-                                                            sx={{ fontSize: '14px' }}
-                                                        >
-                                                            {option.replace(/_/g, ' ').replace('COATED', ' COATED')}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </FormControl>
-                                        </Grid>
+                                        <div key={attr}>
+                                            <label className="block text-sm font-medium text-700  capitalize">
+                                                {attr.replace(/([A-Z])/g, ' $1').trim()}
+                                            </label>
+                                            <select
+                                                name={attr}
+                                                value={formData.productAttributes[attr] || ''}
+                                                onChange={handleAttributeChange}
+                                                className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                            >
+                                                <option value="">Select</option>
+                                                {ENUM_OPTIONS[attr].map((option) => (
+                                                    <option key={option} value={option}>
+                                                        {option.replace(/_/g, ' ').replace('COATED', ' COATED')}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     ))}
-                                </Grid>
-                            </FormSection>
-                        </Grid>
-                        {/* SECTION 3: Marketing Options - Full Width */}
-                        <Grid size={{ xs: 12, md: 12, lg: 10 }}>
-                            <FormSection>
-                                <Typography
-                                    variant="h6"
-                                    sx={{
-                                        fontFamily: 'var(--font-primary)',
-                                        fontWeight: 600,
-                                        color: 'var(--primary-text-color)',
-                                        mb: 1,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1
-                                    }}
-                                >
-                                    <TrendingUp sx={{ color: 'var(--primary-color)' }} />
-                                    Marketing Options
-                                </Typography>
+                                </div>
+                            </div>
 
-                                <FormGroup>
-                                    <Grid container spacing={2}>
-                                        {['topTrending', 'featuredProducts', 'bestDesign'].map(option => (
-                                            <Grid size={{ xs: 12,sm:4, md: 4, lg: 3 }} key={option}>
-                                                <FormControlLabel
-                                                    control={
-                                                        <Checkbox
-                                                            checked={formData.trendingOptions[option]}
-                                                            onChange={handleTrendingChange}
-                                                            name={option}
-                                                            sx={{
-                                                                color: 'var(--primary-color)',
-                                                                '&.Mui-checked': {
-                                                                    color: 'var(--primary-color)',
-                                                                }
-                                                            }}
-                                                        />
-                                                    }
-                                                    label={
-                                                        <Typography sx={{
-                                                            fontSize: '15px',
-                                                            color: 'var(--primary-text-color)',
-                                                            fontWeight: 500
-                                                        }}>
-                                                            {option.replace(/([A-Z])/g, ' $1').trim()}
-                                                        </Typography>
-                                                    }
-                                                />
-                                            </Grid>
-                                        ))}
-                                    </Grid>
-                                </FormGroup>
-                            </FormSection>
-                        </Grid>
+                            {/* SECTION 3: Marketing Options */}
+                            <div className="b border border-gray-200 rounded-lg p-2 hover:border-blue-500 transition-all duration-300">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+                                    <h2 className="text-lg font-semibold text-900">Marketing Options</h2>
+                                </div>
 
-                    </Grid>
-
-                    {/* Action Buttons */}
-                    <Divider sx={{ my: 2, borderColor: 'var(--border-color)' }} />
-
-                    <Box sx={{
-                        display: 'flex',
-                        gap: 3,
-                        justifyContent: 'center',
-                        flexDirection: { xs: 'row', sm: 'row' },
-                        alignItems: 'center',
-                        mb:1
-                    }}>
-                        <ProfessionalButton
-                            variant="outlined"
-                            color="secondary"
-                            onClick={resetForm}
-                            disabled={uiState.isUploading}
-                            startIcon={<RefreshIcon sx={{ fontSize: 20 }} />}
-                            sx={{ minWidth: { xs: '100%', sm: '160px' } }}
-                        >
-                            Reset Form
-                        </ProfessionalButton>
-                        <ProfessionalButton
-                            variant="contained"
-                            color="primary"
-                            onClick={handleUpload}
-                            disabled={uiState.isUploading || completionStatus.status !== 'complete'}
-                            startIcon={uiState.isUploading ? <CircularProgress size={20} /> : <UploadIcon sx={{ fontSize: 20 }} />}
-                            sx={{ minWidth: { xs: '100%', sm: '160px' } }}
-                        >
-                            {uiState.isUploading ? 'Uploading...' : 'Upload Product'}
-                        </ProfessionalButton>
-                    </Box>
-                   
-                      
-                          <Box > 
-                            <Typography
-                                    variant="h6"
-                                    sx={{
-                                        fontFamily: 'var(--font-primary)',
-                                        fontWeight: 600,
-                                        color: 'var(--primary-text-color)',
-                                        mb: 1,
-                                        textAlign: 'center'
-                                    }}
-                                >
-                                    Validation Status
-                                </Typography>
-                                {/* <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent:{xs:'flex-start',md:'center'}, width:'100%'}}>
-                                    {[
-                                        {
-                                            label: 'Tag Key',
-                                            valid: formData.tagKey.trim() && formData.tagKey.trim().length >= CONFIG.minTagLength,
-                                            required: true
-                                        },
-                                        {
-                                            label: 'Description',
-                                            valid: !formData.description.trim() || formData.description.trim().length >= CONFIG.minDescriptionLength,
-                                            required: true
-                                        },
-                                        {
-                                            label: `Images (${formData.selectedFiles.length}/${CONFIG.minFiles}+)`,
-                                            valid: formData.selectedFiles.length >= CONFIG.minFiles,
-                                            required: true
-                                        },
-                                    ].map(({ label, valid, required }, index) => (
-                                        <Chip
-                                            key={index}
-                                            label={label + (required ? ' *' : '')}
-                                            color={valid ? 'success' : 'default'}
-                                            icon={valid ? <CheckIcon sx={{ fontSize: 16 }} /> : undefined}
-                                            variant={valid ? 'filled' : 'outlined'}
-                                            sx={{
-                                                bgcolor: valid ? 'var(--success-bg)' : 'transparent',
-                                                color: valid ? 'var(--success-color)' : 'var(--secondary-text-color)',
-                                                borderColor: valid ? 'var(--success-color)' : 'var(--border-color)',
-                                                fontSize: {xs:'11px',sm:'14px'},
-                                                fontWeight: 500,
-                                                height: '36px',
-                                            }}
-                                        />
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    {['topTrending', 'featuredProducts', 'bestDesign'].map(option => (
+                                        <label key={option} className="flex items-center space-x-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.trendingOptions[option]}
+                                                onChange={handleTrendingChange}
+                                                name={option}
+                                                className="w-4 h-4 text-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <span className="text-700 font-medium capitalize">
+                                                {option.replace(/([A-Z])/g, ' $1').trim()}
+                                            </span>
+                                        </label>
                                     ))}
-                                </Box> */}
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
-                            {[
-                                { label: 'Tag Key', valid: formData.tagKey.trim() && formData.tagKey.trim().length >= CONFIG.minTagLength },
-                                { label: 'Description', valid: formData.description.trim() && formData.description.trim().length >= CONFIG.minDescriptionLength },
-                                { label: `Images (${formData.selectedFiles.length}/${CONFIG.minFiles}+)`, valid: formData.selectedFiles.length >= CONFIG.minFiles },
-                            ].map(({ label, valid }, index) => (
-                                <Chip
-                                    key={index}
-                                    label={label}
-                                    color={valid ? 'success' : 'default'}
-                                    icon={valid ? <CheckIcon sx={{ fontSize: 'var(--font-size-sm)' }} /> : undefined}
-                                    sx={{ bgcolor: valid ? 'var(--success-bg)' : 'var(--border-color)', color: valid ? 'var(--success-color)' : 'var(--secondary-text-color)', fontSize: 'var(--font-size-md)' }}
-                                />
-                            ))}
-                        </Box>
-                    </Box>
-                    
-                </CardContent>
-            </ProfessionalCard>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Divider */}
+                        {/* <div className="border-t border-gray-200 my-2"></div> */}
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
+                            <button
+                                onClick={resetForm}
+                                disabled={uiState.isUploading}
+                                className="w-full sm:w-auto px-6 py-2 border border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Reset Form
+                            </button>
+                            <button
+                                onClick={handleUpload}
+                                disabled={uiState.isUploading || completionStatus.status !== 'complete'}
+                                className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+                            >
+                                {uiState.isUploading ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        Uploading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                        </svg>
+                                        Upload Product
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Validation Status */}
+                        <div className="mt-2 text-center">
+                            <h3 className="text-lg font-semibold text-900 mb-1">Validation Status</h3>
+                            <div className="flex flex-wrap gap-2 justify-center">
+                                {[
+                                    { label: 'Tag Key', valid: formData.tagKey.trim() && formData.tagKey.trim().length >= CONFIG.minTagLength },
+                                    { label: 'Description', valid: formData.description.trim() && formData.description.trim().length >= CONFIG.minDescriptionLength },
+                                    { label: `Images (${formData.selectedFiles.length}/${CONFIG.minFiles}+)`, valid: formData.selectedFiles.length >= CONFIG.minFiles },
+                                ].map(({ label, valid }, index) => (
+                                    <span
+                                        key={index}
+                                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${valid
+                                                ? 'bg-green-100 text-green-800 border border-green-200'
+                                                : 'bg-gray-100 text-gray-600 border border-gray-200'
+                                            }`}
+                                    >
+                                        {valid && (
+                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                        )}
+                                        {label}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* Success Snackbar */}
-            <Snackbar
-                open={uiState.snackbarOpen}
-                autoHideDuration={4000}
-                onClose={() => setUiState(prev => ({ ...prev, snackbarOpen: false }))}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                <Alert
-                    severity="success"
-                    sx={{
-                        bgcolor: 'var(--success-color)',
-                        color: 'var(--text-dark)',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: 500,
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                    }}
-                >
-                    Product uploaded successfully!
-                </Alert>
-            </Snackbar>
-        </Box>
+            {uiState.snackbarOpen && (
+                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+                    <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-5 duration-300">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Product uploaded successfully!
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 
