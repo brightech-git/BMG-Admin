@@ -18,6 +18,7 @@ import { UserAuthProvider } from './public/context/authContext/UserAuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FilterProvider } from './admin/context/product/FilterContext';
+import { NewOrderProvider } from './admin/context/snackbar/NewOrderContext';
 
 function App() {
   const queryClient = new QueryClient(); // Initializes React Query client
@@ -39,10 +40,10 @@ function App() {
                 {/* Public user authentication context */}
                 <UserAuthProvider>
                   <FilterProvider>
-
-                  {/* Defines all routes of the app */}
+                    <NewOrderProvider>               
                   <AppRoutes />
-                  
+                    </NewOrderProvider>
+
                   </FilterProvider>
                   {/* Toast notifications */}
                   <ToastContainer position="top-center" autoClose={3000} />

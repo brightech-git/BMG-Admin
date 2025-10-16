@@ -56,6 +56,7 @@ import ManageSingleProduct from '../../admin/pages/product/manage/ManageSinglePr
 
 import PlacedOrders from '../../admin/pages/order/PlacedOrders';
 import PackingOrders from '../../admin/pages/order/PackingOrders';
+import GlobalSnackbar from '../../admin/components/snackBar/GlobalSnackbar';
 
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
@@ -80,6 +81,7 @@ const AdminRoutes = () => {
 
     return (
         <div className={`app-layout ${themeMode}`}>
+            <GlobalSnackbar /> {/* only once in layout */}
             <NewAdminHeader
                 toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
                 isSidebarOpen={isSidebarOpen}

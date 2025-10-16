@@ -10,6 +10,8 @@ const defaultFilters = {
     priceRange: '',
     page: 0,
     pageSize: 10,
+    search:'',
+    withImage:'',
 };
 
 const FilterContext = createContext(null);

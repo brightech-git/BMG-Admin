@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useUpdateOrderStatus, useOrdersByStatus } from '../../hooks/order/useAllOrder';
 import { orderService } from '../../service/orderService';
+import Snackbar from '../../components/snackBar/Snackbar';
+import BackdropProgress from '../../components/backDrop/BackdropProgress';
 import { Link } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -253,6 +255,11 @@ const QualityChecking = () => {
     const [expandedRows, setExpandedRows] = useState({});
     const createConsignmentMutation = useCreateConsignment();
 
+     const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "info" });
+    const handleSnackbarClose = () => setSnackbar((prev) => ({ ...prev, open: false }));
+    const [progress, setProgress] = useState(0);
+    const [showBackdrop, setShowBackdrop] = useState(false);
+
     const { data, isLoading, isError, error, refetch } = useOrdersByStatus(status, page, rowsPerPage);
     console.log(data, 'datastatus');
     const updateOrderStatus = useUpdateOrderStatus();
@@ -450,105 +457,20 @@ const QualityChecking = () => {
 
     const handleEditSubmit = async () => {
         if (!editForm.status || !editForm.paymentMode) {
-            setFormError('Status and Payment Mode are required.');
+            setSnackbar({
+                open: true,
+                message: "Status and Payment Mode are required.",
+                type: "error",
+            });
             return;
         }
 
+        setShowBackdrop(true);
+        setProgress(0);
+
+        let progressInterval;
+
         try {
-            if (editForm.status?.toUpperCase() === 'CANCELLED') {
-                const payload = {
-                    orderId: selectedOrder.order_id,
-                    newStatus: editForm.status,
-                    remarks: editForm.remarks,
-                    paymentMode: editForm.paymentMode,
-                    paymentStatus: editForm.payment_status,
-                };
-
-                await updateOrderStatus.mutateAsync(payload);
-                refetch();
-                handleCloseEditModal();
-                return;
-            }
-
-            const consignment =
-                address && selectedOrder
-                    ? {
-                        customer_code: 'EO2243',
-                        service_type_id: 'B2C SMART EXPRESS',
-                        load_type: 'NON-DOCUMENT',
-                        description: 'Ring',
-                        dimension_unit: 'cm',
-                        length: '3',
-                        width: '5',
-                        declared_value: '1000',
-                        num_pieces: '1',
-                        origin_details: {
-                            name: address?.name || 'Bmg Jewellers',
-                            phone: address?.phone || '9514333601',
-                            alternate_phone: address?.alternatePhone || '9514333609',
-                            address_line_1: address?.addressLine1 || '160, Melamasi St',
-                            address_line_2: address?.addressLine2 || 'Madurai',
-                            pincode: address?.pincode || '625018',
-                            city: address?.city || 'Madurai',
-                            state: address?.state || 'Tamilnadu',
-                        },
-                        destination_details: {
-                            name: selectedOrder.address.name,
-                            phone: selectedOrder.contact,
-                            alternate_phone: selectedOrder.address.alternatePhone || selectedOrder.address.phone,
-                            address_line_1: selectedOrder.address.addressLine,
-                            address_line_2: selectedOrder.address.landmark,
-                            city: selectedOrder.address.city,
-                            state: selectedOrder.address.state,
-                            pincode: selectedOrder.address.pincode,
-                        },
-                        return_details: {
-                            name: address?.name || 'Bmg Jewellers',
-                            phone: address?.phone || '9514333601',
-                            alternate_phone: address?.alternatePhone || '9514333609',
-                            address_line_1: address?.addressLine1 || '160, Melamasi St',
-                            address_line_2: address?.addressLine2 || 'Madurai',
-                            pincode: address?.pincode || '625018',
-                            city: address?.city || 'Madurai',
-                            state: address?.state || 'Tamilnadu',
-                        },
-                        customer_reference_number: selectedOrder.order_id,
-                        commodity_id: 'COM005',
-                        is_risk_surcharge_applicable: false,
-                        invoice_number: 'INV123',
-                        invoice_date: '2025-08-20',
-                        pieces_detail: [
-                            {
-                                description: 'Piece 1',
-                                declared_value: '1000',
-                                weight: '5',
-                                length: '30',
-                                width: '20',
-                                height: '15',
-                            },
-                        ],
-                    }
-                    : null;
-
-            if (selectedOrder.payment_mode !== 'ONLINE' && consignment) {
-                consignment.cod_collection_mode = 'cash';
-                consignment.cod_amount = selectedOrder.total_amount || selectedOrder.totalAmount;
-            }
-
-            const consignmentPayload = { consignments: [consignment] };
-            const consignmentResponse = await createConsignmentMutation.mutateAsync(consignmentPayload);
-
-            if (!consignmentResponse) {
-                throw new Error('Consignment creation failed: No response received');
-            }
-
-            const result = consignmentResponse?.data?.[0];
-
-            if (result?.success === false && !result?.reference_number) {
-                setFormError(result?.message || 'Consignment creation failed');
-                return;
-            }
-
             const payload = {
                 orderId: selectedOrder.order_id,
                 newStatus: editForm.status,
@@ -556,15 +478,149 @@ const QualityChecking = () => {
                 paymentMode: editForm.paymentMode,
                 paymentStatus: editForm.payment_status,
             };
-            console.log(payload, 'order payload')
 
+            // 1️⃣ Fake progress
+            progressInterval = setInterval(() => {
+                setProgress((prev) => Math.min(prev + 8, 90));
+            }, 200);
+
+            // 2️⃣ Handle CANCELLED separately
+            if (editForm.status?.toUpperCase() === "CANCELLED") {
+                await updateOrderStatus.mutateAsync(payload);
+
+                clearInterval(progressInterval);
+                setProgress(100);
+
+                setSnackbar({
+                    open: true,
+                    message: "Order cancelled successfully!",
+                    type: "success",
+                });
+
+                setTimeout(() => {
+                    setShowBackdrop(false);
+                    refetch();
+                    handleCloseEditModal();
+                }, 600);
+                return;
+            }
+
+            // 3️⃣ Create consignment if required
+            const consignment =
+                address && selectedOrder
+                    ? {
+                        customer_code: "EO2243",
+                        service_type_id: "B2C SMART EXPRESS",
+                        load_type: "NON-DOCUMENT",
+                        description: "Ring",
+                        dimension_unit: "cm",
+                        length: "3",
+                        width: "5",
+                        declared_value: "1000",
+                        num_pieces: "1",
+                        origin_details: {
+                            name: address?.name || "Bmg Jewellers",
+                            phone: address?.phone || "9514333601",
+                            alternate_phone: address?.alternatePhone || "9514333609",
+                            address_line_1: address?.addressLine1 || "160, Melamasi St",
+                            address_line_2: address?.addressLine2 || "Madurai",
+                            pincode: address?.pincode || "625018",
+                            city: address?.city || "Madurai",
+                            state: address?.state || "Tamilnadu",
+                        },
+                        destination_details: {
+                            name: selectedOrder.address.name,
+                            phone: selectedOrder.contact,
+                            alternate_phone:
+                                selectedOrder.address.alternatePhone || selectedOrder.address.phone,
+                            address_line_1: selectedOrder.address.addressLine,
+                            address_line_2: selectedOrder.address.landmark,
+                            city: selectedOrder.address.city,
+                            state: selectedOrder.address.state,
+                            pincode: selectedOrder.address.pincode,
+                        },
+                        return_details: {
+                            name: address?.name || "Bmg Jewellers",
+                            phone: address?.phone || "9514333601",
+                            alternate_phone: address?.alternatePhone || "9514333609",
+                            address_line_1: address?.addressLine1 || "160, Melamasi St",
+                            address_line_2: address?.addressLine2 || "Madurai",
+                            pincode: address?.pincode || "625018",
+                            city: address?.city || "Madurai",
+                            state: address?.state || "Tamilnadu",
+                        },
+                        customer_reference_number: selectedOrder.order_id,
+                        commodity_id: "COM005",
+                        is_risk_surcharge_applicable: false,
+                        invoice_number: "INV123",
+                        invoice_date: "2025-08-20",
+                        pieces_detail: [
+                            {
+                                description: "Piece 1",
+                                declared_value: "1000",
+                                weight: "5",
+                                length: "30",
+                                width: "20",
+                                height: "15",
+                            },
+                        ],
+                    }
+                    : null;
+
+            if (selectedOrder.payment_mode !== "ONLINE" && consignment) {
+                consignment.cod_collection_mode = "cash";
+                consignment.cod_amount = selectedOrder.total_amount || selectedOrder.totalAmount;
+            }
+
+            if (consignment) {
+                const consignmentPayload = { consignments: [consignment] };
+                const consignmentResponse = await createConsignmentMutation.mutateAsync(consignmentPayload);
+
+                if (!consignmentResponse) {
+                    throw new Error("Consignment creation failed: No response received");
+                }
+
+                const result = consignmentResponse?.data?.[0];
+
+                if (result?.success === false && !result?.reference_number) {
+                    setFormError(result?.message || "Consignment creation failed");
+                    clearInterval(progressInterval);
+                    setShowBackdrop(false);
+                    return;
+                }
+            }
+
+            // 4️⃣ Update order status
             await updateOrderStatus.mutateAsync(payload);
-            refetch();
-            handleCloseEditModal();
+
+            clearInterval(progressInterval);
+            setProgress(100);
+
+            setSnackbar({
+                open: true,
+                message: "Order updated successfully!",
+                type: "success",
+            });
+
+            setTimeout(() => {
+                setShowBackdrop(false);
+                refetch();
+                handleCloseEditModal();
+            }, 600);
         } catch (err) {
-            setFormError(`Failed: ${err.message || 'Unknown error'}`);
+            clearInterval(progressInterval);
+            setProgress(100);
+
+            setSnackbar({
+                open: true,
+                message: `Failed: ${err.message || "Unknown error"}`,
+                type: "error",
+            });
+
+            setTimeout(() => setShowBackdrop(false), 600);
         }
     };
+
 
     const handleOpenExportDialog = (type) => {
         setExportType(type);
@@ -1225,7 +1281,20 @@ const QualityChecking = () => {
                     )}
                 </CardContent>
             </TableHeaderCard>
-
+            <Box>
+                <BackdropProgress
+                    open={showBackdrop}
+                    title="Updating Order"
+                    body="Please wait while we update the order status."
+                    progress={progress}
+                />
+                <Snackbar
+                    open={snackbar.open}
+                    message={snackbar.message}
+                    type={snackbar.type}
+                    onClose={handleSnackbarClose}
+                />
+            </Box>
             {selectedOrder && (
                 <Dialog
                     open={openViewModal}

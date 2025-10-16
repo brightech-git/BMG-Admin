@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useUpdateOrderStatus, useOrdersByStatus } from '../../hooks/order/useAllOrder';
 import { orderService } from '../../service/orderService';
 import { Link } from 'react-router-dom';
+import BackdropProgress from '../../components/backDrop/BackdropProgress';
+import Snackbar from '../../components/snackBar/Snackbar';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx-js-style';
@@ -229,7 +231,8 @@ const PlacedOrders = () => {
     const location = useLocation();
     const { key, values } = location.state || {};
     console.log(key, values, 'key');
-
+    const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "info" });
+    const handleSnackbarClose = () => setSnackbar((prev) => ({ ...prev, open: false }));
     const status = key;
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -246,9 +249,12 @@ const PlacedOrders = () => {
         status: '',
         remarks: '',
         paymentMode: '',
+        paymentStatus: '',
     });
     const [formError, setFormError] = useState('');
     const [expandedRows, setExpandedRows] = useState({});
+    const [progress, setProgress] = useState(0);
+    const [showBackdrop, setShowBackdrop] = useState(false);
 
     const { data, isLoading, isError, error, refetch } = useOrdersByStatus(status, page, rowsPerPage);
     console.log(data, 'datastatus');
@@ -266,7 +272,7 @@ const PlacedOrders = () => {
         status: order.status || 'PENDING',
         order_time: order.order_time || order.orderTime || order.date || 'N/A',
         payment_mode: order.paymentMode || order.payment_mode || 'payment',
-        payment_status: order.paymentStatus || 'N/A',
+        payment_status: order.paymentStatus || order.payment_status || 'N/A',
         address: order.address
             ? {
                 addressLine: order.address.addressLine || '',
@@ -301,7 +307,7 @@ const PlacedOrders = () => {
         return (data?.orders || []).map(normalizeOrder);
     }, [data]);
 
-    console.log(orders, 'normalizeOrder');
+
 
     const toggleRowExpansion = (orderId) => {
         setExpandedRows((prev) => ({
@@ -403,6 +409,7 @@ const PlacedOrders = () => {
             status: status,
             remarks: '',
             paymentMode: order.paymentMode || order.payment_mode || 'ONLINE',
+            paymentStatus: order.paymentStatus || order.payment_status || 'PENDING',
         });
         setOpenEditModal(true);
     };
@@ -415,7 +422,7 @@ const PlacedOrders = () => {
     const handleCloseEditModal = () => {
         setOpenEditModal(false);
         setSelectedOrder(null);
-        setEditForm({ status: '', remarks: '', paymentMode: '' });
+        setEditForm({ status: '', remarks: '', paymentMode: ''  ,paymentStatus:''});
         setFormError('');
     };
 
@@ -423,50 +430,100 @@ const PlacedOrders = () => {
         const { name, value } = e.target;
         setEditForm((prev) => ({ ...prev, [name]: value }));
     };
-
     const handleEditSubmit = async () => {
+        // 1️⃣ Validation
         if (!editForm.status || !editForm.paymentMode) {
-            setFormError('Status and Payment Mode are required.');
+            setSnackbar({
+                open: true,
+                message: "Status and Payment Mode are required.",
+                type: "error",
+            });
             return;
         }
 
+        // 2️⃣ Show backdrop and start progress
+        setShowBackdrop(true);
+        setProgress(0);
+
+        let progressInterval;
+
         try {
-            if (editForm.status?.toUpperCase() === 'CANCELLED') {
-                const payload = {
-                    orderId: selectedOrder.order_id,
-                    newStatus: editForm.status,
-                    remarks: editForm.remarks,
-                    paymentMode: editForm.paymentMode,
-                    paymentStatus: editForm.payment_status,
-                };
-
-                await updateOrderStatus.mutateAsync(payload);
-                refetch();
-                handleCloseEditModal();
-                return;
-            }
-
-
-
-           
-
-           
-
             const payload = {
                 orderId: selectedOrder.order_id,
                 newStatus: editForm.status,
                 remarks: editForm.remarks,
                 paymentMode: editForm.paymentMode,
-                paymentStatus: editForm.payment_status,
+                paymentStatus: editForm.paymentStatus,
             };
 
-            await updateOrderStatus.mutateAsync(payload);
-            refetch();
-            handleCloseEditModal();
+            // 3️⃣ Fake progress animation until request finishes
+            progressInterval = setInterval(() => {
+                setProgress(prev => Math.min(prev + Math.random() * 5, 90).toFixed());
+            }, 150);
+
+            // 4️⃣ Handle CANCELLED orders separately
+            if (editForm.status?.toUpperCase() === "CANCELLED") {
+                const response = await updateOrderStatus.mutateAsync(payload);
+                if (!response) throw new Error("Order cancellation failed");
+
+                clearInterval(progressInterval);
+                setProgress(100);
+
+                setSnackbar({
+                    open: true,
+                    message: "Order cancelled successfully!",
+                    type: "success",
+                });
+
+                // Slight delay for smooth backdrop close
+                setTimeout(() => {
+                    setShowBackdrop(false);
+                    refetch();
+                    handleCloseEditModal();
+                }, 600);
+
+                return;
+            }
+
+            // 5️⃣ Normal update flow
+            const response = await updateOrderStatus.mutateAsync(payload);
+
+            // If response indicates failure, throw error
+            if (!response) throw new Error("Order update failed");
+
+            clearInterval(progressInterval);
+            setProgress(100);
+
+            setSnackbar({
+                open: true,
+                message: "Successfully updated order from Placed to QC",
+                type: "success",
+            });
+
+            // Delay backdrop close for smooth UX
+            setTimeout(() => {
+                setShowBackdrop(false);
+                refetch();
+                handleCloseEditModal();
+            }, 1000);
+
         } catch (err) {
-            setFormError(`Failed: ${err.message || 'Unknown error'}`);
+            clearInterval(progressInterval);
+            setProgress(0);
+
+            setSnackbar({
+                open: true,
+                message: `Failed: ${err.message || "Unknown error"}`,
+                type: "error",
+            });
+
+            setTimeout(() => setShowBackdrop(false), 1000);
         }
     };
+
+
+
+
 
     const handleOpenExportDialog = (type) => {
         setExportType(type);
@@ -1127,7 +1184,20 @@ const PlacedOrders = () => {
                     )}
                 </CardContent>
             </TableHeaderCard>
-
+<Box>
+                <BackdropProgress
+                    open={showBackdrop}
+                    title="Updating Order"
+                    body="Please wait while we update the order status."
+                    progress={progress}
+                />
+                <Snackbar
+                    open={snackbar.open}
+                    message={snackbar.message}
+                    type={snackbar.type}
+                    onClose={handleSnackbarClose}
+                />
+</Box>
             {selectedOrder && (
                 <Dialog
                     open={openViewModal}
@@ -2122,6 +2192,7 @@ const PlacedOrders = () => {
                                     ? 'Cancel Order'
                                     : 'Update Status'}
                         </Button>
+                        
                     </DialogActions>
                 </Dialog>
             )}
