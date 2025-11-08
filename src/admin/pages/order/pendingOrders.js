@@ -150,6 +150,7 @@ const PendingOrders = () => {
     const location = useLocation();
     const { key } = location.state || {};
     const status = key;
+    console.log(key,'key')
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);

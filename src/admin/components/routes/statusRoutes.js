@@ -1,7 +1,7 @@
 // src/config/statusRoutes.js
 export const STATUS_ROUTES = [
     { title: 'Today Orders', path: '/admin/order/today', key: '', values: [''] },
-    { title: 'Pending Orders', path: '/admin/order/status/pending', key: 'PAYMENT_PENDING', values: [''] },
+    { title: 'Pending Orders', path: '/admin/order/status/pending', key: 'PENDING', values: [''] },
     { title: 'Placed', path: '/admin/order/status/placed', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
     { title: 'Quality Checking', path: '/admin/order/status/qc', key: 'IN_PROCESSING', values: ['PACKING', 'CANCELLED'] },
     { title: 'Packing', path: '/admin/order/status/packing', key: 'PACKING', values: ['PACKED', 'CANCELLED'] },

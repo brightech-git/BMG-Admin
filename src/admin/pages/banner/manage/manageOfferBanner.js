@@ -21,6 +21,8 @@ import {
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './ManageOfferBanner.css';
 
+import { useItemNames } from '../../../hooks/itemName/useItemNames';
+
 const BASE_IMAGE_URL = 'https://app.bmgjewellers.com';
 
 const ManageOfferBanner = () => {
@@ -44,11 +46,18 @@ const ManageOfferBanner = () => {
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
     const isSmallScreen = useMediaQuery({ query: '(max-width: 480px)' });
 
+    const {items}=useItemNames();
+
+    console.log(items,'items');
+
     const { data: bannersData, isLoading, error, refetch } = useBannersQuery();
     const { mutate: updateOfferBanner, isLoading: isUpdating } = useUpdateOfferBannerMutation();
     const { mutate: deleteOfferBanner, isLoading: isDeleting } = useDeleteOfferBannerMutation();
 
     const banners = useMemo(() => bannersData?.data || [], [bannersData?.data]);
+
+    console.log(banners ,'banner offers')
+
 
     useEffect(() => {
         if (banners.length > 0) {

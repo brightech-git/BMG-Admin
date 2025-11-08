@@ -22,21 +22,39 @@ export const bannersService = {
         });
     },
 
-    updateBanner: (id ,image, title, subtitle, itemname, gender) => {
-        const formData = new FormData();
-        formData.append("id", id);
-        formData.append("image", image);
-        formData.append("title", title);
-        formData.append("subtitle", subtitle);
-        formData.append("itemname", itemname); 
-        formData.append("gender", gender);
-        
-        
+    updateBanner: async (
+        id,
+        image, // can be File, null or undefined
+        title,
+        subtitle,
+        itemname,
+        gender
+    ) => {
+        const form = new FormData();
 
-        return axiosInstance.put("/banner/update", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
+        form.append('id', id);
+        form.append('title', title);
+        form.append('subtitle', subtitle);
+        form.append('itemname', itemname); // string
+        if (gender) form.append('gender', gender); // string
+
+        // Only send a new image if the user selected one
+        if (image instanceof File) {
+            form.append('image', image);
+        }
+
+        // ✅ To log all FormData key-value pairs
+        console.log('FormData contents:');
+        for (const [key, value] of form.entries()) {
+            console.log(`${key}:`, value);
+        }
+
+        return axiosInstance.put('/banner/update', form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
     },
+
+
 
     deleteBanner: (id) => {
         return axiosInstance.delete("/banner/delete", {
@@ -82,16 +100,19 @@ export const occasionBannersService = {
 export const offerBannersService = {
     getOfferBanners: () => axiosInstance.get("/offer_banner/list"),
 
-    createOfferBanner: (image, title, itemname, subtitle, sub_item_name) => {
+    createOfferBanner: (image, title, subtitle, item_name,sub_item_name) => {
         const formData = new FormData();
         formData.append("image", image);
         formData.append("title", title);
         formData.append("subtitle", subtitle);
-        formData.append("item_name", itemname);
+        formData.append("item_name", item_name);
         formData.append("sub_item_name", sub_item_name);
         
 
-        console.log(formData, 'data for banner')
+    
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}:`, value);
+        }
 
 
         return axiosInstance.post("/offer_banner/upload", formData, {

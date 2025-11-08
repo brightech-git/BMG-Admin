@@ -57,6 +57,17 @@ import ManageSingleProduct from '../../admin/pages/product/manage/ManageSinglePr
 import PlacedOrders from '../../admin/pages/order/PlacedOrders';
 import PackingOrders from '../../admin/pages/order/PackingOrders';
 import GlobalSnackbar from '../../admin/components/snackBar/GlobalSnackbar';
+import EcomMarketingAttributesTable from '../../admin/pages/market-option/EcomMarketingAttributesTable';
+import ItemCategory from '../../admin/pages/itemcategory/add/AdditemCategory';
+import ManageItemCategory from '../../admin/pages/itemcategory/manage/manageItemCategory';
+import UploadBestDesign from '../../admin/pages/banner/add/UploadBestDesign';
+import ManageBestDesignBanner from '../../admin/pages/banner/manage/ManageBestDesignBanner';
+import UploadFeatureDesign from '../../admin/pages/banner/add/AddFeatureBanner';
+import ManageFeaturedBanner from '../../admin/pages/banner/manage/ManageFeaturedBanner';
+import UploadLatestBanner from '../../admin/pages/banner/add/AddLatestCollectionBanner';
+import ManageLatestBanner from '../../admin/pages/banner/manage/ManageLatestBanner';
+import AddGenderBanner from '../../admin/pages/banner/add/AddGenderBanner';
+import ManageGenderBanner from '../../admin/pages/banner/manage/ManageGenderBanner';
 
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
@@ -107,6 +118,19 @@ const AdminRoutes = () => {
                         <Route path="occasionbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddOccasionBanner /></ProtectedRoute>} />
                         <Route path="offerbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddOfferBanner /></ProtectedRoute>} />
                         <Route path="banner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddBanner /></ProtectedRoute>} />
+                        <Route path="bestbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><UploadBestDesign /></ProtectedRoute>} />
+                        <Route path="featurebanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><UploadFeatureDesign /></ProtectedRoute>} />
+                        <Route path="latestbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><UploadLatestBanner /></ProtectedRoute>} />
+                        <Route path="genderbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddGenderBanner /></ProtectedRoute>} />
+                       
+
+                        
+
+
+                        <Route path="genderbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageGenderBanner /></ProtectedRoute>} />
+                        <Route path="latestbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageLatestBanner /></ProtectedRoute>} />
+                        <Route path="featurebanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFeaturedBanner /></ProtectedRoute>} />
+                        <Route path="bestbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBestDesignBanner /></ProtectedRoute>} />
                         <Route path="banner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBanner /></ProtectedRoute>} />
                         <Route path="occasionbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageOccasionBanner /></ProtectedRoute>} />
                         <Route path="offerbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageOfferBanner /></ProtectedRoute>} />
@@ -150,6 +174,11 @@ const AdminRoutes = () => {
                         <Route path="todayRevenue" element={<TodayRevenuePage />} />
                         <Route path="monthlySales" element={<MonthlySalesPage />} />
                         <Route path="unauthorized" element={<Unauthorized />} />
+                        <Route path="item-category/add" element={<ItemCategory />} />
+                        <Route path="item-category/manage" element={< ManageItemCategory/>} />
+
+
+                        <Route path='productSpec' element={<EcomMarketingAttributesTable />} />
                         <Route path="*" element={<Navigate to="/admin" replace />} />
                     </Routes>
                 </main>

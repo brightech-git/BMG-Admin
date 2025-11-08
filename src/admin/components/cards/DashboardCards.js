@@ -58,7 +58,7 @@ const DashboardCards = () => {
 
     const page = 0;
     const size = 100000;
-    const { data: pendingOrders, isLoading: loadingPending } = useOrdersByStatus("PAYMENT_PENDING", page, size);
+    const { data: pendingOrders, isLoading: loadingPending } = useOrdersByStatus("PENDING", page, size);
     const { data: placedOrders, isLoading: loadingPlaced } = useOrdersByStatus("PLACED", page, size);
     const { data: inProcessingOrders, isLoading: loadingProcessing } = useOrdersByStatus("IN_PROCESSING", page, size);
     const { data: PackingOrders, isLoading: loadingPacking } = useOrdersByStatus("PACKING", page, size);
@@ -189,9 +189,9 @@ const DashboardCards = () => {
                 value: dashboardData.pendingOrders || 0,
                 icon: <FaClock />,
                 detail: 'Awaiting payment',
-                status: 'PAYMENT_PENDING',
+                status: 'PENDING',
                 path: '/admin/order/status/pending',
-                key: 'PAYMENT_PENDING',
+                key: 'PENDING',
                 values: ['IN_PROCESSING', 'CANCELLED'],
                 progress: ((dashboardData.pendingOrders || 0) / total) * 100
             },
@@ -578,7 +578,7 @@ const OverviewView = ({ cardsData, orderStatusCards, formatNumber, themeMode, da
                 {/* <QuickStats dashboardData={dashboardData} formatNumber={formatNumber} themeMode={themeMode} />
         </motion.div>  */}
 
-        </div> 
+        </div>
     </>
 );
 
@@ -614,7 +614,7 @@ const AnalyticsView = ({ analyticsData, cardsData, formatNumber, themeMode }) =>
                 </div>
                 {/* <RecentActivity /> 
             </div> */}
-            
+
         </motion.div>
     </div>
 );
@@ -747,22 +747,22 @@ const OrderDistributionChart = ({ data }) => (
     </div>
 );
 
-const PerformanceMetrics = ({ cardsData }) => (
-    <div className="performance-metrics">
-        {cardsData.map((card, index) => (
-            <div key={card.id} className="metric-item">
-                <div className="metric-icon">{card.icon}</div>
-                <div className="metric-info">
-                    <div className="metric-title">{card.title}</div>
-                    <div className="metric-value">{card.value}</div>
-                </div>
-                <div className={`metric-trend ${card.trend > 0 ? 'positive' : 'negative'}`}>
-                    {card.trend > 0 ? '+' : ''}{card.trend}%
-                </div>
-            </div>
-        ))}
-    </div>
-);
+// const PerformanceMetrics = ({ cardsData }) => (
+//     <div className="performance-metrics">
+//         {cardsData.map((card, index) => (
+//             <div key={card.id} className="metric-item">
+//                 <div className="metric-icon">{card.icon}</div>
+//                 <div className="metric-info">
+//                     <div className="metric-title">{card.title}</div>
+//                     <div className="metric-value">{card.value}</div>
+//                 </div>
+//                 <div className={`metric-trend ${card.trend > 0 ? 'positive' : 'negative'}`}>
+//                     {card.trend > 0 ? '+' : ''}{card.trend}%
+//                 </div>
+//             </div>
+//         ))}
+//     </div>
+// );
 
 // const RecentActivity = () => (
 //     <div className="recent-activity">

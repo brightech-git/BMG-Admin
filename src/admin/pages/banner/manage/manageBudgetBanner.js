@@ -48,6 +48,7 @@ const ManageBudgetBanner = () => {
     const { mutate: deleteBudgetBanner, isLoading: isDeleting } = useDeleteBudgetBannerMutation();
 
     const banners = useMemo(() => bannersData?.data || [], [bannersData?.data]);
+    const reverseBanner = banners.reverse();
 
     useEffect(() => {
         if (banners.length > 0) {
@@ -368,7 +369,7 @@ const ManageBudgetBanner = () => {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {loadedData.slice(0, visibleItems).map((banner) => (
+                                        {loadedData.slice(0, visibleItems).reverse().map((banner) => (
                                             <TableRow key={banner.id} hover>
                                                 <TableCell>
                                                     <Chip

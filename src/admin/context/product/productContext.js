@@ -29,52 +29,27 @@ export const ProductProvider = ({ children }) => {
         }
     }, []);
 
-    const uploadImages = useCallback(
-        async (formDataOrTagkey, imageFiles = null, description = null, trendingOptions = null, productAttributes = null) => {
-            setLoading(true);
-            setError(null);
-            try {
-                let result;
+    const uploadImages = useCallback(async (formData) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await productService.uploadImagesWithParams(formData);
 
-                // Check if first parameter is FormData
-                if (formDataOrTagkey instanceof FormData) {
-                    result = await productService.uploadImages(formDataOrTagkey);
-                } else {
-                    // Backward compatibility: individual parameters
-                    result = await productService.uploadImagesWithParams(
-                        formDataOrTagkey,
-                        imageFiles,
-                        description,
-                        trendingOptions,
-                        productAttributes
-                    );
-                }
+            if (result.error) throw new Error(result.error);
 
-                // Backend returns { message: "Images uploaded successfully" } or { error: "..." }
-                if (result.error) {
-                    setError(result.error);
-                    throw new Error(result.error);
-                }
-
-                // Update local state if we have a tagkey
-                const tagkey = formDataOrTagkey instanceof FormData ? formDataOrTagkey.get('tagkey') : formDataOrTagkey;
-
-                if (tagkey) {
-                    const updatedData = await getImages(tagkey);
-                    return updatedData;
-                }
-
-                return result;
-            } catch (err) {
-                const errorMessage = err.error || err.message || 'Failed to upload images';
-                setError(errorMessage);
-                throw new Error(errorMessage);
-            } finally {
-                setLoading(false);
+            const tagkey = formData.get('tagkey');
+            if (tagkey) {
+                return await getImages(tagkey);
             }
-        },
-        [getImages]
-    );
+            return result;
+        } catch (err) {
+            const errorMessage = err.error || err.message || 'Failed to upload images';
+            setError(errorMessage);
+            throw new Error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    }, [getImages]);
 
     const deleteImage = useCallback(
         async (tagkey, imagePath) => {
@@ -221,27 +196,39 @@ export const ProductProvider = ({ children }) => {
     const createFormData = useCallback((tagkey, images, description, trendingOptions, productAttributes) => {
         const formData = new FormData();
 
-        formData.append('tagkey', tagkey || '');
-        formData.append('description', description || '');
+        // Required fields
+        formData.append('tagkey', tagkey?.trim() || '');
+        if (description?.trim()) formData.append('description', description.trim());
 
-        formData.append('top_trending', trendingOptions?.topTrending || false);
-        formData.append('featured_products', trendingOptions?.featuredProducts || false);
-        formData.append('best_design', trendingOptions?.bestDesign || false);
+        // Marketing flags
+        formData.append('top_trending', trendingOptions?.topTrending ?? false);
+        formData.append('featured_products', trendingOptions?.featuredProducts ?? false);
+        formData.append('best_design', trendingOptions?.bestDesign ?? false);
 
-        formData.append('gender', productAttributes?.gender || '');
-        formData.append('occasion', productAttributes?.occasion || '');
-        formData.append('collection_type', productAttributes?.collectionType || '');
-        formData.append('material_finish', productAttributes?.materialFinish || '');
-        formData.append('color_accents', productAttributes?.colorAccents || '');
+        // === EXACT MAPPING: UI Key → Backend @RequestParam ===
+        const SPEC_MAPPING = {
+            // UI key (from attributes.description) → backend param name
+            'Gender': 'gender',
+            'Occasion': 'occasion',
+            'Collection Type': 'collection_type',
+            'Material Finish': 'material_finish',
+            'Color Accents': 'color_accents',
+            // Add more if needed: 'Size': 'size', etc.
+        };
 
-        if (images && images.length > 0) {
-            images.forEach((image) => {
-                formData.append('images', image);
-            });
-        }
+        Object.entries(productAttributes).forEach(([uiKey, value]) => {
+            const backendKey = SPEC_MAPPING[uiKey];
+            if (backendKey && value) {
+                formData.append(backendKey, value);
+            }
+        });
+
+        // Images
+        images?.forEach(file => formData.append('images', file));
 
         return formData;
     }, []);
+
 
    
 

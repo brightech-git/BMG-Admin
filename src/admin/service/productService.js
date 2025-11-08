@@ -3,43 +3,25 @@ import axiosInstance from '../api/axiosInstance';
 
 const productService = {
     // Upload images and product details
-    uploadImages: async (formData) => {
+
+
+    uploadImagesWithParams: async (formData) => {
         try {
-            const response = await axiosInstance.post('product_image/upload-record-images', formData);
-            return response.data;
-        } catch (error) {
-            console.error('Upload images error:', error);
-            throw error.response?.data || { error: error.message || 'Failed to upload images' };
-        }
-    },
-
-    uploadImagesWithParams: async (tagkey, images, description, trendingOptions, productAttributes) => {
-        try {
-            const formData = new FormData();
-            formData.append('tagkey', tagkey || '');
-            formData.append('description', description || '');
-
-            formData.append('top_trending', trendingOptions?.topTrending || false);
-            formData.append('featured_products', trendingOptions?.featuredProducts || false);
-            formData.append('best_design', trendingOptions?.bestDesign || false);
-
-            formData.append('gender', productAttributes?.gender || '');
-            formData.append('occasion', productAttributes?.occasion || '');
-            formData.append('collection_type', productAttributes?.collectionType || '');
-            formData.append('material_finish', productAttributes?.materialFinish || '');
-            formData.append('color_accents', productAttributes?.colorAccents || '');
-
-            if (images && images.length > 0) {
-                images.forEach((image) => {
-                    formData.append('images', image);
-                });
+            // LOG FINAL DATA
+            console.log('Final FormData in service:');
+            for (let [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    console.log(`${key}: [File] ${value.name} (${value.size} bytes)`);
+                } else {
+                    console.log(`${key}: ${value}`);
+                }
             }
 
             const response = await axiosInstance.post('product_image/upload-record-images', formData);
             return response.data;
         } catch (error) {
-            console.error('Upload images with params error:', error);
-            throw error.response?.data || { error: error.message || 'Failed to upload images' };
+            console.error('Upload error:', error.response?.data || error.message);
+            throw error.response?.data || { error: error.message };
         }
     },
 
@@ -146,7 +128,7 @@ const productService = {
     },
 
     // 🔹 NEW: Filter products
-    filterItems : async (filters = {}) => {
+    filterItems: async (filters = {}) => {
         try {
             const response = await axiosInstance.get(`product/items/filter`, {
                 params: filters,

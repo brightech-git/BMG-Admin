@@ -1,24 +1,46 @@
-import React, { useState, useCallback, useRef, useContext } from 'react';
+import React, { useState, useCallback, useRef, useContext, useEffect } from 'react';
 import { useProductContext } from '../../../context/product/productContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { MyContext } from '../../../context/themeContext/themeContext';
+import { useEcomMarketingAttributes } from '../../../hooks/market-options/useEcomMarketingAttributes';
 
 const AddProducts = () => {
     const location = useLocation();
     const { tagkey, itemName, subItemName } = location.state || {};
     console.log("Received:", tagkey, itemName, subItemName);
+
     const { uploadImages, createFormData, loading, error, setError } = useProductContext();
     const { themeMode } = useContext(MyContext);
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
+    const { attributes } = useEcomMarketingAttributes();
 
+    const [dynamicOptions, setDynamicOptions] = useState({});
     const [formData, setFormData] = useState({
         tagKey: tagkey || '',
         description: '',
         selectedFiles: [],
         trendingOptions: { topTrending: false, featuredProducts: false, bestDesign: false },
-        productAttributes: { gender: '', occasion: '', collectionType: '', materialFinish: '', colorAccents: '' },
+        productAttributes: {},
     });
+
+    useEffect(() => {
+        if (attributes?.length) {
+            const options = {};
+            const initialAttributes = {};
+            attributes.forEach(attr => {
+                if (attr.active && attr.description) {
+                    options[attr.description] = JSON.parse(attr.valuesJson || '[]');
+                    initialAttributes[attr.description] = '';
+                }
+            });
+            setDynamicOptions(options);
+            setFormData(prev => ({ ...prev, productAttributes: initialAttributes }));
+            console.log("Initial Attributes:", initialAttributes);
+            console.log("Initial Options:", options);
+            console.log("Initial Form Data:", formData);
+        }
+    }, [attributes]);
 
     const [uiState, setUiState] = useState({
         feedback: { error: '', success: '', info: '' },
@@ -36,42 +58,6 @@ const AddProducts = () => {
         minFiles: 3,
         minTagLength: 3,
         minDescriptionLength: 10,
-    };
-
-    const ENUM_OPTIONS = {
-        gender: ['MEN', 'WOMEN', 'KIDS'],
-        occasion: ['DAILY_WEAR', 'WEDDING_WEAR', 'PARTY_WEAR', 'OFFICE_WEAR'],
-        collectionType: ['TRADITIONAL', 'TRENDY', 'MINIMALIST', 'TEMPLE', 'ETHNIC'],
-        materialFinish: ['GOLDCOATED', 'SILVERCOATED'],
-        colorAccents: ['SILVER', 'GOLD'],
-    };
-
-    const ATTRIBUTE_ICONS = {
-        gender: (
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-        ),
-        occasion: (
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-        ),
-        collectionType: (
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-        ),
-        materialFinish: (
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-            </svg>
-        ),
-        colorAccents: (
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-        ),
     };
 
     const clearAllFeedback = useCallback(() => {
@@ -127,17 +113,13 @@ const AddProducts = () => {
 
     const handleInputChange = useCallback((field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+        console.log(prev => ({ ...prev, [field]: value }) ,'change')
         clearAllFeedback();
     }, [clearAllFeedback]);
 
     const handleTrendingChange = useCallback(e => {
         const { name, checked } = e.target;
         setFormData(prev => ({ ...prev, trendingOptions: { ...prev.trendingOptions, [name]: checked } }));
-    }, []);
-
-    const handleAttributeChange = useCallback(e => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, productAttributes: { ...prev.productAttributes, [name]: value } }));
     }, []);
 
     const validateForm = useCallback(() => {
@@ -162,6 +144,30 @@ const AddProducts = () => {
         return { isValid: errors.length === 0, errors };
     }, [formData, validateFiles]);
 
+    // resetForm MOVED UP — before handleUpload
+    const resetForm = useCallback(() => {
+        setFormData({
+            tagKey: '',
+            description: '',
+            selectedFiles: [],
+            trendingOptions: { topTrending: false, featuredProducts: false, bestDesign: false },
+            productAttributes: Object.keys(dynamicOptions).reduce((acc, key) => {
+                acc[key] = '';
+                return acc;
+            }, {}),
+        });
+        setUiState({
+            feedback: { error: '', success: '', info: '' },
+            showAllFiles: false,
+            isDragOver: false,
+            snackbarOpen: false,
+            uploadProgress: 0,
+            isUploading: false
+        });
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }, [dynamicOptions]);
+
+    // Now handleUpload can safely use resetForm
     const handleUpload = useCallback(async () => {
         clearAllFeedback();
         const validation = validateForm();
@@ -181,62 +187,70 @@ const AddProducts = () => {
                 formData.trendingOptions,
                 formData.productAttributes
             );
-            uploadFormData.append('timestamp', new Date().toISOString());
-            uploadFormData.append('fileCount', formData.selectedFiles.length);
+
+            // uploadFormData.append('timestamp', new Date().toISOString());
+            // uploadFormData.append('fileCount', formData.selectedFiles.length);
+
+            // console.log('FormData contents:');
+            // for (let [key, value] of uploadFormData.entries()) {
+            //     if (value instanceof File) {
+            //         console.log(`${key}: [File] ${value.name} (${value.size} bytes, ${value.type})`);
+            //     } else {
+            //         console.log(`${key}: ${value}`);
+            //     }
+            // }
 
             progressInterval = setInterval(() => {
-                setUiState(prev => ({ ...prev, uploadProgress: Math.min(prev.uploadProgress + 10, 90) }));
+                setUiState(prev => ({
+                    ...prev,
+                    uploadProgress: Math.min(prev.uploadProgress + 10, 90)
+                }));
             }, 200);
 
-            await Promise.race([
-                uploadImages(uploadFormData),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('UPLOAD_TIMEOUT')), 120000))
-            ]);
+            await uploadImages(uploadFormData);
 
             clearInterval(progressInterval);
             setUiState(prev => ({ ...prev, uploadProgress: 100, snackbarOpen: true }));
             setFeedback('success', 'Product uploaded successfully!');
             localStorage.setItem('productTagkey', formData.tagKey);
 
+            resetForm(); // Now safe
+
             setTimeout(() => {
                 navigate(`/admin/product/manage/single`, { state: { tagkey: formData.tagKey } });
-                resetForm();
             }, 1500);
+
         } catch (err) {
-            clearInterval(progressInterval);
+            if (progressInterval) clearInterval(progressInterval);
             setUiState(prev => ({ ...prev, isUploading: false, uploadProgress: 0 }));
 
             let errorMessage = 'Upload failed. Please try again.';
-            if (err.message === 'UPLOAD_TIMEOUT') errorMessage = 'Upload timed out. Please check your connection.';
-            else if (err.name === 'NetworkError' || err.message?.toLowerCase().includes('network')) errorMessage = 'Network issue. Please check your connection.';
-            else if (err.response?.status === 413) errorMessage = 'Files too large. Please reduce file sizes.';
-            else if (err.response?.status === 400) errorMessage = err.response?.data?.message || 'Invalid data provided.';
-            else if (err.response?.status === 500) errorMessage = 'Server error. Please try again later.';
-            else if (err.response?.status === 429) errorMessage = 'Too many requests. Please wait a moment.';
-            else if (err.message) errorMessage = err.message;
+            if (err.name === 'NetworkError' || err.message?.toLowerCase().includes('network')) {
+                errorMessage = 'Network issue. Please check your connection.';
+            } else if (err.response?.status === 413) {
+                errorMessage = 'Files too large. Please reduce file sizes.';
+            } else if (err.response?.status === 400) {
+                errorMessage = err.response?.data?.message || 'Invalid data provided.';
+            } else if (err.response?.status === 500) {
+                errorMessage = 'Server error. Please try again later.';
+            } else if (err.response?.status === 429) {
+                errorMessage = 'Too many requests. Please wait a moment.';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
 
             setFeedback('error', errorMessage);
         }
-    }, [formData, validateForm, createFormData, uploadImages, clearAllFeedback, setFeedback, navigate]);
-
-    const resetForm = useCallback(() => {
-        setFormData({
-            tagKey: '',
-            description: '',
-            selectedFiles: [],
-            trendingOptions: { topTrending: false, featuredProducts: false, bestDesign: false },
-            productAttributes: { gender: '', occasion: '', collectionType: '', materialFinish: '', colorAccents: '' },
-        });
-        setUiState({
-            feedback: { error: '', success: '', info: '' },
-            showAllFiles: false,
-            isDragOver: false,
-            snackbarOpen: false,
-            uploadProgress: 0,
-            isUploading: false
-        });
-        if (fileInputRef.current) fileInputRef.current.value = '';
-    }, []);
+    }, [
+        formData,
+        validateForm,
+        createFormData,
+        uploadImages,
+        clearAllFeedback,
+        setFeedback,
+        navigate,
+        resetForm
+    ]);
 
     const getCompletionStatus = useCallback(() => {
         const { tagKey, description, selectedFiles } = formData;
@@ -260,14 +274,10 @@ const AddProducts = () => {
     const getStatusStyles = (status) => {
         const baseStyles = "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border";
         switch (status) {
-            case 'complete':
-                return `${baseStyles} bg-green-50 text-green-700 border-green-200`;
-            case 'incomplete':
-                return `${baseStyles} bg-red-50 text-red-700 border-red-200`;
-            case 'partial':
-                return `${baseStyles} bg-yellow-50 text-yellow-700 border-yellow-200`;
-            default:
-                return baseStyles;
+            case 'complete': return `${baseStyles} bg-green-50 text-green-700 border-green-200`;
+            case 'incomplete': return `${baseStyles} bg-red-50 text-red-700 border-red-200`;
+            case 'partial': return `${baseStyles} bg-yellow-50 text-yellow-700 border-yellow-200`;
+            default: return baseStyles;
         }
     };
 
@@ -279,13 +289,12 @@ const AddProducts = () => {
                 return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>;
             case 'partial':
                 return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>;
-            default:
-                return null;
+            default: return null;
         }
     };
 
     return (
-        <div className="min-h-screen  py-6 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
             {/* Upload Progress Overlay */}
             {uiState.isUploading && (
                 <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
@@ -304,18 +313,14 @@ const AddProducts = () => {
             )}
 
             {/* Main Content */}
-            <div className="max-w-8xl mx-auto mt-2 ">
-                <div className=" rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="max-w-8xl mx-auto mt-2">
+                <div className="rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                     <div className="p-2 sm:p-8">
-                        {/* Header Section */}
+                        {/* Header */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-1">
                             <div>
-                                <h1 className="text-xl sm:text-xl font-bold text-600 mb-1">
-                                    Add Product Images
-                                </h1>
-                                <p className=" text-sm">
-                                    Upload images and specifications for a product
-                                </p>
+                                <h1 className="text-xl sm:text-xl font-bold text-600 mb-1">Add Product Images</h1>
+                                <p className="text-sm">Upload images and specifications for a product</p>
                             </div>
                             <div className={getStatusStyles(completionStatus.status)}>
                                 {getStatusIcon(completionStatus.status)}
@@ -323,7 +328,7 @@ const AddProducts = () => {
                             </div>
                         </div>
 
-                        {/* Feedback Alerts */}
+                        {/* Feedback */}
                         <div className="space-y-1 mb-2">
                             {uiState.feedback.error && (
                                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex justify-between items-center">
@@ -333,10 +338,7 @@ const AddProducts = () => {
                                         </svg>
                                         <span className="text-red-700 font-medium">{uiState.feedback.error}</span>
                                     </div>
-                                    <button
-                                        onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, error: '' } }))}
-                                        className="text-red-600 hover:text-red-800"
-                                    >
+                                    <button onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, error: '' } }))} className="text-red-600 hover:text-red-800">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -351,10 +353,7 @@ const AddProducts = () => {
                                         </svg>
                                         <span className="text-green-700 font-medium">{uiState.feedback.success}</span>
                                     </div>
-                                    <button
-                                        onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, success: '' } }))}
-                                        className="text-green-600 hover:text-green-800"
-                                    >
+                                    <button onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, success: '' } }))} className="text-green-600 hover:text-green-800">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -369,10 +368,7 @@ const AddProducts = () => {
                                         </svg>
                                         <span className="text-blue-700 font-medium">{uiState.feedback.info}</span>
                                     </div>
-                                    <button
-                                        onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, info: '' } }))}
-                                        className="text-blue-600 hover:text-blue-800"
-                                    >
+                                    <button onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, info: '' } }))} className="text-blue-600 hover:text-blue-800">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -383,62 +379,55 @@ const AddProducts = () => {
 
                         {/* Form Sections */}
                         <div className="space-y-2">
-                            {/* SECTION 1: Basic Information & Images */}
+                            {/* Basic Info + Images */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Basic Information */}
-                                <div className=" border border-gray-200 rounded-lg p-2 hover:border-blue-500 transition-all duration-300">
+                                {/* Basic Info */}
+                                <div className="border border-gray-200 rounded-lg p-2 hover:border-blue-500 transition-all duration-300">
                                     <div className="flex items-center gap-2 mb-4">
                                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <h2 className="text-lg font-semibold ">Basic Information</h2>
+                                        <h2 className="text-lg font-semibold">Basic Information</h2>
                                     </div>
-
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium  mb-1">
-                                                Product Tag Key *
-                                            </label>
+                                            <label className="block text-sm font-medium mb-1">Product Tag Key *</label>
                                             <input
                                                 type="text"
                                                 placeholder="e.g., GOLD-EARRINGS-001"
                                                 value={formData.tagKey}
                                                 onChange={e => handleInputChange('tagKey', e.target.value)}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-black  transition-colors duration-200"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-black transition-colors duration-200"
                                             />
                                         </div>
-
                                         <div>
-                                            <label className="block text-sm font-medium ">
-                                                Product Description
-                                            </label>
+                                            <label className="block text-sm font-medium">Product Description</label>
                                             <textarea
-                                                placeholder="Provide a detailed description of the product..."
+                                                placeholder="Provide a detailed description..."
                                                 value={formData.description}
                                                 onChange={e => handleInputChange('description', e.target.value)}
                                                 rows={4}
-                                                className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg  focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-none"
+                                                className="w-full px-4 py-3 text-black border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-none"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Image Upload */}
-                                <div className=" border border-gray-200 rounded-lg p-2 hover:border-blue-500 transition-all duration-300">
+                                <div className="border border-gray-200 rounded-lg p-2 hover:border-blue-500 transition-all duration-300">
                                     <div className="flex items-center gap-2 mb-2">
                                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                         </svg>
                                         <h2 className="text-lg font-semibold">Product Images</h2>
                                     </div>
-
                                     <div className="space-y-4">
                                         <div
                                             className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-300 ${uiState.isDragOver
-                                                    ? 'border-blue-500 bg-blue-50'
-                                                    : formData.selectedFiles.length > 0
-                                                        ? 'border-green-500 bg-green-50'
-                                                        : 'border-gray-300 bg-gray-50 hover:border-blue-500 hover:bg-blue-50'
+                                                ? 'border-blue-500 bg-blue-50'
+                                                : formData.selectedFiles.length > 0
+                                                    ? 'border-green-500 bg-green-50'
+                                                    : 'border-gray-300 bg-gray-50 hover:border-blue-500 hover:bg-blue-50'
                                                 }`}
                                             onClick={() => fileInputRef.current?.click()}
                                             onDragEnter={handleDragEnter}
@@ -459,115 +448,78 @@ const AddProducts = () => {
                                                     <svg className="w-12 h-12 text-green-500 mx-auto mb-3" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                     </svg>
-                                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                                        {formData.selectedFiles.length} Files Selected
-                                                    </h3>
-                                                    <p className="text-gray-600 text-sm">
-                                                        Click or drag to add more files
-                                                    </p>
+                                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">{formData.selectedFiles.length} Files Selected</h3>
+                                                    <p className="text-gray-600 text-sm">Click or drag to add more</p>
                                                 </>
                                             ) : (
                                                 <>
                                                     <svg className="w-12 h-12 text-blue-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                                     </svg>
-                                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                                        Upload Product Images
-                                                    </h3>
-                                                    <p className="text-gray-600 text-sm">
-                                                        JPG, PNG, WEBP • 3-10 files • Max 10MB each
-                                                    </p>
+                                                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Upload Product Images</h3>
+                                                    <p className="text-gray-600 text-sm">JPG, PNG, WEBP • 3-10 files • Max 10MB each</p>
                                                 </>
                                             )}
                                         </div>
 
-                                        {/* File List */}
                                         {formData.selectedFiles.length > 0 && (
                                             <div>
-                                                <h4 className="text-sm font-semibold text-900 mb-1">
-                                                    Selected Files ({formData.selectedFiles.length})
-                                                </h4>
-
-                                                <div
-                                                    className={`flex flex-wrap gap-2 ${uiState.showAllFiles ? '' : 'max-h-48 overflow-y-auto'
-                                                        }`}
-                                                >
-                                                    {(uiState.showAllFiles
-                                                        ? formData.selectedFiles
-                                                        : formData.selectedFiles.slice(0, 8)
-                                                    ).map((file, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex items-center justify-between px-2 py-1 border border-gray-200 rounded-lg transition-colors duration-200 bg-gray-50"
-                                                        >
-                                                            <span className="text-xs sm:text-sm text-gray-700 truncate max-w-[120px] sm:max-w-[200px]">
-                                                                {file.name}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => removeFile(index)}
-                                                                className="text-red-600 hover:text-red-800 ml-2 p-1 transition-colors duration-200"
-                                                            >
-                                                                <svg
-                                                                    className="w-4 h-4"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth={2}
-                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                                    />
+                                                <h4 className="text-sm font-semibold text-900 mb-1">Selected Files ({formData.selectedFiles.length})</h4>
+                                                <div className={`flex flex-wrap gap-2 ${uiState.showAllFiles ? '' : 'max-h-48 overflow-y-auto'}`}>
+                                                    {(uiState.showAllFiles ? formData.selectedFiles : formData.selectedFiles.slice(0, 8)).map((file, index) => (
+                                                        <div key={index} className="flex items-center justify-between px-2 py-1 border border-gray-200 rounded-lg bg-gray-50">
+                                                            <span className="text-xs sm:text-sm text-gray-700 truncate max-w-[120px] sm:max-w-[200px]">{file.name}</span>
+                                                            <button onClick={() => removeFile(index)} className="text-red-600 hover:text-red-800 ml-2 p-1">
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                                 </svg>
                                                             </button>
                                                         </div>
                                                     ))}
                                                 </div>
-
                                                 {formData.selectedFiles.length > 8 && (
-                                                    <button
-                                                        onClick={() =>
-                                                            setUiState((prev) => ({ ...prev, showAllFiles: !prev.showAllFiles }))
-                                                        }
-                                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2 transition-colors duration-200"
-                                                    >
+                                                    <button onClick={() => setUiState(prev => ({ ...prev, showAllFiles: !prev.showAllFiles }))} className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2">
                                                         {uiState.showAllFiles ? 'Show Less' : `View All ${formData.selectedFiles.length} Files`}
                                                     </button>
                                                 )}
                                             </div>
                                         )}
-
                                     </div>
                                 </div>
                             </div>
 
-                            {/* SECTION 2: Product Specifications */}
-                            <div className=" border border-gray-200 rounded-lg p-2  transition-all duration-300">
+                            {/* Product Specifications */}
+                            <div className="border border-gray-200 rounded-lg p-2 transition-all duration-300">
                                 <div className="flex items-center gap-2 mb-2">
                                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                     </svg>
                                     <h2 className="text-lg font-semibold text-900">Product Specifications</h2>
                                 </div>
-
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
-                                    {Object.keys(ENUM_OPTIONS).map((attr) => (
+                                    {Object.keys(dynamicOptions).map(attr => (
                                         <div key={attr}>
-                                            <label className="block text-sm font-medium text-700  capitalize">
+                                            <label className="block text-sm font-medium text-700 capitalize">
                                                 {attr.replace(/([A-Z])/g, ' $1').trim()}
                                             </label>
                                             <select
                                                 name={attr}
                                                 value={formData.productAttributes[attr] || ''}
-                                                onChange={handleAttributeChange}
+                                                onChange={e => {
+                                                    const { value } = e.target;
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        productAttributes: {
+                                                            ...prev.productAttributes,
+                                                            [attr]: value
+                                                        }
+                                                    }));
+                                                }}
                                                 className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                                             >
                                                 <option value="">Select</option>
-                                                {ENUM_OPTIONS[attr].map((option) => (
-                                                    <option key={option} value={option}>
-                                                        {option.replace(/_/g, ' ').replace('COATED', ' COATED')}
-                                                    </option>
+                                                {dynamicOptions[attr].map(option => (
+                                                    <option key={option} value={option}>{option}</option>
                                                 ))}
                                             </select>
                                         </div>
@@ -575,15 +527,14 @@ const AddProducts = () => {
                                 </div>
                             </div>
 
-                            {/* SECTION 3: Marketing Options */}
-                            <div className="b border border-gray-200 rounded-lg p-2 hover:border-blue-500 transition-all duration-300">
+                            {/* Marketing Options */}
+                            <div className="border border-gray-200 rounded-lg p-2 hover:border-blue-500 transition-all duration-300">
                                 <div className="flex items-center gap-2 mb-2">
                                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                     </svg>
                                     <h2 className="text-lg font-semibold text-900">Marketing Options</h2>
                                 </div>
-
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     {['topTrending', 'featuredProducts', 'bestDesign'].map(option => (
                                         <label key={option} className="flex items-center space-x-3 cursor-pointer">
@@ -602,9 +553,6 @@ const AddProducts = () => {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Divider */}
-                        {/* <div className="border-t border-gray-200 my-2"></div> */}
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4">
@@ -651,8 +599,8 @@ const AddProducts = () => {
                                     <span
                                         key={index}
                                         className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${valid
-                                                ? 'bg-green-100 text-green-800 border border-green-200'
-                                                : 'bg-gray-100 text-gray-600 border border-gray-200'
+                                            ? 'bg-green-100 text-green-800 border border-green-200'
+                                            : 'bg-gray-100 text-gray-600 border border-gray-200'
                                             }`}
                                     >
                                         {valid && (

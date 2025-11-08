@@ -101,7 +101,7 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
         <div className="staradmin-header-right">
           <div className="staradmin-actions-group">
             {/* Theme Toggle */}
-            <button
+            {/* <button
               className={`staradmin-action-btn ${activeButton === 'theme' ? 'active' : ''}`}
               onClick={() => {
                 toggleTheme();
@@ -111,7 +111,7 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
               tabIndex={0}
             >
               {themeMode === 'light' ? <MdDarkMode size={18} /> : <MdOutlineLightMode size={18} />}
-            </button>
+            </button> */}
           </div>
 
           {/* User Profile Section */}

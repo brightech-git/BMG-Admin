@@ -12,15 +12,21 @@ export const useUploadBannerMutation = () => {
         },
     });
 };
-
 export const useUpdateBannerMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id,image, title ,subtitle,  itemname,  gender }) =>
-            bannersService.updateBanner(id,image, title, subtitle, itemname, gender),
+        mutationFn: ({ id, image, title, subtitle, itemname, gender }) =>
+            bannersService.updateBanner(
+                id,
+                image,
+                title,
+                subtitle,
+                itemname,
+                gender
+            ),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['banners'] }); // Refetch banners list after update
+            queryClient.invalidateQueries({ queryKey: ['banners'] });
         },
     });
 };

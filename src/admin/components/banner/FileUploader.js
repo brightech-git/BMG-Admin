@@ -1,5 +1,5 @@
 // 📁 src/components/common/FileUploader.js
-import { useState, useRef } from 'react';
+import { useState, useRef ,useEffect } from 'react';
 import { Box, Typography, Button, Chip, CircularProgress } from '@mui/material';
 import { CloudUpload as UploadIcon, CheckCircle as CheckIcon } from '@mui/icons-material';
 import { styled } from '@mui/system';
@@ -25,13 +25,23 @@ export default function FileUploader({
     maxSizeMB = 5,
     onFileSelect,
     initialPreview = null,
+    selectedFile,
     height = 300,
     loading = false,
     error = null,
+    width = '100%',
 }) {
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(initialPreview);
     const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        if (!selectedFile) {
+            setFile(null);
+            setPreview(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    }, [selectedFile]);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];

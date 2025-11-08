@@ -11,7 +11,9 @@ import {
     Card,
     CardContent,
     Alert,
-    CircularProgress
+    CircularProgress,
+    Select,
+    MenuItem
 } from '@mui/material';
 import {
     CloudUpload as UploadIcon,
@@ -21,6 +23,8 @@ import {
 } from '@mui/icons-material';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './AddBanner.css';
+import { useItemNames } from '../../../hooks/itemName/useItemNames';
+import { useEcomMarketingAttributes } from '../../../hooks/market-options/useEcomMarketingAttributes';
 
 const AddBanner = () => {
     const { themeMode } = useContext(MyContext);
@@ -32,6 +36,15 @@ const AddBanner = () => {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const { mutate, isPending } = useUploadBannerMutation();
+    const { attributes } = useEcomMarketingAttributes();
+
+    const genderAttribute = attributes.find(attr => attr.description === "Gender");
+
+    // Parse the valuesJson to an array
+    const genderOptions = genderAttribute ? JSON.parse(genderAttribute.valuesJson) : [];
+
+    const {items: itemNames} = useItemNames();
+  
 
     const handleFileSelect = (file, error) => {
         setImage(file);
@@ -62,11 +75,13 @@ const AddBanner = () => {
             {
                 onSuccess: () => {
                     setSuccess('Banner uploaded successfully!');
+                    
                     setImage(null);
                     setTitle('');
                     setSubTitle('');
                     setItemName('');
                     setGender('');
+                    handleFileSelect(null, null);
                 },
                 onError: (err) => {
                     setError(err.message || 'Failed to upload banner');
@@ -140,36 +155,42 @@ const AddBanner = () => {
                             SelectProps={{ native: true }}
                             className="form-input"
                             disabled={isPending}
+                          
                         >
-                            <option value="">Select an item category</option>
-                            <option value="RINGS">Rings</option>
-                            <option value="EARRINGS">Earrings</option>
-                            <option value="NECKLACES_AND_SETS">Necklaces & Sets</option>
-                            <option value="BANGLES_AND_BRACELETS">Bangles & Bracelets</option>
-                            <option value="ANKLES_AND_TOE_RINGS">Ankles & Toe Rings</option>
-                            <option value="PENDENTS_AND_CHAINS">Pendants & Chains</option>
-                            <option value="MAANG_TIKKA_AND_HAIR_ACCESS">Maang Tikka & Hair Accessories</option>
+                            {itemNames.map((item) => (
+                                <option key={item.ITEMCTRID} value={item.ITEMCTRNAME} style={{fontSize:'10px',fontWeight:'500'}}>
+                                    {item.ITEMCTRNAME}
+                                </option>
+                            ))}
                         </TextField>
 
+                        {/* // Inside your AddBanner component, replace the Gender section with: */}
+
                         <Typography variant="body2" className="form-label" mt={2}>
-                            
                             Gender <span className="required">*</span>
                         </Typography>
-                        <TextField
-                            select
-                            value={gender}
+
+                        <Select
+                            value={gender} // your state variable
                             onChange={(e) => setGender(e.target.value)}
-                            variant="outlined"
+                            displayEmpty
                             fullWidth
-                            SelectProps={{ native: true }}
+                            variant="outlined"
                             className="form-input"
                             disabled={isPending}
                         >
-                            <option value="">Select gender</option>
-                            <option value="MEN">Men</option>
-                            <option value="WOMEN">Women</option>
-                            <option value="KIDS">Kids</option>
-                        </TextField>
+                            <MenuItem value="" disabled>
+                                Select Gender
+                            </MenuItem>
+                            {genderOptions.map((option, idx) => (
+                                <MenuItem key={idx} value={option}>
+                                    {option}
+                                </MenuItem>
+                            ))}
+                        </Select>
+
+
+                      
                     </Box>
 
                     <Box className="file-upload-section" mb={3}>

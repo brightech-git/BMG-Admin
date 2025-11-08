@@ -12,11 +12,16 @@ import {
     CardContent,
     Alert,
     CircularProgress,
-    MenuItem
+    MenuItem,
+    Select
 } from '@mui/material';
 import { CloudUpload as UploadIcon, CheckCircle as CheckIcon, Error as ErrorIcon, Add as AddIcon } from '@mui/icons-material';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './AddFestivalBanner.css';
+import BackdropProgress from '../../../components/backDrop/BackdropProgress';
+import { useEcomMarketingAttributes } from '../../../hooks/market-options/useEcomMarketingAttributes';
+
+
 
 const AddFestivalBanner = () => {
     const { themeMode } = useContext(MyContext);
@@ -29,16 +34,16 @@ const AddFestivalBanner = () => {
     const [success, setSuccess] = useState(null);
     const { mutate, isPending } = useUploadFestivalBannerMutation();
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
+    const {attributes} = useEcomMarketingAttributes();
 
-    const itemNameOptions = [
-        'DIWALI',
-        'EID',
-        'CHRISTMAS',
-        'HOL serviceI',
-        'RAKSHA_BANDHAN',
-        'NAVRATRI',
-        'ONAM'
-    ];
+    const [openBackdrop, setOpenBackdrop] = useState(false);
+    const [progress, setProgress] = useState(0);
+
+console.log(itemName,'itemname')
+    const genderAttribute = attributes.find(attr => attr.description === "Festival");
+
+    // Parse the valuesJson to an array
+    const itemNameOptions = genderAttribute ? JSON.parse(genderAttribute.valuesJson) : [];
 
     const handleFileSelect = (file, error) => {
         setImage(file);
@@ -50,6 +55,7 @@ const AddFestivalBanner = () => {
         e.preventDefault();
         setError(null);
         setSuccess(null);
+        setOpenBackdrop(true);
 
         if (!image) {
             setError('Please select a valid image file (JPEG, PNG, WEBP, max 5MB).');
@@ -73,9 +79,11 @@ const AddFestivalBanner = () => {
             item_name: itemName,
             sub_item_name: subItemName || null
         };
-
+        console.log(payload,'payload')
+        setProgress(10);
         mutate(payload, {
             onSuccess: () => {
+                setProgress(100);
                 setSuccess('Festival Banner uploaded successfully!');
                 setImage(null);
                 setTitle('');
@@ -83,8 +91,16 @@ const AddFestivalBanner = () => {
                 setItemName('');
                 setSubItemName('');
                 setTimeout(() => setSuccess(null), 3000);
+
+                setTimeout(() => {
+                    setOpenBackdrop(false);
+                    setProgress(0);
+                    setSuccess(null);
+                }, 1500);
             },
             onError: (err) => {
+                setOpenBackdrop(false);
+                setProgress(0);
                 setError(err.message || 'Failed to upload festival banner.');
             }
         });
@@ -132,7 +148,7 @@ const AddFestivalBanner = () => {
                             <Typography className="form-label" mt={2}>
                                 Festival <span className="required">*</span>
                             </Typography>
-                            <TextField
+                            <Select
                                 select
                                 value={itemName}
                                 onChange={(e) => setItemName(e.target.value)}
@@ -143,12 +159,12 @@ const AddFestivalBanner = () => {
                                 <MenuItem value="">Select a festival</MenuItem>
                                 {itemNameOptions.map((opt) => (
                                     <MenuItem key={opt} value={opt}>
-                                        {opt.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                                        {opt}
                                     </MenuItem>
                                 ))}
-                            </TextField>
+                            </Select>
 
-                            <Typography className="form-label" mt={2}>
+                            {/* <Typography className="form-label" mt={2}>
                                 Sub Item Name (optional)
                             </Typography>
                             <TextField
@@ -158,7 +174,7 @@ const AddFestivalBanner = () => {
                                 variant="outlined"
                                 fullWidth
                                 className="form-input"
-                            />
+                            /> */}
                         </Box>
                     </Box>
 

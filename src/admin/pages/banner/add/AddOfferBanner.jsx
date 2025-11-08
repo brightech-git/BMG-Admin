@@ -17,6 +17,8 @@ import {
 import { CloudUpload as UploadIcon, CheckCircle as CheckIcon, Error as ErrorIcon, Add as AddIcon } from '@mui/icons-material';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './AddOfferBanner.css';
+import { useItemNames } from '../../../hooks/itemName/useItemNames';
+import { formatLabel } from '../../../../utils/formating/stringUtils';
 
 const AddOfferBanner = () => {
     const { themeMode } = useContext(MyContext);
@@ -30,16 +32,19 @@ const AddOfferBanner = () => {
     const { mutate, isPending } = useUploadOfferBannerMutation();
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
 
-    const itemNameOptions = [
-        'RINGS',
-        'EARRINGS',
-        'NECKLACES_AND_SETS',
-        'BANGLES_AND_BRACELETS',
-        'ANKLETS_AND_TOE_RINGS',
-        'PENDANTS_AND_CHAINS',
-        'MAANG_TIKKA_AND_HAIR_ACCESSORIES',
-        'OFFERS'
-    ];
+    const { items: itemNames } = useItemNames();
+
+    // Map item category options
+    const itemNameOptions = itemNames.map(item => item.ITEMCTRNAME);
+
+    // Find the selected item object based on selected name
+    const selectedItem = itemNames.find(item => item.ITEMCTRNAME === itemName);
+
+    // Fetch sub-items based on selected item's ITEMCTRID
+    const { items: subItemData, loading: loadingSub } = useItemNames(selectedItem?.ITEMCTRID || null);
+
+    // Get sub-items array safely
+    const subItemNameOptions = subItemData?.[0]?.subitems || [];
 
     const handleFileSelect = (file, error) => {
         setImage(file);
@@ -47,6 +52,9 @@ const AddOfferBanner = () => {
         setSuccess(null);
     };
 
+
+
+    console.log(title,subtitle,itemName,subItemName ,'data')
     const handleSubmit = (e) => {
         e.preventDefault();
         setError(null);
@@ -133,6 +141,7 @@ const AddOfferBanner = () => {
                             <Typography className="form-label" mt={2}>
                                 Item Category <span className="required">*</span>
                             </Typography>
+
                             <TextField
                                 select
                                 value={itemName}
@@ -140,26 +149,39 @@ const AddOfferBanner = () => {
                                 variant="outlined"
                                 fullWidth
                                 className="form-input"
+                                SelectProps={{ native: true }} // use native <select> with <option>
                             >
-                                <MenuItem value="">Select an item category</MenuItem>
+                                {/* Placeholder option */}
+                                <option value="">Select an item category</option>
+
                                 {itemNameOptions.map((opt) => (
-                                    <MenuItem key={opt} value={opt}>
-                                        {opt.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
-                                    </MenuItem>
+                                    <option key={opt} value={opt}>
+                                        {formatLabel(opt)}
+                                    </option>
                                 ))}
                             </TextField>
 
+                            {/* Sub Item */}
                             <Typography className="form-label" mt={2}>
                                 Sub Item Name (optional)
                             </Typography>
                             <TextField
-                                placeholder="Enter sub item name"
+                                select
                                 value={subItemName}
                                 onChange={(e) => setSubItemName(e.target.value)}
                                 variant="outlined"
                                 fullWidth
                                 className="form-input"
-                            />
+                                SelectProps={{ native: true }}
+                                disabled={!itemName || loadingSub} // disable until item selected or loading
+                            >
+                                <option value="">Select a sub item</option>
+                                {subItemNameOptions.map((sub) => (
+                                    <option key={sub.SUBITEMID} value={sub.SUBITEMNAME}>
+                                        {formatLabel(sub.SUBITEMNAME)}
+                                    </option>
+                                ))}
+                            </TextField>
                         </Box>
                     </Box>
 

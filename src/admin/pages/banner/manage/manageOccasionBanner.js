@@ -17,6 +17,8 @@ import { useDeleteOccasionBannerMutation, useUpdateOccasionBannerMutation } from
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './ManageOccasionBanner.css';
 
+import { useEcomMarketingAttributes } from '../../../hooks/market-options/useEcomMarketingAttributes';
+
 const BASE_IMAGE_URL = 'https://app.bmgjewellers.com';
 
 const ManageOccasionBanner = () => {
@@ -45,6 +47,18 @@ const ManageOccasionBanner = () => {
     const { mutate: deleteOccasionBanner, isLoading: isDeleting } = useDeleteOccasionBannerMutation();
 
     const banners = useMemo(() => bannersData?.data || [], [bannersData?.data]);
+
+    const { attributes } = useEcomMarketingAttributes();
+
+    const genderAttribute = attributes?.find((attr) => attr.description === 'Gender');
+    const genderOptions = genderAttribute
+        ? JSON.parse(genderAttribute.valuesJson)
+        : [];
+
+    const occasionAttributes = attributes?.find(attr=>attr.description=="Occasion");
+    const occasionOptions = occasionAttributes
+        ? JSON.parse(occasionAttributes.valuesJson)
+        : [];
 
     useEffect(() => {
         if (banners.length > 0) {
@@ -423,10 +437,13 @@ const ManageOccasionBanner = () => {
                                                             className="form-input"
                                                         >
                                                             <MenuItem value="">Select an Occasion</MenuItem>
-                                                            <MenuItem value="DAILY_WEAR">Daily Wear</MenuItem>
-                                                            <MenuItem value="WEDDING_WEAR">Wedding Wear</MenuItem>
-                                                            <MenuItem value="PARTY_WEAR">Party Wear</MenuItem>
-                                                            <MenuItem value="OFFICE_WEAR">Office Wear</MenuItem>
+                                                            {occasionOptions.map((occasion) => (
+                                                                <MenuItem key={occasion} value={occasion}>
+                                                                    {occasion}
+                                                                </MenuItem>
+                                                            ))}
+
+                                                            
                                                         </TextField>
                                                     ) : (
                                                         <Typography variant="body2" className="table-text">
@@ -445,9 +462,11 @@ const ManageOccasionBanner = () => {
                                                             className="form-input"
                                                         >
                                                             <MenuItem value="">Select Gender</MenuItem>
-                                                            <MenuItem value="MEN">Men</MenuItem>
-                                                            <MenuItem value="WOMEN">Women</MenuItem>
-                                                            <MenuItem value="KIDS">Kids</MenuItem>
+                                                           { genderOptions.map((gender) => (
+                                                                <MenuItem key={gender} value={gender}>
+                                                                    {gender}
+                                                                </MenuItem>
+                                                            ))}
                                                         </TextField>
                                                     ) : (
                                                         <Typography variant="body2" className="table-text">

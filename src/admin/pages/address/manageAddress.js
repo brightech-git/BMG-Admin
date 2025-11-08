@@ -1,4 +1,4 @@
-import React,{ useState, useContext } from 'react';
+import React,{ useState, useContext, useEffect } from 'react';
 import { useMediaQuery } from 'react-responsive';
 import {
     Box, Button, TextField, Typography, Card, CardContent, CardActions, Grid,
@@ -24,10 +24,16 @@ const ManageAddress = () => {
     const { useGetAllAddresses, useAddAddress, useUpdateAddress, useDeleteAddress } = useAddressQuery();
 
     const { data: addresses, isLoading } = useGetAllAddresses();
+    console.log(addresses ,'address bmg')
     const addAddressMutation = useAddAddress();
     const updateAddressMutation = useUpdateAddress();
     const deleteAddressMutation = useDeleteAddress();
 
+    const [address,setAddress] =useState([]);
+
+useEffect(()=>{
+    setAddress(addresses)
+},[addresses]);
     const [open, setOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [currentAddressId, setCurrentAddressId] = useState(null);
@@ -186,10 +192,10 @@ const ManageAddress = () => {
                     </CardContent>
                 </Card>
             ) : (
-                <Grid container spacing={3}>
-                    {addresses && addresses.length > 0 ? (
-                        addresses.map((address, index) => (
-                            <Grid item xs={12} md={6} lg={4} key={address.id}>
+                <Grid container spacing={2}>
+                        {Array.isArray(address) && address.length > 0 ? (
+                            address.map((address, index) => (
+                            <Grid size={{xs:12,sm:6,md:4}} key={address.id}>
                                 <Fade in={true} timeout={300 + index * 100}>
                                     <Card className={`address-card ${address.isDefault ? 'default' : ''}`}>
                                         <CardContent>

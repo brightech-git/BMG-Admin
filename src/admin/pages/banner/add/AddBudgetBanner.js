@@ -17,6 +17,8 @@ import {
 import { CloudUpload as UploadIcon, CheckCircle as CheckIcon, Error as ErrorIcon, Add as AddIcon } from '@mui/icons-material';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './AddBudgetBanner.css';
+import BackdropProgress from '../../../components/backDrop/BackdropProgress';
+
 
 const AddBudgetBanner = () => {
     const { themeMode } = useContext(MyContext);
@@ -30,6 +32,9 @@ const AddBudgetBanner = () => {
     const { mutate, isPending } = useBudgetBanner();
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
 
+    const [openBackdrop ,setOpenBackdrop] =useState(false);
+    const [progress, setProgress] = useState(0);
+
     const handleFileSelect = (file, error) => {
         setImage(file);
         setError(error);
@@ -37,6 +42,7 @@ const AddBudgetBanner = () => {
     };
 
     const handleSubmit = (e) => {
+        setOpenBackdrop(true);
         e.preventDefault();
         setError(null);
         setSuccess(null);
@@ -86,16 +92,17 @@ const AddBudgetBanner = () => {
             min_price: min,
             max_price: max
         };
-
+setProgress(10)
         mutate(payload, {
             onSuccess: () => {
+                setProgress(100)
                 setSuccess('Budget Banner uploaded successfully!');
                 setImage(null);
                 setTitle('');
                 setSubtitle('');
                 setMinPrice('');
                 setMaxPrice('');
-                setTimeout(() => setSuccess(null), 3000);
+                setTimeout(() => { setProgress(0); setOpenBackdrop(false); setSuccess(null) } , 3000);
             },
             onError: (err) => {
                 setError(err.message || 'Failed to upload budget banner.');

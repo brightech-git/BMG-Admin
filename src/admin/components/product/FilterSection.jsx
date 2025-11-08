@@ -17,7 +17,11 @@ export default function FilterSection() {
     // Fetch all items
     const { items: allItems, loading: loadingItems } = useItemNames(null);
     // Fetch subitems of selected item
-    const { items: subItems, loading: loadingSub } = useItemNames(selectedItem?.ITEMID || null);
+    const { items: subItem, loading: loadingSub } = useItemNames(selectedItem?.ITEMCTRID || null);
+    const subItems = subItem?.[0]?.subitems || [];
+
+
+    console.log('Selected SubItems:', subItems);
 
     // Price ranges
     const minPriceRanges = [
@@ -217,7 +221,7 @@ export default function FilterSection() {
                                 >
                                     {modalStep === 'filters' && 'Advanced Filters'}
                                     {modalStep === 'items' && 'Select Item'}
-                                    {modalStep === 'subitems' && `Select Sub Items - ${selectedItem?.ITEMNAME}`}
+                                    {modalStep === 'subitems' && `Select Sub Items - ${selectedItem?.ITEMCTRNAME}`}
                                 </h4>
                             </div>
                             <button
@@ -339,7 +343,7 @@ export default function FilterSection() {
                                         >
                                             {selectedItem ? (
                                                 <div>
-                                                    <div className="font-medium">{selectedItem.ITEMNAME}</div>
+                                                    <div className="font-medium">{selectedItem.ITEMCTRNAME}</div>
                                                     <div
                                                         
                                                         style={{ fontSize: 'var(--font-size-xs, 13px)' }}
@@ -467,7 +471,7 @@ export default function FilterSection() {
                                     ) : (
                                         allItems.map(item => (
                                             <button
-                                                key={`item-${item.ITEMID}`}
+                                                key={`item-${item.ITEMCTRID}`}
                                                 onClick={() => handleItemSelect(item)}
                                                 className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-500 transition-all"
                                                 style={{
@@ -475,7 +479,7 @@ export default function FilterSection() {
                                                     borderRadius: 'var(--border-radius-md, 8px)'
                                                 }}
                                             >
-                                                {item.ITEMNAME}
+                                                {item.ITEMCTRNAME}
                                             </button>
                                         ))
                                     )}

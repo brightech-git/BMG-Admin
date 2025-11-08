@@ -1,23 +1,64 @@
-import { useState, useEffect, useRef, useMemo, useContext } from 'react';
+import React, {
+    useState,
+    useEffect,
+    useRef,
+    useMemo,
+    useContext,
+} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaQuery } from 'react-responsive';
 import { useNavigate } from 'react-router-dom';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import {
-    Box, Typography, Button, Table, TableBody, TableCell,
-    TableContainer, TableHead, TableRow, CircularProgress, Alert,
-    IconButton, Chip, Tooltip, TextField, Avatar
+    Box,
+    Typography,
+    Button,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    CircularProgress,
+    Alert,
+    IconButton,
+    Chip,
+    Tooltip,
+    TextField,
+    Avatar,
+    Paper,
+    Select,
+    MenuItem,
+    FormControl,
 } from '@mui/material';
-import { Visibility, Edit, Delete, Add, Refresh, Search, CloudUpload } from '@mui/icons-material';
+import {
+    Visibility,
+    Edit,
+    Delete,
+    Add,
+    Refresh,
+    Search,
+    CloudUpload,
+} from '@mui/icons-material';
+
 import { useBannersQuery } from '../../../hooks/banners/mainBanner/useBannersQuery';
-import { useUpdateBannerMutation, useDeleteBannerMutation } from '../../../hooks/banners/mainBanner/useUploadBannerMutation';
+import {
+    useUpdateBannerMutation,
+    useDeleteBannerMutation,
+} from '../../../hooks/banners/mainBanner/useUploadBannerMutation';
+import { useEcomMarketingAttributes } from '../../../hooks/market-options/useEcomMarketingAttributes';
+import { useItemNames } from '../../../hooks/itemName/useItemNames';
 import './ManageBanners.css';
+import BackdropProgress from '../../../components/backDrop/BackdropProgress';
 
 const BASE_IMAGE_URL = 'https://app.bmgjewellers.com';
 
 const ManageBanner = () => {
     const navigate = useNavigate();
     const { themeMode } = useContext(MyContext);
+    const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
+
+    // ---------- STATE ----------
     const [selectedId, setSelectedId] = useState(null);
     const [editFile, setEditFile] = useState(null);
     const [editTitle, setEditTitle] = useState('');
@@ -28,78 +69,86 @@ const ManageBanner = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [visibleItems, setVisibleItems] = useState(20);
-    const [loadedData, setLoadedData] = useState([]);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [selectedBanner, setSelectedBanner] = useState(null);
-    const tableContainerRef = useRef(null);
-    const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
-    const isSmallScreen = useMediaQuery({ query: '(max-width: 480px)' });
 
+    const tableContainerRef = useRef(null);
+
+    // ---------- QUERIES ----------
     const { data: bannersData, isLoading, error, refetch } = useBannersQuery();
-    const { mutate: updateBanner, isLoading: isUpdating } = useUpdateBannerMutation();
-    const { mutate: deleteBanner, isLoading: isDeleting } = useDeleteBannerMutation();
+    const { mutate: updateBanner, isPending: isUpdating } = useUpdateBannerMutation();
+    const { mutate: deleteBanner, isPending: isDeleting } = useDeleteBannerMutation();
 
     const banners = useMemo(() => bannersData?.data || [], [bannersData?.data]);
 
-    useEffect(() => {
-        if (banners.length > 0) {
-            const filtered = banners.filter(
-                (banner) =>
-                    banner.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    banner.id.toString().includes(searchQuery)
-            );
-            setLoadedData(filtered);
-        } else {
-            setLoadedData([]);
-        }
+    const { attributes } = useEcomMarketingAttributes();
+    const genderAttribute = attributes?.find((a) => a.description === 'Gender');
+    const genderOptions = genderAttribute
+        ? JSON.parse(genderAttribute.valuesJson)
+        : [];
+
+    const { items: itemNames } = useItemNames();
+    const [progress ,setProgress]=useState();
+    const [backdropOpen ,setBackdropOpen]=useState(false)
+
+    // ---------- FILTER ----------
+    const filtered = useMemo(() => {
+        if (!searchQuery) return banners;
+        const q = searchQuery.toLowerCase();
+        return banners.filter(
+            (b) =>
+                (b.title && b.title.toLowerCase().includes(q)) ||
+                b.id.toString().includes(q)
+        );
     }, [banners, searchQuery]);
 
+    // ---------- INFINITE SCROLL ----------
     useEffect(() => {
-        const handleTableScroll = () => {
-            if (!tableContainerRef.current) return;
-            const container = tableContainerRef.current;
-            const scrollTop = container.scrollTop;
-            const scrollHeight = container.scrollHeight;
-            const clientHeight = container.clientHeight;
+        const el = tableContainerRef.current;
+        if (!el) return;
 
-            if (scrollTop + clientHeight >= scrollHeight - 100 && !isLoadingMore) {
+        const onScroll = () => {
+            const { scrollTop, scrollHeight, clientHeight } = el;
+            if (
+                scrollTop + clientHeight >= scrollHeight - 150 &&
+                !isLoadingMore &&
+                visibleItems < filtered.length
+            ) {
                 setIsLoadingMore(true);
                 setTimeout(() => {
-                    setVisibleItems(prev => Math.min(prev + 20, loadedData.length));
+                    setVisibleItems((p) => Math.min(p + 20, filtered.length));
                     setIsLoadingMore(false);
                 }, 300);
             }
         };
 
-        const tableContainer = tableContainerRef.current;
-        if (tableContainer) {
-            tableContainer.addEventListener('scroll', handleTableScroll);
-            return () => tableContainer.removeEventListener('scroll', handleTableScroll);
-        }
-    }, [visibleItems, loadedData.length, isLoadingMore]);
+        el.addEventListener('scroll', onScroll);
+        return () => el.removeEventListener('scroll', onScroll);
+    }, [filtered.length, visibleItems, isLoadingMore]);
 
+    // ---------- MESSAGES ----------
     useEffect(() => {
-        if (successMessage || errorMessage) {
-            const timer = setTimeout(() => {
-                setSuccessMessage('');
-                setErrorMessage('');
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
+        if (!successMessage && !errorMessage) return;
+        const t = setTimeout(() => {
+            setSuccessMessage('');
+            setErrorMessage('');
+        }, 3000);
+        return () => clearTimeout(t);
     }, [successMessage, errorMessage]);
 
-    const handleRefreshClick = () => {
+    // ---------- HANDLERS ----------
+    const handleRefresh = () => {
         refetch();
         setSearchQuery('');
     };
 
-    const handleViewClick = (banner) => {
+    const handleView = (banner) => {
         setSelectedBanner(banner);
         setShowViewModal(true);
     };
 
-    const handleEditClick = (banner) => {
+    const handleEdit = (banner) => {
         setSelectedId(banner.id);
         setEditFile(null);
         setEditTitle(banner.title || '');
@@ -109,71 +158,61 @@ const ManageBanner = () => {
         setErrorMessage('');
     };
 
-    const handleEditFileChange = (e) => {
-        const file = e.target.files[0];
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!file.type.match('image.*')) {
-            setErrorMessage('Please select a valid image file (JPEG, PNG, etc.)');
+        if (!file.type.startsWith('image/')) {
+            setErrorMessage('Only image files are allowed');
             return;
         }
-
         if (file.size > 5 * 1024 * 1024) {
-            setErrorMessage('File size exceeds maximum limit of 5MB');
+            setErrorMessage('File must be < 5 MB');
             return;
         }
-
         setEditFile(file);
         setErrorMessage('');
     };
 
-    const handleEditTitleChange = (e) => {
-        setEditTitle(e.target.value);
-        setErrorMessage('');
-    };
-
-    const handleSubTitleChange = (e) => {
-        setEditSubTitle(e.target.value);
-        setErrorMessage('');
-    };
-
-    const handleItemName = (e) => {
-        setEditItemName(e.target.value);
-        setErrorMessage('');
-    };
-
-    const handleGender = (e) => {
-        setEditGender(e.target.value);
-        setErrorMessage('');
-    };
-
-    const handleSaveEdit = (id) => {
+    const handleSave = (id) => {
         if (!editFile && !editTitle.trim()) {
-            setErrorMessage('Please provide at least an image or a title.');
+            setErrorMessage('Provide at least a title or an image');
             return;
         }
 
+        setBackdropOpen(true)
+        setProgress(20)
         updateBanner(
-            { id, image: editFile, title: editTitle, subtitle: editSubTitle, itemname: editItemName, gender: editGender },
+            {
+                id,
+                image: editFile,
+                title: editTitle,
+                subtitle: editSubTitle,
+                itemname: editItemName,
+                gender: editGender,
+            },
             {
                 onSuccess: () => {
-                    setSuccessMessage('Banner updated successfully!');
-                    setSelectedId(null);
-                    setEditFile(null);
-                    setEditTitle('');
-                    setEditSubTitle('');
-                    setEditItemName('');
-                    setEditGender('');
+                    setProgress(100);
+                    setSuccessMessage('Banner updated');
+                    resetEdit();
                     refetch();
+                    setTimeout(() => {setSuccessMessage('');
+                        setBackdropOpen(false);
+                     
+                     },3000)
                 },
-                onError: (error) => {
-                    setErrorMessage(error.response?.data?.error || 'Failed to update banner.');
+                onError: (err) => {
+                    setErrorMessage(
+                        (err.response && err.response.data && err.response.data.error) ||
+                        'Update failed'
+                    );
                 },
             }
         );
     };
 
-    const handleCancelEdit = () => {
+    const resetEdit = () => {
         setSelectedId(null);
         setEditFile(null);
         setEditTitle('');
@@ -184,382 +223,386 @@ const ManageBanner = () => {
     };
 
     const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this banner?')) {
-            deleteBanner(id, {
-                onSuccess: () => {
-                    setSuccessMessage('Banner deleted successfully!');
-                    refetch();
-                },
-                onError: (error) => {
-                    setErrorMessage(error.response?.data?.error || 'Failed to delete banner.');
-                },
-            });
-        }
+        if (!window.confirm('Delete this banner?')) return;
+        deleteBanner(id, {
+            onSuccess: () => {
+                setSuccessMessage('Banner deleted');
+                refetch();
+            },
+            onError: (err) => {
+                setErrorMessage(
+                    (err.response && err.response.data && err.response.data.error) ||
+                    'Delete failed'
+                );
+            },
+        });
     };
 
-    const renderMobileCards = () => (
-        <div className="mobile-banner-grid">
-            {loadedData.slice(0, visibleItems).map((banner) => (
-                <motion.div
-                    key={banner.id}
-                    className="mobile-banner-card"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.2 }}
-                >
-                    <div className="mobile-banner-header">
-                        <Typography variant="h6">{banner.title || 'Untitled Banner'}</Typography>
-                        <Chip
-                            label={`#${banner.id}`}
-                            size="small"
-                            className="banner-chip"
-                        />
-                    </div>
-                    <Avatar
-                        src={`${BASE_IMAGE_URL}${banner.image_path}`}
-                        variant="rounded"
-                        className="mobile-banner-image"
-                        onClick={() => handleViewClick(banner)}
-                    />
-                    <div className="mobile-banner-details">
-                        <Typography variant="body2"><strong>Sub Title:</strong> {banner.subtitle || 'N/A'}</Typography>
-                        <Typography variant="body2"><strong>Item Name:</strong> {banner.itemname || 'N/A'}</Typography>
-                        <Typography variant="body2"><strong>Gender:</strong> {banner.gender || 'N/A'}</Typography>
-                        <Typography variant="body2"><strong>Created:</strong> {new Date(banner.created_at).toLocaleString()}</Typography>
-                    </div>
-                    <div className="mobile-banner-actions">
-                        <IconButton onClick={() => handleViewClick(banner)} title="View Details">
-                            <Visibility />
-                        </IconButton>
-                        <IconButton onClick={() => handleEditClick(banner)} disabled={isDeleting} title="Edit Banner">
-                            <Edit />
-                        </IconButton>
-                        <IconButton onClick={() => handleDelete(banner.id)} disabled={isDeleting} title="Delete Banner">
-                            <Delete />
-                        </IconButton>
-                    </div>
-                </motion.div>
-            ))}
-        </div>
-    );
-
-    const renderViewModalContent = () => (
-        <div className="modal-content">
-            <h3>Banner Details: {selectedBanner?.title || 'Untitled Banner'}</h3>
-            <div className="modal-image">
-                <img
-                    src={`${BASE_IMAGE_URL}${selectedBanner?.image_path}`}
-                    alt={selectedBanner?.title || 'Banner'}
-                    className="modal-banner-image"
-                />
-                <p className="image-url">{BASE_IMAGE_URL}{selectedBanner?.image_path}</p>
-            </div>
-            <div className="modal-banner-details">
-                <p><strong>ID:</strong> #{selectedBanner?.id}</p>
-                <p><strong>Title:</strong> {selectedBanner?.title || 'N/A'}</p>
-                <p><strong>Sub Title:</strong> {selectedBanner?.subtitle || 'N/A'}</p>
-                <p><strong>Item Name:</strong> {selectedBanner?.itemname || 'N/A'}</p>
-                <p><strong>Gender:</strong> {selectedBanner?.gender || 'N/A'}</p>
-                <p><strong>Created:</strong> {new Date(selectedBanner?.created_at).toLocaleString()}</p>
-                <p><strong>Status:</strong> {selectedBanner?.status || 'N/A'}</p>
-            </div>
-            <div className="modal-actions">
-                <button className="btn primary" onClick={() => setShowViewModal(false)}>
-                    Close
-                </button>
-            </div>
-        </div>
-    );
-
+    // ---------- RENDER ----------
     if (error) {
         return (
-            <div className={`manage-banner-container ${themeMode}`}>
-                <div className="alert error">
-                    Failed to load banners. Please try again.
-                    <button className="btn small" onClick={() => refetch()}>
+            <Box className={`manage-banner-container ${themeMode}`} p={3}>
+                <Alert severity="error">
+                    Failed to load banners.{' '}
+                    <Button onClick={() => refetch()} size="small">
                         Retry
-                    </button>
-                </div>
-            </div>
+                    </Button>
+                </Alert>
+            </Box>
         );
     }
 
     return (
-        <div className={`manage-banner-container ${themeMode}`}>
-            <div className="card">
-                <div className="section-header">
-                    <div>
-                        <h3>Manage Banners</h3>
-                        <p>View and manage all website banners with their associated images and details</p>
-                    </div>
-                    <div className="section-actions">
-                        <button
-                            className="btn success"
+
+        <>
+        <Box>
+                <BackdropProgress open={backdropOpen} title="Processing..." body="" progress={progress} />
+        </Box>
+        <Box className={`manage-banner-container ${themeMode}`} p={isMobile ? 1 : 3}>
+            <Paper elevation={3} sx={{ p: 3 }}>
+                {/* Header */}
+                <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={2}
+                >
+                    <Box>
+                        <Typography variant="h5">Manage Banners</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            View and edit all website banners
+                        </Typography>
+                    </Box>
+                    <Box display="flex" gap={1}>
+                        <Button
+                            variant="contained"
+                            color="success"
+                            startIcon={<Add />}
                             onClick={() => navigate('/admin/banner/add')}
-                            title="Add Banner"
                         >
-                            <span className="icon"><Add /></span>
-                            {isSmallScreen ? '' : 'Add Banner'}
-                        </button>
-                        <button
-                            className="btn secondary"
-                            onClick={handleRefreshClick}
-                            title="Refresh"
+                            Add
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<Refresh />}
+                            onClick={handleRefresh}
                         >
-                            <span className="icon"><Refresh /></span>
-                            {isSmallScreen ? '' : 'Refresh'}
-                        </button>
-                    </div>
-                </div>
+                            Refresh
+                        </Button>
+                    </Box>
+                </Box>
 
-                <div className="banner-overview">
-                    <div className="overview-icon">
-                        <Add />
-                    </div>
+                {/* Overview */}
+                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                    <Add fontSize="large" color="primary" />
                     <div>
-                        <h4>Banner Overview</h4>
-                        <p>Total Banners: {loadedData.length} • Active Banners: {loadedData.filter(b => b.status === 'active').length}</p>
+                        <Typography variant="subtitle1">Banner Overview</Typography>
+                        <Typography variant="body2">
+                            Total: {filtered.length} • Active:{' '}
+                            {filtered.filter((b) => b.status === 'active').length}
+                        </Typography>
                     </div>
-                </div>
+                </Box>
 
-                <div className="search-container">
-                    <input
-                        type="text"
+                {/* Search */}
+                <Box position="relative" mb={2}>
+                    <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Search by title or ID..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search banners by title or ID..."
-                        className="search-input"
+                        InputProps={{
+                            startAdornment: <Search sx={{ mr: 1, color: 'action.active' }} />,
+                        }}
                     />
-                    <span className="search-icon"><Search /></span>
-                </div>
+                </Box>
 
+                {/* Messages */}
                 <AnimatePresence>
                     {errorMessage && (
                         <motion.div
-                            className="alert error"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
                         >
-                            <span className="alert-icon">⚠️</span>
-                            {errorMessage}
+                            <Alert severity="error" onClose={() => setErrorMessage('')}>
+                                {errorMessage}
+                            </Alert>
                         </motion.div>
                     )}
                     {successMessage && (
                         <motion.div
-                            className="alert success"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
                         >
-                            <span className="alert-icon">✅</span>
-                            {successMessage}
+                            <Alert severity="success" onClose={() => setSuccessMessage('')}>
+                                {successMessage}
+                            </Alert>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
+                {/* Loading / Empty */}
                 {isLoading ? (
-                    <div className="loading-state">
-                        <div className="spinner"></div>
-                        <p>Loading banners...</p>
-                    </div>
-                ) : loadedData.length === 0 ? (
-                    <div className="empty-state">
-                        <div className="empty-state-icon">📜</div>
-                        <h4>No Banners Found</h4>
-                        <p>{searchQuery ? 'No banners match your search' : 'No banners available'}</p>
-                        <button
-                            className="btn primary"
-                            onClick={handleRefreshClick}
-                            disabled={isLoading}
+                    <Box textAlign="center" py={4}>
+                        <CircularProgress />
+                        <Typography mt={1}>Loading banners…</Typography>
+                    </Box>
+                ) : filtered.length === 0 ? (
+                    <Box textAlign="center" py={4}>
+                        <Typography variant="h6">No Banners Found</Typography>
+                        <Typography>
+                            {searchQuery ? 'Try a different search' : 'Add your first banner'}
+                        </Typography>
+                        <Button
+                            startIcon={<Refresh />}
+                            onClick={handleRefresh}
+                            sx={{ mt: 2 }}
                         >
-                            <span className="icon"><Refresh /></span>
                             Refresh
-                        </button>
-                    </div>
+                        </Button>
+                    </Box>
                 ) : (
                     <>
-                        <p className="results-count">
-                            Showing {Math.min(visibleItems, loadedData.length)} of {loadedData.length} banners
-                        </p>
-                        {isMobile ? renderMobileCards() : (
-                            <div className="table-responsive" ref={tableContainerRef}>
-                                <table className="banner-table">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Image</th>
-                                            <th>Title</th>
-                                            <th>Sub Title</th>
-                                            <th>Item Name</th>
-                                            <th>Gender</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {loadedData.slice(0, visibleItems).map((banner) => (
+                        <Typography variant="caption" display="block" mb={1}>
+                            Showing {Math.min(visibleItems, filtered.length)} of{' '}
+                            {filtered.length}
+                        </Typography>
+
+                        {/* ==== RESPONSIVE TABLE ==== */}
+                        <TableContainer
+                            ref={tableContainerRef}
+                            sx={{
+                                maxHeight: 'calc(100vh - 340px)',
+                                overflowX: 'auto',
+                                '& th, & td': { whiteSpace: 'nowrap' },
+                            }}
+                        >
+                            <Table stickyHeader size={isMobile ? 'small' : 'medium'}>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>ID</TableCell>
+                                        <TableCell>Image</TableCell>
+                                        <TableCell>Title</TableCell>
+                                        <TableCell>Sub Title</TableCell>
+                                        <TableCell>Item Name</TableCell>
+                                        <TableCell>Gender</TableCell>
+                                        <TableCell align="center">Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {filtered.slice(0, visibleItems).map((banner) => {
+                                        const isEditing = selectedId === banner.id;
+
+                                        return (
                                             <motion.tr
                                                 key={banner.id}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
                                                 transition={{ duration: 0.2 }}
                                             >
-                                                <td>
-                                                    <span className="banner-chip">#{banner.id}</span>
-                                                </td>
-                                                <td>
-                                                    {selectedId === banner.id ? (
-                                                        <div className="edit-image-container">
+                                                {/* ID */}
+                                                <TableCell>
+                                                    <Chip label={`#${banner.id}`} size="small" />
+                                                </TableCell>
+
+                                                {/* Image */}
+                                                <TableCell>
+                                                    {isEditing ? (
+                                                        <Box display="flex" flexDirection="column" gap={1}>
                                                             <input
                                                                 type="file"
                                                                 accept="image/*"
-                                                                onChange={handleEditFileChange}
-                                                                className="edit-file-input"
+                                                                onChange={handleFileChange}
+                                                                style={{ display: 'none' }}
                                                                 id={`file-${banner.id}`}
                                                             />
-                                                            <label htmlFor={`file-${banner.id}`} className="btn small secondary">
-                                                                <span className="icon"><CloudUpload /></span>
-                                                                Choose Image
+                                                            <label htmlFor={`file-${banner.id}`}>
+                                                                <Button
+                                                                    component="span"
+                                                                    size="small"
+                                                                    startIcon={<CloudUpload />}
+                                                                    variant="outlined"
+                                                                >
+                                                                    Choose
+                                                                </Button>
                                                             </label>
                                                             {editFile && (
-                                                                <span className="image-preview-text">
-                                                                    Selected: {editFile.name}
-                                                                </span>
+                                                                <Typography variant="caption" noWrap>
+                                                                    {editFile.name}
+                                                                </Typography>
                                                             )}
-                                                        </div>
+                                                        </Box>
                                                     ) : (
                                                         <Avatar
                                                             src={`${BASE_IMAGE_URL}${banner.image_path}`}
                                                             variant="rounded"
-                                                            className="banner-image"
-                                                            onClick={() => handleViewClick(banner)}
+                                                            sx={{
+                                                                width: 60,
+                                                                height: 60,
+                                                                cursor: 'pointer',
+                                                            }}
+                                                            onClick={() => handleView(banner)}
                                                         />
                                                     )}
-                                                </td>
-                                                <td>
-                                                    {selectedId === banner.id ? (
-                                                        <input
-                                                            type="text"
+                                                </TableCell>
+
+                                                {/* Title */}
+                                                <TableCell>
+                                                    {isEditing ? (
+                                                        <TextField
+                                                            size="small"
                                                             value={editTitle}
-                                                            onChange={handleEditTitleChange}
-                                                            placeholder="Enter banner title"
-                                                            className="form-input inline-input"
+                                                            onChange={(e) => setEditTitle(e.target.value)}
+                                                            placeholder="Title"
+                                                            fullWidth
                                                         />
                                                     ) : (
-                                                        banner.title || 'Untitled Banner'
+                                                        banner.title || '—'
                                                     )}
-                                                </td>
-                                                <td>
-                                                    {selectedId === banner.id ? (
-                                                        <input
-                                                            type="text"
+                                                </TableCell>
+
+                                                {/* Sub Title */}
+                                                <TableCell>
+                                                    {isEditing ? (
+                                                        <TextField
+                                                            size="small"
                                                             value={editSubTitle}
-                                                            onChange={handleSubTitleChange}
-                                                            placeholder="Enter banner sub title"
-                                                            className="form-input inline-input"
+                                                            onChange={(e) => setEditSubTitle(e.target.value)}
+                                                            placeholder="Sub title"
+                                                            fullWidth
                                                         />
                                                     ) : (
-                                                        banner.subtitle || 'N/A'
+                                                        banner.subtitle || '—'
                                                     )}
-                                                </td>
-                                                <td>
-                                                    {selectedId === banner.id ? (
-                                                        <input
-                                                            type="text"
-                                                            value={editItemName}
-                                                            onChange={handleItemName}
-                                                            placeholder="Enter item name"
-                                                            className="form-input inline-input"
-                                                        />
+                                                </TableCell>
+
+                                                {/* Item Name */}
+                                                <TableCell>
+                                                    {isEditing ? (
+                                                        <FormControl fullWidth size="small">
+                                                            <Select
+                                                                value={editItemName}
+                                                                onChange={(e) => setEditItemName(e.target.value)}
+                                                                displayEmpty
+                                                            >
+                                                                <MenuItem value="" disabled>
+                                                                    Select item
+                                                                </MenuItem>
+                                                                {itemNames?.map((it) => (
+                                                                    <MenuItem
+                                                                        key={it.ITEMCTRID}
+                                                                        value={it.ITEMCTRNAME}
+                                                                    >
+                                                                        {it.ITEMCTRNAME}
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Select>
+                                                        </FormControl>
                                                     ) : (
-                                                        banner.itemname || 'N/A'
+                                                        banner.itemname || '—'
                                                     )}
-                                                </td>
-                                                <td>
-                                                    {selectedId === banner.id ? (
-                                                        <input
-                                                            type="text"
-                                                            value={editGender}
-                                                            onChange={handleGender}
-                                                            placeholder="Enter gender"
-                                                            className="form-input inline-input"
-                                                        />
+                                                </TableCell>
+
+                                                {/* Gender */}
+                                                <TableCell>
+                                                    {isEditing ? (
+                                                        <FormControl fullWidth size="small">
+                                                            <Select
+                                                                value={editGender}
+                                                                onChange={(e) => setEditGender(e.target.value)}
+                                                                displayEmpty
+                                                            >
+                                                                <MenuItem value="" disabled>
+                                                                    Select gender
+                                                                </MenuItem>
+                                                                {genderOptions.map((g) => (
+                                                                    <MenuItem key={g} value={g}>
+                                                                        {g}
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Select>
+                                                        </FormControl>
                                                     ) : (
-                                                        banner.gender || 'N/A'
+                                                        banner.gender || '—'
                                                     )}
-                                                </td>
-                                                <td className="action-buttons">
-                                                    {selectedId === banner.id ? (
+                                                </TableCell>
+
+                                                {/* Actions */}
+                                                <TableCell align="center">
+                                                    {isEditing ? (
                                                         <>
-                                                            <button
-                                                                className="btn small primary"
-                                                                onClick={() => handleSaveEdit(banner.id)}
-                                                                disabled={isUpdating}
-                                                            >
-                                                                {isUpdating ? (
-                                                                    <>
-                                                                        <span className="spinner-icon"></span>
-                                                                        Save
-                                                                    </>
-                                                                ) : (
-                                                                    'Save'
-                                                                )}
-                                                            </button>
-                                                            <button
-                                                                className="btn small danger"
-                                                                onClick={handleCancelEdit}
-                                                                disabled={isUpdating}
-                                                            >
-                                                                Cancel
-                                                            </button>
+                                                            <Tooltip title="Save">
+                                                                <IconButton
+                                                                    color="primary"
+                                                                    onClick={() => handleSave(banner.id)}
+                                                                    disabled={isUpdating}
+                                                                >
+                                                                    {isUpdating ? (
+                                                                        <CircularProgress size={20} />
+                                                                    ) : (
+                                                                        <Edit />
+                                                                    )}
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <Tooltip title="Cancel">
+                                                                <IconButton
+                                                                    onClick={resetEdit}
+                                                                    disabled={isUpdating}
+                                                                >
+                                                                    <Delete />
+                                                                </IconButton>
+                                                            </Tooltip>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <button
-                                                                className="btn small info"
-                                                                onClick={() => handleViewClick(banner)}
-                                                                title="View Details"
-                                                            >
-                                                                <span className="icon"><Visibility /></span>
-                                                            </button>
-                                                            <button
-                                                                className="btn small warning"
-                                                                onClick={() => handleEditClick(banner)}
-                                                                disabled={isDeleting}
-                                                                title="Edit Banner"
-                                                            >
-                                                                <span className="icon"><Edit /></span>
-                                                            </button>
-                                                            <button
-                                                                className="btn small danger"
-                                                                onClick={() => handleDelete(banner.id)}
-                                                                disabled={isDeleting}
-                                                                title="Delete Banner"
-                                                            >
-                                                                <span className="icon"><Delete /></span>
-                                                            </button>
+                                                            <Tooltip title="View">
+                                                                <IconButton onClick={() => handleView(banner)}>
+                                                                    <Visibility />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <Tooltip title="Edit">
+                                                                <IconButton
+                                                                    onClick={() => handleEdit(banner)}
+                                                                    disabled={isDeleting}
+                                                                >
+                                                                    <Edit />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <Tooltip title="Delete">
+                                                                <IconButton
+                                                                    color="error"
+                                                                    onClick={() => handleDelete(banner.id)}
+                                                                    disabled={isDeleting}
+                                                                >
+                                                                    <Delete />
+                                                                </IconButton>
+                                                            </Tooltip>
                                                         </>
                                                     )}
-                                                </td>
+                                                </TableCell>
                                             </motion.tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+
+                        {/* Load-more */}
                         {isLoadingMore && (
-                            <div className="loading-more">
-                                <div className="spinner small"></div>
-                                <span>Loading more...</span>
-                            </div>
+                            <Box display="flex" justifyContent="center" py={2}>
+                                <CircularProgress size={24} />
+                                <Typography ml={1}>Loading more…</Typography>
+                            </Box>
                         )}
                     </>
                 )}
 
+                {/* ==== VIEW MODAL ==== */}
                 <AnimatePresence>
-                    {showViewModal && (
+                    {showViewModal && selectedBanner && (
                         <motion.div
                             className="modal-overlay"
                             initial={{ opacity: 0 }}
@@ -568,19 +611,68 @@ const ManageBanner = () => {
                             onClick={() => setShowViewModal(false)}
                         >
                             <motion.div
-                                className="modal-content modal-view-content"
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.9, opacity: 0 }}
-                                onClick={e => e.stopPropagation()}
+                                className="modal-content"
+                                initial={{ scale: 0.9 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0.9 }}
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    maxWidth: 600,
+                                    width: '90%',
+                                    background: themeMode === 'dark' ? '#333' : '#fff',
+                                    padding: 24,
+                                    borderRadius: 8,
+                                }}
                             >
-                                {renderViewModalContent()}
+                                <Typography variant="h6" mb={2}>
+                                    Banner Details – {selectedBanner.title || 'Untitled'}
+                                </Typography>
+                                <Box textAlign="center" mb={2}>
+                                    <img
+                                        src={`${BASE_IMAGE_URL}${selectedBanner.image_path}`}
+                                        alt={selectedBanner.title}
+                                        style={{
+                                            maxHeight: 300,
+                                            width: '100%',
+                                            objectFit: 'contain',
+                                            borderRadius: 4,
+                                        }}
+                                    />
+                                </Box>
+                                <Typography variant="body2">
+                                    <strong>ID:</strong> #{selectedBanner.id}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <strong>Title:</strong> {selectedBanner.title || '—'}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <strong>Sub Title:</strong> {selectedBanner.subtitle || '—'}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <strong>Item Name:</strong> {selectedBanner.itemname || '—'}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <strong>Gender:</strong> {selectedBanner.gender || '—'}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <strong>Created:</strong>{' '}
+                                    {new Date(selectedBanner.created_at).toLocaleString()}
+                                </Typography>
+                                <Box mt={3} textAlign="right">
+                                    <Button
+                                        variant="contained"
+                                        onClick={() => setShowViewModal(false)}
+                                    >
+                                        Close
+                                    </Button>
+                                </Box>
                             </motion.div>
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </div>
-        </div>
+            </Paper>
+        </Box>
+        </>
     );
 };
 

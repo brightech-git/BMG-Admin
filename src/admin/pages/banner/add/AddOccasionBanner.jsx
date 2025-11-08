@@ -12,11 +12,15 @@ import {
     CardContent,
     Alert,
     CircularProgress,
-    MenuItem
+    MenuItem,
+    Select
 } from '@mui/material';
 import { CloudUpload as UploadIcon, CheckCircle as CheckIcon, Error as ErrorIcon, Add as AddIcon } from '@mui/icons-material';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './AddOccasionBanner.css';
+import { useEcomMarketingAttributes } from '../../../hooks/market-options/useEcomMarketingAttributes';
+import BackdropProgress from '../../../components/backDrop/BackdropProgress';
+
 
 const AddOccasionBanner = () => {
     const { themeMode } = useContext(MyContext);
@@ -30,16 +34,26 @@ const AddOccasionBanner = () => {
     const { mutate, isPending } = useUploadOccasionBannerMutation();
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
 
-    const occasionOptions = ['WEDDING', 'PARTY', 'CASUAL', 'FESTIVAL', 'DAILY_WEAR'];
-    const genderOptions = ['MALE', 'FEMALE', 'UNISEX'];
+    const [openBackdrop, setOpenBackdrop] = useState(false);
+    const [progress, setProgress] = useState(0);
 
+
+    const { attributes } = useEcomMarketingAttributes();
+
+    const genderAttribute = attributes.find(attr => attr.description === "Gender");
+
+    // Parse the valuesJson to an array
+    const genderOptions = genderAttribute ? JSON.parse(genderAttribute.valuesJson) : [];
+    const occasionsAttribute = attributes.find(attr => attr.description === "Occasion");
+    const occasionsFromAttributes = occasionsAttribute ? JSON.parse(occasionsAttribute.valuesJson) : [];
+    const occasionOptions = occasionsFromAttributes;
     const handleFileSelect = (file, error) => {
         setImage(file);
         setError(error);
         setSuccess(null);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
         setSuccess(null);
@@ -64,29 +78,35 @@ const AddOccasionBanner = () => {
             return;
         }
 
-        const payload = {
-            image,
-            title,
-            subtitle: subtitle || null,
-            occasion,
-            gender
-        };
+        const payload = { image, title, subtitle: subtitle || null, occasion, gender };
+
+        setOpenBackdrop(true);
+        setProgress(10);
 
         mutate(payload, {
             onSuccess: () => {
+                setProgress(100);
                 setSuccess('Occasion Banner uploaded successfully!');
-                setImage(null);
+                setImage(null); // clear the uploaded image
                 setTitle('');
                 setSubtitle('');
                 setOccasion('');
                 setGender('');
-                setTimeout(() => setSuccess(null), 3000);
+
+                setTimeout(() => {
+                    setOpenBackdrop(false);
+                    setProgress(0);
+                    setSuccess(null);
+                }, 1500);
             },
             onError: (err) => {
+                setOpenBackdrop(false);
+                setProgress(0);
                 setError(err.message || 'Failed to upload occasion banner.');
             }
         });
     };
+
 
     return (
         <div className={`add-occasion-banner-container ${themeMode}`}>
@@ -126,44 +146,67 @@ const AddOccasionBanner = () => {
                                 fullWidth
                                 className="form-input"
                             />
-
                             <Typography className="form-label" mt={2}>
                                 Occasion <span className="required">*</span>
                             </Typography>
-                            <TextField
-                                select
+                            <Select
                                 value={occasion}
                                 onChange={(e) => setOccasion(e.target.value)}
-                                variant="outlined"
+                                displayEmpty
                                 fullWidth
+                                variant="outlined"
                                 className="form-input"
+                                renderValue={(selected) => {
+                                    if (!selected) {
+                                        return <span style={{ color: '#999' }}>Select an occasion</span>;
+                                    }
+                                    return selected
+                                        .replace(/_/g, ' ')
+                                        .toLowerCase()
+                                        .replace(/\b\w/g, (c) => c.toUpperCase());
+                                }}
                             >
-                                <MenuItem value="">Select an occasion</MenuItem>
+                                <MenuItem value="" disabled>
+                                    Select an occasion
+                                </MenuItem>
                                 {occasionOptions.map((opt) => (
                                     <MenuItem key={opt} value={opt}>
-                                        {opt.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                                        {opt
+                                            .replace(/_/g, ' ')
+                                            .toLowerCase()
+                                            .replace(/\b\w/g, (c) => c.toUpperCase())}
                                     </MenuItem>
                                 ))}
-                            </TextField>
+                            </Select>
 
                             <Typography className="form-label" mt={2}>
                                 Gender <span className="required">*</span>
                             </Typography>
-                            <TextField
-                                select
+                            <Select
                                 value={gender}
                                 onChange={(e) => setGender(e.target.value)}
-                                variant="outlined"
+                                displayEmpty
                                 fullWidth
+                                variant="outlined"
                                 className="form-input"
+                                renderValue={(selected) => {
+                                    if (!selected) {
+                                        return <span style={{ color: '#999' }}>Select gender</span>;
+                                    }
+                                    return selected.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+                                }}
                             >
-                                <MenuItem value="">Select gender</MenuItem>
+                                <MenuItem value="" disabled>
+                                    Select gender
+                                </MenuItem>
                                 {genderOptions.map((opt) => (
                                     <MenuItem key={opt} value={opt}>
                                         {opt.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
                                     </MenuItem>
                                 ))}
-                            </TextField>
+                            </Select>
+
+
                         </Box>
                     </Box>
 

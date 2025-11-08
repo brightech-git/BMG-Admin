@@ -19,6 +19,8 @@ import {
 } from '../../../hooks/banners/categoryBanner/useCategoryBanner';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './ManageCategoryBanner.css';
+import { useItemNames } from '../../../hooks/itemName/useItemNames';
+import BackdropProgress from '../../../components/backDrop/BackdropProgress';
 
 const BASE_IMAGE_URL = 'https://app.bmgjewellers.com';
 
@@ -42,23 +44,31 @@ const ManageCategoryBanner = () => {
     const tableContainerRef = useRef(null);
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
     const isSmallScreen = useMediaQuery({ query: '(max-width: 480px)' });
+    const [itemName , setItemName] =useState();
 
     const { data: bannersData, isLoading, error, refetch } = useBannersQuery();
+    const [backdropOpen ,setBackdropOpen]=useState(false);
+    const [progress,setProgress]=useState(0);
+
+    console.log(bannersData,'datainhandpick');
     const { mutate: updateCategoryBanner, isLoading: isUpdating } = useCategoryUpdateMutation();
     const { mutate: deleteCategoryBanner, isLoading: isDeleting } = useDeleteCategoryBannerMutation();
 
     const banners = useMemo(() => bannersData?.data || [], [bannersData?.data]);
 
-    const itemCategories = [
-        'GIFT_IDEAS',
-        'EARRINGS',
-        'NECKLACES_AND_SETS',
-        'BANGLES_AND_BRACELETS',
-        'ANKLES_AND_TOE_RINGS',
-        'PENDANTS_AND_CHAINS',
-        'MAANG_TIKKA_AND_HAIR_ACCESS'
-    ];
+    console.log('banners', loadedData)
 
+       const { items: allItems, loading: loadingItems } = useItemNames(null);
+
+
+    
+        // Fetch subitems based on selected item ID
+    console.log(itemName ,'itemName')
+    const { items: subItem, loading: loadingSub } = useItemNames(itemName || null);
+        const subItems = subItem?.[0]?.subitems || [];
+
+    const itemCategories = allItems;
+    
     useEffect(() => {
         if (banners.length > 0) {
             const filtered = banners.filter(
@@ -96,6 +106,12 @@ const ManageCategoryBanner = () => {
             return () => tableContainer.removeEventListener('scroll', handleTableScroll);
         }
     }, [visibleItems, loadedData.length, isLoadingMore]);
+
+    const handleEditItemNameChange = (id) =>{
+        
+        setItemName(id);
+        console.log(id, 'id');
+    }
 
     const handleRefreshClick = () => {
         refetch();
@@ -142,6 +158,7 @@ const ManageCategoryBanner = () => {
 
     const handleItemNameChange = (e) => {
         setEditItemName(e.target.value);
+        console.log(e.target.value, 'value');
         setErrorMessage('');
     };
 
@@ -160,6 +177,7 @@ const ManageCategoryBanner = () => {
             setErrorMessage('Please select a valid item category.');
             return;
         }
+        setBackdropOpen(true);
 
         const payload = {
             id,
@@ -168,13 +186,16 @@ const ManageCategoryBanner = () => {
             itemName: editItemName,
             subItemName: editSubItemName || null,
         };
+        console.log(payload, 'payload');
 
         if (editFile instanceof File) {
             payload.image = editFile;
         }
-
+setProgress(20)
         updateCategoryBanner(payload, {
+        
             onSuccess: () => {
+
                 setSuccessMessage('Category Banner updated successfully!');
                 setSelectedId(null);
                 setEditFile(null);
@@ -182,8 +203,14 @@ const ManageCategoryBanner = () => {
                 setEditSubTitle('');
                 setEditItemName('');
                 setEditSubItemName('');
-                setTimeout(() => setSuccessMessage(''), 3000);
+                setProgress(100);
+                setTimeout(() => {setSuccessMessage('');
+                    setBackdropOpen(false);
+                    setProgress(0);
+                },
+                     3000);
                 refetch();
+                
             },
             onError: (error) => {
                 setErrorMessage(error.response?.data?.error || 'Failed to update banner.');
@@ -447,41 +474,62 @@ const ManageCategoryBanner = () => {
                                                     {selectedId === banner.id ? (
                                                         <TextField
                                                             select
-                                                            value={editItemName}
-                                                            onChange={handleItemNameChange}
-                                                            size="small"
-                                                            fullWidth
-                                                            className="form-input"
+                                                            value={editItemName} // this should be ID
+                                                            onChange={(e) => {
+                                                                // const selectedName = e.target.value;
+                                                                const { id, name } = e.target.value; // ✅ get both from the object
+
+                                                                handleItemNameChange({ target: { value: name } }); // for the banner API
+                                                                handleEditItemNameChange(id); // for subitems
+                                                                handleSubItemNameChange({ target: { value: '' } });
+                                                            }}
+
                                                         >
                                                             <MenuItem value="">Select an item category</MenuItem>
                                                             {itemCategories.map((category) => (
-                                                                <MenuItem key={category} value={category}>
-                                                                    {category.replace(/_/g, ' ')}
+                                                                <MenuItem
+                                                                    key={category.ITEMCTRID}
+                                                                    value={{ id: category.ITEMCTRID, name: category.ITEMCTRNAME }} // ✅ store both
+                                                                    data-id={category.ITEMCTRID} // ✅ attach the ID as a data attribute
+                                                                >
+                                                                    {category.ITEMCTRNAME} 
                                                                 </MenuItem>
                                                             ))}
                                                         </TextField>
                                                     ) : (
                                                         <Typography variant="body2" className="table-text">
-                                                            {banner.itemName ? banner.itemName.replace(/_/g, ' ') : 'No Category'}
+                                                            {banner.itemName || "No Category"}
                                                         </Typography>
                                                     )}
                                                 </TableCell>
+
                                                 <TableCell>
                                                     {selectedId === banner.id ? (
                                                         <TextField
-                                                            value={editSubItemName}
+                                                            select
+                                                            value={editSubItemName} // this should store subitem ID
                                                             onChange={handleSubItemNameChange}
-                                                            placeholder="Enter sub item name (optional)"
                                                             size="small"
                                                             fullWidth
                                                             className="form-input"
-                                                        />
+                                                            disabled={!editItemName} // disable until an item category is selected
+                                                        >
+                                                            <MenuItem value="">Select a sub item name</MenuItem>
+                                                            {subItems.map((sub) => (
+                                                                <MenuItem key={sub.SUBITEMID} value={sub.SUBITEMNAME}>
+                                                                    {sub.SUBITEMNAME}
+                                                                </MenuItem>
+                                                            ))}
+                                                        </TextField>
                                                     ) : (
                                                         <Typography variant="body2" className="table-text">
                                                             {banner.subItemName || 'No Sub Item'}
                                                         </Typography>
                                                     )}
                                                 </TableCell>
+
+ 
+                                                
                                                 <TableCell align="center">
                                                     {selectedId === banner.id ? (
                                                         <Stack direction="row" spacing={1} justifyContent="center">
@@ -554,7 +602,9 @@ const ManageCategoryBanner = () => {
                             )}
                         </>
                     )}
-
+                    {/* <Box >
+                        <BackdropProgress open={backdropOpen} title="Processing..." body="" progress={progress} />
+                    </Box> */}
                     <Dialog
                         open={previewModal}
                         onClose={() => setPreviewModal(false)}

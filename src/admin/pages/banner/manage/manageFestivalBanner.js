@@ -15,6 +15,8 @@ import { useUpdateFEstivalBannerMutation, useDeleteFestivalBannerMutation } from
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './ManageFestivalBanner.css';
 
+import { useEcomMarketingAttributes } from '../../../hooks/market-options/useEcomMarketingAttributes';
+
 const BASE_IMAGE_URL = 'https://app.bmgjewellers.com';
 
 const ManageFestivalBanner = () => {
@@ -38,21 +40,20 @@ const ManageFestivalBanner = () => {
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
     const isSmallScreen = useMediaQuery({ query: '(max-width: 480px)' });
 
+    const { attributes } = useEcomMarketingAttributes();
+
+    const festivalAttributes = attributes.find(attr=>attr.description == "Festival");
+    const itemNameAttributes = ["FESTIVAL"];
+
+    const itemNameOptions = festivalAttributes ? JSON.parse(festivalAttributes.valuesJson) : [];
+
     const { data: bannersData, isLoading, error, refetch } = useBannersQuery();
     const { mutate: updateFestivalBanner, isLoading: isUpdating } = useUpdateFEstivalBannerMutation();
     const { mutate: deleteFestivalBanner, isLoading: isDeleting } = useDeleteFestivalBannerMutation();
 
     const banners = useMemo(() => bannersData?.data || [], [bannersData?.data]);
 
-    const festivalCategories = [
-        'DIWALI',
-        'CHRISTMAS',
-        'EID',
-        'NAVRATRI',
-        'HOLI',
-        'RAKSHA_BANDHAN',
-        'NEW_YEAR'
-    ];
+    const festivalCategories = itemNameOptions;
 
     useEffect(() => {
         if (banners.length > 0) {
@@ -449,7 +450,7 @@ const ManageFestivalBanner = () => {
                                                             className="form-input"
                                                         >
                                                             <MenuItem value="">Select a festival category</MenuItem>
-                                                            {festivalCategories.map((category) => (
+                                                            {itemNameAttributes.map((category) => (
                                                                 <MenuItem key={category} value={category}>
                                                                     {category.replace(/_/g, ' ')}
                                                                 </MenuItem>
@@ -464,13 +465,20 @@ const ManageFestivalBanner = () => {
                                                 <TableCell>
                                                     {selectedId === banner.id ? (
                                                         <TextField
+                                                            select
                                                             value={editSubItemName}
                                                             onChange={handleSubItemNameChange}
-                                                            placeholder="Enter sub item name (optional)"
                                                             size="small"
                                                             fullWidth
                                                             className="form-input"
-                                                        />
+                                                        >
+                                                        <MenuItem value="">Select a sub item category</MenuItem>
+                                                            {festivalCategories.map((category) => (
+                                                                <MenuItem key={category} value={category}>
+                                                                    {category.replace(/_/g, ' ')}
+                                                                </MenuItem>
+                                                            ))}
+                                                            </TextField>
                                                     ) : (
                                                         <Typography variant="body2" className="table-text">
                                                             {banner.sub_item_name || 'No Sub Item'}

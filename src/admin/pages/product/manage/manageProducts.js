@@ -7,6 +7,8 @@ import { MyContext } from '../../../context/themeContext/themeContext';
 import FilterSection from '../../../components/product/FilterSection';
 import './ManageProduct.css';
 
+
+
 // Helper to remove empty filters
 const getActiveFilters = (filters) =>
     Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== '' && v !== undefined && v !== null));

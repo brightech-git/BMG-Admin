@@ -1,4 +1,3 @@
-
 import { useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaQuery } from 'react-responsive';
@@ -13,11 +12,18 @@ import {
     CardContent,
     Alert,
     CircularProgress,
-    MenuItem
+    MenuItem,
+    Select,
 } from '@mui/material';
-import { CloudUpload as UploadIcon, CheckCircle as CheckIcon, Error as ErrorIcon, Add as AddIcon } from '@mui/icons-material';
+import {
+    CheckCircle as CheckIcon,
+    Error as ErrorIcon,
+    Add as AddIcon,
+} from '@mui/icons-material';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './AddCategoryBanner.css';
+import { useItemNames } from '../../../hooks/itemName/useItemNames';
+import BackdropProgress from '../../../components/backDrop/BackdropProgress';
 
 const AddCategoryBanner = () => {
     const { themeMode } = useContext(MyContext);
@@ -30,16 +36,15 @@ const AddCategoryBanner = () => {
     const [success, setSuccess] = useState(null);
     const { mutate, isPending } = useCategoryUploadMutation();
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
+    const [openBackdrop, setOpenBackdrop] = useState(false);
+    const [progress, setProgress] = useState(0);
 
-    const itemNameOptions = [
-        'GIFT_IDEAS',
-        'EARRINGS',
-        'NECKLACES_AND_SETS',
-        'BANGLES_AND_BRACELETS',
-        'ANKLETS_AND_TOE_RINGS',
-        'PENDANTS_AND_CHAINS',
-        'MAANG_TIKKA_AND_HAIR_ACCESSORIES'
-    ];
+    // Fetch all items
+    const { items: allItems, loading: loadingItems } = useItemNames(null);
+
+    // Fetch subitems based on selected item ID
+    const { items: subItem, loading: loadingSub } = useItemNames(itemName || null);
+    const subItems = subItem?.[0]?.subitems || [];
 
     const handleFileSelect = (file, error) => {
         setImage(file);
@@ -48,46 +53,43 @@ const AddCategoryBanner = () => {
     };
 
     const handleSubmit = (e) => {
+        setOpenBackdrop(true);
         e.preventDefault();
         setError(null);
         setSuccess(null);
 
-        if (!image) {
-            setError('Please select a valid image file (JPEG, PNG, WEBP, max 5MB).');
-            return;
-        }
-
-        if (!title.trim()) {
-            setError('Please enter a title for the banner.');
-            return;
-        }
-
-        if (!itemName) {
-            setError('Please select an item category.');
-            return;
-        }
+        if (!image) return setError('Please select a valid image file (JPEG, PNG, WEBP, max 5MB).');
+        if (!title.trim()) return setError('Please enter a title for the banner.');
+        if (!itemName) return setError('Please select an item category.');
 
         const payload = {
             image,
             title,
             subtitle: subtitle || null,
             item_name: itemName,
-            sub_item_name: subItemName || null
+            sub_item_name: subItemName || null,
         };
-
+setProgress(10);
         mutate(payload, {
             onSuccess: () => {
+                setProgress(100);
                 setSuccess('Category Banner uploaded successfully!');
                 setImage(null);
                 setTitle('');
                 setSubtitle('');
                 setItemName('');
                 setSubItemName('');
-                setTimeout(() => setSuccess(null), 3000);
+
+
+                setTimeout(() => {
+                    setOpenBackdrop(false);
+                    setProgress(0);
+                    setSuccess(null);
+                }, 1500);
             },
             onError: (err) => {
                 setError(err.message || 'Failed to upload category banner.');
-            }
+            },
         });
     };
 
@@ -106,6 +108,7 @@ const AddCategoryBanner = () => {
 
                     <Box mb={3}>
                         <Box className="form-section">
+                            {/* Banner Title */}
                             <Typography className="form-label">
                                 Banner Title <span className="required">*</span>
                             </Typography>
@@ -118,6 +121,7 @@ const AddCategoryBanner = () => {
                                 className="form-input"
                             />
 
+                            {/* Banner Subtitle */}
                             <Typography className="form-label" mt={2}>
                                 Banner Subtitle (optional)
                             </Typography>
@@ -130,39 +134,52 @@ const AddCategoryBanner = () => {
                                 className="form-input"
                             />
 
+                            {/* Item Category */}
                             <Typography className="form-label" mt={2}>
                                 Item Category <span className="required">*</span>
                             </Typography>
-                            <TextField
-                                select
+                            <Select
                                 value={itemName}
-                                onChange={(e) => setItemName(e.target.value)}
+                                onChange={(e) => {
+                                    setItemName(e.target.value);
+                                    setSubItemName('');
+                                }}
                                 variant="outlined"
                                 fullWidth
                                 className="form-input"
+                                disabled={loadingItems}
                             >
                                 <MenuItem value="">Select an item category</MenuItem>
-                                {itemNameOptions.map((opt) => (
-                                    <MenuItem key={opt} value={opt}>
-                                        {opt.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                                {allItems?.map((opt) => (
+                                    <MenuItem key={opt.ITEMCTRID} value={opt.ITEMCTRNAME}>
+                                        {opt.ITEMCTRNAME}
                                     </MenuItem>
                                 ))}
-                            </TextField>
+                            </Select>
 
+                            {/* Sub Item */}
                             <Typography className="form-label" mt={2}>
                                 Sub Item Name (optional)
                             </Typography>
-                            <TextField
-                                placeholder="Enter sub item name"
+                            <Select
                                 value={subItemName}
                                 onChange={(e) => setSubItemName(e.target.value)}
                                 variant="outlined"
                                 fullWidth
                                 className="form-input"
-                            />
+                                disabled={!itemName || loadingSub}
+                            >
+                                <MenuItem value="">Select a sub item name</MenuItem>
+                                {subItems.map((sub) => (
+                                    <MenuItem key={sub.SUBITEMID} value={sub.SUBITEMNAME}>
+                                        {sub.SUBITEMNAME}
+                                    </MenuItem>
+                                ))}
+                            </Select>
                         </Box>
                     </Box>
 
+                    {/* File Upload */}
                     <Box mb={3}>
                         <Box className="form-section">
                             <Typography className="form-label">
@@ -171,14 +188,11 @@ const AddCategoryBanner = () => {
                             <Typography className="form-hint">
                                 Select a banner image (JPG, PNG, WEBP - Max 5MB)
                             </Typography>
-                            <FileUploader
-                                onFileSelect={handleFileSelect}
-                                loading={isPending}
-                                height={300}
-                            />
+                            <FileUploader onFileSelect={handleFileSelect} loading={isPending} height={300} />
                         </Box>
                     </Box>
 
+                    {/* Alerts */}
                     <AnimatePresence>
                         {error && (
                             <motion.div
@@ -206,6 +220,7 @@ const AddCategoryBanner = () => {
                         )}
                     </AnimatePresence>
 
+                    {/* Submit Button */}
                     <Box className="action-buttons">
                         <Button
                             onClick={handleSubmit}

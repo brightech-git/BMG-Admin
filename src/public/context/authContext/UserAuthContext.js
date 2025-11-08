@@ -18,6 +18,7 @@ export const UserAuthProvider = ({ children }) => {
     
 
     const login = async (loginData) => {
+    
         const response = await loginUser(loginData);
 
         // Store user info and token
@@ -42,6 +43,7 @@ export const UserAuthProvider = ({ children }) => {
 
         // Only save if it's a successful signup
         localStorage.setItem("user", JSON.stringify(response));
+        
         localStorage.setItem("user_token", response.token);
         localStorage.setItem("userMobileNumber", response.contact);
         setUser(response);

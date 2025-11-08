@@ -5,8 +5,8 @@ export const useUploadOfferBannerMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ image, title, subtitle, itemname, sub_item_name }) =>
-            offerBannersService.createOfferBanner(image, title, subtitle, itemname, sub_item_name),
+        mutationFn: ({ image, title, subtitle, item_name, sub_item_name }) =>
+            offerBannersService.createOfferBanner(image, title, subtitle, item_name, sub_item_name),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['offerbanners'] }); // Refetch banners list
         },
