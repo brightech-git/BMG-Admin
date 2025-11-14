@@ -1,250 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useUpdateOrderStatus, useOrdersByStatus } from '../../hooks/order/useAllOrder';
-import { orderService } from '../../service/orderService';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import BackdropProgress from '../../components/backDrop/BackdropProgress';
 import Snackbar from '../../components/snackBar/Snackbar';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx-js-style';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    IconButton,
-    Tooltip,
-    TextField,
-    InputAdornment,
-    MenuItem,
-    Select,
-    FormControl,
-    InputLabel,
-    Box,
-    Typography,
-    CircularProgress,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Divider,
-    Chip,
-    Grid,
-    Alert,
-    Radio,
-    RadioGroup,
-    FormControlLabel,
-    Collapse,
-    Card,
-    CardContent,
-    CardHeader,
-    FormLabel,
-} from '@mui/material';
-import {
-    Print as PrintIcon,
-    PictureAsPdf as PdfIcon,
-    GridOn as ExcelIcon,
-    Search as SearchIcon,
-    Refresh as RefreshIcon,
-    Close as CloseIcon,
-    KeyboardArrowLeft,
-    KeyboardArrowRight,
-    FirstPage,
-    LastPage,
-    Edit as EditIcon,
-    Visibility as ViewIcon,
-    ExpandMore,
-    Receipt,
-} from '@mui/icons-material';
-import { styled } from '@mui/system';
-import './OrderManagement.css';
-import { useLocation } from 'react-router-dom';
+import EditStatusModalTailwind from '../../components/modal/EditStatusModalTailwind';
+import AdvancedTableModal from '../../components/modal/AdvancedTableModal';
+import AdvancedTable from '../../components/table/ResponsiveTable';
+import StatusChip from '../../components/statusChip/StatusChip';
 
-// ========== ENHANCED STYLED COMPONENTS ==========
-const StyledTableContainer = styled(TableContainer)(() => ({
-    borderRadius: 'var(--border-radius-lg)',
-    overflow: 'visible',
-    background: 'var(--card-background-color)',
-    boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
-    border: '1px solid var(--border-color)',
-    maxHeight: 'none',
-    '& .MuiTableHead-root': {
-        background: 'var(--background-color)',
-        '& .MuiTableCell-head': {
-            color: 'var(--primary-text-color)',
-            fontFamily: 'var(--font-primary)',
-            fontWeight: 600,
-            fontSize: 'var(--font-size-sm)',
-            textTransform: 'none',
-            letterSpacing: '0.5px',
-            borderBottom: 'none',
-            padding: 'var(--spacing-sm) var(--spacing-md)',
-        },
-    },
-    '& .MuiTableRow-root': {
-        transition: 'all var(--transition-speed) ease',
-        '&:hover': {
-            backgroundColor: 'var(--active-bg)',
-        },
-    },
-    '& .MuiTableCell-root': {
-        borderBottom: '1px solid var(--border-color)',
-        padding: 'var(--spacing-sm) var(--spacing-md)',
-        fontSize: 'var(--font-size-sm)',
-        fontFamily: 'var(--font-primary)',
-    },
-}));
-
-const ModernButton = styled(Button)(({ variant: buttonVariant, color }) => ({
-    borderRadius: 'var(--border-radius-md)',
-    textTransform: 'none',
-    fontFamily: 'var(--font-secondary)',
-    fontWeight: 600,
-    fontSize: 'var(--font-size-sm)',
-    padding: 'var(--spacing-sm) var(--spacing-md)',
-    transition: `all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1)`,
-    boxShadow: buttonVariant === 'contained' ? '0 2px 8px rgba(0, 0, 0, 0.08)' : 'none',
-    '&:hover': {
-        transform: 'translateY(-1px)',
-        boxShadow: buttonVariant === 'contained' ? '0 4px 12px rgba(0, 0, 0, 0.12)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-    },
-    ...(color === 'primary' && {
-        background: 'var(--primary-color)',
-        color: 'var(--text-dark)',
-        '&:hover': {
-            background: 'var(--active-border)',
-        },
-    }),
-    ...(color === 'secondary' && {
-        background: 'var(--secondary-color)',
-        color: 'var(--text-dark)',
-        '&:hover': {
-            background: 'var(--active-bg)',
-        },
-    }),
-    ...(color === 'dark' && {
-        background: 'var(--dark-bg)',
-        color: 'var(--text-dark)',
-        '&:hover': {
-            background: 'var(--active-border)',
-        },
-    }),
-}));
-
-const StatusChip = styled(Chip)(({ status }) => {
-    const getStatusStyles = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'confirmed':
-            case 'delivered':
-                return {
-                    background: 'var(--success-color)',
-                    color: 'var(--text-dark)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                };
-            case 'pending':
-                return {
-                    background: 'var(--warning-color)',
-                    color: 'var(--text-dark)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                };
-            case 'processing':
-                return {
-                    background: 'var(--info-color)',
-                    color: 'var(--text-dark)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                };
-            case 'shipped':
-                return {
-                    background: 'var(--primary-color)',
-                    color: 'var(--text-dark)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                };
-            case 'cancelled':
-                return {
-                    background: 'var(--error-color)',
-                    color: 'var(--text-dark)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                };
-            default:
-                return {
-                    background: 'var(--secondary-color)',
-                    color: 'var(--text-dark)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                };
-        }
-    };
-
-    return {
-        fontFamily: 'var(--font-primary)',
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        fontSize: 'var(--font-size-xs)',
-        minWidth: '90px',
-        height: '28px',
-        borderRadius: 'var(--border-radius-md)',
-        transition: `all var(--transition-speed) ease`,
-        cursor: 'pointer',
-        ...getStatusStyles(status),
-        '&:hover': {
-            transform: 'scale(1.05)',
-        },
-    };
-});
-
-const TableHeaderCard = styled(Card)(() => ({
-    borderRadius: 'var(--border-radius-lg)',
-    background: 'var(--card-background-color)',
-    boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
-    border: '1px solid var(--border-color)',
-    marginBottom: 'var(--spacing-lg)',
-    transition: `all var(--transition-speed) ease`,
-    '&:hover': {
-        transform: 'translateY(-1px)',
-        boxShadow: '0 4px 12px rgba(30, 30, 44, 0.12)',
-    },
-}));
-
-// Helper function to get color based on order status
-const getStatusColor = (status) => {
-    switch (status) {
-        case 'PENDING':
-            return 'warning';
-        case 'PROCESSING':
-            return 'info';
-        case 'SHIPPED':
-            return 'primary';
-        case 'DELIVERED':
-            return 'success';
-        case 'CANCELLED':
-            return 'error';
-        default:
-            return 'default';
-    }
-};
-
-// Rest of the component remains the same, with updates to `sx` props
-const PlacedOrders = () => {
+const OrderTable = () => {
     const location = useLocation();
     const { key, values } = location.state || {};
-    console.log(key, values, 'key');
-    const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "info" });
-    const handleSnackbarClose = () => setSnackbar((prev) => ({ ...prev, open: false }));
-    const status = key;
+
+    console.log(key ,'key for order')
+
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: "",
+        type: "info"
+    });
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('ALL');
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [openViewModal, setOpenViewModal] = useState(false);
     const [openEditModal, setOpenEditModal] = useState(false);
-    const [openExportDialog, setOpenExportDialog] = useState(false);
-    const [exportType, setExportType] = useState('');
-    const [exportMode, setExportMode] = useState('current');
-    const [isFetchingFullList, setIsFetchingFullList] = useState(false);
     const [editForm, setEditForm] = useState({
         status: '',
         remarks: '',
@@ -252,15 +32,14 @@ const PlacedOrders = () => {
         paymentStatus: '',
     });
     const [formError, setFormError] = useState('');
-    const [expandedRows, setExpandedRows] = useState({});
     const [progress, setProgress] = useState(0);
     const [showBackdrop, setShowBackdrop] = useState(false);
 
+    const status = key;
     const { data, isLoading, isError, error, refetch } = useOrdersByStatus(status, page, rowsPerPage);
-    console.log(data, 'datastatus');
     const updateOrderStatus = useUpdateOrderStatus();
 
-  
+    const handleSnackbarClose = () => setSnackbar(prev => ({ ...prev, open: false }));
 
     const normalizeOrder = (order = {}) => ({
         id: order.order_id || order.orderId || 'N/A',
@@ -273,24 +52,22 @@ const PlacedOrders = () => {
         order_time: order.order_time || order.orderTime || order.date || 'N/A',
         payment_mode: order.paymentMode || order.payment_mode || 'payment',
         payment_status: order.paymentStatus || order.payment_status || 'N/A',
-        address: order.address
-            ? {
-                addressLine: order.address.addressLine || '',
-                alternatePhone: order.address.alternatePhone || '',
-                city: order.address.city || '',
-                state: order.address.state || '',
-                pincode: order.address.pincode || '',
-                locality: order.address.locality || '',
-                landmark: order.address.landmark || '',
-                companyName: order.address.companyName || '',
-                name: order.address.name || '',
-                phone: order.address.phone || '',
-                gstNumber: order.address.gstNumber || '',
-                id: order.address.id || '',
-                isDefault: order.address.isDefault || false,
-                customerId: order.address.customerId || '',
-            }
-            : {},
+        address: order.address ? {
+            addressLine: order.address.addressLine || '',
+            alternatePhone: order.address.alternatePhone || '',
+            city: order.address.city || '',
+            state: order.address.state || '',
+            pincode: order.address.pincode || '',
+            locality: order.address.locality || '',
+            landmark: order.address.landmark || '',
+            companyName: order.address.companyName || '',
+            name: order.address.name || '',
+            phone: order.address.phone || '',
+            gstNumber: order.address.gstNumber || '',
+            id: order.address.id || '',
+            isDefault: order.address.isDefault || false,
+            customerId: order.address.customerId || '',
+        } : {},
         orderItems: (order.orderItems || []).map((item) => ({
             product_name: item.product_name || item.productName || 'N/A',
             quantity: item.quantity || 0,
@@ -302,69 +79,9 @@ const PlacedOrders = () => {
         })),
     });
 
-    console.log(data, 'data');
-    const orders = React.useMemo(() => {
+    const orders = useMemo(() => {
         return (data?.orders || []).map(normalizeOrder);
     }, [data]);
-
-
-
-    const toggleRowExpansion = (orderId) => {
-        setExpandedRows((prev) => ({
-            ...prev,
-            [orderId]: !prev[orderId],
-        }));
-    };
-
-    const fetchFullOrderList = async () => {
-        setIsFetchingFullList(true);
-        try {
-            const totalOrders = data?.data?.totalOrders || 1000;
-            const response = await orderService.getAllOrders(0, totalOrders);
-            const normalizedOrders = (response?.data?.orders || []).map(normalizeOrder);
-            return normalizedOrders;
-        } catch (err) {
-            console.error('Error fetching full order list:', err);
-            return [];
-        } finally {
-            setIsFetchingFullList(false);
-        }
-    };
-
-    const baseUrl = 'https://app.bmgjewellers.com';
-
-    const normalizeImagePaths = (imagePath) => {
-        if (!imagePath) return [];
-
-        try {
-            if (typeof imagePath === 'string' && imagePath.trim().startsWith('[')) {
-                const paths = JSON.parse(imagePath);
-                return paths.map((p) => (p.startsWith('http') ? p : `${baseUrl}${p}`));
-            }
-            if (typeof imagePath === 'string') {
-                return [imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`];
-            }
-            if (Array.isArray(imagePath)) {
-                return imagePath.map((p) => (p.startsWith('http') ? p : `${baseUrl}${p}`));
-            }
-        } catch (e) {
-            console.error('Invalid imagePath format:', imagePath, e);
-            return [];
-        }
-
-        return [];
-    };
-
-    const getStatusImpactText = (status) => {
-        switch (status) {
-            case 'IN_PROCESSING':
-                return 'Order will be moved to packing queue and consignment will be created with DTDC';
-            case 'CANCELLED':
-                return 'Order will be cancelled and customer will be notified. Refund process will be initiated if applicable';
-            default:
-                return 'Status will be updated and relevant notifications will be sent';
-        }
-    };
 
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(parseInt(event.target.value, 10));
@@ -375,31 +92,23 @@ const PlacedOrders = () => {
         setSearchTerm(event.target.value);
     };
 
-    const filteredOrders = React.useMemo(() => {
+    const filteredOrders = useMemo(() => {
         return orders.filter((order) => {
             const searchTermLower = (searchTerm || '').toLowerCase();
             const orderId = (order.order_id || '').toLowerCase();
             const userName = (order.user_name || '').toLowerCase();
             const contact = (order.contact || '').toLowerCase();
             const email = (order.email || '').toLowerCase();
-            const status = order.status || '';
 
-            const matchesSearch =
-                orderId.includes(searchTermLower) ||
+            return orderId.includes(searchTermLower) ||
                 userName.includes(searchTermLower) ||
                 contact.includes(searchTermLower) ||
                 email.includes(searchTermLower);
-
-            const matchesStatus = statusFilter === 'ALL' || status === statusFilter;
-
-            return matchesSearch && matchesStatus;
         });
-    }, [orders, searchTerm, statusFilter]);
+    }, [orders, searchTerm]);
 
     const handleViewOrder = (order) => {
-        console.log(order, 'selectbefore');
         setSelectedOrder(order);
-        console.log('selectedorder', normalizeOrder(order));
         setOpenViewModal(true);
     };
 
@@ -422,26 +131,25 @@ const PlacedOrders = () => {
     const handleCloseEditModal = () => {
         setOpenEditModal(false);
         setSelectedOrder(null);
-        setEditForm({ status: '', remarks: '', paymentMode: ''  ,paymentStatus:''});
+        setEditForm({
+            status: '',
+            remarks: '',
+            paymentMode: '',
+            paymentStatus: ''
+        });
         setFormError('');
     };
 
-    const handleEditFormChange = (e) => {
-        const { name, value } = e.target;
-        setEditForm((prev) => ({ ...prev, [name]: value }));
-    };
-    const handleEditSubmit = async () => {
-        // 1️⃣ Validation
-        if (!editForm.status || !editForm.paymentMode) {
+    const handleEditSubmit = async (formData) => {
+        if (!editForm.status) {
             setSnackbar({
                 open: true,
-                message: "Status and Payment Mode are required.",
+                message: "Status is required.",
                 type: "error",
             });
             return;
         }
 
-        // 2️⃣ Show backdrop and start progress
         setShowBackdrop(true);
         setProgress(0);
 
@@ -450,45 +158,18 @@ const PlacedOrders = () => {
         try {
             const payload = {
                 orderId: selectedOrder.order_id,
-                newStatus: editForm.status,
-                remarks: editForm.remarks,
+                newStatus: formData.status,
+                remarks: formData.remarks,
                 paymentMode: editForm.paymentMode,
                 paymentStatus: editForm.paymentStatus,
             };
 
-            // 3️⃣ Fake progress animation until request finishes
             progressInterval = setInterval(() => {
                 setProgress(prev => Math.min(prev + Math.random() * 5, 90).toFixed());
             }, 150);
 
-            // 4️⃣ Handle CANCELLED orders separately
-            if (editForm.status?.toUpperCase() === "CANCELLED") {
-                const response = await updateOrderStatus.mutateAsync(payload);
-                if (!response) throw new Error("Order cancellation failed");
-
-                clearInterval(progressInterval);
-                setProgress(100);
-
-                setSnackbar({
-                    open: true,
-                    message: "Order cancelled successfully!",
-                    type: "success",
-                });
-
-                // Slight delay for smooth backdrop close
-                setTimeout(() => {
-                    setShowBackdrop(false);
-                    refetch();
-                    handleCloseEditModal();
-                }, 600);
-
-                return;
-            }
-
-            // 5️⃣ Normal update flow
             const response = await updateOrderStatus.mutateAsync(payload);
 
-            // If response indicates failure, throw error
             if (!response) throw new Error("Order update failed");
 
             clearInterval(progressInterval);
@@ -496,16 +177,15 @@ const PlacedOrders = () => {
 
             setSnackbar({
                 open: true,
-                message: "Successfully updated order from Placed to QC",
+                message: "Order status updated successfully!",
                 type: "success",
             });
 
-            // Delay backdrop close for smooth UX
             setTimeout(() => {
                 setShowBackdrop(false);
                 refetch();
                 handleCloseEditModal();
-            }, 1000);
+            }, 600);
 
         } catch (err) {
             clearInterval(progressInterval);
@@ -521,1683 +201,349 @@ const PlacedOrders = () => {
         }
     };
 
+    const orderHeaders = [
+        { key: "order_id", label: "Order ID", align: "left" },
+        { key: "customer", label: "Customer", align: "left" },
+        { key: "amount", label: "Amount", align: "right" },
+        { key: "status", label: "Status", align: "center" },
+        { key: "order_date", label: "Order Date", align: "left" },
+        { key: "payment_mode", label: "Payment Mode", align: "left" },
+        { key: "actions", label: "Actions", align: "center" },
+    ];
 
+    const formattedOrders = filteredOrders.map(order => ({
+        order_id: (
+            <span className="text-xs font-semibold text-primaryText">
+                {order.order_id}
+            </span>
+        ),
+        customer: (
+            <div className="min-w-[120px]">
+                <div className="text-xs font-semibold text-primaryText">{order.user_name}</div>
+                <div className="text-xs text-secondaryText">{order.contact}</div>
+            </div>
+        ),
+        amount: (
+            <span className="text-xs font-semibold text-primaryText">
+                ₹{order.total_amount.toFixed(2)}
+            </span>
+        ),
+        status: (
+            <StatusChip
+                status={order?.status}
+                size="small"
+                onClick={() => handleEditOrder(order)}
+            />
+        ),
+        order_date: (
+            <div className="min-w-[100px]">
+                <div className="text-xs font-medium text-primaryText">
+                    {new Date(order.order_time).toLocaleDateString()}
+                </div>
+                <div className="text-xs text-secondaryText">
+                    {new Date(order.order_time).toLocaleTimeString()}
+                </div>
+            </div>
+        ),
+        payment_mode: (
+            <span className="text-xs px-2 py-1 rounded bg-info text-black font-semibold">
+                {order.payment_mode}
+            </span>
+        ),
+        actions: (
+            <div className="flex items-center justify-center gap-1">
+                <button
+                    onClick={() => handleViewOrder(order)}
+                    className="btn-icon-primary p-1 rounded-md  transition-colors"
+                >
+                    <ViewIcon className="w-4 h-4" />
+                </button>
+                <button
+                    onClick={() => handleEditOrder(order)}
+                    className="btn-icon-warning p-1 rounded-md  transition-colors"
+                >
+                    <EditIcon className="w-4 h-4" />
+                </button>
+            </div>
+        ),
+    }));
 
+    // Status options based on current status
+    const getStatusOptions = () => {
+        const statusFlow = {
+            'PLACED': [
+                { value: 'IN_PROCESSING', label: 'Move to Quality Check' },
+                { value: 'CANCELLED', label: 'Cancel Order' },
+            ],
+            'IN_PROCESSING': [
+                { value: 'PACKING', label: 'Move to Packing' },
+                { value: 'CANCELLED', label: 'Cancel Order' },
+            ],
+            'PACKING': [
+                { value: 'PACKED', label: 'Product has been packed' },
+                { value: 'CANCELLED', label: 'Cancel Order' },
+            ],
+            'PACKED': [
+                { value: 'READY_TO_SHIP', label: 'Move to Ready to Ship' },
+                { value: 'CANCELLED', label: 'Cancel Order' },
+            ],
+            'READY_TO_SHIP': [
+                { value: 'SHIPPED', label: 'Move to Shipped' },
+                { value: 'CANCELLED', label: 'Cancel Order' },
+            ],
+            'SHIPPED': [
+                { value: 'DELIVERED', label: 'Mark as Delivered' },
+            ],
+        };
 
-
-    const handleOpenExportDialog = (type) => {
-        setExportType(type);
-        setOpenExportDialog(true);
-    };
-
-    const handleCloseExportDialog = () => {
-        setOpenExportDialog(false);
-        setExportType('');
-        setExportMode('current');
+        return statusFlow[status] || [
+            { value: 'CANCELLED', label: 'Cancel Order' },
+        ];
     };
 
     if (isLoading) {
         return (
-            <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                minHeight="200px"
-                sx={{ backgroundColor: 'var(--background-color)' }}
-            >
-                <CircularProgress sx={{ color: 'var(--primary-color)' }} />
-            </Box>
+            <div className="min-h-[200px] bg-background flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
         );
     }
 
     if (isError) {
         return (
-            <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                minHeight="200px"
-                sx={{ backgroundColor: 'var(--background-color)' }}
-            >
-                <Typography sx={{ color: 'var(--error-color)', fontFamily: 'var(--font-primary)', fontSize: 'var(--font-size-md)' }}>
+            <div className="min-h-[200px] bg-background flex flex-col items-center justify-center p-4">
+                <div className="text-error text-sm font-primary mb-2">
                     Error loading orders: {error.message}
-                </Typography>
-            </Box>
+                </div>
+                <button
+                    onClick={() => refetch()}
+                    className="bg-primary text-primaryText px-3 py-1 rounded-md text-xs font-semibold hover:bg-activeBorder transition-colors"
+                >
+                    Retry
+                </button>
+            </div>
         );
     }
 
     return (
-        <Box
-            p={2}
-            sx={{
-                backgroundColor: 'var(--background-color)',
-                minHeight: '100vh',
-                fontFamily: 'var(--font-primary)',
-                overflow: 'auto',
-                '&::-webkit-scrollbar': {
-                    width: '0.5em',
-                    height: '0.5em', // for horizontal scroll
-                },
-                '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: 'var(--primary-color)',
-                    borderRadius: 'var(--border-radius-md)',
-                },
-                mt: '20px'
-            }}
-        >
-            <TableHeaderCard>
-                <CardContent sx={{ p: 'var(--spacing-lg)'  }}>
-                    <nav aria-label="breadcrumb">
-                        <ol className="breadcrumb">
+        <div className="min-h-screen bg-background font-primary p-2 mt-5 overflow-auto">
+            {/* Header Card */}
+            <div className="bg-card rounded-lg shadow-sm border border-border mb-4 transition-all hover:shadow-md hover:-translate-y-0.5">
+                <div className="p-4">
+                    {/* Breadcrumb */}
+                    <nav className="breadcrumb mb-3">
+                        <ol className="flex items-center space-x-2 text-sm">
                             <li className="breadcrumb-item">
-                                <Link to="/">Dashboard</Link>
+                                <Link
+                                    to="/"
+                                    className="text-secondaryText hover:text-primaryText transition-colors"
+                                >
+                                    Dashboard
+                                </Link>
                             </li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                Manage QC Orders
+                            <li className="text-primaryText font-semibold">
+                                Manage {status?.replace('_', ' ')} Orders
                             </li>
                         </ol>
                     </nav>
-                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-                        <Box display="flex" alignItems="center" gap={1}>
-                            <Typography
-                                variant="h6"
-                                sx={{
-                                    color: 'var(--primary-text-color)',
-                                    fontWeight: 700,
-                                    fontFamily: 'var(--font-primary)',
-                                    fontSize: 'var(--font-size-lg)',
-                                }}
-                            >
+
+                    {/* Title and Search */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-bold text-primaryText font-primary">
                                 Order Management
-                            </Typography>
-                            <Chip
-                                label={`${filteredOrders.length} orders`}
-                                size="small"
-                                sx={{
-                                    backgroundColor: 'var(--active-bg)',
-                                    color: 'var(--primary-color)',
-                                    fontFamily: 'var(--font-primary)',
-                                    fontWeight: 600,
-                                    fontSize: 'var(--font-size-xs)',
-                                }}
-                            />
-                        </Box>
-                        <Box display="flex" gap={2} alignItems="center" mb={3}>
-                            <TextField
-                                variant="outlined"
-                                size="small"
+                            </h2>
+                            <span className="bg-activeBg text-primary px-2 py-1 rounded text-xs font-semibold">
+                                {filteredOrders.length} orders
+                            </span>
+                        </div>
+
+                        <div className="relative flex-1 sm:flex-none sm:w-64">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <SearchIcon className="h-3 w-3 text-secondaryText" />
+                            </div>
+                            <input
+                                type="text"
                                 placeholder="Search orders..."
                                 value={searchTerm}
                                 onChange={handleSearchChange}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <SearchIcon sx={{ color: 'var(--secondary-text-color)' }} />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                sx={{
-                                    minWidth: 200,
-                                    maxWidth: { xs: '100%', sm: 300 },
-                                    width: '100%',
-                                    flexGrow: { xs: 1, sm: 0 },
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: 'var(--border-radius-md)',
-                                        backgroundColor: 'var(--card-background-color)',
-                                        fontFamily: 'var(--font-primary)',
-                                        fontSize: 'var(--font-size-sm)',
-                                        color: 'var(--primary-text-color)',
-                                        '& fieldset': {
-                                            borderColor: 'var(--border-color)',
-                                        },
-                                    },
-                                }}
+                                className="w-full pl-10 pr-3 py-2 bg-card border border-border rounded-md text-sm text-primaryText placeholder-secondaryText focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                             />
-                        </Box>
-                    </Box>
+                        </div>
+                    </div>
 
-                    
-
-                    {isLoading ? (
-                        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" p={6}>
-                            <CircularProgress size={50} sx={{ color: 'var(--primary-color)', mb: 2 }} />
-                            <Typography sx={{ color: 'var(--secondary-text-color)', fontFamily: 'var(--font-primary)', fontSize: 'var(--font-size-md)' }}>
-                                Loading orders...
-                            </Typography>
-                        </Box>
-                    ) : isError ? (
-                        <Box p={3}>
-                            <Alert
-                                severity="error"
-                                sx={{
-                                    backgroundColor: 'var(--error-color)',
-                                    color: 'var(--text-dark)',
-                                    borderRadius: 'var(--border-radius-md)',
-                                    fontFamily: 'var(--font-primary)',
-                                    fontSize: 'var(--font-size-sm)',
-                                    '& .MuiAlert-icon': { color: 'var(--text-dark)' },
-                                }}
-                            >
-                                Error loading orders: {error.message}
-                            </Alert>
-                            <ModernButton
-                                onClick={() => refetch()}
-                                variant="contained"
-                                color="primary"
-                                sx={{ mt: 2 }}
-                            >
-                                Retry
-                            </ModernButton>
-                        </Box>
+                    {/* Table */}
+                    {filteredOrders.length === 0 ? (
+                        <div className="text-center py-8">
+                            <div className="text-secondaryText text-sm">
+                                No orders found
+                            </div>
+                        </div>
                     ) : (
-                                <StyledTableContainer sx={{
-                                    width: '100%',
-                
-                                    overflowX: { xs: 'auto', md: 'visible' }, // horizontal scroll on mobile
-                                    '&::-webkit-scrollbar': {
-                                        height: '0.5em', // horizontal scrollbar height
-                                    },
-                                    '&::-webkit-scrollbar-thumb': {
-                                        backgroundColor: 'var(--primary-color)',
-                                        borderRadius: 'var(--border-radius-md)' },}}>
-                            <Table stickyHeader>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-xs)', fontFamily: 'var(--font-primary)' }}>Order ID</TableCell>
-                                        <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Customer</TableCell>
-                                        <TableCell align="right" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Amount</TableCell>
-                                        <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Status</TableCell>
-                                        <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Order Date</TableCell>
-                                        <TableCell sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Payment Mode</TableCell>
-                                        <TableCell align="center" sx={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', fontFamily: 'var(--font-primary)' }}>Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {filteredOrders.length > 0 ? (
-                                        filteredOrders.map((order) => (
-                                            <React.Fragment key={order.id}>
-                                                <TableRow sx={{ '&:hover': { backgroundColor: 'var(--active-bg)' } }}>
-                                                    <TableCell>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                fontWeight: 600,
-                                                                color: 'var(--primary-color)',
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            {order.order_id}
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Box>
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{
-                                                                    fontWeight: 600,
-                                                                    color: 'var(--primary-text-color)',
-                                                                    fontFamily: 'var(--font-secondary)',
-                                                                    fontSize: 'var(--font-size-xs)',
-                                                                }}
-                                                            >
-                                                                {order.user_name}
-                                                            </Typography>
-                                                            <Typography
-                                                                variant="caption"
-                                                                sx={{
-                                                                    color: 'var(--secondary-text-color)',
-                                                                    fontFamily: 'var(--font-secondary)',
-                                                                    fontSize: 'var(--font-size-xs)',
-                                                                }}
-                                                            >
-                                                                {order.email}
-                                                            </Typography>
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell align="right">
-                                                        <Typography
-                                                            variant="body1"
-                                                            sx={{
-                                                                fontWeight: 700,
-                                                                color: 'var(--primary-color)',
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            ₹{order.total_amount.toFixed(2)}
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell align="center">
-                                                        <StatusChip
-                                                            label={order.status.toUpperCase()}
-                                                            status={order.status}
-                                                            size="small"
-                                                            onClick={() => handleEditOrder(order)}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                fontWeight: 500,
-                                                                color: 'var(--primary-text-color)',
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            {new Date(order.order_time).toLocaleDateString()}
-                                                        </Typography>
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                color: 'var(--secondary-text-color)',
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            {new Date(order.order_time).toLocaleTimeString()}
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Chip
-                                                            label={order.payment_mode}
-                                                            size="small"
-                                                            sx={{
-                                                                backgroundColor: 'var(--info-color)',
-                                                                color: 'var(--text-dark)',
-                                                                fontWeight: 600,
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell align="center">
-                                                        <Box display="flex" gap={1} justifyContent="center">
-                                                            <Tooltip title="View Order" arrow>
-                                                                <IconButton
-                                                                    size="small"
-                                                                    onClick={() => handleViewOrder(order)}
-                                                                    sx={{
-                                                                        color: 'var(--primary-color)',
-                                                                        backgroundColor: 'var(--active-bg)',
-                                                                        borderRadius: 'var(--border-radius-sm)',
-                                                                        '&:hover': {
-                                                                            backgroundColor: 'var(--active-border)',
-                                                                            transform: 'scale(1.05)',
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <ViewIcon fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                            <Tooltip title="Edit Status" arrow>
-                                                                <IconButton
-                                                                    size="small"
-                                                                    onClick={() => handleEditOrder(order)}
-                                                                    sx={{
-                                                                        color: 'var(--warning-color)',
-                                                                        backgroundColor: 'var(--active-bg)',
-                                                                        borderRadius: 'var(--border-radius-sm)',
-                                                                        '&:hover': {
-                                                                            backgroundColor: 'var(--active-border)',
-                                                                            transform: 'scale(1.05)',
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <EditIcon fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                            <Tooltip title="View Products" arrow>
-                                                                <IconButton
-                                                                    size="small"
-                                                                    onClick={() => toggleRowExpansion(order.order_id)}
-                                                                    sx={{
-                                                                        color: 'var(--info-color)',
-                                                                        backgroundColor: 'var(--active-bg)',
-                                                                        borderRadius: 'var(--border-radius-sm)',
-                                                                        transition: `transform var(--transition-speed) ease`,
-                                                                        transform: expandedRows[order.order_id] ? 'rotate(180deg)' : 'rotate(0deg)',
-                                                                        '&:hover': {
-                                                                            backgroundColor: 'var(--active-border)',
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <ExpandMore fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        </Box>
-                                                    </TableCell>
-                                                </TableRow>
-                                                <TableRow>
-                                                    <TableCell
-                                                        colSpan={7}
-                                                        sx={{
-                                                            py: 0,
-                                                            px: 0,
-                                                            borderBottom: expandedRows[order.order_id] ? '1px solid var(--border-color)' : 0,
-                                                            mb: expandedRows[order.order_id] ? 2 : 0,
-                                                        }}
-                                                    >
-                                                        <Collapse in={expandedRows[order.order_id]} timeout="auto" unmountOnExit>
-                                                            <Box
-                                                                sx={{
-                                                                    backgroundColor: 'var(--background-color)',
-                                                                    borderTop: '1px solid var(--border-color)',
-                                                                    borderBottom: '1px solid var(--border-color)',
-                                                                    py: 2,
-                                                                    px: 2,
-                                                                    position: 'relative',
-                                                                    zIndex: 1,
-                                                                }}
-                                                            >
-                                                                <Box
-                                                                    sx={{
-                                                                        maxWidth: '95%',
-                                                                        margin: '0 auto',
-                                                                        backgroundColor: 'var(--card-background-color)',
-                                                                        borderRadius: 'var(--border-radius-lg)',
-                                                                        overflow: 'visible',
-                                                                        boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
-                                                                        border: '1px solid var(--border-color)',
-                                                                        position: 'relative',
-                                                                    }}
-                                                                >
-                                                                    <Table
-                                                                        size="small"
-                                                                        sx={{
-                                                                            width: '100%',
-                                                                            '& .MuiTableCell-root': {
-                                                                                borderBottom: '1px solid var(--border-color)',
-                                                                                padding: 'var(--spacing-sm) var(--spacing-md)',
-                                                                                fontFamily: 'var(--font-secondary)',
-                                                                                fontSize: 'var(--font-size-sm)',
-                                                                            },
-                                                                        }}
-                                                                    >
-                                                                        <TableHead>
-                                                                            <TableRow sx={{ backgroundColor: 'var(--active-bg)' }}>
-                                                                                <TableCell
-                                                                                    sx={{
-                                                                                        fontWeight: 700,
-                                                                                        color: 'var(--primary-color)',
-                                                                                        fontSize: 'var(--font-size-sm)',
-                                                                                        width: '35%',
-                                                                                    }}
-                                                                                >
-                                                                                    Product
-                                                                                </TableCell>
-                                                                                <TableCell
-                                                                                    sx={{
-                                                                                        fontWeight: 700,
-                                                                                        color: 'var(--primary-color)',
-                                                                                        fontSize: 'var(--font-size-sm)',
-                                                                                        width: '20%',
-                                                                                    }}
-                                                                                >
-                                                                                    SKU
-                                                                                </TableCell>
-                                                                               
-                                                                                <TableCell
-                                                                                    align="right"
-                                                                                    sx={{
-                                                                                        fontWeight: 700,
-                                                                                        color: 'var(--primary-color)',
-                                                                                        fontSize: 'var(--font-size-sm)',
-                                                                                        width: '15%',
-                                                                                    }}
-                                                                                >
-                                                                                    Unit Price
-                                                                                </TableCell>
-                                                                                <TableCell
-                                                                                    align="right"
-                                                                                    sx={{
-                                                                                        fontWeight: 700,
-                                                                                        color: 'var(--primary-color)',
-                                                                                        fontSize: 'var(--font-size-sm)',
-                                                                                        width: '15%',
-                                                                                    }}
-                                                                                >
-                                                                                    Total
-                                                                                </TableCell>
-                                                                            </TableRow>
-                                                                        </TableHead>
-                                                                        <TableBody>
-                                                                            {order.orderItems?.map((item, index) => {
-                                                                                const isLastRow = index === order.orderItems.length - 1;
-                                                                                return (
-                                                                                    <TableRow
-                                                                                        key={index}
-                                                                                        sx={{
-                                                                                            '&:hover': {
-                                                                                                backgroundColor: 'var(--active-bg)',
-                                                                                            },
-                                                                                            borderBottom: isLastRow ? 'none' : '1px solid var(--border-color)',
-                                                                                        }}
-                                                                                    >
-                                                                                        <TableCell>
-                                                                                            <Typography
-                                                                                                variant="body2"
-                                                                                                sx={{
-                                                                                                    color: 'var(--primary-text-color)',
-                                                                                                    fontWeight: 500,
-                                                                                                    fontFamily: 'var(--font-secondary)',
-                                                                                                    fontSize: 'var(--font-size-xs)',
-                                                                                                }}
-                                                                                            >
-                                                                                                {item.product_name}
-                                                                                            </Typography>
-                                                                                        </TableCell>
-                                                                                        <TableCell>
-                                                                                            <Typography
-                                                                                                variant="body2"
-                                                                                                sx={{
-                                                                                                    color: 'var(--info-color)',
-                                                                                                    fontWeight: 500,
-                                                                                                    fontFamily: 'monospace',
-                                                                                                    fontSize: 'var(--font-size-xs)',
-                                                                                                    backgroundColor: 'var(--active-bg)',
-                                                                                                    padding: 'var(--spacing-xs) var(--spacing-sm)',
-                                                                                                    borderRadius: 'var(--border-radius-sm)',
-                                                                                                    display: 'inline-block',
-                                                                                                }}
-                                                                                            >
-                                                                                                {item.item_id}-{item.tagno}
-                                                                                            </Typography>
-                                                                                        </TableCell>
-                                                                                       
-                                                                                        <TableCell align="right">
-                                                                                            <Typography
-                                                                                                variant="body2"
-                                                                                                sx={{
-                                                                                                    color: 'var(--secondary-text-color)',
-                                                                                                    fontWeight: 500,
-                                                                                                    fontFamily: 'var(--font-secondary)',
-                                                                                                    fontSize: 'var(--font-size-sm)',
-                                                                                                }}
-                                                                                            >
-                                                                                                ₹{item.price.toFixed(2)}
-                                                                                            </Typography>
-                                                                                        </TableCell>
-                                                                                        <TableCell align="right">
-                                                                                            <Typography
-                                                                                                variant="body2"
-                                                                                                sx={{
-                                                                                                    color: 'var(--primary-color)',
-                                                                                                    fontWeight: 700,
-                                                                                                    fontFamily: 'var(--font-secondary)',
-                                                                                                    fontSize: 'var(--font-size-sm)',
-                                                                                                }}
-                                                                                            >
-                                                                                                ₹{item.price .toFixed(2)}
-                                                                                            </Typography>
-                                                                                        </TableCell>
-                                                                                    </TableRow>
-                                                                                );
-                                                                            })}
-                                                                            <TableRow
-                                                                                sx={{
-                                                                                    backgroundColor: 'var(--active-bg)',
-                                                                                    borderTop: '2px solid var(--border-color)',
-                                                                                }}
-                                                                            >
-                                                                                <TableCell colSpan={3} sx={{ py: 2 }}>
-                                                                                    <Typography
-                                                                                        variant="body2"
-                                                                                        sx={{
-                                                                                            fontWeight: 700,
-                                                                                            color: 'var(--primary-text-color)',
-                                                                                            textAlign: 'right',
-                                                                                            fontFamily: 'var(--font-secondary)',
-                                                                                            fontSize: 'var(--font-size-sm)',
-                                                                                        }}
-                                                                                    >
-                                                                                        Order Total:
-                                                                                    </Typography>
-                                                                                </TableCell>
-                                                                                <TableCell align="right" sx={{ py: 2 }}>
-                                                                                    <Typography
-                                                                                        variant="h6"
-                                                                                        sx={{
-                                                                                            color: 'var(--primary-color)',
-                                                                                            fontWeight: 700,
-                                                                                            fontFamily: 'var(--font-secondary)',
-                                                                                            fontSize: 'var(--font-size-lg)',
-                                                                                        }}
-                                                                                    >
-                                                                                        ₹{order.total_amount.toFixed(2)}
-                                                                                    </Typography>
-                                                                                </TableCell>
-                                                                            </TableRow>
-                                                                        </TableBody>
-                                                                    </Table>
-                                                                </Box>
-                                                            </Box>
-                                                        </Collapse>
-                                                    </TableCell>
-                                                </TableRow>
-                                            </React.Fragment>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                                                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                                                    <Receipt sx={{ fontSize: 60, color: 'var(--border-color)' }} />
-                                                    <Typography
-                                                        variant="h6"
-                                                        sx={{
-                                                            color: 'var(--secondary-text-color)',
-                                                            fontWeight: 500,
-                                                            fontFamily: 'var(--font-primary)',
-                                                            fontSize: 'var(--font-size-lg)',
-                                                        }}
-                                                    >
-                                                        No orders found
-                                                    </Typography>
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                            color: 'var(--secondary-text-color)',
-                                                            fontFamily: 'var(--font-primary)',
-                                                            fontSize: 'var(--font-size-sm)',
-                                                        }}
-                                                    >
-                                                        Try adjusting your search or filters
-                                                    </Typography>
-                                                </Box>
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </StyledTableContainer>
+                        <AdvancedTable
+                            headers={orderHeaders}
+                            data={formattedOrders}
+                            alignments={{
+                                amount: "right",
+                                status: "center",
+                                actions: "center",
+                                payment_mode: "left",
+                            }}
+                            actionColumn="actions" // This will show actions column
+                        />
                     )}
 
+                    {/* Footer */}
                     {filteredOrders.length > 0 && (
-                        <Box
-                            sx={{
-                                mt: 3,
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                backgroundColor: 'var(--card-background-color)',
-                                borderRadius: 'var(--border-radius-lg)',
-                                padding: 'var(--spacing-md) var(--spacing-lg)',
-                                boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
-                                border: '1px solid var(--border-color)',
-                                flexWrap: 'wrap',
-                                gap: 2,
-                            }}
-                        >
-                            <Box display="flex" alignItems="center" gap={2}>
-                              
-                                <Chip
-                                    label={`${filteredOrders.length} filtered`}
-                                    size="small"
-                                    sx={{
-                                        backgroundColor: 'var(--info-color)',
-                                        color: 'var(--text-dark)',
-                                        fontWeight: 600,
-                                        fontFamily: 'var(--font-primary)',
-                                        fontSize: 'var(--font-size-xs)',
-                                    }}
-                                />
-                            </Box>
+                        <div className="mt-3 bg-card rounded-lg border border-border p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex items-center gap-2">
+                                <span className="bg-info text-black px-2 py-1 rounded text-xs font-semibold">
+                                    {filteredOrders.length} filtered
+                                </span>
+                            </div>
 
-                            <Box display="flex" alignItems="center" gap={2}>
-                                <Box display="flex" alignItems="center" gap={1}>
-                                    <Typography
-                                        variant="body2"
-                                        sx={{
-                                            color: 'var(--secondary-text-color)',
-                                            fontWeight: 500,
-                                            fontFamily: 'var(--font-secondary)',
-                                            fontSize: 'var(--font-size-sm)',
-                                        }}
-                                    >
-                                        Rows per page:
-                                    </Typography>
-                                    <FormControl size="small" sx={{ minWidth: 80 }}>
-                                        <Select
-                                            value={rowsPerPage}
-                                            onChange={handleChangeRowsPerPage}
-                                            sx={{
-                                                borderRadius: 'var(--border-radius-md)',
-                                                fontSize: 'var(--font-size-sm)',
-                                                backgroundColor: 'var(--background-color)',
-                                                fontFamily: 'var(--font-secondary)',
-                                                color: 'var(--primary-text-color)',
-                                                '& .MuiOutlinedInput-root': {
-                                                    border: '1px solid var(--border-color)',
-                                                },
-                                            }}
-                                        >
-                                            <MenuItem value={5}>5</MenuItem>
-                                            <MenuItem value={10}>10</MenuItem>
-                                            <MenuItem value={25}>25</MenuItem>
-                                            <MenuItem value={50}>50</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                </Box>
-                            </Box>
-                        </Box>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-secondaryText font-secondary">
+                                    Rows per page:
+                                </span>
+                                <select
+                                    value={rowsPerPage}
+                                    onChange={handleChangeRowsPerPage}
+                                    className="bg-background border border-border rounded text-xs text-primaryText font-secondary px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={25}>25</option>
+                                    <option value={50}>50</option>
+                                </select>
+                            </div>
+                        </div>
                     )}
-                </CardContent>
-            </TableHeaderCard>
-<Box>
-                <BackdropProgress
-                    open={showBackdrop}
-                    title="Updating Order"
-                    body="Please wait while we update the order status."
-                    progress={progress}
-                />
-                <Snackbar
-                    open={snackbar.open}
-                    message={snackbar.message}
-                    type={snackbar.type}
-                    onClose={handleSnackbarClose}
-                />
-</Box>
+                </div>
+            </div>
+
+            {/* Backdrop and Snackbar */}
+            <BackdropProgress
+                open={showBackdrop}
+                title="Updating Order"
+                body="Please wait while we update the order status."
+                progress={progress}
+            />
+
+            <Snackbar
+                open={snackbar.open}
+                message={snackbar.message}
+                type={snackbar.type}
+                onClose={handleSnackbarClose}
+            />
+
+            {/* Modals */}
             {selectedOrder && (
-                <Dialog
-                    open={openViewModal}
-                    onClose={handleCloseViewModal}
-                    maxWidth="lg"
-                    fullWidth
-                    PaperProps={{
-                        sx: {
-                            borderRadius: 'var(--border-radius-lg)',
-                            backgroundColor: 'var(--card-background-color)',
-                        },
-                    }}
-                >
-                    <DialogTitle>
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
-                            <Typography
-                                variant="h6"
-                                sx={{
-                                    color: 'var(--primary-text-color)',
-                                    fontFamily: 'var(--font-primary)',
-                                    fontSize: 'var(--font-size-md)', // Slightly larger for heading
-                                }}
-                            >
-                                Order Details - {selectedOrder.order_id}
-                            </Typography>
-                            <IconButton
-                                onClick={handleCloseViewModal}
-                                sx={{
-                                    color: 'var(--secondary-text-color)',
-                                    '&:hover': {
-                                        backgroundColor: 'var(--active-bg)',
-                                    },
-                                }}
-                            >
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
-                        </Box>
-                    </DialogTitle>
-                    <DialogContent dividers>
-                        <Box mb={3}>
-                            <Typography
-                                variant="h6"
-                                gutterBottom
-                                sx={{
-                                    color: 'var(--primary-color)',
-                                    textAlign: 'center',
-                                    mb: 2,
-                                    fontFamily: 'var(--font-primary)',
-                                    fontSize: 'var(--font-size-md)', // Slightly larger for section heading
-                                }}
-                            >
-                                User Details
-                            </Typography>
-                            <TableContainer
-                                component={Paper}
-                                elevation={1}
-                                sx={{
-                                    backgroundColor: 'var(--card-background-color)',
-                                    borderRadius: 'var(--border-radius-md)',
-                                    border: '1px solid var(--border-color)',
-                                }}
-                            >
-                                <Table size="small">
-                                    <TableBody>
-                                        <TableRow>
-                                            <TableCell
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    width: '25%',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Order Number
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    width: '25%',
-                                                    fontFamily: 'var(--font-secondary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                {selectedOrder.order_id}
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    width: '25%',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Name
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    width: '25%',
-                                                    fontFamily: 'var(--font-secondary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                {selectedOrder.user_name}
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Email
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    fontFamily: 'var(--font-secondary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                {selectedOrder.email}
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Mobile Number
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    fontFamily: 'var(--font-secondary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                {selectedOrder.contact}
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Address
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    fontFamily: 'var(--font-secondary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                {selectedOrder?.address ? (
-                                                    <>
-                                                        <div>{selectedOrder.address.name}</div>
-                                                        <div>{selectedOrder.address.addressLine}</div>
-                                                        {selectedOrder.address.landmark && <div>Landmark: {selectedOrder.address.landmark}</div>}
-                                                        {selectedOrder.address.locality && <div>{selectedOrder.address.locality}</div>}
-                                                        <div>
-                                                            {selectedOrder.address.city}, {selectedOrder.address.state} - {selectedOrder.address.pincode}
-                                                        </div>
-                                                        {selectedOrder.address.country && <div>{selectedOrder.address.country}</div>}
-                                                        <div>Phone: {selectedOrder.address.phone}</div>
-                                                        {selectedOrder.address.alternatePhone && <div>Alt: {selectedOrder.address.alternatePhone}</div>}
-                                                        {selectedOrder.address.companyName && <div>Company: {selectedOrder.address.companyName}</div>}
-                                                    </>
-                                                ) : (
-                                                    <div>No address available</div>
-                                                )}
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Order Date
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    fontFamily: 'var(--font-secondary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                {new Date(selectedOrder.order_time).toLocaleString()}
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Box>
+                <>
+                    <AdvancedTableModal
+                        open={openViewModal}
+                        onClose={handleCloseViewModal}
+                        title={`Order Details - ${selectedOrder?.order_id}`}
+                        mode="view"
+                        userData={[
+                            {
+                                key: "Order Number",
+                                value: selectedOrder?.order_id,
+                                align: "left",
+                            },
+                            {
+                                key: "Name",
+                                value: selectedOrder?.user_name,
+                            },
+                            {
+                                key: "Email",
+                                value: selectedOrder?.email,
+                            },
+                            {
+                                key: "Mobile Number",
+                                value: selectedOrder?.contact,
+                            },
+                            {
+                                key: "Address",
+                                value: selectedOrder?.address
+                                    ? `${selectedOrder.address.name}, ${selectedOrder.address.addressLine}, ${selectedOrder.address.landmark ? selectedOrder.address.landmark + "," : ""} ${selectedOrder.address.city}, ${selectedOrder.address.state} - ${selectedOrder.address.pincode}`
+                                    : "No address available",
+                            },
+                            {
+                                key: "Order Date",
+                                value: selectedOrder?.order_time
+                                    ? new Date(selectedOrder.order_time).toLocaleString()
+                                    : "-",
+                            },
+                        ]}
+                        userColumns={[
+                            { key: "key", label: "Field" },
+                            { key: "value", label: "Details" },
+                        ]}
+                        orderData={selectedOrder?.orderItems?.map((item, index) => ({
+                            sno: index + 1,
+                            productId: item.tagno || item.sno || "-",
+                            productImage: item.image_path,
+                            productName: item.product_name,
+                            price: item.price.toFixed(2),
+                            total: (item.price * item.quantity).toFixed(2),
+                        }))}
+                        orderColumns={[
+                            { key: "sno", label: "S.No", align: "left" },
+                            { key: "productId", label: "Product ID", align: "left" },
+                            { key: "productImage", label: "Product Image", align: "left" },
+                            { key: "productName", label: "Product Name", align: "left" },
+                            { key: "price", label: "Price", align: "right" },
+                            { key: "total", label: "Total", align: "right" },
+                        ]}
+                        showNextArrow={false}
+                        showTotal={true}
+                        totalLabel="Grand Total"
+                        totalValue={`₹${selectedOrder?.total_amount?.toFixed(2)}`}
+                    />
 
-                        <Box mb={3}>
-                            <Typography
-                                variant="h6"
-                                gutterBottom
-                                sx={{
-                                    color: 'var(--primary-color)',
-                                    textAlign: 'center',
-                                    mb: 2,
-                                    fontFamily: 'var(--font-primary)',
-                                    fontSize: 'var(--font-size-md)', // Slightly larger for section heading
-                                }}
-                            >
-                                Order Details
-                            </Typography>
-                            <TableContainer
-                                component={Paper}
-                                elevation={1}
-                                sx={{
-                                    backgroundColor: 'var(--card-background-color)',
-                                    borderRadius: 'var(--border-radius-md)',
-                                    border: '1px solid var(--border-color)',
-                                }}
-                            >
-                                <Table size="small">
-                                    <TableHead>
-                                        <TableRow sx={{ backgroundColor: 'var(--background-color)' }}>
-                                            <TableCell
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                S.No
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Product ID
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Product Image
-                                            </TableCell>
-                                            <TableCell
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Product Name
-                                            </TableCell>
-                                            <TableCell
-                                                align="right"
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Price
-                                            </TableCell>
-                                            <TableCell
-                                                align="right"
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                    color: 'var(--primary-text-color)',
-                                                }}
-                                            >
-                                                Total
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {selectedOrder.orderItems?.map((item, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell
-                                                    sx={{
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    }}
-                                                >
-                                                    {index + 1}
-                                                </TableCell>
-                                                <TableCell
-                                                    sx={{
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    }}
-                                                >
-                                                    {item.tagno || item.sno || '-'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {normalizeImagePaths(item.image_path)[0] ? (
-                                                        <img
-                                                            src={normalizeImagePaths(item.image_path)[0]}
-                                                            alt={item.productName}
-                                                            style={{
-                                                                width: 40,
-                                                                height: 40,
-                                                                objectFit: 'cover',
-                                                                borderRadius: 'var(--border-radius-sm)',
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <Box
-                                                            sx={{
-                                                                width: 40,
-                                                                height: 40,
-                                                                backgroundColor: 'var(--background-color)',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                borderRadius: 'var(--border-radius-sm)',
-                                                            }}
-                                                        >
-                                                            <Typography
-                                                                variant="caption"
-                                                                sx={{
-                                                                    color: 'var(--secondary-text-color)',
-                                                                    fontFamily: 'var(--font-secondary)',
-                                                                    fontSize: 'var(--font-size-xs)',
-                                                                }}
-                                                            >
-                                                                No Image
-                                                            </Typography>
-                                                        </Box>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell
-                                                    sx={{
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    }}
-                                                >
-                                                    {item.product_name}
-                                                </TableCell>
-                                                <TableCell
-                                                    align="right"
-                                                    sx={{
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    }}
-                                                >
-                                                    ₹{item.price.toFixed(2)}
-                                                </TableCell>
-                                                <TableCell
-                                                    align="right"
-                                                    sx={{
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    }}
-                                                >
-                                                    ₹{(item.price * item.quantity).toFixed(2)} {/* Fixed: Use quantity for total */}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                        <TableRow sx={{ backgroundColor: 'var(--warning-color)' }}>
-                                            <TableCell
-                                                colSpan={5}
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    textAlign: 'right',
-                                                    color: 'var(--text-dark)',
-                                                    fontFamily: 'var(--font-primary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                }}
-                                            >
-                                                Grand Total
-                                            </TableCell>
-                                            <TableCell
-                                                align="right"
-                                                sx={{
-                                                    fontWeight: 'bold',
-                                                    color: 'var(--text-dark)',
-                                                    fontFamily: 'var(--font-secondary)',
-                                                    fontSize: 'var(--font-size-xs)',
-                                                }}
-                                            >
-                                                ₹{selectedOrder.total_amount.toFixed(2)}
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Box>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button
-                            onClick={handleCloseViewModal}
-                            color="primary"
-                            variant="contained"
-                            sx={{
-                                fontFamily: 'var(--font-secondary)',
-                                fontSize: 'var(--font-size-xs)',
-                                borderRadius: 'var(--border-radius-md)',
-                                backgroundColor: 'var(--primary-color)',
-                                color: 'var(--text-dark)',
-                                '&:hover': {
-                                    backgroundColor: 'var(--active-border)',
-                                },
-                            }}
-                        >
-                            Close
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                    <EditStatusModalTailwind
+                        open={openEditModal}
+                        onClose={handleCloseEditModal}
+                        orderData={selectedOrder}
+                        onSubmit={handleEditSubmit}
+                        isLoading={updateOrderStatus.isLoading}
+                        statusOptions={getStatusOptions()}
+                        itemTableColumns={[
+                            { key: "sno", label: "S.NO", align: "left" },
+                            { key: "product", label: "Product", align: "left" },
+                            { key: "price", label: "Price", align: "right" },
+                            { key: "tagno", label: "Tag No", align: "center" }
+                        ]}
+                        itemTableData={selectedOrder?.orderItems || []}
+                        userTableColumns={[]}
+                        userTableData={selectedOrder || []}
+                        errorMessage={formError}
+                    />
+                </>
             )}
-
-            {selectedOrder && (
-                <Dialog
-                    open={openEditModal}
-                    onClose={handleCloseEditModal}
-                    maxWidth="lg"
-                    fullWidth
-                    PaperProps={{
-                        sx: {
-                            borderRadius: 'var(--border-radius-lg)',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                            maxHeight: '90vh',
-                            backgroundColor: 'var(--card-background-color)',
-                        },
-                    }}
-                >
-                    <DialogTitle sx={{ pb: 1 }}>
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
-                            <Box>
-                                <Typography
-                                    variant="h5"
-                                    sx={{
-                                        fontWeight: 600,
-                                        color: 'var(--primary-text-color)',
-                                        fontFamily: 'var(--font-primary)',
-                                        fontSize: 'var(--font-size-lg)', // Keep larger for heading
-                                        mb: 0.5,
-                                    }}
-                                >
-                                    Edit Order
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    sx={{
-                                        color: 'var(--secondary-text-color)',
-                                        fontFamily: 'var(--font-primary)',
-                                        fontSize: 'var(--font-size-xs)', // Use xs for secondary text
-                                    }}
-                                >
-                                    Order ID: {selectedOrder.order_id}
-                                </Typography>
-                            </Box>
-                            <IconButton
-                                onClick={handleCloseEditModal}
-                                sx={{
-                                    color: 'var(--secondary-text-color)',
-                                    '&:hover': {
-                                        backgroundColor: 'var(--active-bg)',
-                                        color: 'var(--primary-text-color)',
-                                    },
-                                }}
-                            >
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
-                        </Box>
-                    </DialogTitle>
-
-                    <DialogContent dividers sx={{ p: 0 }}>
-                        <Box sx={{ p: 'var(--spacing-lg)' }}>
-                            <Card
-                                sx={{
-                                    mb: 4,
-                                    border: '1px solid var(--border-color)',
-                                    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-                                    backgroundColor: 'var(--card-background-color)',
-                                }}
-                            >
-                                <CardHeader
-                                    title={
-                                        <Typography
-                                            variant="h6"
-                                            sx={{
-                                                color: 'var(--primary-text-color)',
-                                                fontWeight: 600,
-                                                fontFamily: 'var(--font-primary)',
-                                                fontSize: 'var(--font-size-md)', // Slightly larger for card header
-                                            }}
-                                        >
-                                            Order Overview
-                                        </Typography>
-                                    }
-                                    sx={{ pb: 2 }}
-                                />
-                                <CardContent sx={{ pt: 0 }}>
-                                    <Grid container spacing={3}>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Customer Name
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        color: 'var(--primary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    {selectedOrder.user_name}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Current Status
-                                                </Typography>
-                                                <Box sx={{ mt: 0.5 }}>
-                                                    <Chip
-                                                        label={selectedOrder.status}
-                                                        color={getStatusColor(selectedOrder.status)}
-                                                        size="small"
-                                                        sx={{
-                                                            fontWeight: 600,
-                                                            fontFamily: 'var(--font-secondary)',
-                                                            fontSize: 'var(--font-size-xs)',
-                                                            backgroundColor: `var(--warning-color)`,
-                                                            color: 'var(--secondary-text-color)',
-                                                        }}
-                                                    />
-                                                </Box>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Payment Mode
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        color: 'var(--primary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    {selectedOrder.payment_mode || selectedOrder.paymentMode}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Payment Status
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    {selectedOrder.payment_status || selectedOrder.paymentStatus}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12} sm={6} md={3}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Total Amount
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        color: 'var(--success-color)',
-                                                        fontWeight: 600,
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    ₹{selectedOrder.total_amount.toFixed(2)}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                        <Grid item xs={12}>
-                                            <Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                        color: 'var(--secondary-text-color)',
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Order Date
-                                                </Typography>
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{
-                                                        color: 'var(--primary-text-color)',
-                                                        fontFamily: 'var(--font-secondary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    {new Date(selectedOrder.order_time).toLocaleString()}
-                                                </Typography>
-                                            </Box>
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
-
-                            <Card
-                                sx={{
-                                    border: '1px solid var(--border-color)',
-                                    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-                                    backgroundColor: 'var(--card-background-color)',
-                                }}
-                            >
-                                <CardHeader
-                                    title={
-                                        <Typography
-                                            variant="h6"
-                                            sx={{
-                                                color: 'var(--primary-text-color)',
-                                                fontWeight: 600,
-                                                fontFamily: 'var(--font-primary)',
-                                                fontSize: 'var(--font-size-md)', // Slightly larger for card header
-                                            }}
-                                        >
-                                            Update Order Status
-                                        </Typography>
-                                    }
-                                    subheader={
-                                        <Typography
-                                            variant="body2"
-                                            sx={{
-                                                color: 'var(--secondary-text-color)',
-                                                fontFamily: 'var(--font-secondary)',
-                                                fontSize: 'var(--font-size-xs)',
-                                            }}
-                                        >
-                                            Change the order status and add relevant remarks
-                                        </Typography>
-                                    }
-                                    sx={{ pb: 2 }}
-                                />
-                                <CardContent sx={{ pt: 0 }}>
-                                    {formError && (
-                                        <Alert
-                                            severity="error"
-                                            sx={{
-                                                mb: 3,
-                                                backgroundColor: 'var(--error-color)',
-                                                color: 'var(--text-dark)',
-                                                borderRadius: 'var(--border-radius-md)',
-                                                fontFamily: 'var(--font-secondary)',
-                                                fontSize: 'var(--font-size-xs)',
-                                                '& .MuiAlert-icon': { fontSize: 'var(--font-size-xs)' },
-                                            }}
-                                        >
-                                            {formError}
-                                        </Alert>
-                                    )}
-
-                                    <Grid container spacing={3}>
-                                        <Grid item xs={12} md={6}>
-                                            <FormControl component="fieldset">
-                                                <FormLabel
-                                                    component="legend"
-                                                    sx={{
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    }}
-                                                >
-                                                    Select New Status
-                                                </FormLabel>
-                                                <RadioGroup
-                                                    name="status"
-                                                    value={editForm.status}
-                                                    onChange={handleEditFormChange}
-                                                >
-                                                    <FormControlLabel
-                                                        value="IN_PROCESSING"
-                                                        control={<Radio sx={{ color: 'var(--primary-color)', '& .MuiSvgIcon-root': { fontSize: 'var(--font-size-xs)' } }} />}
-                                                        label={
-                                                            <Typography sx={{ fontFamily: 'var(--font-secondary)', fontSize: 'var(--font-size-xs)' , color: 'var(--primary-text-color)' }}>
-                                                                Move to Quality Checking
-                                                            </Typography>
-                                                        }
-                                                    />
-                                                    <FormControlLabel
-                                                        value="CANCELLED"
-                                                        control={<Radio sx={{ color: 'var(--primary-color)', '& .MuiSvgIcon-root': { fontSize: 'var(--font-size-xs)' } }} />}
-                                                        label={
-                                                            <Typography sx={{ fontFamily: 'var(--font-secondary)', fontSize: 'var(--font-size-xs)', color: 'var(--primary-text-color)' }}>
-                                                                Cancel Order
-                                                            </Typography>
-                                                        }
-                                                    />
-                                                </RadioGroup>
-                                            </FormControl>
-                                        </Grid>
-
-                                        <Grid item xs={12}>
-                                            <TextField
-                                                fullWidth
-                                                label="Remarks & Notes"
-                                                name="remarks"
-                                                value={editForm.remarks}
-                                                onChange={handleEditFormChange}
-                                                multiline
-                                                rows={4}
-                                                placeholder="Enter detailed remarks about this status change..."
-                                                disabled={updateOrderStatus.isLoading}
-                                                helperText="Provide specific details about the status change (required for cancellations)"
-                                                sx={{
-                                                    '& .MuiInputLabel-root': {
-                                                        fontWeight: 500,
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    },
-                                                    '& .MuiInputBase-root': {
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--primary-text-color)',
-                                                    },
-                                                    '& .MuiFormHelperText-root': {
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                        color: 'var(--secondary-text-color)',
-                                                    },
-                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: 'var(--border-color)',
-                                                    },
-                                                }}
-                                            />
-                                        </Grid>
-
-                                        <Grid item xs={12}>
-                                            <Box
-                                                sx={{
-                                                    p: 3,
-                                                    backgroundColor: 'var(--card-background-color)',
-                                                    borderRadius: 'var(--border-radius-md)',
-                                                    border: '1px solid var(--border-color)',
-                                                }}
-                                            >
-                                                <Typography
-                                                    variant="subtitle2"
-                                                    sx={{
-                                                        fontWeight: 600,
-                                                        mb: 2,
-                                                        color: 'var(--primary-text-color)',
-                                                        fontFamily: 'var(--font-primary)',
-                                                        fontSize: 'var(--font-size-xs)',
-                                                    }}
-                                                >
-                                                    Status Change Preview
-                                                </Typography>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                color: 'var(--secondary-text-color)',
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            Current:
-                                                        </Typography>
-                                                        <Chip
-                                                            label={selectedOrder.status}
-                                                            color={getStatusColor(selectedOrder.status)}
-                                                            size="small"
-                                                            sx={{
-                                                                fontWeight: 600,
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                                backgroundColor: `var(--${getStatusColor(selectedOrder.status)}-color)`,
-                                                                color: 'var(--primary-text-color)',
-                                                            }}
-                                                        />
-                                                    </Box>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', color: 'var(--secondary-text-color)' }}>
-                                                        →
-                                                    </Box>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                color: 'var(--secondary-text-color)',
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            New:
-                                                        </Typography>
-                                                        <Chip
-                                                            label={editForm.status || 'Select Status'}
-                                                            color={editForm.status ? getStatusColor(editForm.status) : 'default'}
-                                                            size="small"
-                                                            sx={{
-                                                                fontWeight: 600,
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                                backgroundColor: editForm.status ? `var(--${getStatusColor(editForm.status)}-color)` : 'var(--secondary-color)',
-                                                                color: 'var(--primary-text-color)',
-                                                                border: editForm.status ? 'none' : '1px solid var(--border-color)',
-                                                            }}
-                                                            variant={editForm.status ? 'filled' : 'outlined'}
-                                                        />
-                                                    </Box>
-                                                    {editForm.status && editForm.status !== selectedOrder.status && (
-                                                        <Chip
-                                                            label="WILL UPDATE"
-                                                            color="warning"
-                                                            size="small"
-                                                            sx={{
-                                                                fontWeight: 600,
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                                backgroundColor: 'var(--warning-color)',
-                                                                color: 'var(--primary-text-color)',
-                                                                animation: 'pulse 2s infinite',
-                                                                '@keyframes pulse': {
-                                                                    '0%, 100%': { opacity: 1 },
-                                                                    '50%': { opacity: 0.5 },
-                                                                },
-                                                            }}
-                                                        />
-                                                    )}
-                                                </Box>
-                                                {/* {editForm.status && (
-                                                    <Box sx={{ mt: 2, p: 2, backgroundColor: 'var(--card-background-color)', borderRadius: 'var(--border-radius-sm)' }}>
-                                                        <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                                color: 'var(--secondary-text-color)',
-                                                                fontWeight: 500,
-                                                                fontFamily: 'var(--font-secondary)',
-                                                                fontSize: 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            Impact: {getStatusImpactText(editForm.status)}
-                                                        </Typography>
-                                                    </Box>
-                                                )} */}
-                                            </Box>
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
-                        </Box>
-                    </DialogContent>
-
-                    <DialogActions
-                        sx={{
-                            p: 3,
-                            backgroundColor: 'var(--background-color)',
-                            borderTop: '1px solid var(--border-color)',
-                        }}
-                    >
-                        <Button
-                            onClick={handleCloseEditModal}
-                            disabled={updateOrderStatus.isLoading }
-                            variant="outlined"
-                            sx={{
-                                textTransform: 'none',
-                                fontWeight: 500,
-                                fontFamily: 'var(--font-secondary)',
-                                fontSize: 'var(--font-size-xs)',
-                                borderRadius: 'var(--border-radius-md)',
-                                color: 'var(--primary-text-color)',
-                                borderColor: 'var(--border-color)',
-                                '&:hover': {
-                                    backgroundColor: 'var(--active-bg)',
-                                    borderColor: 'var(--active-border)',
-                                },
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleEditSubmit}
-                            color={editForm.status?.toUpperCase() === 'CANCELLED' ? 'error' : 'primary'}
-                            variant="contained"
-                            disabled={
-                                updateOrderStatus.isLoading ||
-                                !editForm.status ||
-                                editForm.status === selectedOrder.status
-                            }
-                            startIcon={
-                                (updateOrderStatus.isLoading ) ? (
-                                    <CircularProgress size={16} sx={{ color: 'var(--text-dark)' }} />
-                                ) : null
-                            }
-                            sx={{
-                                minWidth: 180,
-                                textTransform: 'none',
-                                fontWeight: 600,
-                                fontFamily: 'var(--font-secondary)',
-                                fontSize: 'var(--font-size-xs)',
-                                borderRadius: 'var(--border-radius-md)',
-                                backgroundColor: editForm.status?.toUpperCase() === 'CANCELLED' ? 'var(--error-color)' : 'var(--primary-color)',
-                                color: 'var(--text-dark)',
-                                '&:hover': {
-                                    backgroundColor: editForm.status?.toUpperCase() === 'CANCELLED' ? 'var(--error-color)' : 'var(--active-border)',
-                                },
-                            }}
-                        >
-                            {(updateOrderStatus.isLoading )
-                                ? 'Processing...'
-                                : editForm.status?.toUpperCase() === 'CANCELLED'
-                                    ? 'Cancel Order'
-                                    : 'Update Status'}
-                        </Button>
-                        
-                    </DialogActions>
-                </Dialog>
-            )}
-        </Box>
+        </div>
     );
 };
 
-export default PlacedOrders;
+// Simple icon components (replace with your actual icon components)
+const ViewIcon = ({ className }) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+    </svg>
+);
+
+const EditIcon = ({ className }) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+    </svg>
+);
+
+const SearchIcon = ({ className }) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+    </svg>
+);
+
+export default OrderTable;

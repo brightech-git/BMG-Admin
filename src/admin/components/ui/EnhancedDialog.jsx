@@ -90,7 +90,7 @@ export const ProgressTracker = ({ trackingData, themeMode = 'light' }) => {
 
     // Complete status order including all possible states
     const statusOrder = [
-        'PENDING', 'PENDING', 'PLACED', 'IN_PROCESSING',
+         'PENDING', 'PLACED', 'IN_PROCESSING',
         'READY', 'PACKED', 'SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'
     ];
 
@@ -172,7 +172,7 @@ export const ProgressTracker = ({ trackingData, themeMode = 'light' }) => {
                 ? 'Delivery Failed'
                 : isPaymentPending
                     ? 'Payment Pending'
-                    : `${progressPercentage}% Complete`
+                    : `${progressPercentage.toFixed()}% Complete`
     };
 
     return (
@@ -221,7 +221,7 @@ export const ProgressTracker = ({ trackingData, themeMode = 'light' }) => {
                             Order Progress
                         </span>
                         <span className="text-responsive-xs font-semibold" style={{ color: progressConfig.color }}>
-                            {progressPercentage}%
+                            {progressPercentage.toFixed()}%
                         </span>
                     </div>
 
@@ -231,14 +231,14 @@ export const ProgressTracker = ({ trackingData, themeMode = 'light' }) => {
                             <div
                                 className="h-full rounded-full transition-all duration-500 ease-out"
                                 style={{
-                                    width: `${progressPercentage}%`,
+                                    width: `${progressPercentage.toFixed(2)}%`,
                                     backgroundColor: progressConfig.color
                                 }}
                             />
                         </div>
 
                         {/* Progress Steps */}
-                        <div className="flex justify-between mt-2">
+                        {/* <div className="flex justify-between mt-2">
                             {statusOrder.map((status, index) => {
                                 const isCompleted = index <= currentStepIndex;
                                 const isCurrent = index === currentStepIndex;
@@ -267,7 +267,7 @@ export const ProgressTracker = ({ trackingData, themeMode = 'light' }) => {
                                     </div>
                                 );
                             })}
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             )}

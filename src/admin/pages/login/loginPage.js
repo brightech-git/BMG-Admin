@@ -91,7 +91,7 @@ const LoginPage = () => {
                 roles: result.user.roles, 
             };
             const roles = userData.roles || [];
-            if (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_EMPLOYEE' || roles.includes('ROLE_USER'))) {
+            if (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_EMPLOYEE' )) {
                 login(token, userData);
                 navigate('/admin');
             } else {
@@ -331,7 +331,6 @@ const LoginPage = () => {
                     background: white;
                     border-radius: 24px;
                     overflow: hidden;
-                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                     height: 100%;
                 }
 
@@ -374,7 +373,6 @@ const LoginPage = () => {
                     height: 50px;
                     border-radius: 14px;
                     object-fit: cover;
-                    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
                 }
 
                 .brand-text h1 {
@@ -419,7 +417,6 @@ const LoginPage = () => {
                     overflow: hidden;
                     position: relative;
                     margin-bottom: 18px;
-                    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
                 }
 
                 .slide-image {
@@ -434,7 +431,6 @@ const LoginPage = () => {
                     left: 0;
                     right: 0;
                     bottom: 0;
-                    background: linear-gradient(45deg, rgba(30, 60, 114, 0.3), rgba(42, 82, 152, 0.3));
                 }
 
                 .slide-text {
@@ -469,7 +465,6 @@ const LoginPage = () => {
                     width: 35px;
                     height: 35px;
                     border-radius: 50%;
-                    background: rgba(255, 255, 255, 0.2);
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
@@ -519,7 +514,7 @@ const LoginPage = () => {
                 .form-section {
                     display: flex;
                     align-items: center;
-                    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                    background: #fff;
                 }
 
                 .form-container {

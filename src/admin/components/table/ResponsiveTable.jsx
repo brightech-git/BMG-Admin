@@ -1,7 +1,10 @@
-// ResponsiveTable.jsx
 import React from 'react';
+import SkeletonTable from './SkeletonTable';
 
-const ResponsiveTable = ({
+
+
+
+const AdvancedTable = ({
     headers = [],
     data = [],
     isLoading = false,
@@ -11,54 +14,80 @@ const ResponsiveTable = ({
     alignments = {},
     renderCell = null,
     themeMode = 'light',
-    showNextArrow = false, // New prop to control next arrow icon
-    actionColumn = 'tracking' // New prop to specify which action column to show
+    showNextArrow = false,
+    actionColumn = 'tracking',
+
+    // ---- Tailwind with JIT variable syntax ----
+    headerBg = 'bg-[var(--card-background-color)]',
+    headerText = 'text-[var(--primary-text-color)]',
+    rowBg = 'bg-[var(--card-background-color)]',
+    rowText = 'text-[var(--primary-text-color)]',
+    rowHoverBg = 'hover:bg-[var(--active-bg)]',
+    fontFamilyHeader = 'font-secondary',
+    fontFamilyRow = 'font-primary',
+    fontSizeHeader = 'text-[var(--font-size-sm)]',
+    fontSizeRow = 'text-[var(--font-size-xs)]',
+    tableWidth = 'w-full',
 }) => {
-    // Default alignments if not provided
-    const defaultAlignments = headers.reduce((acc, header) => {
-        acc[header.key] = header.align || 'left';
+    // ---- Build final column alignment map ----
+    const finalAlignments = headers.reduce((acc, h) => {
+        const key = h.key;
+
+        // 1️⃣ Header-level alignment has highest priority
+        if (h.align) {
+            acc[key] = h.align;
+            return acc;
+        }
+
+        // 2️⃣ Prop alignments override auto-detection
+        if (alignments[key]) {
+            acc[key] = alignments[key];
+            return acc;
+        }
+
+        // 3️⃣ Auto-detect alignment using first row
+        const sample = data?.[0]?.[key];
+
+        if (key === "sno") {
+            acc[key] = "center"; // or "left" if you prefer
+        } else if (typeof sample === "number") {
+            acc[key] = "right";
+        } else {
+            acc[key] = "left";
+        }
+
         return acc;
     }, {});
 
-    const tableAlignments = { ...defaultAlignments, ...alignments };
+    // const tableAlignments = { ...finalAlignments, ...alignments };
 
-    const getAlignmentClass = (alignment) => {
-        switch (alignment) {
-            case 'center': return 'text-center';
-            case 'right': return 'text-right';
-            default: return 'text-left';
-        }
-    };
+    const alignClass = (a) =>
+        a === "center"
+            ? "text-center"
+            : a === "right"
+                ? "text-right"
+                : "text-left";
 
-    // Filter headers based on actionColumn prop
-    const filteredHeaders = headers.filter(header => {
-        if (actionColumn === 'tracking' && header.key === 'actions') return false;
-        if (actionColumn === 'actions' && header.key === 'tracking') return false;
+
+    const filteredHeaders = headers.filter((h) => {
+        if (actionColumn === 'tracking' && h.key === 'actions') return false;
+        if (actionColumn === 'actions' && h.key === 'tracking') return false;
         return true;
     });
 
-    if (isLoading) {
-        return (
-            <div className="flex flex-col items-center justify-center p-6">
-                <div className="w-12 h-12 border-4 border-[var(--primary-color)] border-t-transparent rounded-full animate-spin mb-3"></div>
-                <p className="text-[var(--secondary-text-color)] text-responsive-md font-primary">
-                    Loading orders...
-                </p>
-            </div>
-        );
-    }
+    if (isLoading) return <SkeletonTable rows={6} columns={filteredHeaders.length} themeMode={themeMode} withHeader />;
 
     if (isError) {
         return (
-            <div className="p-4">
-                <div className="bg-[var(--error-color)] text-[var(--text-dark)] rounded-lg p-4 mb-3">
-                    <p className="font-primary text-responsive-sm">
-                        Error loading orders: {error?.message}
+            <div className="p-6 text-center">
+                <div className="bg-[var(--error-color)] text-white rounded-md p-4 mb-4 max-w-md mx-auto">
+                    <p className="font-medium text-xs">
+                        Error: {error?.message ?? 'Failed to load data'}
                     </p>
                 </div>
                 <button
                     onClick={onRetry}
-                    className="bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-[var(--active-border)] transition-colors font-primary text-responsive-sm"
+                    className="bg-[var(--primary-color)] text-white px-4 py-2 rounded-md hover:bg-[var(--active-border)] transition-colors font-medium text-xs"
                 >
                     Retry
                 </button>
@@ -67,83 +96,56 @@ const ResponsiveTable = ({
     }
 
     return (
-        <div className="w-full overflow-hidden">
-            {/* Table for all screen sizes - same structure */}
-            <div className="overflow-x-auto">
-                <table className="w-full min-w-full border-collapse">
-                    <thead>
-                        <tr className="bg-[var(--card-background-color)] border-b border-[var(--border-color)]">
-                            {filteredHeaders.map((header, index) => (
-                                <th
-                                    key={header.key || index}
-                                    className={`
-                                        px-[var(--spacing-md)] py-[var(--spacing-sm)]
-                                        font-bold font-secondary
-                                        text-[var(--primary-text-color)]
-                                        ${getAlignmentClass(tableAlignments[header.key])}
-                                        whitespace-nowrap
-                                        text-responsive-sm
-                                    `}
-                                    style={{
-                                        fontFamily: 'var(--font-secondary)'
-                                    }}
-                                >
-                                    {header.label}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.length > 0 ? (
-                            data.map((row, rowIndex) => (
-                                <tr
-                                    key={row.orderId || rowIndex}
-                                    className="border-b border-[var(--border-color)] hover:bg-[var(--active-bg)] transition-colors"
-                                >
-                                    {filteredHeaders.map((header, cellIndex) => (
-                                        <td
-                                            key={`${row.orderId}-${header.key}`}
-                                            className={`
-                                                px-[var(--spacing-md)] py-[var(--spacing-sm)]
-                                                font-primary
-                                                ${getAlignmentClass(tableAlignments[header.key])}
-                                                text-responsive-xs
-                                            `}
-                                            style={{
-                                                fontFamily: 'var(--font-primary)'
-                                            }}
-                                        >
-                                            {renderCell ? renderCell(header.key, row, themeMode, showNextArrow) : row[header.key]}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan={filteredHeaders.length} className="px-[var(--spacing-md)] py-[var(--spacing-xl)] text-center">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="text-[var(--border-color)] text-4xl">📄</div>
-                                        <p
-                                            className="text-[var(--secondary-text-color)] font-primary text-responsive-lg font-medium"
-                                            style={{ fontFamily: 'var(--font-primary)' }}
-                                        >
-                                            No orders found
-                                        </p>
-                                        <p
-                                            className="text-[var(--secondary-text-color)] font-primary text-responsive-sm"
-                                            style={{ fontFamily: 'var(--font-primary)' }}
-                                        >
-                                            Try adjusting your search or filters
-                                        </p>
-                                    </div>
-                                </td>
+        <div className={`${tableWidth} overflow-x-auto`}>
+            <table className="w-full min-w-full border-collapse border border-[var(--border-color)]">
+                <thead>
+                    <tr className={headerBg}>
+                        {filteredHeaders.map((h) => (
+                            <th
+                                key={h.key}
+                                className={`px-md py-sm font-bold ${fontFamilyHeader} ${headerText} 
+    ${fontSizeHeader} ${alignClass(finalAlignments[h.key])} 
+    whitespace-nowrap border border-[var(--border-color)]`}
+
+                            >
+                                {h.label}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.length > 0 ? (
+                        data.map((row, i) => (
+                            <tr key={row.id ?? i} className={`${rowBg}  transition-colors`}>
+                                {filteredHeaders.map((h) => (
+                                    <td
+                                        key={`${row.id ?? i}-${h.key}`}
+                                        className={`px-md py-sm ${fontFamilyRow} ${rowText} 
+    ${fontSizeRow} ${alignClass(finalAlignments[h.key])} 
+    border border-[var(--border-color)]`}
+
+                                    >
+                                        {renderCell ? renderCell(h.key, row, themeMode, showNextArrow) : row[h.key]}
+                                    </td>
+                                ))}
                             </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={filteredHeaders.length} className="px-md py-xl text-center border border-[var(--border-color)]">
+                                <div className="flex flex-col items-center gap-3">
+                                    <p className="font-medium text-sm text-[var(--secondary-text-color)]">No data found</p>
+                                    <p className="text-xs text-[var(--secondary-text-color)] opacity-80">
+                                        Try adjusting your search or filters
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
         </div>
     );
 };
 
-export default ResponsiveTable;
+export default AdvancedTable;

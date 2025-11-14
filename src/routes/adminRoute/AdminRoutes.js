@@ -74,7 +74,6 @@ const AdminRoutes = () => {
     const { authToken } = useAuth();
     const allowedRoles = ['ROLE_ADMIN', 'ROLE_EMPLOYEE'];
 
-   
 
     useEffect(() => {
         document.body.classList.remove('dark', 'light');

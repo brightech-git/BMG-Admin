@@ -52,7 +52,7 @@
   --font-size-xxs: 10px;
   --font-size-xs: 12px;
   --font-size-sm: 14px;
-  --font-size-md: 16px;
+  --font-size-md: 12px;
   --font-size-lg: 18px;
   --font-size-xl: 20px;
   --font-size-2xl: 24px;
@@ -84,7 +84,7 @@
 }
 
 /* Dark theme overrides */
-.dark {
+/* .dark {
   --primary-text-color: #e0e0e0;
   --secondary-text-color: #b0b0b0;
   --background-color: #02021d;
@@ -97,13 +97,12 @@
   --border-color: #333333;
   --card-background-color: #02021d;
 
-  /* SideBar Style */
   --active-bg: rgba(37, 99, 235, 0.55);
   --active-border: #60a5fa;
   --submenu-indicator: #a0aec0;
   --submenu-indicator-active: #60a5fa;
   --both-text-color: #041f60;
-}
+} */
 
 /* Global styles */
 body {

@@ -10,19 +10,11 @@ import { useMutation } from '@tanstack/react-query';
 import { trackOrderById } from '../../service/orderService';
 import { Link } from 'react-router-dom';
 import StatusChip from '../../components/statusChip/StatusChip';
-import { TextField, Button } from '../../components/ui/TailwindForm';
-import { Card, CardContent } from '../../components/ui/TailwindCard';
-import { Typography } from '../../components/ui/TailwindTypography';
-import { Chip } from '../../components/ui/TailwindChip';
 import SkeletonTable from '../../components/table/SkeletonTable';
-import { EnhancedDialog, ProgressTracker } from '../../components/ui/EnhancedDialog';
+import AdvancedTableModal from '../../components/modal/AdvancedTableModal';
 
-// Icons
-import {
-    Search as SearchIcon,
-    RemoveRedEye,
-    ArrowForward
-} from '@mui/icons-material';
+// Icons (still using MUI icons, but styled via CSS)
+import { Search as SearchIcon, RemoveRedEye, ArrowForward } from '@mui/icons-material';
 
 const OrderHistoryPage = () => {
     const { themeMode } = useContext(MyContext);
@@ -36,7 +28,7 @@ const OrderHistoryPage = () => {
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
     const isTablet = useMediaQuery({ query: '(max-width: 1024px)' });
 
-    const [activeDays, setActiveDays] = useState(0); // Default active is "Today"
+    const [activeDays, setActiveDays] = useState(0);
 
     const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : '';
     const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : '';
@@ -54,7 +46,6 @@ const OrderHistoryPage = () => {
         mutationFn: (orderId) => trackOrderById(orderId),
         onSuccess: (data) => {
             setTrackingData(data);
-            console.log('Tracking data:', data);
             setTrackingModalOpen(true);
         },
         onError: (error) => {
@@ -117,7 +108,7 @@ const OrderHistoryPage = () => {
         switch (key) {
             case 'orderId':
                 return (
-                    <span className="text-responsive-xs font-semibold text-[var(--active-border)]">
+                    <span className="text-responsive-xs font-semibold" style={{ color: 'var(--active-border)' }}>
                         {row.orderId}
                     </span>
                 );
@@ -125,10 +116,10 @@ const OrderHistoryPage = () => {
             case 'customer':
                 return (
                     <div>
-                        <div className="text-responsive-xs font-semibold text-[var(--primary-text-color)]">
+                        <div className="text-responsive-xs font-semibold" style={{ color: 'var(--primary-text-color)' }}>
                             {row.customerName}
                         </div>
-                        <div className="text-responsive-xxs text-[var(--secondary-text-color)]">
+                        <div className="text-responsive-xxs" style={{ color: 'var(--secondary-text-color)' }}>
                             {row.contact}
                         </div>
                     </div>
@@ -137,10 +128,10 @@ const OrderHistoryPage = () => {
             case 'orderTime':
                 return (
                     <div>
-                        <div className="text-responsive-xs text-[var(--primary-text-color)]">
+                        <div className="text-responsive-xs" style={{ color: 'var(--primary-text-color)' }}>
                             {format(parseISO(row.orderTime), 'dd/MM/yyyy')}
                         </div>
-                        <div className="text-responsive-xxs text-[var(--secondary-text-color)]">
+                        <div className="text-responsive-xxs" style={{ color: 'var(--secondary-text-color)' }}>
                             {format(parseISO(row.orderTime), 'hh:mm a')}
                         </div>
                     </div>
@@ -149,41 +140,30 @@ const OrderHistoryPage = () => {
             case 'products':
                 return (
                     <div className="flex items-center space-compact-sm">
-                        <Chip
-                            label={`${row.orderItems?.length || 0} item${row.orderItems?.length > 1 ? 's' : ''}`}
-                            size="small"
-                            themeMode={themeMode}
-                        />
+                        <span className="inline-block px-2 py-1 text-responsive-xxs font-medium rounded-full"
+                            style={{ backgroundColor: 'var(--active-bg)', color: 'var(--primary-text-color)' }}>
+                            {row.orderItems?.length || 0} item{row.orderItems?.length > 1 ? 's' : ''}
+                        </span>
                     </div>
                 );
 
             case 'totalAmount':
                 return (
-                    <span className="text-responsive-xs font-bold text-[var(--primary-color)]">
+                    <span className="text-responsive-xs font-bold" style={{ color: 'var(--primary-color)' }}>
                         ₹{row.totalAmount?.toFixed(2)}
                     </span>
                 );
 
             case 'status':
-                return (
-                    <StatusChip
-                        status={row?.status}
-                        size="small"
-                        themeMode={themeMode}
-                    />
-                );
+                return <StatusChip status={row?.status} size="small" themeMode={themeMode} />;
 
             case 'tracking':
                 return (
                     <div className="flex items-center justify-center space-compact-xs">
                         <button
                             onClick={() => handleTrackOrder(row.orderId)}
-                            className="
-                                p-1 rounded-[var(--border-radius-sm)] 
-                                transition-smooth hover:scale-105
-                                text-[var(--active-border)] 
-                                bg-[var(--active-bg)]
-                            "
+                            className="p-1 rounded-[var(--border-radius-sm)] transition-smooth hover:scale-105"
+                            style={{ color: 'var(--active-border)', backgroundColor: 'var(--active-bg)' }}
                             title="View Tracking"
                         >
                             <RemoveRedEye className="text-responsive-sm" />
@@ -191,12 +171,8 @@ const OrderHistoryPage = () => {
                         {showNextArrow && (
                             <button
                                 onClick={() => handleNextAction(row)}
-                                className="
-                                    p-1 rounded-[var(--border-radius-sm)] 
-                                    transition-smooth hover:scale-105
-                                    text-[var(--primary-color)] 
-                                    bg-[var(--active-bg)]
-                                "
+                                className="p-1 rounded-[var(--border-radius-sm)] transition-smooth hover:scale-105"
+                                style={{ color: 'var(--primary-color)', backgroundColor: 'var(--active-bg)' }}
                                 title="Next Action"
                             >
                                 <ArrowForward className="text-responsive-sm" />
@@ -212,157 +188,113 @@ const OrderHistoryPage = () => {
 
     if (isError) {
         return (
-            <div className="min-h-screen bg-[var(--background-color)] p-4 md:p-8">
-                <Card themeMode={themeMode} className="p-6">
-                    <div className="
-                        bg-[var(--error-color)] text-[var(--text-dark)] 
-                        rounded-[var(--border-radius-md)] p-4 mb-4
-                    ">
-                        <Typography variant="body1">
-                            Failed to load orders. Please try again.
-                        </Typography>
+            <div className="min-h-screen p-4 md:p-8" style={{ backgroundColor: 'var(--background-color)' }}>
+                <div className="p-6 rounded-[var(--border-radius-md)] shadow-professional"
+                    style={{ backgroundColor: 'var(--card-background-color)' }}>
+                    <div className="p-4 mb-4 rounded-[var(--border-radius-md)] text-white"
+                        style={{ backgroundColor: 'var(--error-color)' }}>
+                        <p className="text-responsive-sm">Failed to load orders. Please try again.</p>
                     </div>
-                    <Button
+                    <button
                         onClick={refetch}
-                        variant="contained"
-                        themeMode={themeMode}
+                        className="px-4 py-2 text-responsive-sm font-medium text-white rounded-[var(--border-radius-sm)] transition-smooth"
+                        style={{ backgroundColor: 'var(--primary-color)' }}
                     >
                         Retry
-                    </Button>
-                </Card>
+                    </button>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[var(--background-color)] py-8 md:py-10 px-2 md:px-10 ml-0 md:ml-4">
-            {/* Main Card */}
-            <Card themeMode={themeMode} className="shadow-professional hover:shadow-professional-hover transition-smooth">
-                <CardContent padding="default">
-                    {/* Breadcrumb */}
-                    <nav className="mb-1">
-                        <ol className="flex items-center space-x-1 text-responsive-sm">
-                            <li>
-                                <Link
-                                    to="/"
-                                    className="text-[var(--primary-color)] hover:text-[var(--active-border)] transition-colors"
-                                >
-                                    Dashboard
-                                </Link>
-                            </li>
-                            <li className="text-[var(--secondary-text-color)]">/</li>
-                            <li className="text-[var(--primary-text-color)] font-semibold">
-                                Manage Today Orders
-                            </li>
-                        </ol>
-                    </nav>
+        <div className="min-h-screen py-8 md:py-10 px-2 md:px-10 ml-0 md:ml-4" style={{ backgroundColor: 'var(--background-color)' }}>
+            <div className=""
+                >
+                <div className="p-2  md:p-3">
 
-                    {/* Header Section - Enhanced for Tablet */}
+
+                    {/* Header */}
                     <div className={`
-                        flex ${isMobile ? 'flex-col' : isTablet ? 'flex-col lg:flex-row lg:items-center lg:justify-between' : 'flex-row items-center justify-between'} 
-                        ${isMobile ? 'space-y-1' : isTablet ? 'space-y-3 lg:space-y-0' : 'space-y-0'} 
-                        mb-2
-                    `}>
-                        {/* Title Section */}
-                        <div className="flex items-center space-x-1">
-                            <Typography variant="h6" className={`${isTablet ? 'text-responsive-lg' : 'text-responsive-md md:text-responsive-xl'}`}>
+            flex ${isMobile ? 'flex-col' : isTablet ? 'flex-col lg:flex-row lg:items-center lg:justify-between' : 'flex-row items-center justify-between'}
+            ${isMobile ? 'space-y-4' : isTablet ? 'space-y-4 lg:space-y-0' : 'space-y-0'} mb-6
+          `}>
+                        <div className="flex items-center space-x-2">
+                            <h2 className={`${isTablet ? 'text-responsive-lg' : 'text-responsive-xl'} font-bold`}
+                                style={{ color: 'var(--primary-text-color)' }}>
                                 Order Details
-                            </Typography>
-                            <Chip
-                                label={`${filteredOrders.length || 0} orders`}
-                                size="small"
-                                themeMode={themeMode}
-                            />
+                            </h2>
+                            <span className="inline-block px-2 py-1 text-responsive-xs font-medium rounded-full"
+                                style={{ backgroundColor: 'var(--active-bg)', color: 'var(--primary-text-color)' }}>
+                                {filteredOrders.length || 0} orders
+                            </span>
                         </div>
 
-                        {/* Controls Section - Enhanced for Tablet */}
                         <div className={`
-                            flex ${isMobile ? 'flex-col' : isTablet ? 'flex-col lg:flex-row lg:items-center' : 'flex-row items-center'} 
-                            ${isMobile ? 'space-y-2' : isTablet ? 'space-y-2 lg:space-y-0 lg:space-x-2' : 'space-x-2'}
-                            ${isMobile ? 'w-full' : isTablet ? 'w-full lg:w-auto' : 'w-auto'}
-                        `}>
-                            {/* Date Range - Enhanced for Tablet */}
+              flex ${isMobile ? 'flex-col' : isTablet ? 'flex-col lg:flex-row' : 'flex-row items-center'}
+              ${isMobile ? 'space-y-3' : isTablet ? 'space-y-3 lg:space-y-0 lg:space-x-3' : 'space-x-3'}
+              ${isMobile ? 'w-full' : isTablet ? 'w-full lg:w-auto' : 'w-auto'}
+            `}>
                             <div className={`
-                                flex ${isMobile ? 'flex-col' : isTablet ? 'flex-col lg:flex-row lg:items-center' : 'flex-row items-center'} 
-                                ${isMobile ? 'space-y-1' : isTablet ? 'space-y-1 lg:space-y-0 lg:space-x-2' : 'space-x-2'}
-                                ${isTablet ? 'w-30 lg:w-30' : 'w-30'}
-                            `}>
-                                <TextField
-                                    label="From"
+                flex ${isMobile ? 'flex-col' : isTablet ? 'flex-col lg:flex-row' : 'flex-row items-center'}
+                ${isMobile ? 'space-y-2' : isTablet ? 'space-y-2 lg:space-y-0 lg:space-x-2' : 'space-x-2'}
+              `}>
+                                <input
                                     type="date"
                                     value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
                                     onChange={(e) => setStartDate(parseDate(e.target.value))}
-                                    themeMode={themeMode}
-                                    className={isMobile ? 'w-full' : isTablet ? 'w-full lg:w-36' : 'w-40'}
+                                    className="px-3 py-2 text-responsive-sm border rounded-[var(--border-radius-sm)]"
+                                    style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--card-background-color)' }}
                                 />
-
-                                <TextField
-                                    label="To"
+                                <input
                                     type="date"
                                     value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
                                     onChange={(e) => setEndDate(parseDate(e.target.value))}
-                                    themeMode={themeMode}
-                                    className={isMobile ? 'w-full' : isTablet ? 'w-full lg:w-36' : 'w-40'}
+                                    className="px-3 py-2 text-responsive-sm border rounded-[var(--border-radius-sm)]"
+                                    style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--card-background-color)' }}
                                 />
                             </div>
 
-                            {/* Quick Date Buttons - Enhanced for Tablet */}
-                            <div className={`
-                                flex space-x-1 flex-wrap
-                                ${isTablet ? 'justify-center lg:justify-start' : ''}
-                                ${isMobile ? 'mt-0' : isTablet ? 'mt-2 lg:mt-2' : 'mt-2'}
-                            `}>
+                            <div className="flex space-x-1 flex-wrap">
                                 {[0, 7, 30].map((days) => (
-                                    <Button
+                                    <button
                                         key={days}
-                                        variant={activeDays === days ? "contained" : "outlined"}
-                                        size="small"
                                         onClick={() => handleQuickDateSelect(days)}
-                                        themeMode={themeMode}
-                                        className={`${isTablet ? 'text-responsive-xs px-2' : 'text-responsive-xxs'}`}
+                                        className={`px-3 py-1 text-responsive-xs font-medium rounded-[var(--border-radius-sm)] transition-smooth ${activeDays === days ? 'text-white' : ''
+                                            }`}
+                                        style={{
+                                            backgroundColor: activeDays === days ? 'var(--primary-color)' : 'transparent',
+                                            color: activeDays === days ? '#fff' : 'var(--primary-text-color)',
+                                            border: activeDays === days ? 'none' : '1px solid var(--border-color)'
+                                        }}
                                     >
                                         {days === 0 ? 'Today' : days === 7 ? '7 Days' : '30 Days'}
-                                    </Button>
+                                    </button>
                                 ))}
                             </div>
 
-                            {/* Search - Enhanced for Tablet */}
-                            <div className={`relative ${isTablet ? 'flex-1 min-w-full lg:min-w-[230px]' : 'flex-1 min-w-[190px]'}`}>
-                                <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
-                                    <SearchIcon className={`${isTablet ? 'text-responsive-xs' : 'text-responsive-xxs'} text-[var(--secondary-text-color)]`} />
-                                </div>
-                                <TextField
+                            <div className="relative flex-1 min-w-[190px]">
+                                <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-responsive-xs"
+                                    style={{ color: 'var(--secondary-text-color)' }} />
+                                <input
+                                    type="text"
                                     placeholder="Search by Order ID or Mobile"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    themeMode={themeMode}
-                                    className={`w-full`}
+                                    className="w-full pl-10 pr-3 py-2 text-responsive-sm border rounded-[var(--border-radius-sm)]"
+                                    style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--card-background-color)' }}
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Table Section */}
-                    {isLoading ? (
-                        <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                            <SkeletonTable
-                                rows={6}
-                                columns={7}
-                                themeMode={themeMode}
-                                withHeader={true}
-                            />
-                            <Typography variant="body1" className="text-center text-[var(--secondary-text-color)]">
-                                Loading orders...
-                            </Typography>
-                        </div>
-                    ) : (
-                        <div className="rounded-[var(--border-radius-md)] overflow-hidden border border-[var(--border-color)]">
+                    <div className="rounded-[var(--border-radius-md)] overflow-hidden border" style={{ borderColor: 'var(--border-color)' }}>
+                        {isLoading ? (
+                            <SkeletonTable rows={5} cols={7} />
+                        ) : (
                             <ResponsiveTable
                                 headers={tableHeaders}
                                 data={filteredOrders}
-                                isLoading={isLoading}
-                                isError={isError}
-                                onRetry={refetch}
                                 renderCell={renderCell}
                                 themeMode={themeMode}
                                 showNextArrow={true}
@@ -372,88 +304,43 @@ const OrderHistoryPage = () => {
                                     tracking: 'center'
                                 }}
                             />
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                        )}
+                    </div>
+                </div>
+            </div>
 
-            {/* Enhanced Tracking Dialog */}
-            <EnhancedDialog
+            <AdvancedTableModal
                 open={trackingModalOpen}
                 onClose={closeTrackingModal}
                 title="Order Tracking Details"
-                maxWidth="lg"
+                mode="track"
                 themeMode={themeMode}
-            >
-                {trackingData ? (
-                    <div className="space-y-2">
-                        <ProgressTracker
-                            trackingData={trackingData}
-                            themeMode={themeMode}
-                        />
-
-                        {/* Order Items */}
-                        <div>
-                            <h3 className="text-responsive-md font-semibold text-[var(--primary-text-color)] mb-4">
-                                Order Items
-                            </h3>
-                            <div className="overflow-x-auto">
-                                <table className="w-full border-collapse">
-                                    <thead>
-                                        <tr className="bg-[var(--active-bg)]">
-                                            <th className="text-left p-3 text-responsive-xs font-semibold text-[var(--primary-text-color)]">
-                                                Product
-                                            </th>
-                                            <th className="text-left p-3 text-responsive-xs font-semibold text-[var(--primary-text-color)]">
-                                                Product Key
-                                            </th>
-                                            <th className="text-right p-3 text-responsive-xs font-semibold text-[var(--primary-text-color)]">
-                                                Price
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {trackingData?.items?.map((item, index) => (
-                                            <tr key={index} className="border-b border-[var(--border-color)] hover:bg-[var(--active-bg)]">
-                                                <td className="p-3">
-                                                    <div className="flex items-center space-x-2">
-                                                        {item.image_path && (
-                                                            <img
-                                                                src={item.image_path}
-                                                                alt={item.productName}
-                                                                className="w-10 h-10 rounded-[var(--border-radius-sm)] object-cover border border-[var(--border-color)]"
-                                                            />
-                                                        )}
-                                                        <span className="text-responsive-xs text-[var(--primary-text-color)]">
-                                                            {item.productName}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-3 text-responsive-xs text-[var(--primary-text-color)]">
-                                                    {item.itemid}{item.tagno}
-                                                </td>
-                                                <td className="p-3 text-right text-responsive-xs font-semibold text-[var(--success-color)]">
-                                                    ₹{item.price.toFixed(2)}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                columns={[
+                    { key: 'productName', label: 'Product', align: 'left' },
+                    { key: 'productKey', label: 'Product Key', align: 'left' },
+                    { key: 'price', label: 'Price (₹)', align: 'right' },
+                ]}
+                data={trackingData?.items?.map(item => ({
+                    productName: (
+                        <div className="flex items-center space-x-2">
+                            {item.image_path && (
+                                <img
+                                    src={item.image_path}
+                                    alt={item.productName}
+                                    className="w-10 h-10 rounded-[var(--border-radius-sm)] object-cover border"
+                                    style={{ borderColor: 'var(--border-color)' }}
+                                />
+                            )}
+                            <span>{item.productName}</span>
                         </div>
-                    </div>
-                ) : (
-                    <div className="text-center py-8">
-                        <div className="text-4xl text-[var(--border-color)] mb-4">📦</div>
-                        <Typography variant="h6" className="text-[var(--secondary-text-color)] mb-2">
-                            No Tracking Information
-                        </Typography>
-                        <Typography variant="body2" className="text-[var(--secondary-text-color)]">
-                            Tracking details are not available for this order yet.
-                        </Typography>
-                    </div>
-                )}
-            </EnhancedDialog>
+                    ),
+                    productKey: `${item.itemid}${item.tagno}`,
+                    price: `₹${item.price.toFixed(2)}`
+                })) || []}
+                showTotal={true}
+                totalLabel="Total Price"
+                totalValue={`₹${trackingData?.items?.reduce((sum, i) => sum + i.price, 0)?.toFixed(2) || 0}`}
+            />
         </div>
     );
 };
