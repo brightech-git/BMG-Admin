@@ -89,8 +89,9 @@ const OrderHistoryPage = () => {
 
     const handleNextAction = (row) => {
         const route = getStatusRoute(row.status);
+        const path ='/admin/order/status';
         if (route) {
-            navigate(route.path, { state: { key: route.key, values: route.values } });
+            navigate(path, { state: { key: route.key, values: route.values } });
         }
     };
 
@@ -340,6 +341,8 @@ const OrderHistoryPage = () => {
                 showTotal={true}
                 totalLabel="Total Price"
                 totalValue={`₹${trackingData?.items?.reduce((sum, i) => sum + i.price, 0)?.toFixed(2) || 0}`}
+                fontSizeHeader='text-xs'
+                fontSizeRow="text-xs"
             />
         </div>
     );

@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import {
-    useUpdateLatestBannerMutation, useLatestBannersQuery ,useDeleteLatestBannerMutation} from '../../../hooks/banners/latestCollection/useLatestCollection'
+    useUpdateLatestBannerMutation, useLatestBannersQuery, useDeleteLatestBannerMutation
+} from '../../../hooks/banners/latestCollection/useLatestCollection'
 import { useNavigate } from "react-router-dom";
 import FileUploader from "../../../components/banner/FileUploader";
 import BackdropProgress from "../../../components/backDrop/BackdropProgress";
@@ -27,7 +28,7 @@ import {
     CardContent,
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
-import { getProductImages } from "../../../../utils/image/getProductImages";
+import { getProductImages } from "../../../../utils/mediaUtils/mediaUtils.js.js";
 
 const ManageLatestBanner = () => {
     const { data: designs, isLoading } = useLatestBannersQuery();

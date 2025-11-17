@@ -54,7 +54,6 @@ import RefundedOrders from '../../admin/pages/order/RefundedOrders';
 import ReturnedOrders from '../../admin/pages/order/ReturnedOrders';
 import ManageSingleProduct from '../../admin/pages/product/manage/ManageSingleProduct';
 
-import PlacedOrders from '../../admin/pages/order/PlacedOrders';
 import PackingOrders from '../../admin/pages/order/PackingOrders';
 import GlobalSnackbar from '../../admin/components/snackBar/GlobalSnackbar';
 import EcomMarketingAttributesTable from '../../admin/pages/market-option/EcomMarketingAttributesTable';
@@ -68,6 +67,10 @@ import UploadLatestBanner from '../../admin/pages/banner/add/AddLatestCollection
 import ManageLatestBanner from '../../admin/pages/banner/manage/ManageLatestBanner';
 import AddGenderBanner from '../../admin/pages/banner/add/AddGenderBanner';
 import ManageGenderBanner from '../../admin/pages/banner/manage/ManageGenderBanner';
+import AddImage from '../../admin/pages/product/add/addImageProduct';
+
+import OrderTable from '../../admin/pages/order/AllOrders';
+
 
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
@@ -104,8 +107,8 @@ const AdminRoutes = () => {
                 <main className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
                     <Routes>
                         <Route path="/" element={<ProtectedRoute allowedRoles={allowedRoles}><MainContent /></ProtectedRoute>} />
-                        <Route path="product/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddProduct /></ProtectedRoute>} />
-                        <Route path="product/manage/:tagKey" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageProduct /></ProtectedRoute>} />
+                        <Route path="product/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddImage /></ProtectedRoute>} />
+                        {/* <Route path="product/manage/:tagKey" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageProduct /></ProtectedRoute>} /> */}
                         <Route path="product/manage/single" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageSingleProduct /></ProtectedRoute>} />
 
                         <Route path="product/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageProduct /></ProtectedRoute>} />
@@ -150,9 +153,9 @@ const AdminRoutes = () => {
 
                         <Route path="userDetails" element={<UserDetails />} />
                         <Route path="order/today" element={<OrderHistoryPage />} />
-                        <Route path="order/status" element={<OrderStatusManagement />} />
+                        {/* <Route path="order/status" element={<OrderStatusManagement />} /> */}
                         <Route path="order/status/prepare" element={<PrepareOrder />} />
-                        <Route path='order/status/placed' element={<PlacedOrders />} />
+                        <Route path='order/status' element={<OrderTable />} />
                         <Route path='order/status/packing' element={<PackingOrders />} />
                         <Route path="order/status/in-transit" element={<TransitOrders />} />
                         <Route path="order/status/refunded" element={<RefundedOrders />} />

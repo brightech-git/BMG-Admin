@@ -160,7 +160,8 @@ const DashboardCards = () => {
                 value: dashboardData.deliveredOrders,
                 icon: <FaCheckCircle />,
                 detail: 'Successfully delivered',
-                link: 'order/status/delivered',
+                link: 'order/status',
+                key: 'DELIVERED',
                 type: 'success',
                 trend: 15.3
             },
@@ -190,7 +191,7 @@ const DashboardCards = () => {
                 icon: <FaClock />,
                 detail: 'Awaiting payment',
                 status: 'PENDING',
-                path: '/admin/order/status/pending',
+                path: '/admin/order/status',
                 key: 'PENDING',
                 values: ['IN_PROCESSING', 'CANCELLED'],
                 progress: ((dashboardData.pendingOrders || 0) / total) * 100
@@ -202,7 +203,7 @@ const DashboardCards = () => {
                 icon: <FaShoppingBag />,
                 detail: 'Recently placed',
                 status: 'PLACED',
-                path: '/admin/order/status/placed',
+                path: '/admin/order/status',
                 key: 'PLACED',
                 values: ['IN_PROCESSING', 'CANCELLED'],
                 progress: ((dashboardData.placedOrders || 0) / total) * 100
@@ -214,7 +215,7 @@ const DashboardCards = () => {
                 icon: <FaSearch />, // Quality check icon
                 detail: 'Quality control',
                 status: 'IN_PROCESSING',
-                path: '/admin/order/status/qc',
+                path: '/admin/order/status',
                 key: 'IN_PROCESSING',
                 values: ['PACKING', 'CANCELLED'],
                 progress: ((dashboardData.inProcessingOrders || 0) / total) * 100
@@ -226,7 +227,7 @@ const DashboardCards = () => {
                 icon: <FaBoxOpen />, // Better packing icon
                 detail: 'Being packed',
                 status: 'PACKING',
-                path: '/admin/order/status/packing',
+                path: '/admin/order/status',
                 key: 'PACKING',
                 values: ['PACKED', 'CANCELLED'],
                 progress: ((dashboardData.PackingOrders || 0) / total) * 100
@@ -238,7 +239,7 @@ const DashboardCards = () => {
                 icon: <FaBox />, // Packed box icon
                 detail: 'Ready for shipment',
                 status: 'PACKED',
-                path: '/admin/order/status/packed',
+                path: '/admin/order/status',
                 key: 'PACKED',
                 values: ['SHIPPED', 'CANCELLED'],
                 progress: ((dashboardData.packedOrders || 0) / total) * 100
@@ -250,7 +251,7 @@ const DashboardCards = () => {
                 icon: <FaShippingFast />, // Shipping icon
                 detail: 'Order shipped',
                 status: 'SHIPPED',
-                path: '/admin/order/status/shipped',
+                path: '/admin/order/status',
                 key: 'SHIPPED',
                 values: ['IN_TRANSIT', 'CANCELLED'],
                 progress: ((dashboardData.shippedOrders || 0) / total) * 100
@@ -262,7 +263,7 @@ const DashboardCards = () => {
                 icon: <FaTruck />, // Truck icon for transit
                 detail: 'On the way',
                 status: 'IN_TRANSIT',
-                path: '/admin/order/status/in-transit',
+                path: '/admin/order/status',
                 key: 'IN_TRANSIT',
                 values: ['DELIVERED', 'CANCELLED'],
                 progress: ((dashboardData.inTransitOrders || 0) / total) * 100
@@ -274,7 +275,7 @@ const DashboardCards = () => {
                 icon: <FaCheckCircle />, // Check mark for delivered
                 detail: 'Successfully delivered',
                 status: 'DELIVERED',
-                path: '/admin/order/status/delivered',
+                path: '/admin/order/status',
                 key: 'DELIVERED',
                 values: ['COMPLETED'],
                 progress: ((dashboardData.deliveredOrders || 0) / total) * 100
@@ -286,7 +287,7 @@ const DashboardCards = () => {
                 icon: <FaTimesCircle />, // X mark for cancelled
                 detail: 'Cancelled orders',
                 status: 'CANCELLED',
-                path: '/admin/order/status/cancelled',
+                path: '/admin/order/status',
                 key: 'CANCELLED',
                 values: ['CLOSED'],
                 progress: ((dashboardData.cancelledOrders || 0) / total) * 100
@@ -298,7 +299,7 @@ const DashboardCards = () => {
                 icon: <FaUndo />, // Return/undo icon
                 detail: 'Order returned',
                 status: 'RETURNED',
-                path: '/admin/order/status/returned',
+                path: '/admin/order/status',
                 key: 'RETURNED',
                 values: ['REFUNDED', 'CLOSED'],
                 progress: ((dashboardData.returnedOrders || 0) / total) * 100
@@ -310,7 +311,7 @@ const DashboardCards = () => {
                 icon: <FaMoneyBillWave />, // Money icon for refund
                 detail: 'Payment refunded',
                 status: 'REFUNDED',
-                path: '/admin/order/status/refunded',
+                path: '/admin/order/status',
                 key: 'REFUNDED',
                 values: ['CLOSED'],
                 progress: ((dashboardData.refundedOrders || 0) / total) * 100
@@ -645,7 +646,7 @@ const StatCard = React.memo(({ card, index, formatNumber, themeMode }) => {
                         <p className="card-value">{formatNumber(card.value)}</p>
                     </div>
                     <div>
-                        <Link to={card.link} className="card-link">
+                        <Link to={card.link} state={{ key: card.key }} className="card-link">
                             View <FaExternalLinkAlt />
                         </Link>
                     </div>

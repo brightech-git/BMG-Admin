@@ -733,7 +733,7 @@ const DeliveredOrders = () => {
             }}
         >
             <TableHeaderCard>
-                <CardContent sx={{ p: 3 }}>
+                <CardContent sx={{ p: 1 }}>
                     <nav aria-label="breadcrumb">
                         <ol className="breadcrumb">
                             <li className="breadcrumb-item">

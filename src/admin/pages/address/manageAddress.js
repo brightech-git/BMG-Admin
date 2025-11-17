@@ -115,8 +115,10 @@ useEffect(()=>{
 
     const handleCheckboxChange = (e) => {
         setFormData((prev) => ({ ...prev, isDefault: e.target.checked }));
+        console.log(e.target.checked,'formdataforAddress');
     };
-
+    
+    console.log(formData ,'formdataforAddress')
     const handleSubmit = async () => {
         if (!validateForm()) {
             showSnackbar('Please correct the form errors.', 'error');

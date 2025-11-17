@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext ,useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
     FaBox,
@@ -35,18 +35,18 @@ const menuItems = [
         icon: <FaClipboardList className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Today Orders', path: '/admin/order/today', key: '', values: [''] },
-            { title: 'Pending Orders', path: '/admin/order/status/pending', key: 'PENDING', values: [''] },
-            { title: 'Placed', path: '/admin/order/status/placed', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
-            { title: 'Quality Checking', path: '/admin/order/status/qc', key: 'IN_PROCESSING', values: ['PACKING', 'CANCELLED'] },
-            { title: 'Packing', path: '/admin/order/status/packing', key: 'PACKING', values: ['PACKED', 'CANCELLED'] },
-            { title: 'Packed', path: '/admin/order/status/packed', key: 'PACKED', values: ['SHIPPED', 'CANCELLED'] },
-            { title: 'Dispatch', path: '/admin/order/status/shipped', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Pending Orders', path: '/admin/order/status', key: 'PENDING', values: [''] },
+            { title: 'Placed', path: '/admin/order/status', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
+            { title: 'Quality Checking', path: '/admin/order/status', key: 'IN_PROCESSING', values: ['PACKING', 'CANCELLED'] },
+            { title: 'Packing', path: '/admin/order/status', key: 'PACKING', values: ['PACKED', 'CANCELLED'] },
+            { title: 'Packed', path: '/admin/order/status', key: 'PACKED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Dispatch', path: '/admin/order/status', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
             // { title: 'Shipped', path: '/admin/order/status/shipping', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
-            { title: 'In-Transit', path: '/admin/order/status/in-transit', key: 'IN_TRANSIT', values: ['SHIPPED', 'CANCELLED'] },
-            { title: 'Delivered', path: '/admin/order/status/delivered', key: 'DELIVERED', values: ['SHIPPED', 'CANCELLED'] },
-            { title: 'Cancelled', path: '/admin/order/status/cancelled', key: 'CANCELLED', values: ['SHIPPED', 'CANCELLED'] },
-            { title: 'Returned', path: '/admin/order/status/returned', key: 'RETURNED', values: ['SHIPPED', 'CANCELLED'] },
-            { title: 'Refunded', path: '/admin/order/status/refunded', key: 'REFUNDED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'In-Transit', path: '/admin/order/status', key: 'IN_TRANSIT', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Delivered', path: '/admin/order/status', key: 'DELIVERED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Cancelled', path: '/admin/order/status', key: 'CANCELLED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Returned', path: '/admin/order/status', key: 'RETURNED', values: ['SHIPPED', 'CANCELLED'] },
+            { title: 'Refunded', path: '/admin/order/status', key: 'REFUNDED', values: ['SHIPPED', 'CANCELLED'] },
         ],
     },
     {
@@ -125,9 +125,42 @@ const employeeMenu = {
 };
 
 const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, currentPath }) => {
+    const location = useLocation();
     const hasSubmenu = item.submenu && item.submenu.length > 0;
-    const isActive = item.path === currentPath ||
-        (hasSubmenu && item.submenu.some(subItem => subItem.path === currentPath));
+
+    // Get current URL search parameters
+    const searchParams = new URLSearchParams(location.search);
+    const currentKey = searchParams.get('key');
+
+    // Improved active state checking that considers query parameters
+    const isActive = useMemo(() => {
+        // For main menu items without submenu
+        if (item.path && !hasSubmenu) {
+            return location.pathname === item.path;
+        }
+
+        // For submenu items (check both path and key parameter)
+        if (item.path && item.key !== undefined) {
+            return location.pathname === item.path && currentKey === item.key;
+        }
+
+        return false;
+    }, [location.pathname, location.search, item, hasSubmenu, currentKey]);
+
+    // Check if parent menu has active child
+    const hasActiveChild = useMemo(() => {
+        if (!item.submenu) return false;
+
+        return item.submenu.some(subItem => {
+            if (subItem.path && subItem.key !== undefined) {
+                return location.pathname === subItem.path && currentKey === subItem.key;
+            }
+            return location.pathname === subItem.path;
+        });
+    }, [location.pathname, location.search, item, currentKey]);
+
+    // Parent is active if it has an active child
+    const isParentActive = hasSubmenu && hasActiveChild;
 
     const handleClick = () => {
         if (hasSubmenu) {
@@ -137,11 +170,26 @@ const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, curren
         }
     };
 
+    // Helper function to create proper navigation for order items
+    const getNavigationProps = (menuItem) => {
+        if (menuItem.path === '/admin/order/status' && menuItem.key) {
+            // For order status items, include the key parameter
+            return {
+                to: `${menuItem.path}?key=${menuItem.key}`,
+                state: { key: menuItem.key, values: menuItem.values }
+            };
+        }
+        return {
+            to: menuItem.path,
+            state: menuItem.key ? { key: menuItem.key, values: menuItem.values } : undefined
+        };
+    };
+
     return (
         <div className="staradmin-menu-item-wrapper">
             {hasSubmenu ? (
                 <div
-                    className={`staradmin-menu-item ${isActive ? 'active' : ''} ${hasSubmenu ? 'has-submenu' : ''}`}
+                    className={`staradmin-menu-item ${isParentActive ? 'active' : ''} ${hasSubmenu ? 'has-submenu' : ''}`}
                     onClick={handleClick}
                 >
                     <div className="staradmin-menu-content">
@@ -174,7 +222,7 @@ const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, curren
                 </div>
             ) : (
                 <NavLink
-                    to={item.path}
+                    {...getNavigationProps(item)}
                     className={({ isActive }) =>
                         `staradmin-menu-item ${isActive ? 'active' : ''}`
                     }
@@ -212,12 +260,17 @@ const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, curren
                     >
                         {item.submenu.map((subItem) => (
                             <NavLink
-                                key={subItem.path}
-                                to={subItem.path}
-                                state={{ key: subItem.key, values: subItem.values }}
-                                className={({ isActive }) =>
-                                    `staradmin-submenu-item ${isActive ? 'active' : ''}`
-                                }
+                                key={`${subItem.path}-${subItem.key || ''}`}
+                                {...getNavigationProps(subItem)}
+                                className={({ isActive }) => {
+                                    // Custom active check for order status items
+                                    let active = isActive;
+                                    if (subItem.path === '/admin/order/status' && subItem.key) {
+                                        active = location.pathname === subItem.path &&
+                                            currentKey === subItem.key;
+                                    }
+                                    return `staradmin-submenu-item ${active ? 'active' : ''}`;
+                                }}
                                 onClick={onClick}
                             >
                                 <div className="staradmin-submenu-indicator"></div>
@@ -256,11 +309,21 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }, []);
 
     useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const currentKey = searchParams.get('key');
+
         const initialExpanded = {};
         menuItems.forEach((item) => {
             if (item.submenu) {
                 initialExpanded[item.title.toLowerCase()] = item.submenu.some(
-                    (subItem) => subItem.path === location.pathname
+                    (subItem) => {
+                        const pathMatches = subItem.path === location.pathname;
+                        // For order items, also check the key parameter
+                        if (subItem.path === '/admin/order/status' && subItem.key) {
+                            return pathMatches && currentKey === subItem.key;
+                        }
+                        return pathMatches;
+                    }
                 );
             }
         });
@@ -270,7 +333,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             );
         }
         setExpanded(initialExpanded);
-    }, [location.pathname]);
+    }, [location.pathname, location.search]); // Add location.search as dependency
 
     useEffect(() => {
         const title = getPageTitle(location.pathname, menuItems);

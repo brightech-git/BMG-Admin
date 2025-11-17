@@ -1,9 +1,6 @@
 import React from 'react';
 import SkeletonTable from './SkeletonTable';
 
-
-
-
 const AdvancedTable = ({
     headers = [],
     data = [],
@@ -25,9 +22,10 @@ const AdvancedTable = ({
     rowHoverBg = 'hover:bg-[var(--active-bg)]',
     fontFamilyHeader = 'font-secondary',
     fontFamilyRow = 'font-primary',
-    fontSizeHeader = 'text-[var(--font-size-sm)]',
+    fontSizeHeader = 'text-[var(--font-size-xs)]',
     fontSizeRow = 'text-[var(--font-size-xs)]',
     tableWidth = 'w-full',
+    emptyMessage = '',
 }) => {
     // ---- Build final column alignment map ----
     const finalAlignments = headers.reduce((acc, h) => {
@@ -99,11 +97,11 @@ const AdvancedTable = ({
         <div className={`${tableWidth} overflow-x-auto`}>
             <table className="w-full min-w-full border-collapse border border-[var(--border-color)]">
                 <thead>
-                    <tr className={headerBg}>
+                    <tr className={`${headerBg}`}>
                         {filteredHeaders.map((h) => (
                             <th
                                 key={h.key}
-                                className={`px-md py-sm font-bold ${fontFamilyHeader} ${headerText} 
+                                className={`px-0.5 sm:px-1 py-sm font-bold ${fontFamilyHeader} ${headerText} 
     ${fontSizeHeader} ${alignClass(finalAlignments[h.key])} 
     whitespace-nowrap border border-[var(--border-color)]`}
 
@@ -120,7 +118,7 @@ const AdvancedTable = ({
                                 {filteredHeaders.map((h) => (
                                     <td
                                         key={`${row.id ?? i}-${h.key}`}
-                                        className={`px-md py-sm ${fontFamilyRow} ${rowText} 
+                                        className={`px-0.5 sm:px-1  ${fontFamilyRow} ${rowText} 
     ${fontSizeRow} ${alignClass(finalAlignments[h.key])} 
     border border-[var(--border-color)]`}
 
@@ -132,12 +130,12 @@ const AdvancedTable = ({
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={filteredHeaders.length} className="px-md py-xl text-center border border-[var(--border-color)]">
-                                <div className="flex flex-col items-center gap-3">
-                                    <p className="font-medium text-sm text-[var(--secondary-text-color)]">No data found</p>
-                                    <p className="text-xs text-[var(--secondary-text-color)] opacity-80">
-                                        Try adjusting your search or filters
-                                    </p>
+                            <td colSpan={filteredHeaders.length} className="px-1 py-2 text-center border border-[var(--border-color)]">
+                                <div className="flex flex-col items-center">
+                                   
+                                        {emptyMessage ? (<p className='text-xs text-[var(--secondary-text-color)] opacity-90'> {emptyMessage} </p>): (<p className = "text-xs text-[var(--secondary-text-color)] opacity-90">
+                                            No data found
+                                    </p>)}
                                 </div>
                             </td>
                         </tr>

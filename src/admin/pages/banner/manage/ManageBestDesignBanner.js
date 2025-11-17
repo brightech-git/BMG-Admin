@@ -9,6 +9,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import FileUploader from "../../../components/banner/FileUploader";
 import BackdropProgress from "../../../components/backDrop/BackdropProgress";
+import BannerTable from "../../../components/banner/manageBannerTable.jsx";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 import {
     Box,
@@ -30,7 +32,7 @@ import {
     CardContent,
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
-import { getProductImages } from "../../../../utils/image/getProductImages";
+import { getProductImages } from "../../../../utils/mediaUtils/mediaUtils.js.js";
 
 const ManageBestDesignBanner = () => {
     const { data: designs, isLoading } = useBestDesignsQuery();
@@ -96,125 +98,188 @@ const ManageBestDesignBanner = () => {
 
     if (isLoading) return <p>Loading banners...</p>;
 
+    console.log(designs ,'designdata')
+    const tableData = designs.map((item, index) => ({
+        id: item.id,
+        sno: index + 1,
+        image_path: item.Image,
+        name: item.Name || "—",
+    }));
+
+
     return (
-        <Box sx={{ mt: { xs: 3, md: 4 }, p: { xs: 2, md: 4 } }}>
-            <Box sx={{ padding: 3, border: "1px solid #e0e0e0ff", borderRadius: 2 }}>
-                {/* Top bar */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mb: 3,
-                    }}
-                >
-                    <Typography
-                        variant="h6"
-                        sx={{ fontWeight: 700, fontSize: { md: "20px", sm: "16px", xs: "14px" } }}
-                    >
-                        Manage Best Designed Banners
-                    </Typography>
-                    <Button variant="contained" color="primary" onClick={onAddNew}>
-                        Add New Banner
-                    </Button>
-                </Box>
+        // <Box sx={{ mt: { xs: 3, md: 4 }, p: { xs: 2, md: 4 } }}>
+        //     <Box sx={{ padding: 3, border: "1px solid #e0e0e0ff", borderRadius: 2 }}>
+        //         {/* Top bar */}
+        //         <Box
+        //             sx={{
+        //                 display: "flex",
+        //                 justifyContent: "space-between",
+        //                 alignItems: "center",
+        //                 mb: 3,
+        //             }}
+        //         >
+        //             <Typography
+        //                 variant="h6"
+        //                 sx={{ fontWeight: 700, fontSize: { md: "20px", sm: "16px", xs: "14px" } }}
+        //             >
+        //                 Manage Best Designed Banners
+        //             </Typography>
+        //             <Button variant="contained" color="primary" onClick={onAddNew}>
+        //                 Add New Banner
+        //             </Button>
+        //         </Box>
 
-                {/* Empty state */}
-                {!designs || designs.length === 0 ? (
-                    <Card
-                        sx={{
-                            textAlign: "center",
-                            py: 10,
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 2,
-                        }}
-                    >
-                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                            No banners found
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            You haven’t added any best design banners yet.
-                        </Typography>
-                        <Button variant="contained" color="primary" onClick={onAddNew}>
-                            Add New Banner
-                        </Button>
-                    </Card>
-                ) : (
-                    <Paper sx={{ width: "100%", overflowX: "auto" }}>
-                        <Table>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>S.No</TableCell>
-                                    <TableCell>Image</TableCell>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell align="center">Actions</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {designs.map((design, index) => (
-                                    <TableRow key={design.id}>
-                                        <TableCell>{index + 1}</TableCell>
-                                        <TableCell>
-                                            <img
-                                                src={getProductImages(design.Image)}
-                                                alt={design.Name}
-                                                style={{ width: 80, height: 50, objectFit: "cover", borderRadius: 4 }}
-                                            />
-                                        </TableCell>
-                                        <TableCell>{design.Name}</TableCell>
-                                        <TableCell align="center">
-                                            <IconButton color="primary" onClick={() => handleEdit(design)} size="small">
-                                                <Edit />
-                                            </IconButton>
-                                            <IconButton color="error" onClick={() => handleDelete(design.id)} size="small">
-                                                <Delete />
-                                            </IconButton>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </Paper>
-                )}
+        //         {/* Empty state */}
+        //         {!designs || designs.length === 0 ? (
+        //             <Card
+        //                 sx={{
+        //                     textAlign: "center",
+        //                     py: 10,
+        //                     display: "flex",
+        //                     flexDirection: "column",
+        //                     alignItems: "center",
+        //                     justifyContent: "center",
+        //                     gap: 2,
+        //                 }}
+        //             >
+        //                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        //                     No banners found
+        //                 </Typography>
+        //                 <Typography variant="body2" color="text.secondary">
+        //                     You haven’t added any best design banners yet.
+        //                 </Typography>
+        //                 <Button variant="contained" color="primary" onClick={onAddNew}>
+        //                     Add New Banner
+        //                 </Button>
+        //             </Card>
+        //         ) : (
+        //             <Paper sx={{ width: "100%", overflowX: "auto" }}>
+        //                 <Table>
+        //                     <TableHead>
+        //                         <TableRow>
+        //                             <TableCell>S.No</TableCell>
+        //                             <TableCell>Image</TableCell>
+        //                             <TableCell>Name</TableCell>
+        //                             <TableCell align="center">Actions</TableCell>
+        //                         </TableRow>
+        //                     </TableHead>
+        //                     <TableBody>
+        //                         {designs.map((design, index) => (
+        //                             <TableRow key={design.id}>
+        //                                 <TableCell>{index + 1}</TableCell>
+        //                                 <TableCell>
+        //                                     <img
+        //                                         src={getProductImages(design.Image)}
+        //                                         alt={design.Name}
+        //                                         style={{ width: 80, height: 50, objectFit: "cover", borderRadius: 4 }}
+        //                                     />
+        //                                 </TableCell>
+        //                                 <TableCell>{design.Name}</TableCell>
+        //                                 <TableCell align="center">
+        //                                     <IconButton color="primary" onClick={() => handleEdit(design)} size="small">
+        //                                         <Edit />
+        //                                     </IconButton>
+        //                                     <IconButton color="error" onClick={() => handleDelete(design.id)} size="small">
+        //                                         <Delete />
+        //                                     </IconButton>
+        //                                 </TableCell>
+        //                             </TableRow>
+        //                         ))}
+        //                     </TableBody>
+        //                 </Table>
+        //             </Paper>
+        //         )}
 
-                {/* Edit Dialog */}
-                <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} fullWidth maxWidth="sm">
-                    <DialogTitle>Edit Banner</DialogTitle>
-                    <DialogContent>
-                        <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                            Change Name or Image
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            label="Banner Name"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            sx={{ mb: 2 }}
-                        />
-                        <FileUploader selectedFile={editFile} onFileSelect={setEditFile} height={200} />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setEditDialogOpen(false)} color="secondary">
-                            Cancel
-                        </Button>
-                        <Button onClick={handleUpdate} variant="contained" color="primary">
-                            Update
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+        //         {/* Edit Dialog */}
+        //         <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} fullWidth maxWidth="sm">
+        //             <DialogTitle>Edit Banner</DialogTitle>
+        //             <DialogContent>
+        //                 <Typography variant="subtitle1" sx={{ mb: 2 }}>
+        //                     Change Name or Image
+        //                 </Typography>
+        //                 <TextField
+        //                     fullWidth
+        //                     label="Banner Name"
+        //                     value={editName}
+        //                     onChange={(e) => setEditName(e.target.value)}
+        //                     sx={{ mb: 2 }}
+        //                 />
+        //                 <FileUploader selectedFile={editFile} onFileSelect={setEditFile} height={200} />
+        //             </DialogContent>
+        //             <DialogActions>
+        //                 <Button onClick={() => setEditDialogOpen(false)} color="secondary">
+        //                     Cancel
+        //                 </Button>
+        //                 <Button onClick={handleUpdate} variant="contained" color="primary">
+        //                     Update
+        //                 </Button>
+        //             </DialogActions>
+        //         </Dialog>
 
-                {/* Backdrop Progress */}
-                <BackdropProgress
-                    open={backdropOpen}
-                    title="Updating Banner"
-                    body="Please wait while the banner is updated..."
-                    progress={progress}
-                />
-            </Box>
-        </Box>
+        //         {/* Backdrop Progress */}
+        //         <BackdropProgress
+        //             open={backdropOpen}
+        //             title="Updating Banner"
+        //             body="Please wait while the banner is updated..."
+        //             progress={progress}
+        //         />
+        //     </Box>
+        // </Box>
+
+        <div className="max-w-8xl mx-auto mt-3  p-3 sm:p-4 sm:mt-4">
+            <BannerTable
+                title="Manage BestDesigned Banners"
+                headers={[
+                    { key: "sno", label: "S.No" },
+                    { key: "image_path", label: "Image" },
+                    {key:'name' , label: 'Name'},
+                    { key: "actions", label: "Actions", align: "center" },
+                ]}
+                data={tableData}
+                renderCell={(key, row) => {
+                    // Image column
+                    if (key === "image_path") {
+                        return (
+                            <img
+                                src={getProductImages(row.image_path)}
+                                alt={row.title}
+                                width={60}
+                                height={40}
+                                className="rounded shadow-sm object-cover"
+                            />
+                        );
+                    }
+
+                    // Actions column
+                    if (key === "actions") {
+                        return (
+                            <div className="flex gap-2 justify-center">
+                                <button
+                                    onClick={() => navigate(`/admin/banner/add?id=${row.id}`)}
+                                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                                    title="Edit"
+                                >
+                                    <FaEdit size={16} />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(row.id)}
+                                    className="text-red-600 hover:text-red-800 transition-colors"
+                                    title="Delete"
+                                >
+                                    <FaTrash size={16} />
+                                </button>
+                            </div>
+                        );
+                    }
+
+                    // Default value display
+                    return row[key];
+                }}
+                loading={isLoading}
+                emptyMessage="No banners found"
+            />
+        </div>
     );
 };
 

@@ -21,9 +21,9 @@ import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import FileUploader from "../../../components/banner/FileUploader";
 
-import  useCategories from '../../../hooks/itemCategory/useItemCategory'
+import useCategories from '../../../hooks/itemCategory/useItemCategory'
 import { useDeleteCategory, useUpdateCategory } from '../../../hooks/itemCategory/useUploadCategory'
-import { getProductImages } from "../../../../utils/image/getProductImages";
+import { getProductImages } from "../../../../utils/mediaUtils/mediaUtils.js.js";
 import { useItemNames } from "../../../hooks/itemName/useItemNames";
 import { useNavigate } from "react-router-dom";
 
@@ -43,7 +43,7 @@ const ManageItemCategory = () => {
     const handleDelete = async (id) => {
 
         try {
-            await deleteCategory( id );
+            await deleteCategory(id);
             toast.success("Category deleted successfully!");
         } catch (err) {
             console.error(err);
@@ -64,7 +64,7 @@ const ManageItemCategory = () => {
         }
 
         try {
-            console.log(editingId ,selectedItemName ,selectedFile ,'update')
+            console.log(editingId, selectedItemName, selectedFile, 'update')
             await updateCategory({ id: editingId, itemName: selectedItemName, image: selectedFile });
             toast.success("Category updated successfully!");
             setEditingId(null);
@@ -81,7 +81,7 @@ const ManageItemCategory = () => {
 
     return (
         <Box sx={{ maxWidth: "95%", mx: "auto", mt: 5 }}>
-            <Box sx={{display:'flex' ,justifyContent:'space-between' ,flexDirection:'row' ,mb:{xs:2,md:3}}}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', mb: { xs: 2, md: 3 } }}>
                 <Typography variant="h5" mb={3}>
                     Manage Item Categories
                 </Typography>
@@ -90,8 +90,8 @@ const ManageItemCategory = () => {
                     Add Item Category
                 </Button>
             </Box>
-           
-      
+
+
 
             <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 650 }} aria-label="categories table">

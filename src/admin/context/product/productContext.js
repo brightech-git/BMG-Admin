@@ -5,254 +5,198 @@ import productService from '../../service/productService';
 const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
-    const [images, setImages] = useState([]);
+    const [images, setImages] = useState([]);           // current image URLs
+    const [videos, setVideos] = useState([]);           // current video URLs
     const [description, setDescription] = useState('');
     const [productDetails, setProductDetails] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [filteredProducts, setFilteredProducts] = useState([]); // 🔹 new state
+    const [filteredProducts, setFilteredProducts] = useState([]);
 
-    const getImages = useCallback(async (tagkey) => {
+    // === GET MEDIA (images + videos) ===
+    const getMedia = useCallback(async (tagkey) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await productService.getImages(tagkey);
-            setImages(response.images || []);
-            setDescription(response.description || '');
-            return response;
+            const result = await productService.getImages(tagkey); // uses GET /record-images
+            if (result.error) throw new Error(result.error);
+
+            const imgs = result.images || [];
+            const vids = result.videos || [];
+
+            setImages(imgs);
+            setVideos(vids);
+
+            return { images: imgs, videos: vids };
         } catch (err) {
-            const errorMessage = err.error || err.message || 'Failed to fetch images';
-            setError(errorMessage);
-            throw new Error(errorMessage);
+            const msg = err.error || err.message || 'Failed to fetch media';
+            setError(msg);
+            throw new Error(msg);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    const uploadImages = useCallback(async (formData) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await productService.uploadImagesWithParams(formData);
-
-            if (result.error) throw new Error(result.error);
-
-            const tagkey = formData.get('tagkey');
-            if (tagkey) {
-                return await getImages(tagkey);
-            }
-            return result;
-        } catch (err) {
-            const errorMessage = err.error || err.message || 'Failed to upload images';
-            setError(errorMessage);
-            throw new Error(errorMessage);
-        } finally {
-            setLoading(false);
-        }
-    }, [getImages]);
-
-    const deleteImage = useCallback(
-        async (tagkey, imagePath) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const result = await productService.deleteImage(tagkey, imagePath);
-                if (result.error) {
-                    setError(result.error);
-                    throw new Error(result.error);
-                }
-                const updatedData = await getImages(tagkey);
-                return updatedData;
-            } catch (err) {
-                const errorMessage = err.error || err.message || 'Failed to delete image';
-                setError(errorMessage);
-                throw err;
-            } finally {
-                setLoading(false);
-            }
-        },
-        [getImages]
-    );
-
-    const updateImage = useCallback(
-        async (tagkey, oldImagePath, newImageFile) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const result = await productService.updateImage(tagkey, oldImagePath, newImageFile);
-                if (result.error) {
-                    setError(result.error);
-                    throw new Error(result.error);
-                }
-                const updatedData = await getImages(tagkey);
-                return updatedData;
-            } catch (err) {
-                const errorMessage = err.error || err.message || 'Failed to update image';
-                setError(errorMessage);
-                throw err;
-            } finally {
-                setLoading(false);
-            }
-        },
-        [getImages]
-    );
-
-    const updateDescription = useCallback(
-        async (tagkey, newDescription) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const result = await productService.updateDescription(tagkey, newDescription);
-                if (result.error) {
-                    setError(result.error);
-                    throw new Error(result.error);
-                }
-                const updatedData = await getImages(tagkey);
-                return updatedData;
-            } catch (err) {
-                const errorMessage = err.error || err.message || 'Failed to update description';
-                setError(errorMessage);
-                throw err;
-            } finally {
-                setLoading(false);
-            }
-        },
-        [getImages]
-    );
-
+    // === GET FULL PRODUCT DETAILS (attributes, flags, etc.) ===
     const getProductDetails = useCallback(async (tagkey) => {
         setLoading(true);
         setError(null);
         try {
             const response = await productService.getProductDetails(tagkey);
-            if (response.error) {
-                setError(response.error);
-                throw new Error(response.error);
-            }
+            if (response.error) throw new Error(response.error);
+
             setProductDetails(response);
-            setImages(response.images || []);
             setDescription(response.description || '');
+
             return response;
         } catch (err) {
-            const errorMessage = err.error || err.message || 'Failed to fetch product details';
-            setError(errorMessage);
+            const msg = err.error || err.message || 'Failed to fetch product details';
+            setError(msg);
             throw err;
         } finally {
             setLoading(false);
         }
     }, []);
 
-    const updateProductAttributes = useCallback(
-        async (tagkey, trendingOptions, productAttributes, description) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const result = await productService.updateProductAttributes(tagkey, trendingOptions, productAttributes, description);
-                if (result.error) {
-                    setError(result.error);
-                    throw new Error(result.error);
-                }
-                const updatedData = await getProductDetails(tagkey);
-                return updatedData;
-            } catch (err) {
-                const errorMessage = err.error || err.message || 'Failed to update product attributes';
-                setError(errorMessage);
-                throw err;
-            } finally {
-                setLoading(false);
+    // === DELETE SINGLE IMAGE OR VIDEO ===
+    const deleteMedia = useCallback(async (tagkey, mediaPath, type) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await productService.deleteMedia(tagkey, mediaPath, type);
+            if (result.error) throw new Error(result.error);
+
+            if (type === 'image') {
+                setImages(prev => prev.filter(p => p !== mediaPath));
+            } else {
+                setVideos(prev => prev.filter(p => p !== mediaPath));
             }
-        },
-        [getProductDetails]
-    );
 
-    const validateProductData = useCallback((tagkey, images, description, productAttributes) => {
-        const errors = [];
-
-        if (!tagkey || !tagkey.trim()) {
-            errors.push('Product tag key is required');
+            return result;
+        } catch (err) {
+            const msg = err.error || err.message || `Failed to delete ${type}`;
+            setError(msg);
+            throw err;
+        } finally {
+            setLoading(false);
         }
-
-        if (!images || images.length < 3 || images.length > 5) {
-            errors.push('Please select between 3 to 5 images');
-        }
-
-        if (!description || !description.trim()) {
-            errors.push('Product description is required');
-        }
-
-        const requiredAttributes = ['gender', 'occasion', 'collectionType', 'materialFinish', 'colorAccents'];
-        const missingAttributes = requiredAttributes.filter((attr) => !productAttributes[attr]);
-
-        if (missingAttributes.length > 0) {
-            errors.push(`Please select: ${missingAttributes.join(', ')}`);
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors,
-        };
     }, []);
 
-    const createFormData = useCallback((tagkey, images, description, trendingOptions, productAttributes) => {
+    // === UPDATE ALL FIELDS (PUT /update-all-fields) ===
+    const updateAllFields = useCallback(async (formData) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await productService.updateAllFields(formData);
+            if (result.error) throw new Error(result.error);
+
+            // Update local state with new paths
+            const newImages = result.images || [];
+            const newVideos = result.videos || [];
+            setImages(newImages);
+            setVideos(newVideos);
+
+            return result;
+        } catch (err) {
+            const msg = err.error || err.message || 'Update failed';
+            setError(msg);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // === VALIDATE BEFORE SUBMIT ===
+    const validateProductData = useCallback((tagkey, images, description) => {
+        const errors = [];
+
+        if (!tagkey?.trim()) errors.push('Tag key is required');
+        if (!description?.trim()) errors.push('Description is required');
+        if (!images || images.length < 3) errors.push('At least 3 images required');
+
+        return { isValid: errors.length === 0, errors };
+    }, []);
+
+    // === CREATE FormData for update-all-fields ===
+    const createFormData = useCallback((
+        tagkey,
+        newImages = [],
+        newVideos = [],
+        description = '',
+        trendingOptions = {},
+        productAttributes = {}
+    ) => {
         const formData = new FormData();
 
-        // Required fields
         formData.append('tagkey', tagkey?.trim() || '');
+
         if (description?.trim()) formData.append('description', description.trim());
 
         // Marketing flags
-        formData.append('top_trending', trendingOptions?.topTrending ?? false);
-        formData.append('featured_products', trendingOptions?.featuredProducts ?? false);
-        formData.append('best_design', trendingOptions?.bestDesign ?? false);
+        formData.append('top_trending', trendingOptions.topTrending ?? false);
+        formData.append('featured_products', trendingOptions.featuredProducts ?? false);
+        formData.append('best_design', trendingOptions.bestDesign ?? false);
 
-        // === EXACT MAPPING: UI Key → Backend @RequestParam ===
-        const SPEC_MAPPING = {
-            // UI key (from attributes.description) → backend param name
-            'Gender': 'gender',
-            'Occasion': 'occasion',
-            'Collection Type': 'collection_type',
-            'Material Finish': 'material_finish',
-            'Color Accents': 'color_accents',
-            // Add more if needed: 'Size': 'size', etc.
+        // Product attributes (exact @RequestParam names)
+        const attrMap = {
+            gender: 'gender',
+            occasion: 'occasion',
+            collectionType: 'collection_type',
+            materialFinish: 'material_finish',
+            colorAccents: 'color_accents',
         };
 
-        Object.entries(productAttributes).forEach(([uiKey, value]) => {
-            const backendKey = SPEC_MAPPING[uiKey];
-            if (backendKey && value) {
-                formData.append(backendKey, value);
-            }
+        Object.entries(attrMap).forEach(([uiKey, backendKey]) => {
+            const value = productAttributes[uiKey];
+            if (value) formData.append(backendKey, value);
         });
 
-        // Images
-        images?.forEach(file => formData.append('images', file));
+        // New files
+        newImages.forEach(file => formData.append('newImages', file));
+        newVideos.forEach(file => formData.append('newVideos', file));
 
         return formData;
     }, []);
 
-
-   
-
-
+    // === UPLOAD NEW PRODUCT (first time) ===
+    const uploadImages = useCallback(async (formData) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await productService.uploadImagesWithParams(formData);
+            if (result.error) throw new Error(result.error);
+            return result;
+        } catch (err) {
+            const msg = err.error || err.message || 'Upload failed';
+            setError(msg);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     return (
         <ProductContext.Provider
             value={{
+                // State
                 images,
+                videos,
                 description,
                 productDetails,
                 loading,
                 error,
-                getImages,
-                uploadImages,
-                deleteImage,
-                updateImage,
-                updateDescription,
+                filteredProducts,
+                setFilteredProducts,
+
+                // Actions
+                getMedia,
                 getProductDetails,
-                updateProductAttributes,
+                deleteMedia,
+                updateAllFields,
+                uploadImages,
                 validateProductData,
                 createFormData,
                 setError,
-                
             }}
         >
             {children}

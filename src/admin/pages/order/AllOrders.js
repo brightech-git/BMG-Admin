@@ -1,18 +1,33 @@
-import React, { useState, useMemo } from 'react';
-import { useUpdateOrderStatus, useOrdersByStatus } from '../../hooks/order/useAllOrder';
-import { Link, useLocation } from 'react-router-dom';
-import BackdropProgress from '../../components/backDrop/BackdropProgress';
-import Snackbar from '../../components/snackBar/Snackbar';
-import EditStatusModalTailwind from '../../components/modal/EditStatusModalTailwind';
-import AdvancedTableModal from '../../components/modal/AdvancedTableModal';
-import AdvancedTable from '../../components/table/ResponsiveTable';
-import StatusChip from '../../components/statusChip/StatusChip';
+import React, { useState, useMemo ,useEffect} from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useUpdateOrderStatus, useOrdersByStatus } from '../../hooks/order/useAllOrder.js';
+import BackdropProgress from '../../components/backDrop/BackdropProgress.jsx';
+import Snackbar from '../../components/snackBar/Snackbar.jsx';
+import EditStatusModalTailwind from '../../components/modal/EditStatusModalTailwind.jsx';
+import AdvancedTableModal from '../../components/modal/AdvancedTableModal.jsx';
+import AdvancedTable from '../../components/table/ResponsiveTable.jsx';
+import StatusChip from '../../components/statusChip/StatusChip.jsx';
+import { useCreateConsignment } from '../../hooks/shipping/useCreateConsignment.js';
+import { useAddressQuery } from '../../hooks/address/useAddressQuery.js'
+import { getProductImages } from '../../../utils/mediaUtils/mediaUtils.js.js';
 
 const OrderTable = () => {
     const location = useLocation();
-    const { key, values } = location.state || {};
+   
+    const navigate =useNavigate();
 
-    console.log(key ,'key for order')
+
+    const { key } = location.state || {};
+    console.log(key,'keytoget')
+
+    // Redirect if key is not present
+    // useEffect(() => {
+    //     if (!key) {
+    //         navigate('/', { replace: true });
+    //     }
+    // }, [key, navigate]);
+
+  
 
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -37,8 +52,17 @@ const OrderTable = () => {
 
     const status = key;
     const { data, isLoading, isError, error, refetch } = useOrdersByStatus(status, page, rowsPerPage);
+    const createConsignmentMutation = useCreateConsignment();
     const updateOrderStatus = useUpdateOrderStatus();
+    const { useGetAllAddresses} = useAddressQuery();
+    const {data:addressesData} = useGetAllAddresses();
 
+    const addresses = addressesData|| [];
+
+    // Find default origin address
+    const defaultOriginAddress = useMemo(() => {
+        return addresses.find(addr => addr.default === false);
+    }, [addresses]);
     const handleSnackbarClose = () => setSnackbar(prev => ({ ...prev, open: false }));
 
     const normalizeOrder = (order = {}) => ({
@@ -140,19 +164,90 @@ const OrderTable = () => {
         setFormError('');
     };
 
+    // ────────────────────────────────────────────────────────────────
+    // MAIN SUBMIT – Consignment + Label + Status Update
+    // ────────────────────────────────────────────────────────────────
+    const buildConsignment = (order, origin) => {
+        // Total weight = 5 g per item (you can adjust logic later)
+        const totalWeight = order.orderItems.reduce((sum, it) => sum + it.quantity * 5, 0);
+        const totalQty = order.orderItems.reduce((sum, it) => sum + it.quantity, 0);
+
+        const consignment = {
+            customer_code: "EO2243",                         // <-- keep your static code
+            service_type_id: "B2C SMART EXPRESS",
+            load_type: "NON-DOCUMENT",
+            description: order.orderItems.map(i => i.product_name).join(", "),
+            dimension_unit: "cm",
+            length: "30",                                    // you can make dynamic later
+            width: "20",
+            height: "15",
+            weight: totalWeight.toString(),                  // dynamic
+            declared_value: order.total_amount.toString(),
+            num_pieces: totalQty.toString(),
+            origin_details: {
+                name: origin.name,
+                phone: origin.phone,
+                alternate_phone: origin.alternatePhone || "",
+                address_line_1: origin.addressLine1,
+                address_line_2: origin.addressLine2 || "",
+                pincode: origin.pincode,
+                city: origin.city,
+                state: origin.state,
+                country: origin.country || "India",
+            },
+            destination_details: {
+                name: order.address.name,
+                phone: order.address.phone,
+                alternate_phone: order.address.alternatePhone || order.address.phone,
+                address_line_1: order.address.addressLine,
+                address_line_2: order.address.landmark || "",
+                city: order.address.city,
+                state: order.address.state,
+                pincode: order.address.pincode,
+                country: "India",
+            },
+            return_details: {                                 // same as origin
+                name: origin.name,
+                phone: origin.phone,
+                alternate_phone: origin.alternatePhone || "",
+                address_line_1: origin.addressLine1,
+                address_line_2: origin.addressLine2 || "",
+                pincode: origin.pincode,
+                city: origin.city,
+                state: origin.state,
+                country: origin.country || "India",
+            },
+            customer_reference_number: order.order_id,
+            commodity_id: "COM005",
+            is_risk_surcharge_applicable: false,
+            invoice_number: `INV${order.order_id}`,
+            invoice_date: new Date().toISOString().split("T")[0], // today
+            pieces_detail: order.orderItems.map((it, idx) => ({
+                description: it.product_name,
+                declared_value: (it.price * it.quantity).toFixed(2),
+                weight: (it.quantity * 5).toString(),          // 5 g per unit
+                length: "30",
+                width: "20",
+                height: "15",
+            })),
+        };
+
+        // COD only for non-ONLINE payments
+        if (order.payment_mode !== "ONLINE") {
+            consignment.cod_collection_mode = "cash";
+            consignment.cod_amount = order.total_amount;
+        }
+
+        return consignment;
+    };
     const handleEditSubmit = async (formData) => {
-        if (!editForm.status) {
-            setSnackbar({
-                open: true,
-                message: "Status is required.",
-                type: "error",
-            });
+        if (!formData.status) {
+            setSnackbar({ open: true, message: "Status is required.", type: "error" });
             return;
         }
 
         setShowBackdrop(true);
         setProgress(0);
-
         let progressInterval;
 
         try {
@@ -165,21 +260,54 @@ const OrderTable = () => {
             };
 
             progressInterval = setInterval(() => {
-                setProgress(prev => Math.min(prev + Math.random() * 5, 90).toFixed());
+                setProgress(prev => Math.min(prev + Math.random() * 5, 90));
             }, 150);
 
-            const response = await updateOrderStatus.mutateAsync(payload);
+            // ── CANCELLED (no consignment) ───────────────────────
+            if (formData.status.toUpperCase() === "CANCELLED") {
+                await updateOrderStatus.mutateAsync(payload);
+                clearInterval(progressInterval);
+                setProgress(100);
+                setSnackbar({ open: true, message: "Order cancelled!", type: "success" });
+                setTimeout(() => { setShowBackdrop(false); refetch(); handleCloseEditModal(); }, 600);
+                return;
+            }
 
-            if (!response) throw new Error("Order update failed");
+            // ── PACKING → PACKED: Create Consignment ─────────────
+            if (status === 'PACKING' && formData.status === 'PACKED') {
+                if (!defaultOriginAddress) {
+                    throw new Error("Default origin address not found.");
+                }
+
+                const consignment = buildConsignment(selectedOrder, defaultOriginAddress);
+                const consignmentPayload = { consignments: [consignment] };
+
+                const consignmentResponse = await createConsignmentMutation.mutateAsync(consignmentPayload);
+                const result = consignmentResponse?.data?.[0];
+
+                if (!result || result.success === false || !result.reference_number) {
+                    throw new Error(result?.message || "Consignment creation failed");
+                }
+
+                setSnackbar({
+                    open: true,
+                    message: `Consignment created: ${result.reference_number}`,
+                    type: "success",
+                });
+            }
+
+            // ── PACKED → READY_TO_SHIP: Label (simulate) ────────
+            if (status === 'PACKED' && formData.status === 'READY_TO_SHIP') {
+                await new Promise(r => setTimeout(r, 1000));
+                setSnackbar({ open: true, message: "Label generated!", type: "success" });
+            }
+
+            // ── FINAL: Update Order Status ───────────────────────
+            await updateOrderStatus.mutateAsync(payload);
 
             clearInterval(progressInterval);
             setProgress(100);
-
-            setSnackbar({
-                open: true,
-                message: "Order status updated successfully!",
-                type: "success",
-            });
+            setSnackbar({ open: true, message: "Order updated!", type: "success" });
 
             setTimeout(() => {
                 setShowBackdrop(false);
@@ -190,14 +318,13 @@ const OrderTable = () => {
         } catch (err) {
             clearInterval(progressInterval);
             setProgress(0);
+            setShowBackdrop(false);
 
             setSnackbar({
                 open: true,
-                message: `Failed: ${err.message || "Unknown error"}`,
+                message: `Failed: ${err.message}`,
                 type: "error",
             });
-
-            setTimeout(() => setShowBackdrop(false), 1000);
         }
     };
 
@@ -207,7 +334,7 @@ const OrderTable = () => {
         { key: "amount", label: "Amount", align: "right" },
         { key: "status", label: "Status", align: "center" },
         { key: "order_date", label: "Order Date", align: "left" },
-        { key: "payment_mode", label: "Payment Mode", align: "left" },
+        { key: "payment_mode", label: "Payment Mode", align: "center" },
         { key: "actions", label: "Actions", align: "center" },
     ];
 
@@ -246,8 +373,9 @@ const OrderTable = () => {
             </div>
         ),
         payment_mode: (
-            <span className="text-xs px-2 py-1 rounded bg-info text-black font-semibold">
-                {order.payment_mode}
+            <span className="text-xs px-2 py-1 rounded align_center text-black font-semibold">
+              
+                <StatusChip status={order.payment_mode} size='small' />
             </span>
         ),
         actions: (
@@ -280,7 +408,7 @@ const OrderTable = () => {
                 { value: 'CANCELLED', label: 'Cancel Order' },
             ],
             'PACKING': [
-                { value: 'PACKED', label: 'Product has been packed' },
+                { value: 'PACKED', label: 'Product has been packing' },
                 { value: 'CANCELLED', label: 'Cancel Order' },
             ],
             'PACKED': [
@@ -326,26 +454,29 @@ const OrderTable = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background font-primary p-2 mt-5 overflow-auto">
+        <div className="max-w-8xl mx-auto bg-background font-primary  mt-5 overflow-auto">
             {/* Header Card */}
-            <div className="bg-card rounded-lg shadow-sm border border-border mb-4 transition-all hover:shadow-md hover:-translate-y-0.5">
-                <div className="p-4">
+            <div className="bg-card   border border-border mb-4 ml-2 sm:ml-4 transition-all ">
+                <div className="p-2">
+
                     {/* Breadcrumb */}
-                    <nav className="breadcrumb mb-3">
-                        <ol className="flex items-center space-x-2 text-sm">
-                            <li className="breadcrumb-item">
-                                <Link
-                                    to="/"
-                                    className="text-secondaryText hover:text-primaryText transition-colors"
-                                >
-                                    Dashboard
-                                </Link>
-                            </li>
-                            <li className="text-primaryText font-semibold">
+                     <nav aria-label="breadcrumb">
+                          <ol className="breadcrumb items-center">
+                            <Link
+                                to="/"
+                                className="text-secondaryText hover:text-primaryText transition-colors text-sm"
+                            >
+                                Dashboard
+                            </Link>
+                            <span className="text-secondaryText">/</span>
+                            <li className="text-primaryText font-semibold capitalize text-xs">
                                 Manage {status?.replace('_', ' ')} Orders
                             </li>
-                        </ol>
-                    </nav>
+                         </ol>
+                        </nav>
+                 
+                
+
 
                     {/* Title and Search */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -382,6 +513,8 @@ const OrderTable = () => {
                     ) : (
                         <AdvancedTable
                             headers={orderHeaders}
+                            fontSizeHeader='text-sm'
+                            fontSizeRow="text-xs"
                             data={formattedOrders}
                             alignments={{
                                 amount: "right",
@@ -395,7 +528,7 @@ const OrderTable = () => {
 
                     {/* Footer */}
                     {filteredOrders.length > 0 && (
-                        <div className="mt-3 bg-card rounded-lg border border-border p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="mt-3  flex flex-row sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div className="flex items-center gap-2">
                                 <span className="bg-info text-black px-2 py-1 rounded text-xs font-semibold">
                                     {filteredOrders.length} filtered
@@ -409,7 +542,7 @@ const OrderTable = () => {
                                 <select
                                     value={rowsPerPage}
                                     onChange={handleChangeRowsPerPage}
-                                    className="bg-background border border-border rounded text-xs text-primaryText font-secondary px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                                    className="bg-background border border-border rounded text-xs text-primaryText font-secondary px-1 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
                                 >
                                     <option value={5}>5</option>
                                     <option value={10}>10</option>
@@ -483,16 +616,19 @@ const OrderTable = () => {
                         orderData={selectedOrder?.orderItems?.map((item, index) => ({
                             sno: index + 1,
                             productId: item.tagno || item.sno || "-",
-                            productImage: item.image_path,
-                            productName: item.product_name,
+                            product: (
+                                <span className='flex items-center gap-1 text-xs'>
+                                    <img src={getProductImages(item.image_path)} width={30} height={30} />
+                                    {item.product_name}
+                                </span>
+                            ),
                             price: item.price.toFixed(2),
-                            total: (item.price * item.quantity).toFixed(2),
+                            total: item.price.toFixed(2),
                         }))}
                         orderColumns={[
                             { key: "sno", label: "S.No", align: "left" },
                             { key: "productId", label: "Product ID", align: "left" },
-                            { key: "productImage", label: "Product Image", align: "left" },
-                            { key: "productName", label: "Product Name", align: "left" },
+                            { key: "product", label: "Product ", align: "left" },
                             { key: "price", label: "Price", align: "right" },
                             { key: "total", label: "Total", align: "right" },
                         ]}

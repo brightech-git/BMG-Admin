@@ -65,7 +65,7 @@ const EditStatusModalTailwind = ({
                 style={{ background: 'var(--background-color)' }}
             >
                 {/* Header */}
-                <div className="flex justify-between items-center p-lg border-b border-[var(--border-color)]">
+                <div className="flex justify-between items-center p-lg ">
                     <div>
                         <h2 className="text-sm font-[var(--font-primary)] text-[var(--primary-text-color)] font-semibold">
                             Edit Order
@@ -85,7 +85,7 @@ const EditStatusModalTailwind = ({
                 {/* Content */}
                 <div className="p-lg space-y-4 text-xs font-[var(--font-primary)]">
                     {/* User & Item Details Table */}
-                    <div className="bg-[var(--card-background-color)] border border-[var(--border-color)] rounded-md p-md shadow-sm space-y-4">
+                    <div className="p-md space-y-4">
                         <AdvancedTable
                             headers={itemTableColumns}
                             data={orderItemData}

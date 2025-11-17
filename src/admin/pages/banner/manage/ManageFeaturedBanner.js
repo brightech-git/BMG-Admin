@@ -30,7 +30,7 @@ import {
     CardContent,
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
-import { getProductImages } from "../../../../utils/image/getProductImages";
+import { getProductImages } from "../../../../utils/mediaUtils/mediaUtils.js.js";
 
 const ManageFeaturedBanner = () => {
     const { data: designs, isLoading } = useFeaturedBannersQuery();

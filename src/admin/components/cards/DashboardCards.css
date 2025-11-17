@@ -3,7 +3,7 @@
   max-width: 100%;
   margin: 0 auto;
   padding: var(--spacing-md);
-  background: var(--background-color);
+  background: transparent;
 
 }
 

@@ -33,15 +33,23 @@ const StatusChip = ({ status, size = 'medium', onClick, themeMode = 'light' }) =
         // 🟠 Refund
         refunded: { bg: "#F97316", text: "#FFFFFF" },
         refund: { bg: "#F97316", text: "#FFFFFF" },
+
+        //payment
+        online: { bg: "#10B981", text: "#FFFFFF" }, // Green for online
+        cod: { bg: "#F59E0B", text: "#1F2937" }, // Amber for COD
+
     };
 
     const safeStatus = typeof status === 'string' ? status.toLowerCase() : '';
     const config = statusConfig[safeStatus] || statusConfig.pending;
 
     // Format label: "in_transit" -> "In Transit"
-    const formattedLabel = safeStatus
-        ? safeStatus.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
-        : 'Unknown';
+    const formattedLabel =
+        safeStatus === "cod"
+            ? "COD"
+            : safeStatus
+                ? safeStatus.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+                : "Unknown";
 
     const sizeClasses = {
         small: 'px-2 py-1 text-xs',
@@ -52,13 +60,13 @@ const StatusChip = ({ status, size = 'medium', onClick, themeMode = 'light' }) =
     return (
         <span
             className={`
-                inline-flex items-center justify-center rounded-full font-semibold cursor-pointer transition-transform
-                hover:scale-105 active:scale-95 ${sizeClasses[size]}
-            `}
+        inline-flex items-center justify-center rounded-full font-semibold cursor-pointer transition-transform
+        hover:scale-105 active:scale-95 ${sizeClasses[size]}
+      `}
             style={{
                 backgroundColor: config.bg,
                 color: config.text,
-                fontFamily: 'var(--font-secondary)',
+                fontFamily: "var(--font-secondary)",
             }}
             onClick={onClick}
         >

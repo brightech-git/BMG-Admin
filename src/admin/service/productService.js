@@ -126,6 +126,31 @@ const productService = {
             throw error.response?.data || { error: error.message || 'Failed to update product attributes' };
         }
     },
+    // productService.js (add these two methods)
+
+    updateAllFields: async (formData) => {
+        try {
+            const response = await axiosInstance.put('/product_image/update-all-fields', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Update all fields error:', error);
+            throw error.response?.data || { error: error.message };
+        }
+    },
+
+    deleteMedia: async (tagkey, mediaPath, type) => {
+        try {
+            const response = await axiosInstance.delete('/product_image/delete-media', {
+                params: { tagkey, mediaPath, type }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Delete media error:', error);
+            throw error.response?.data || { error: error.message };
+        }
+    },
 
     // 🔹 NEW: Filter products
     filterItems: async (filters = {}) => {

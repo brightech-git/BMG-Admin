@@ -47,8 +47,8 @@ const ManageBudgetBanner = () => {
     const { mutate: updateBudgetBanner, isLoading: isUpdating } = useUpdateBudgetBannerMutation();
     const { mutate: deleteBudgetBanner, isLoading: isDeleting } = useDeleteBudgetBannerMutation();
 
-    const banners = useMemo(() => bannersData?.data || [], [bannersData?.data]);
-    const reverseBanner = banners.reverse();
+
+    const banners = useMemo(() => bannersData?.data?.categories || [], [bannersData?.data]);
 
     useEffect(() => {
         if (banners.length > 0) {

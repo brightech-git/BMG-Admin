@@ -15,23 +15,20 @@ const MainContent = () => {
     const navigate = useNavigate();
     usePollNewOrders( orderService.getAllOrders);
     return (
-        <main className={`main-content ${themeMode === 'dark' ? 'dark' : ''}`}>
-            {/* Dashboard Cards Row */}
-            <div>
-               
-            </div>
+        <main className={`main-dash-content ${themeMode === 'dark' ? 'dark' : ''}`}>
+           
             <div className="dashboard-cards-section">
                 <DashboardCards />
             </div>
             <button
                 onClick={() => {
-                    console.log("🚀 showNewOrder triggered");
+    
                     showNewOrder({
                         message: "Test order received!",
                         type: "info",
                         action: {
                             label: "View Order",
-                            navigateTo: "/order/status/placed",
+                            navigateTo: "/order/status",
                             state: {
                                 key: "PLACED",
                                 values: ["IN-PROCESSING", "CANCELLED"],
@@ -43,9 +40,6 @@ const MainContent = () => {
             >
                 Trigger Test Snackbar
             </button>
-
-
-
 
 
             {/* Latest Orders Section */}

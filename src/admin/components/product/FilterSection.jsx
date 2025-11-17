@@ -12,7 +12,7 @@ export default function FilterSection() {
     const [showModal, setShowModal] = useState(false);
     const [modalStep, setModalStep] = useState('filters');
     const [selectedItem, setSelectedItem] = useState(null);
-    const [selectedSubItems, setSelectedSubItems] = useState([]);
+    // const [selectedSubItems, setSelectedSubItems] = useState([]);
 
     // Fetch all items
     const { items: allItems, loading: loadingItems } = useItemNames(null);
@@ -40,27 +40,27 @@ export default function FilterSection() {
 
     // Handle item selection and go to subitems
     const handleItemSelect = (item) => {
-        setSelectedItem(item);
-        setSelectedSubItems([]);
-        setModalStep('subitems');
+        // setSelectedItem(item);
+        //setSelectedSubItems([]);
+        // setModalStep('subitems');
         updateFilter('itemName', item.ITEMNAME);
-        updateFilter('subItemName', '');
+        // updateFilter('subItemName', '');
     };
 
     // Handle subitem checkbox
-    const handleSubItemToggle = (sub) => {
-        const updated = selectedSubItems.includes(sub.SUBITEMID)
-            ? selectedSubItems.filter(id => id !== sub.SUBITEMID)
-            : [...selectedSubItems, sub.SUBITEMID];
+    // const handleSubItemToggle = (sub) => {
+    //     const updated = selectedSubItems.includes(sub.SUBITEMID)
+    //         ? selectedSubItems.filter(id => id !== sub.SUBITEMID)
+    //         : [...selectedSubItems, sub.SUBITEMID];
 
-        setSelectedSubItems(updated);
+    //     setSelectedSubItems(updated);
 
-        const selectedNames = subItems
-            .filter(s => updated.includes(s.SUBITEMID))
-            .map(s => s.SUBITEMNAME);
+    //     const selectedNames = subItems
+    //         .filter(s => updated.includes(s.SUBITEMID))
+    //         .map(s => s.SUBITEMNAME);
 
-        updateFilter('subItemName', selectedNames.join(','));
-    };
+    //     updateFilter('subItemName', selectedNames.join(','));
+    // };
 
     // Handle price range selection
     const handlePriceRangeSelect = (type, value) => {
@@ -75,16 +75,16 @@ export default function FilterSection() {
     const removeChip = (key, value) => {
         if (key === 'itemName') {
             setSelectedItem(null);
-            setSelectedSubItems([]);
+            // setSelectedSubItems([]);
         } else if (key === 'subItemName') {
-            setSelectedSubItems([]);
+            //setSelectedSubItems([]);
         }
         updateFilter(key, '');
     };
 
     const clearAll = () => {
         setSelectedItem(null);
-        setSelectedSubItems([]);
+       // setSelectedSubItems([]);
         resetFilters();
     };
 
@@ -221,7 +221,7 @@ export default function FilterSection() {
                                 >
                                     {modalStep === 'filters' && 'Advanced Filters'}
                                     {modalStep === 'items' && 'Select Item'}
-                                    {modalStep === 'subitems' && `Select Sub Items - ${selectedItem?.ITEMCTRNAME}`}
+                                    {/* {modalStep === 'subitems' && `Select Sub Items - ${selectedItem?.ITEMCTRNAME}`} */}
                                 </h4>
                             </div>
                             <button
@@ -251,7 +251,7 @@ export default function FilterSection() {
                                             placeholder="Search products..."
                                             value={filters.search || ''}
                                             onChange={(e) => updateFilter('search', e.target.value)}
-                                            className=" bg-[var(--background-color)] w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500  transition-all "
+                                            className=" bg-[var(--background-color)] w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500  transition-all "
                                             style={{
                                                 fontSize: 'var(--font-size-sm, 14px)',
                                                 borderRadius: 'var(--border-radius-md, 8px)',
@@ -270,12 +270,12 @@ export default function FilterSection() {
                                             Image Filter
                                         </h4>
                                         <div className="space-y-2">
-                                            <label className="flex items-center gap-3 p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer  transition-colors">
+                                            <label className="flex items-center gap-3 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer  transition-colors">
                                                 <input
                                                     type="checkbox"
                                                     checked={filters.withImage === 'true'}
                                                     onChange={(e) => updateFilter('withImage', e.target.checked ? 'true' : '')}
-                                                    className="w-4 h-4 accent-blue-600"
+                                                    className="w-3 h-3 accent-blue-600"
                                                 />
                                                 <div className="flex items-center gap-2">
                                                     <Image size={16} />
@@ -284,12 +284,12 @@ export default function FilterSection() {
                                                     </span>
                                                 </div>
                                             </label>
-                                            <label className="flex items-center gap-3 p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer   transition-colors">
+                                            <label className="flex items-center gap-3 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer   transition-colors">
                                                 <input
                                                     type="checkbox"
                                                     checked={filters.withImage === 'false'}
                                                     onChange={(e) => updateFilter('withImage', e.target.checked ? 'false' : '')}
-                                                    className="w-4 h-4 accent-blue-600"
+                                                    className="w-3 h-3 accent-blue-600"
                                                 />
                                                 <div className="flex items-center gap-2">
                                                     <ImageOff size={16} />
@@ -317,7 +317,7 @@ export default function FilterSection() {
                                             placeholder="Enter tag key..."
                                             value={filters.tagKey || ''}
                                             onChange={(e) => updateFilter('tagKey', e.target.value)}
-                                            className=" bg-[var(--background-color)] w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 transition-all"
+                                            className=" bg-[var(--background-color)] w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 transition-all"
                                             style={{
                                                 fontSize: 'var(--font-size-sm, 14px)',
                                                 borderRadius: 'var(--border-radius-md, 8px)'
@@ -346,9 +346,9 @@ export default function FilterSection() {
                                                     <div className="font-medium">{selectedItem.ITEMCTRNAME}</div>
                                                     <div
                                                         
-                                                        style={{ fontSize: 'var(--font-size-xs, 13px)' }}
+                                                        style={{ fontSize: 'var(--font-size-s, 10px)' }}
                                                     >
-                                                        {selectedSubItems.length} subitems selected
+                                                        {/* {selectedSubItems.length} subitems selected */}
                                                     </div>
                                                 </div>
                                             ) : (
@@ -373,7 +373,7 @@ export default function FilterSection() {
                                             </h4>
 
                                             {/* Manual Input */}
-                                            <div className="grid grid-cols-2 gap-3 mb-3">
+                                            <div className="grid grid-cols-2 gap-3 mb-2">
                                                 <div>
                                                     <label
                                                         className="font-medium mb-1 block"
@@ -386,7 +386,7 @@ export default function FilterSection() {
                                                         placeholder="0"
                                                         value={filters.minGrandTotal || ''}
                                                         onChange={(e) => updateFilter('minGrandTotal', e.target.value)}
-                                                    className="bg-[var(--background-color)] bg w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-800"
+                                                    className="bg-[var(--background-color)] bg w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-800"
                                                         style={{ fontSize: 'var(--font-size-sm, 14px)' }}
                                                     />
                                                 </div>
@@ -402,7 +402,7 @@ export default function FilterSection() {
                                                         placeholder="100000"
                                                         value={filters.maxGrandTotal || ''}
                                                         onChange={(e) => updateFilter('maxGrandTotal', e.target.value)}
-                                                    className=" bg-[var(--background-color)] w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-800"
+                                                    className=" bg-[var(--background-color)] w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-800"
                                                         style={{ fontSize: 'var(--font-size-sm, 14px)' }}
                                                     />
                                                 </div>
@@ -487,7 +487,7 @@ export default function FilterSection() {
                             )}
 
                             {/* Subitems List */}
-                            {modalStep === 'subitems' && (
+                            {/* {modalStep === 'subitems' && (
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                                    
                                     {loadingSub ? (
@@ -522,7 +522,7 @@ export default function FilterSection() {
                                         ))
                                     )}
                                 </div>
-                            )}
+                            )} */}
                         </div>
 
                         {/* Modal Footer */}

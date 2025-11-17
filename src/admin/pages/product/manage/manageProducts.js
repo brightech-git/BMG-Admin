@@ -7,8 +7,6 @@ import { MyContext } from '../../../context/themeContext/themeContext';
 import FilterSection from '../../../components/product/FilterSection';
 import './ManageProduct.css';
 
-
-
 // Helper to remove empty filters
 const getActiveFilters = (filters) =>
     Object.fromEntries(Object.entries(filters).filter(([_, v]) => v !== '' && v !== undefined && v !== null));
@@ -19,6 +17,17 @@ const constructImageUrls = (imagePath, baseUrl = 'https://app.bmgjewellers.com')
     try {
         const images = JSON.parse(imagePath);
         return images.map((img) => (img.startsWith('http') ? img : `${baseUrl}${img}`));
+    } catch {
+        return [];
+    }
+};
+
+// Construct video URLs
+const constructVideoUrls = (videoPath, baseUrl = 'https://app.bmgjewellers.com') => {
+    if (!videoPath) return [];
+    try {
+        const videos = JSON.parse(videoPath);
+        return videos.map((video) => (video.startsWith('http') ? video : `${baseUrl}${video}`));
     } catch {
         return [];
     }
@@ -65,6 +74,146 @@ const SkeletonCard = ({ themeMode, isMobileView }) => (
     )
 );
 
+// Media Display Component
+const MediaDisplay = ({ product, navigate }) => {
+    const images = constructImageUrls(product.ImagePath);
+    const videos = constructVideoUrls(product.VideoPath);
+    console.log(videos ,'vidoes')
+
+    const hasImages = images.length > 0;
+    const hasVideos = videos.length > 0;
+    const totalMedia = images.length + videos.length;
+
+    if (!hasImages && !hasVideos) {
+        return (
+            <button
+                onClick={() =>
+                    navigate(`/admin/product/add`, {
+                        state: { tagkey: product.TAGKEY, itemName: product.ITEMNAME }
+                    })
+                }
+                className="text-red-500 border border-red-400 border-dashed text-xs px-1 py-0.5 rounded hover:bg-red-50 transition"
+            >
+                Need to Add
+            </button>
+        );
+    }
+
+    return (
+        <div className="flex gap-1 items-center">
+            {/* Display first image thumbnail if available */}
+            {hasImages && (
+                <img
+                    src={images[0]}
+                    alt="product"
+                    className="w-8 h-8 rounded object-cover"
+                    onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/40?text=No+Img')}
+                />
+            )}
+
+            {/* Show additional media count if there are more than 1 media items */}
+            {(totalMedia >= 1 || (hasImages && hasVideos)) && (
+                <div className="flex items-center gap-1">
+                    {/* Video indicator if videos exist */}
+                    {hasVideos && (
+                        <div className="flex items-center gap-0.5">
+                            <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                            <span className="text-xs text-blue-600 font-small">{videos.length}</span>
+                        </div>
+                    )}
+
+                    {/* Image count if more than 1 image */}
+                    {images.length > 1 && (
+                        <div className="flex items-center gap-0.5">
+                            <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-xs text-gray-600 font-small">{images.length}</span>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Edit button */}
+            <button
+                title="Edit media"
+                onClick={() =>
+                    navigate(`/admin/product/add`, {
+                        state: {
+                            tagkey: product.TAGKEY,
+                            itemName: product.ITEMNAME,
+                            subItemName: product.SUBITEMNAME,
+                            isUpdate: true,
+                        },
+                    })
+                }
+                className="ml-1 p-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition"
+            >
+                <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                </svg>
+            </button>
+        </div>
+    );
+};
+
+// Mobile Media Display Component
+const MobileMediaDisplay = ({ product, navigate }) => {
+    const images = constructImageUrls(product.ImagePath);
+    const videos = constructVideoUrls(product.VideoPath);
+    const hasImages = images.length > 0;
+    const hasVideos = videos.length > 0;
+
+    if (!hasImages && !hasVideos) {
+        return (
+            <button
+                onClick={() =>
+                    navigate(`/admin/product/add`, {
+                        state: { tagkey: product.TAGKEY, itemName: product.ITEMNAME, subItemName: product.SUBITEMNAME },
+                    })
+                }
+                className="text-red-500 border border-red-400 border-solid text-xs px-1 py-0.5 rounded hover:bg-red-50 transition"
+            >
+                Need to Add
+            </button>
+        );
+    }
+
+    return (
+        <div className="flex gap-1 items-center">
+            {hasImages && (
+                <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {images.length}
+                </span>
+            )}
+            {hasVideos && (
+                <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                    {videos.length}
+                </span>
+            )}
+        </div>
+    );
+};
+
 // ProductList Component
 const ProductList = ({ products, isMobileView, themeMode, themeColor, isFetching, isInitialFetch }) => {
     const navigate = useNavigate();
@@ -79,7 +228,7 @@ const ProductList = ({ products, isMobileView, themeMode, themeColor, isFetching
                             <th className="px-1 py-1 border border-gray-300 text-center">S.No</th>
                             <th className="px-3 py-1 border border-gray-300 text-center">Product</th>
                             <th className="px-2 py-1 border border-gray-300">Product Key</th>
-                            <th className="px-2 py-1 border border-gray-300">Images</th>
+                            <th className="px-2 py-1 border border-gray-300">Media</th>
                             <th className="px-2 py-1 border border-gray-300 text-center">Details</th>
                         </tr>
                     </thead>
@@ -113,7 +262,7 @@ const ProductList = ({ products, isMobileView, themeMode, themeColor, isFetching
                             <th className="px-1 py-1 border border-gray-300 text-center">S.No</th>
                             <th className="px-3 py-1 border border-gray-300 text-center">Product</th>
                             <th className="px-2 py-1 border border-gray-300">Product Key</th>
-                            <th className="px-2 py-1 border border-gray-300">Images</th>
+                            <th className="px-2 py-1 border border-gray-300">Media</th>
                             <th className="px-2 py-1 border border-gray-300 text-center">Details</th>
                         </tr>
                     </thead>
@@ -124,30 +273,7 @@ const ProductList = ({ products, isMobileView, themeMode, themeColor, isFetching
                                 <td className="px-3 py-1 border border-gray-300 truncate text-xs w-30">{p.ITEMNAME} - {p.SUBITEMNAME}</td>
                                 <td className="px-2 py-1 border border-gray-300 truncate w-30">{p.TAGKEY}</td>
                                 <td className="px-1 py-1 border border-gray-300 w-30">
-                                    <div className="flex gap-1">
-                                        {constructImageUrls(p.ImagePath).length > 0 ? (
-                                            constructImageUrls(p.ImagePath).slice(0, 3).map((img, i) => (
-                                                <img
-                                                    key={i}
-                                                    src={img}
-                                                    alt="product"
-                                                    className="w-8 h-8 rounded object-cover"
-                                                    onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/40?text=No+Img')}
-                                                />
-                                            ))
-                                        ) : (
-                                            <button
-                                                onClick={() =>
-                                                    navigate(`/admin/product/add`, {
-                                                        state: { tagkey: p.TAGKEY, itemName: p.ITEMNAME, subItemName: p.SUBITEMNAME },
-                                                    })
-                                                }
-                                                className="text-red-500 border border-red-400 border-dashed text-xs px-1 py-0.5 rounded hover:bg-red-50 transition"
-                                            >
-                                                Need to Add
-                                            </button>
-                                        )}
-                                    </div>
+                                    <MediaDisplay product={p} navigate={navigate} />
                                 </td>
                                 <td className="px-2 py-1 border border-gray-300 text-center">
                                     <ArrowForward
@@ -175,7 +301,7 @@ const ProductList = ({ products, isMobileView, themeMode, themeColor, isFetching
                         <th className="px-1 py-1 border border-gray-300 text-center">S.No</th>
                         <th className="px-1 py-1 border border-gray-300">Product Key</th>
                         <th className="px-1 py-1 border border-gray-300 text-center">Product</th>
-                        <th className="px-1 py-1 border border-gray-300">Images</th>
+                        <th className="px-1 py-1 border border-gray-300">Media</th>
                         <th className="px-1 py-1 border border-gray-300 text-center">Details</th>
                     </tr>
                 </thead>
@@ -188,25 +314,16 @@ const ProductList = ({ products, isMobileView, themeMode, themeColor, isFetching
                                 {p.ITEMNAME} - {p.SUBITEMNAME}
                             </td>
                             <td className="px-1 py-1 border border-gray-300">
-                                <div className="flex gap-1 flex-wrap">
-                                    {constructImageUrls(p.ImagePath).length > 0 ? (
-                                        <span className="px-2 py-0.5 text-xs text-center bg-green-100 rounded">Available</span>
-                                    ) : (
-                                        <button
-                                            onClick={() =>
-                                                navigate(`/add-product?tagkey=${p.TAGKEY}`, {
-                                                    state: { tagkey: p.TAGKEY, itemName: p.ITEMNAME, subItemName: p.SUBITEMNAME },
-                                                })
-                                            }
-                                            className="text-red-500 border border-red-400 border-solid text-xs px-1 py-0.5 rounded hover:bg-red-50 transition"
-                                        >
-                                            Need to Add
-                                        </button>
-                                    )}
-                                </div>
+                                <MobileMediaDisplay product={p} navigate={navigate} />
                             </td>
                             <td className="px-1 py-1 border border-gray-300 text-center">
-                                <ArrowForward className="text-black cursor-pointer mx-auto" style={{ fontSize: 10 }} />
+                                <ArrowForward
+                                    className="text-black cursor-pointer mx-auto"
+                                    style={{ fontSize: 10 }}
+                                    onClick={() =>
+                                        navigate(`/admin/product/manage/single`, { state: { tagKey: p.TAGKEY } })
+                                    }
+                                />
                             </td>
                         </tr>
                     ))}
@@ -295,17 +412,17 @@ const ManageProduct = () => {
     };
 
     return (
-        <div className={`product-container ${themeMode === 'dark' ? 'text-white bg-gray-900' : 'text-black bg-white'}`}>
-            <div className="p-4 sm:p-6 lg:p-8">
+        <div className={`product-container`}>
+            <div className="p-2 sm:p-6 lg:p-8 mt-4">
                 {/* Breadcrumb */}
-                <nav aria-label="breadcrumb" className="p-2">
-                    <ol className="breadcrumb flex gap-2 text-sm">
+                <nav aria-label="breadcrumb" className="p-1">
+                    <ol className="breadcrumb flex gap-2 text-xs">
                         <li>
-                            <Link to="/" className="text-blue-500">
+                            <Link to="/" className="text-blue-500 text-xs">
                                 Dashboard
                             </Link>
                         </li>
-                        <li>/ Manage Products</li>
+                        <li className='text-xs'>/ Manage Products</li>
                     </ol>
                 </nav>
 
@@ -323,9 +440,9 @@ const ManageProduct = () => {
                 />
 
                 {/* Pagination / Load More */}
-                <div className="flex flex-wrap justify-between items-center mt-4 gap-2 text-sm">
+                <div className="flex flex-wrap justify-between items-center mt-2 gap-2 text-sm">
                     {/* Showing text */}
-                    <p className="order-1 sm:order-1 text-xs sm:text-sm mt-3">
+                    <p className="order-1 sm:order-1 text-xs sm:text-xs mt-3">
                         Showing {Math.min(visibleCount, allProducts.length)} of {totalCount} products
                     </p>
 
@@ -333,18 +450,18 @@ const ManageProduct = () => {
                     {hasMore && (
                         <div className="w-full flex justify-center">
                             <button
-                                className="bg-blue-500 text-white px-3 sm:px-4 sm:py-1.5 rounded-full hover:bg-blue-600 transition text-xs sm:text-sm"
+                                className="bg-blue-500 text-white px-2 sm:px-4 sm:py-1.5 rounded-full hover:bg-blue-600 transition text-xs sm:text-sm"
                                 onClick={handleLoadMore}
                             >
-                                <span className="sm:hidden">Load More</span>
-                                <span className="hidden sm:inline">Load More Products</span>
+                                <span className="sm:hidden text-xs">Load More</span>
+                                <span className="hidden sm:inline text-xs">Load More Products</span>
                             </button>
                         </div>
                     )}
 
                     {/* Rows per page */}
                     <div className="flex items-center gap-1 sm:gap-2 order-3 sm:order-3 ml-auto">
-                        <span className="text-xs sm:text-sm whitespace-nowrap">Rows per page:</span>
+                        <span className="text-xs sm:text-sm whitespace-nowrap ">Rows per page:</span>
                         <select
                             value={pageSize}
                             onChange={handlePageSizeChange}
