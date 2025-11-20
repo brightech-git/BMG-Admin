@@ -1,4 +1,3 @@
-"use client";
 
 import React, { useState } from "react";
 import {
@@ -7,32 +6,11 @@ import {
     useDeleteBestDesignMutation,
 } from "../../../hooks/banners/BestDesignedProductsBanner/useBestDesign";
 import { useNavigate } from "react-router-dom";
-import FileUploader from "../../../components/banner/FileUploader";
-import BackdropProgress from "../../../components/backDrop/BackdropProgress";
 import BannerTable from "../../../components/banner/manageBannerTable.jsx";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { getProductImages } from "../../../../utils/mediaUtils/mediaUtils.js";
 
-import {
-    Box,
-    Typography,
-    Button,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
-    Paper,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    IconButton,
-    TextField,
-    Card,
-    CardContent,
-} from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
-import { getProductImages } from "../../../../utils/mediaUtils/mediaUtils.js.js";
+
 
 const ManageBestDesignBanner = () => {
     const { data: designs, isLoading } = useBestDesignsQuery();
@@ -92,13 +70,11 @@ const ManageBestDesignBanner = () => {
         }
     };
 
-    const onAddNew = () => {
-        navigate("/bestbanner/add");
-    };
+   
 
     if (isLoading) return <p>Loading banners...</p>;
 
-    console.log(designs ,'designdata')
+    console.log(designs, 'designdata')
     const tableData = designs.map((item, index) => ({
         id: item.id,
         sno: index + 1,
@@ -106,7 +82,9 @@ const ManageBestDesignBanner = () => {
         name: item.Name || "—",
     }));
 
-
+    const handleOnClick = () => {
+        navigate('/admin/bestbanner/add')
+    }
     return (
         // <Box sx={{ mt: { xs: 3, md: 4 }, p: { xs: 2, md: 4 } }}>
         //     <Box sx={{ padding: 3, border: "1px solid #e0e0e0ff", borderRadius: 2 }}>
@@ -233,9 +211,11 @@ const ManageBestDesignBanner = () => {
                 headers={[
                     { key: "sno", label: "S.No" },
                     { key: "image_path", label: "Image" },
-                    {key:'name' , label: 'Name'},
+                    { key: 'name', label: 'Name' },
                     { key: "actions", label: "Actions", align: "center" },
                 ]}
+                button={designs.length < 2 ? ("Add Banner") : ('')}
+                onClick={handleOnClick}
                 data={tableData}
                 renderCell={(key, row) => {
                     // Image column
@@ -244,9 +224,8 @@ const ManageBestDesignBanner = () => {
                             <img
                                 src={getProductImages(row.image_path)}
                                 alt={row.title}
-                                width={60}
-                                height={40}
-                                className="rounded shadow-sm object-cover"
+                                style={{ width: 40, height: 40, objectFit: "contain"}}
+                                className="rounded  object-contain"
                             />
                         );
                     }
@@ -256,7 +235,7 @@ const ManageBestDesignBanner = () => {
                         return (
                             <div className="flex gap-2 justify-center">
                                 <button
-                                    onClick={() => navigate(`/admin/banner/add?id=${row.id}`)}
+                                    onClick={() =>  navigate('/admin/bestbanner/add', { state: { id: row.id, mode: 'edit' } })}
                                     className="text-blue-600 hover:text-blue-800 transition-colors"
                                     title="Edit"
                                 >
@@ -267,7 +246,7 @@ const ManageBestDesignBanner = () => {
                                     className="text-red-600 hover:text-red-800 transition-colors"
                                     title="Delete"
                                 >
-                                    <FaTrash size={16} />
+                                    <FaTrash size={14} />
                                 </button>
                             </div>
                         );

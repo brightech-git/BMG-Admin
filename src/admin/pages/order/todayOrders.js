@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom';
 import StatusChip from '../../components/statusChip/StatusChip';
 import SkeletonTable from '../../components/table/SkeletonTable';
 import AdvancedTableModal from '../../components/modal/AdvancedTableModal';
-
+import { getProductImages } from '../../../utils/mediaUtils/mediaUtils';
 // Icons (still using MUI icons, but styled via CSS)
 import { Search as SearchIcon, RemoveRedEye, ArrowForward } from '@mui/icons-material';
 
@@ -21,10 +21,11 @@ const OrderHistoryPage = () => {
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedOrder , setSelectedOrder] = useState('');
     const [trackingModalOpen, setTrackingModalOpen] = useState(false);
     const [trackingData, setTrackingData] = useState(null);
     const navigate = useNavigate();
-
+console.log(selectedOrder ,'oredeselectede')
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
     const isTablet = useMediaQuery({ query: '(max-width: 1024px)' });
 
@@ -46,6 +47,7 @@ const OrderHistoryPage = () => {
         mutationFn: (orderId) => trackOrderById(orderId),
         onSuccess: (data) => {
             setTrackingData(data);
+            setSelectedOrder(data);
             setTrackingModalOpen(true);
         },
         onError: (error) => {
@@ -109,7 +111,7 @@ const OrderHistoryPage = () => {
         switch (key) {
             case 'orderId':
                 return (
-                    <span className="text-responsive-xs font-semibold" style={{ color: 'var(--active-border)' }}>
+                    <span className="text-xs font-semibold" style={{ color: 'var(--active-border)' }}>
                         {row.orderId}
                     </span>
                 );
@@ -117,10 +119,10 @@ const OrderHistoryPage = () => {
             case 'customer':
                 return (
                     <div>
-                        <div className="text-responsive-xs font-semibold" style={{ color: 'var(--primary-text-color)' }}>
+                        <div className="text-xs font-semibold" style={{ color: 'var(--primary-text-color)' }}>
                             {row.customerName}
                         </div>
-                        <div className="text-responsive-xxs" style={{ color: 'var(--secondary-text-color)' }}>
+                        <div className="text-xxs" style={{ color: 'var(--secondary-text-color)' }}>
                             {row.contact}
                         </div>
                     </div>
@@ -129,10 +131,10 @@ const OrderHistoryPage = () => {
             case 'orderTime':
                 return (
                     <div>
-                        <div className="text-responsive-xs" style={{ color: 'var(--primary-text-color)' }}>
+                        <div className="text-xs" style={{ color: 'var(--primary-text-color)' }}>
                             {format(parseISO(row.orderTime), 'dd/MM/yyyy')}
                         </div>
-                        <div className="text-responsive-xxs" style={{ color: 'var(--secondary-text-color)' }}>
+                        <div className="text-xxs" style={{ color: 'var(--secondary-text-color)' }}>
                             {format(parseISO(row.orderTime), 'hh:mm a')}
                         </div>
                     </div>
@@ -150,7 +152,7 @@ const OrderHistoryPage = () => {
 
             case 'totalAmount':
                 return (
-                    <span className="text-responsive-xs font-bold" style={{ color: 'var(--primary-color)' }}>
+                    <span className="text-xs font-bold" style={{ color: 'var(--primary-color)' }}>
                         ₹{row.totalAmount?.toFixed(2)}
                     </span>
                 );
@@ -164,19 +166,19 @@ const OrderHistoryPage = () => {
                         <button
                             onClick={() => handleTrackOrder(row.orderId)}
                             className="p-1 rounded-[var(--border-radius-sm)] transition-smooth hover:scale-105"
-                            style={{ color: 'var(--active-border)', backgroundColor: 'var(--active-bg)' }}
+                            style={{ color: 'var(--active-border)' }}
                             title="View Tracking"
                         >
-                            <RemoveRedEye className="text-responsive-sm" />
+                            <RemoveRedEye className="text-xs" />
                         </button>
                         {showNextArrow && (
                             <button
                                 onClick={() => handleNextAction(row)}
                                 className="p-1 rounded-[var(--border-radius-sm)] transition-smooth hover:scale-105"
-                                style={{ color: 'var(--primary-color)', backgroundColor: 'var(--active-bg)' }}
+                                style={{ color: 'var(--primary-color)', }}
                                 title="Next Action"
                             >
-                                <ArrowForward className="text-responsive-sm" />
+                                <ArrowForward className="text-xs" />
                             </button>
                         )}
                     </div>
@@ -209,7 +211,7 @@ const OrderHistoryPage = () => {
     }
 
     return (
-        <div className="min-h-screen py-8 md:py-10 px-2 md:px-10 ml-0 md:ml-4" style={{ backgroundColor: 'var(--background-color)' }}>
+        <div className="border mt-8 md:py-10 px-2 md:px-10 ml-0 md:ml-4" style={{ backgroundColor: 'var(--background-color)' }}>
             <div className=""
                 >
                 <div className="p-2  md:p-3">
@@ -299,11 +301,14 @@ const OrderHistoryPage = () => {
                                 renderCell={renderCell}
                                 themeMode={themeMode}
                                 showNextArrow={true}
+                                fontSizeRow='text-xs'
                                 alignments={{
                                     totalAmount: 'right',
                                     status: 'center',
                                     tracking: 'center'
                                 }}
+                              
+                                fontSizeHeader="text-sm"
                             />
                         )}
                     </div>
@@ -315,34 +320,68 @@ const OrderHistoryPage = () => {
                 onClose={closeTrackingModal}
                 title="Order Tracking Details"
                 mode="track"
+                userView ={false}
                 themeMode={themeMode}
-                columns={[
-                    { key: 'productName', label: 'Product', align: 'left' },
-                    { key: 'productKey', label: 'Product Key', align: 'left' },
-                    { key: 'price', label: 'Price (₹)', align: 'right' },
-                ]}
-                data={trackingData?.items?.map(item => ({
-                    productName: (
-                        <div className="flex items-center space-x-2">
-                            {item.image_path && (
-                                <img
-                                    src={item.image_path}
-                                    alt={item.productName}
-                                    className="w-10 h-10 rounded-[var(--border-radius-sm)] object-cover border"
-                                    style={{ borderColor: 'var(--border-color)' }}
-                                />
-                            )}
-                            <span>{item.productName}</span>
-                        </div>
-                    ),
-                    productKey: `${item.itemid}${item.tagno}`,
-                    price: `₹${item.price.toFixed(2)}`
-                })) || []}
+                currentStatus={selectedOrder.current_status}
+                trackDetails = {selectedOrder.history}
+                //  userData={[
+                //                             {
+                //                                 key: "Order Number",
+                //                                 value: selectedOrder?.order_id,
+                //                                 align: "left",
+                //                             },
+                //                             {
+                //                                 key: "Name",
+                //                                 value: selectedOrder?.user_name,
+                //                             },
+                //                             {
+                //                                 key: "Email",
+                //                                 value: selectedOrder?.email,
+                //                             },
+                //                             {
+                //                                 key: "Mobile Number",
+                //                                 value: selectedOrder?.contact,
+                //                             },
+                //                             {
+                //                                 key: "Address",
+                //                                 value: selectedOrder?.address
+                //                                     ? `${selectedOrder.address.name}, ${selectedOrder.address.addressLine}, ${selectedOrder.address.landmark ? selectedOrder.address.landmark + "," : ""} ${selectedOrder.address.city}, ${selectedOrder.address.state} - ${selectedOrder.address.pincode}`
+                //                                     : "No address available",
+                //                             },
+                //                             {
+                //                                 key: "Order Date",
+                //                                 value: selectedOrder?.order_time
+                //                                     ? new Date(selectedOrder.order_time).toLocaleString()
+                //                                     : "-",
+                //                             },
+                //                         ]}
+                //                         userColumns={[
+                //                             { key: "key", label: "Field" },
+                //                             { key: "value", label: "Details" },
+                //                         ]}
+                                        orderData={selectedOrder?.items?.map((item, index) => ({
+                                            sno: index + 1,
+                                            productId: item.tagno || item.sno || "-",
+                                            product: (
+                                                <span className='flex items-center gap-1 text-xs'>
+                                                    <img src={getProductImages(item.image_path)} width={30} height={30} />
+                                                    {item.product_name}
+                                                </span>
+                                            ),
+                                            price: item.price.toFixed(2),
+                                            total: item.price.toFixed(2),
+                                        }))}
+                                        orderColumns={[
+                                            { key: "sno", label: "S.No", align: "left" },
+                                            { key: "productId", label: "Product ID", align: "left" },
+                                            { key: "product", label: "Product ", align: "left" },
+                                            { key: "price", label: "Price", align: "right" },
+                                            { key: "total", label: "Total", align: "right" },
+                                        ]}
                 showTotal={true}
                 totalLabel="Total Price"
                 totalValue={`₹${trackingData?.items?.reduce((sum, i) => sum + i.price, 0)?.toFixed(2) || 0}`}
-                fontSizeHeader='text-xs'
-                fontSizeRow="text-xs"
+                
             />
         </div>
     );

@@ -1,4 +1,4 @@
-import React, { useState, useMemo ,useEffect} from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useUpdateOrderStatus, useOrdersByStatus } from '../../hooks/order/useAllOrder.js';
 import BackdropProgress from '../../components/backDrop/BackdropProgress.jsx';
@@ -9,16 +9,16 @@ import AdvancedTable from '../../components/table/ResponsiveTable.jsx';
 import StatusChip from '../../components/statusChip/StatusChip.jsx';
 import { useCreateConsignment } from '../../hooks/shipping/useCreateConsignment.js';
 import { useAddressQuery } from '../../hooks/address/useAddressQuery.js'
-import { getProductImages } from '../../../utils/mediaUtils/mediaUtils.js.js';
+import { getProductImages } from '../../../utils/mediaUtils/mediaUtils.js';
 
 const OrderTable = () => {
     const location = useLocation();
-   
-    const navigate =useNavigate();
+
+    const navigate = useNavigate();
 
 
     const { key } = location.state || {};
-    console.log(key,'keytoget')
+    console.log(key, 'keytoget')
 
     // Redirect if key is not present
     // useEffect(() => {
@@ -27,7 +27,7 @@ const OrderTable = () => {
     //     }
     // }, [key, navigate]);
 
-  
+
 
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -54,10 +54,10 @@ const OrderTable = () => {
     const { data, isLoading, isError, error, refetch } = useOrdersByStatus(status, page, rowsPerPage);
     const createConsignmentMutation = useCreateConsignment();
     const updateOrderStatus = useUpdateOrderStatus();
-    const { useGetAllAddresses} = useAddressQuery();
-    const {data:addressesData} = useGetAllAddresses();
+    const { useGetAllAddresses } = useAddressQuery();
+    const { data: addressesData } = useGetAllAddresses();
 
-    const addresses = addressesData|| [];
+    const addresses = addressesData || [];
 
     // Find default origin address
     const defaultOriginAddress = useMemo(() => {
@@ -374,7 +374,7 @@ const OrderTable = () => {
         ),
         payment_mode: (
             <span className="text-xs px-2 py-1 rounded align_center text-black font-semibold">
-              
+
                 <StatusChip status={order.payment_mode} size='small' />
             </span>
         ),
@@ -460,8 +460,8 @@ const OrderTable = () => {
                 <div className="p-2">
 
                     {/* Breadcrumb */}
-                     <nav aria-label="breadcrumb">
-                          <ol className="breadcrumb items-center">
+                    <nav aria-label="breadcrumb">
+                        <ol className="breadcrumb items-center">
                             <Link
                                 to="/"
                                 className="text-secondaryText hover:text-primaryText transition-colors text-sm"
@@ -472,10 +472,10 @@ const OrderTable = () => {
                             <li className="text-primaryText font-semibold capitalize text-xs">
                                 Manage {status?.replace('_', ' ')} Orders
                             </li>
-                         </ol>
-                        </nav>
-                 
-                
+                        </ol>
+                    </nav>
+
+
 
 
                     {/* Title and Search */}

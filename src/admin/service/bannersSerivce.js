@@ -1,4 +1,3 @@
-import { Form } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 
             /*----------------------Main Banner---------------------- */
@@ -6,42 +5,21 @@ import axiosInstance from "../api/axiosInstance";
 export const bannersService = {
     getBanners: () => axiosInstance.get("/banner/list"),
 
-    createBanner: (image, title,itemname,subtitle ,gender ) => {
-        const formData = new FormData();
-        formData.append("image", image);
-        formData.append("title", title);
-        formData.append("itemname", itemname);
-        formData.append("subtitle", subtitle);
-        formData.append("gender",gender);
-
-        console.log(formData,'data for banner')
-        
+    createBanner: (formData ) => {
+       
+        console.log('FormData contents:');
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}:`, value);
+        }
 
         return axiosInstance.post("/banner/upload", formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
     },
 
-    updateBanner: async (
-        id,
-        image, // can be File, null or undefined
-        title,
-        subtitle,
-        itemname,
-        gender
+    updateBanner: async (formData
     ) => {
         const form = new FormData();
-
-        form.append('id', id);
-        form.append('title', title);
-        form.append('subtitle', subtitle);
-        form.append('itemname', itemname); // string
-        if (gender) form.append('gender', gender); // string
-
-        // Only send a new image if the user selected one
-        if (image instanceof File) {
-            form.append('image', image);
-        }
 
         // ✅ To log all FormData key-value pairs
         console.log('FormData contents:');
@@ -49,7 +27,7 @@ export const bannersService = {
             console.log(`${key}:`, value);
         }
 
-        return axiosInstance.put('/banner/update', form, {
+        return axiosInstance.put('/banner/update', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
     },
@@ -68,20 +46,23 @@ export const bannersService = {
 export const occasionBannersService = {
     getOccasionBanners: () => axiosInstance.get("/occasion_banner/list"),
 
-    createOccasionBanner: (image, title ,subtitle,occasion,gender) => {
-        const formData = new FormData();
-        formData.append("image", image);
-        formData.append("title", title);
-        formData.append("subtitle", subtitle);
-        formData.append("occasion", occasion);
-        formData.append("gender", gender);
+    createOccasionBanner: (formData) => {
+        // const formData = new FormData();
+        // formData.append("image", image);
+        // formData.append("title", title);
+        // formData.append("subtitle", subtitle);
+        // formData.append("occasion", occasion);
+        // formData.append("gender", gender);
 
         return axiosInstance.post("/occasion_banner/upload", formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
     },
 
-    updateOccasionBanner: ( formData) => {
+    updateOccasionBanner: (formData) => {
+        for(const[key,values] of formData.entries()
+         )
+            console.log(key ,values)
         return axiosInstance.put(`/occasion_banner/update`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
@@ -100,19 +81,19 @@ export const occasionBannersService = {
 export const offerBannersService = {
     getOfferBanners: () => axiosInstance.get("/offer_banner/list"),
 
-    createOfferBanner: (image, title, subtitle, item_name,sub_item_name) => {
-        const formData = new FormData();
-        formData.append("image", image);
-        formData.append("title", title);
-        formData.append("subtitle", subtitle);
-        formData.append("item_name", item_name);
-        formData.append("sub_item_name", sub_item_name);
+    createOfferBanner: (formData) => {
+        // const formData = new FormData();
+        // formData.append("image", image);
+        // formData.append("title", title);
+        // formData.append("subtitle", subtitle);
+        // formData.append("item_name", item_name);
+        // formData.append("sub_item_name", sub_item_name);
         
 
     
-        for (const [key, value] of formData.entries()) {
-            console.log(`${key}:`, value);
-        }
+        // for (const [key, value] of formData.entries()) {
+        //     console.log(`${key}:`, value);
+        // }
 
 
         return axiosInstance.post("/offer_banner/upload", formData, {
@@ -120,7 +101,7 @@ export const offerBannersService = {
         });
     },
 
-    updateOfferBanner: (id,formData) => {
+    updateOfferBanner: (formData,id) => {
         return axiosInstance.put(`/offer_banner/update/${id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
@@ -139,17 +120,17 @@ export const offerBannersService = {
 export const BudgetBannersService = {
     getBudgetBanners: () => axiosInstance.get("/budget-categories/all"),
 
-    createBudgetBanner: (image, title, subtitle, min_price, max_price) => {
-        const formData = new FormData();
-        formData.append("image", image);
-        formData.append("title", title);
-        formData.append("subtitle", subtitle);
-        formData.append("min_price", Number(min_price)); // ensure number
-        formData.append("max_price", Number(max_price));
-        formData.append("isPremium", "true");
-        formData.append("alt", "Glorious");
+    createBudgetBanner: (formData) => {
+        // const formData = new FormData();
+        // formData.append("image", image);
+        // formData.append("title", title);
+        // formData.append("subtitle", subtitle);
+        // formData.append("min_price", Number(min_price)); // ensure number
+        // formData.append("max_price", Number(max_price));
+        // formData.append("isPremium", "true");
+        // formData.append("alt", "Glorious");
 
-        console.log([...formData.entries()], 'Data for banner');
+        // console.log([...formData.entries()], 'Data for banner');
 
         return axiosInstance.post("/budget-categories/upload", formData);
     },
@@ -175,28 +156,28 @@ export const BudgetBannersService = {
 export const CategoryBannersService = {
     getCategoryBanners: () => axiosInstance.get("/category_banner/list"),
 
-    createCategoryBanner: (image, title, subtitle, itemName, subItemName) => {
-        const formData = new FormData();
-        formData.append("image", image);
-        formData.append("title", title);
-        formData.append("subtitle", subtitle);
-        formData.append("itemName", itemName);
-        formData.append("subItemName", subItemName);
+    createCategoryBanner: (formData) => {
+        // const formData = new FormData();
+        // formData.append("image", image);
+        // formData.append("title", title);
+        // formData.append("subtitle", subtitle);
+        // formData.append("itemName", itemName);
+        // formData.append("subItemName", subItemName);
 
-        console.log([...formData.entries()], 'Data for banner');
+        // console.log([...formData.entries()], 'Data for banner');
 
         return axiosInstance.post("/category_banner/upload", formData);
     },
 
 
-    updateCategoryBanner: (image, id, title, subtitle, itemName, subItemName) => {
-        const formData = new FormData();
-        formData.append("image", image);
-        formData.append("id", id);
-        formData.append("title", title);
-        formData.append("subtitle", subtitle);
-        formData.append("itemName", itemName);
-        formData.append("subItemName", subItemName);
+    updateCategoryBanner: (formData) => {
+        // const formData = new FormData();
+        // formData.append("image", image);
+        // formData.append("id", id);
+        // formData.append("title", title);
+        // formData.append("subtitle", subtitle);
+        // formData.append("itemName", itemName);
+        // formData.append("subItemName", subItemName);
 
 
         return axiosInstance.put("/category_banner/update", formData, {
@@ -217,28 +198,28 @@ export const CategoryBannersService = {
 export const FestivalBannersService = {
     getFestivalBanners: () => axiosInstance.get("/festival_banner/list"),
 
-    createFestivalBanner: (image, title, subtitle, itemname, sub_item_name) => {
-        const formData = new FormData();
-        formData.append("image", image);
-        formData.append("title", title);
-        formData.append("subtitle", subtitle);
-        formData.append("item_name", itemname);
-        formData.append("sub_item_name", sub_item_name);
+    createFestivalBanner: (formData) => {
+        // const formData = new FormData();
+        // formData.append("image", image);
+        // formData.append("title", title);
+        // formData.append("subtitle", subtitle);
+        // formData.append("item_name", itemname);
+        // formData.append("sub_item_name", sub_item_name);
 
-        console.log([...formData.entries()], 'Data for banner');
+        // console.log([...formData.entries()], 'Data for banner');
 
         return axiosInstance.post("/festival_banner/upload", formData);
     },
 
 
-    updateFestivalBanner: (image, id, title, subtitle, item_name, sub_item_name) => {
-        const formData = new FormData();
-        formData.append("image", image);
-        formData.append("id",id)
-        formData.append("title", title);
-        formData.append("subtitle", subtitle);
-        formData.append("item_name", item_name);
-        formData.append("sub_item_name", sub_item_name);
+    updateFestivalBanner: (formData) => {
+        // const formData = new FormData();
+        // formData.append("image", image);
+        // formData.append("id",id)
+        // formData.append("title", title);
+        // formData.append("subtitle", subtitle);
+        // formData.append("item_name", item_name);
+        // formData.append("sub_item_name", sub_item_name);
 
 
         return axiosInstance.put("/festival_banner/update", formData, {

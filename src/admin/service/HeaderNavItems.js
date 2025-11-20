@@ -14,13 +14,18 @@ export const uploadMenuItem = async (formData) => {
 };
 
 export const updateMenuItem = async (formData) => {
-    const response = await axiosInstance.put(`/menu/update`, formData, {
+
+    for(const [ key,values] of formData.entries()){
+        console.log(`${key}` ,values);
+    }
+    const response = await axiosInstance.put('/menu/update', formData, {
         headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
 };
 
 export const deleteMenuItem = async (id) => {
+    console.log(id,'deleteid')
     const response = await axiosInstance.delete(`/menu/delete`, {
         params: { id },
     });

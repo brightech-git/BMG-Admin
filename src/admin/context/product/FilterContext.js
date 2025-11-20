@@ -1,4 +1,4 @@
-'use client';
+
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
 
 const defaultFilters = {

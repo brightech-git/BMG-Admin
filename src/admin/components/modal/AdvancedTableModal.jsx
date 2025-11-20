@@ -6,6 +6,7 @@ const AdvancedTableModal = ({
     onClose,
     title = "Details",
     mode = "view",
+    userView = true,
     userData = [],
     userColumns = [],
     orderData = [],
@@ -16,18 +17,51 @@ const AdvancedTableModal = ({
     showTotal = false,
     totalLabel = "Grand Total",
     totalValue,
+    trackDetails=[],
+    currentStatus = '',
 }) => {
-    const [activeTable, setActiveTable] = useState("user"); // 'user' or 'order'
+    const [activeTable, setActiveTable] = useState("order"); // 'user' or 'order'
 
     if (!open) return null;
-
     const getModeBanner = () => {
         switch (mode) {
             case "track":
                 return (
-                    <div className="w-full text-center py-2 rounded-lg bg-[var(--active-bg)] text-[var(--primary-text-color)] font-semibold">
-                        Tracking Mode – Package Progress
+                    <div className="w-full text-center py-2 text-sm rounded-lg bg-[var(--active-bg)] text-[var(--primary-text-color)] font-semibold">
+                        <p> Tracking Mode – Current Status: {currentStatus} </p>
+
+                        <div className="mt-1 bg-[var(--card-bg)] p-1 text-[var(--secondary-text-color)] align-center text-start font-normal text-xs">
+                            <h3 className="font-semibold mb-2 text-sm justify-start text-[var(--primary-text-color)]">Tracking History</h3>
+
+                            {trackDetails?.length > 0 ? (
+                                <ul className="space-y-1">
+                                    {trackDetails.map((item, index) => (
+                                        <li
+                                            key={index}
+                                            className="border-b  last:border-none"
+                                        >
+                                            <div className="flex justify-between">
+                                                <span className="font-semibold">{item.status}</span>
+                                                <span className="text-xs">
+                                                    {item.updated_at
+                                                        ? new Date(item.updated_at).toLocaleString()
+                                                        : "--"}
+                                                </span>
+                                            </div>
+                                            {item.remarks && (
+                                                <p className="text-xs ">
+                                                    {item.remarks}
+                                                </p>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-center text-sm text-gray-500">No tracking history available.</p>
+                            )}
+                        </div>
                     </div>
+
                 );
             case "edit":
                 return (
@@ -53,7 +87,7 @@ const AdvancedTableModal = ({
                     </p>
                     <button
                         onClick={onClose}
-                        className="text-[var(--secondary-text-color)] hover:text-[var(--error-color)] text-sm"
+                        className="text-[var(--error-color)] text-sm"
                     >
                         ✕
                     </button>
@@ -61,15 +95,17 @@ const AdvancedTableModal = ({
 
                 {/* Table Switcher */}
                 <div className="flex space-x-1 p-1">
-                    <button
+
+                    {userView && <button
                         onClick={() => setActiveTable("user")}
                         className={`px-2 py-1 rounded font-[var(--font-primary)] ${activeTable === "user"
-                                ? "bg-[var(--primary-color)] text-[var(--card-background-color)] text-xs"
-                                : "bg-[var(--card-background-color)] text-[var(--primary-text-color)] border border-[var(--border-color)] text-xs"
+                            ? "bg-[var(--primary-color)] text-[var(--card-background-color)] text-xs"
+                            : "bg-[var(--card-background-color)] text-[var(--primary-text-color)] border border-[var(--border-color)] text-xs"
                             }`}
                     >
                         User Details
-                    </button>
+                    </button>}
+                   
                     <button
                         onClick={() => setActiveTable("order")}
                         className={`px-2 py-1 rounded font-[var(--font-primary)] ${activeTable === "order"
@@ -123,8 +159,8 @@ const AdvancedTableModal = ({
 
                     {/* Optional Footer Total */}
                     {activeTable === "order" && showTotal && (
-                        <div className="flex justify-end ">
-                            <span className="font-semibold mr-2 text-sm">{totalLabel}:</span>
+                        <div className="flex justify-end align-center">
+                            <span className="font-semibold mr-2 text-xs">{totalLabel}:</span>
                             <span className="text-[var(--error-color)] font-bold text-xs">
                                 {totalValue}
                             </span>

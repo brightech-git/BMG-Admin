@@ -15,11 +15,7 @@ export const useUploadLatestBannerMutation = () => {
     return useMutation({
 
 
-        mutationFn: ({image,name}) => {
-            const formData = new FormData();
-           
-            formData.append("image", image);
-            formData.append("name", name);
+        mutationFn: (formData) => {
             
             LatestBanner.uploadLatestBanner(formData)},
         onSuccess: () => {

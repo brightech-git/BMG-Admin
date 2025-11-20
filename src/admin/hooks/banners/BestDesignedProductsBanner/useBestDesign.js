@@ -15,16 +15,9 @@ export const useUploadBestDesignMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ image, name }) => {
-            const formData = new FormData();
-            formData.append("name", name);
-            formData.append("image", image);
-
-            // Debug: log FormData entries
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value, "bestDesign upload");
-            }
-
+        mutationFn: (formData) => {
+       
+          
             return uploadBestDesign(formData);
         },
         onSuccess: () => {
@@ -38,16 +31,8 @@ export const useUpdateBestDesignMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, name, image }) => {
-            const formData = new FormData();
-            formData.append("id", id);
-            if (name) formData.append("name", name);
-            if (image instanceof File) formData.append("image", image);
-
-            // Debug: log FormData
-            for (let [key, value] of formData.entries()) {
-                console.log(key, value, "bestDesign update");
-            }
+        mutationFn: (formData) => {
+      
 
             return updateBestDesign(formData);
         },

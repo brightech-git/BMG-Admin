@@ -749,87 +749,97 @@ const ManageBanner = () => {
     const { data: bannersData, isLoading, refetch } = useBannersQuery();
     const { mutate: deleteBanner } = useDeleteBannerMutation();
 
-    const banners = useMemo(() => bannersData?.data || [], [bannersData?.data]);
+    // Use memo to avoid unnecessary recalculations
+    const banners = useMemo(() => {
+            if (!bannersData) return [];
+    
+            // Handle different possible response structures
+            if (Array.isArray(bannersData)) {
+                return bannersData;
+            } else if (Array.isArray(bannersData?.data)) {
+                return bannersData.data;
+            } else if (Array.isArray(bannersData?.banners)) {
+                return bannersData.banners;
+            } else if (Array.isArray(bannersData?.results)) {
+                return bannersData.results;
+            }
+    
+            console.warn('Unexpected banners data structure:', bannersData);
+            return [];
+        }, [bannersData]);
 
     const handleDelete = (id) => {
         if (window.confirm("Delete this banner?")) {
             deleteBanner(id, {
-                onSuccess: () => {
-                    refetch(); // Refresh the list after deletion
-                }
+                onSuccess: () => refetch(), // Refresh list after deletion
             });
         }
     };
 
-    // Format data for the table with serial numbers
     const tableData = banners.map((item, index) => ({
         id: item.id,
         sno: index + 1,
         image_path: item.image_path,
-        title: item.title || "—",
-        subtitle: item.subtitle || "—",
+        // title: item.title || "—",
+        // subtitle: item.subtitle || "—",
         itemname: item.itemname || "—",
-        gender: item.gender || "—",
     }));
+    const handleOnClick = () =>{
+        navigate('/banner/add')
+    }
 
     return (
-        <div>
-            <div className="max-w-8xl mx-auto mt-3  p-3 sm:p-4 sm:mt-4">
-        <BannerTable
-            title="Manage Banners"
-            headers={[
-                { key: "sno", label: "S.No" },
-                { key: "image_path", label: "Image" },
-                { key: "title", label: "Title" },
-                { key: "subtitle", label: "Subtitle" },
-                { key: "itemname", label: "Item Name" },
-                { key: "gender", label: "Gender" },
-                { key: "actions", label: "Actions", align: "center" },
-            ]}
-            data={tableData}
-            renderCell={(key, row) => {
-                // Image column
-                if (key === "image_path") {
-                    return (
-                        <img
-                            src={getProductImages(row.image_path)}
-                            alt={row.title}
-                            width={60}
-                            height={40}
-                            className="rounded shadow-sm object-cover"
-                        />
-                    );
-                }
-
-                // Actions column
-                if (key === "actions") {
-                    return (
-                        <div className="flex gap-2 justify-center">
-                            <button
-                                onClick={() => navigate(`/admin/banner/add?id=${row.id}`)}
-                                className="text-blue-600 hover:text-blue-800 transition-colors"
-                                title="Edit"
-                            >
-                                <FaEdit size={16} />
-                            </button>
-                            <button
-                                onClick={() => handleDelete(row.id)}
-                                className="text-red-600 hover:text-red-800 transition-colors"
-                                title="Delete"
-                            >
-                                <FaTrash size={16} />
-                            </button>
-                        </div>
-                    );
-                }
-
-                // Default value display
-                return row[key];
-            }}
-            loading={isLoading}
-            emptyMessage="No banners found"
-        />
-        </div>
+        <div className="max-w-8xl mx-auto mt-3 p-3 sm:p-4 sm:mt-4">
+            <BannerTable
+                title="Manage Main Banners"
+                button={banners.length <= 5 ? ("Add Banner") : ('')}
+                onClick = {handleOnClick}
+                headers={[
+                    { key: "sno", label: "S.No" },
+                    { key: "image_path", label: "Image" },
+                    // { key: "title", label: "Title" },
+                    // { key: "subtitle", label: "Subtitle" },
+                    { key: "itemname", label: "Item Name" },
+                    { key: "actions", label: "Actions", align: "center" },
+                ]}
+                data={tableData}
+                renderCell={(key, row) => {
+                    if (key === "image_path") {
+                        return (
+                            <img
+                                src={getProductImages(row.image_path)}
+                                alt={row.title}
+                                width={60}
+                                height={40}
+                                className="rounded shadow-sm object-contain"
+                            />
+                        );
+                    }
+                    if (key === "actions") {
+                        return (
+                            <div className="flex gap-2 justify-center">
+                                <button
+                                    onClick={() => navigate('/admin/banner/add', { state: { id: row.id, mode: 'edit' } })}
+                                    className="text-blue-600 hover:text-blue-800 transition-colors"
+                                    title="Edit"
+                                >
+                                    <FaEdit size={16} />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(row.id)}
+                                    className="text-red-600 hover:text-red-800 transition-colors"
+                                    title="Delete"
+                                >
+                                    <FaTrash size={16} />
+                                </button>
+                            </div>
+                        );
+                    }
+                    return row[key];
+                }}
+                loading={isLoading}
+                emptyMessage="No banners found"
+            />
         </div>
     );
 };

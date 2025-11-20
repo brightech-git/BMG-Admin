@@ -22,6 +22,8 @@ const FeatureBanner = {
     },
 
     updateFeaturedBanner: async (formData) => {
+        for(const[key , values] of formData.entries())
+            console.log(key,values);
         const response = await axiosInstance.put(`${baseUrl}/update`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });

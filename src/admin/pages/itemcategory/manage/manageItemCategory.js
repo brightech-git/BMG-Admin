@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState ,useMemo ,useEffect } from "react";
 import {
     Box,
     Typography,
@@ -23,170 +23,103 @@ import FileUploader from "../../../components/banner/FileUploader";
 
 import useCategories from '../../../hooks/itemCategory/useItemCategory'
 import { useDeleteCategory, useUpdateCategory } from '../../../hooks/itemCategory/useUploadCategory'
-import { getProductImages } from "../../../../utils/mediaUtils/mediaUtils.js.js";
+import { getProductImages } from "../../../../utils/mediaUtils/mediaUtils.js";
 import { useItemNames } from "../../../hooks/itemName/useItemNames";
 import { useNavigate } from "react-router-dom";
-
-const baseUrl = "https://app.bmgjewellers.com";
+import BannerTable from "../../../components/banner/manageBannerTable.jsx";
+import { FaTrash ,FaEdit} from "react-icons/fa";
 
 const ManageItemCategory = () => {
-    const { data: categories, isLoading, isError } = useCategories();
-    const { mutateAsync: deleteCategory } = useDeleteCategory();
-    const { mutateAsync: updateCategory, isLoading: updating } = useUpdateCategory();
-
-    const [editingId, setEditingId] = useState(null);
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [selectedItemName, setSelectedItemName] = useState("");
-    const { items } = useItemNames();
-    const navigate = useNavigate();
-
-    const handleDelete = async (id) => {
-
-        try {
-            await deleteCategory(id);
-            toast.success("Category deleted successfully!");
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to delete category");
-        }
-    };
-
-    const handleEdit = (category) => {
-        setEditingId(category.id);
-        setSelectedItemName(category.item_name);
-        setSelectedFile(null); // reset file
-    };
-
-    const handleUpdate = async () => {
-        if (!selectedItemName) {
-            toast.error("Item name is required");
-            return;
-        }
-
-        try {
-            console.log(editingId, selectedItemName, selectedFile, 'update')
-            await updateCategory({ id: editingId, itemName: selectedItemName, image: selectedFile });
-            toast.success("Category updated successfully!");
-            setEditingId(null);
-            setSelectedFile(null);
-            setSelectedItemName("");
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to update category");
-        }
-    };
-
-    if (isLoading) return <CircularProgress />;
-    if (isError) return <Typography color="error">Failed to load categories</Typography>;
-
-    return (
-        <Box sx={{ maxWidth: "95%", mx: "auto", mt: 5 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', mb: { xs: 2, md: 3 } }}>
-                <Typography variant="h5" mb={3}>
-                    Manage Item Categories
-                </Typography>
-
-                <Button variant="contained" color="primary" size="small" onClick={() => navigate("/admin/item-category/add")} >
-                    Add Item Category
-                </Button>
-            </Box>
-
-
-
-            <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 650 }} aria-label="categories table">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>S.No</TableCell>
-                            <TableCell>Item Name</TableCell>
-                            <TableCell>Image</TableCell>
-                            <TableCell align="center">Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {categories?.map((category, index) => {
-                            const images = getProductImages(category.image_path);
-
-                            return (
-                                <TableRow key={category.id}>
-                                    <TableCell>{index + 1}</TableCell>
-
-                                    <TableCell>
-                                        {editingId === category.id ? (
-                                            <FormControl fullWidth sx={{ mb: 3 }}>
-                                                <InputLabel id="item-select-label">Select Item</InputLabel>
-                                                <Select
-                                                    labelId="item-select-label"
-                                                    value={selectedItemName}       // state variable holding selected value
-                                                    label="Select Item"
-                                                    onChange={(e) => setSelectedItemName(e.target.value)}
-                                                >
-                                                    <MenuItem value="">
-                                                        <em>None</em>
-                                                    </MenuItem>
-                                                    {items.map((item) => (
-                                                        <MenuItem key={item.id} value={item.ITEMCTRNAME}>
-                                                            {item.ITEMCTRNAME}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </FormControl>
-                                            // <input
-                                            //     type="text"
-                                            //     value={selectedItemName}
-                                            //     onChange={(e) => setSelectedItemName(e.target.value)}
-                                            //     style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #ccc" }}
-                                            // />
-                                        ) : (
-                                            category.item_name
-                                        )}
-                                    </TableCell>
-
-                                    <TableCell>
-                                        {editingId === category.id ? (
-                                            <FileUploader
-                                                key={editingId} // reset FileUploader for each edit
-                                                initialPreview={images[0]}
-                                                onFileSelect={(file) => setSelectedFile(file)}
-                                                height={80}
-                                                width={80}
-                                            />
-                                        ) : (
-                                            <img src={images[0]} alt={category.item_name} style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8 }} />
-                                        )}
-                                    </TableCell>
-
-                                    {/* <TableCell>{new Date(category.created_at).toLocaleString()}</TableCell> */}
-
-                                    <TableCell align="center">
-                                        {editingId === category.id ? (
-                                            <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-                                                <Button variant="contained" size="small" onClick={handleUpdate} disabled={updating}>
-                                                    {updating ? <CircularProgress size={20} /> : "Save"}
-                                                </Button>
-                                                <Button variant="outlined" size="small" onClick={() => setEditingId(null)}>
-                                                    Cancel
-                                                </Button>
-                                            </Box>
-                                        ) : (
-                                            <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-                                                <IconButton color="primary" onClick={() => handleEdit(category)}>
-                                                    <EditIcon />
-                                                </IconButton>
-                                                <IconButton color="error" onClick={() => handleDelete(category.id)}>
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Box>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Box>
-    );
-};
-
-export default ManageItemCategory;
+     const navigate = useNavigate();
+   
+    const { data: bannersData, isLoading, refetch } = useCategories();
+    const { mutate: deleteBanner } = useDeleteCategory();
+   
+       // Use memo to avoid unnecessary recalculations
+       const banners = useMemo(() => {
+               if (!bannersData) return [];
+       
+               // Handle different possible response structures
+               if (Array.isArray(bannersData)) {
+                   return bannersData;
+               } else if (Array.isArray(bannersData?.data)) {
+                   return bannersData.data;
+               } else if (Array.isArray(bannersData?.banners)) {
+                   return bannersData.banners;
+               } else if (Array.isArray(bannersData?.results)) {
+                   return bannersData.results;
+               }
+       
+               console.warn('Unexpected banners data structure:', bannersData);
+               return [];
+           }, [bannersData]);
+   
+       const handleDelete = (id) => {
+           if (window.confirm("Delete this banner?")) {
+               deleteBanner(id, {
+                   onSuccess: () => refetch(), // Refresh list after deletion
+               });
+           }
+       };
+    console.log(banners,'banners')
+       const tableData = banners.map((item, index) => ({
+           id: item.id,
+           sno: index + 1,
+           image_path: item.image_path,
+           itemname: item.item_name || "—",
+       }));
+   
+       return (
+           <div className="max-w-8xl mx-auto mt-3 p-3 sm:p-4 sm:mt-4">
+               <BannerTable
+                   title="Manage Banners"
+                   headers={[
+                       { key: "sno", label: "S.No" },
+                       { key: "image_path", label: "Image" },
+                       { key: "itemname", label: "Item Name" },
+                       { key: "actions", label: "Actions", align: "center" },
+                   ]}
+                   data={tableData}
+                   renderCell={(key, row) => {
+                       if (key === "image_path") {
+                           return (
+                               <img
+                                   src={getProductImages(row.image_path)}
+                                   alt={row.title}
+                                   width={40}
+                                   height={30}
+                                   className="rounded shadow-sm object-contain"
+                               />
+                           );
+                       }
+                       if (key === "actions") {
+                           return (
+                               <div className="flex gap-2 justify-center">
+                                   <button
+                                       onClick={() => navigate('/item-category/add', { state: { id: row.id, mode: 'edit' } })}
+                                       className="text-blue-600 hover:text-blue-800 transition-colors"
+                                       title="Edit"
+                                   >
+                                       <FaEdit size={16} />
+                                   </button>
+                                   <button
+                                       onClick={() => handleDelete(row.id)}
+                                       className="text-red-600 hover:text-red-800 transition-colors"
+                                       title="Delete"
+                                   >
+                                       <FaTrash size={16} />
+                                   </button>
+                               </div>
+                           );
+                       }
+                       return row[key];
+                   }}
+                   loading={isLoading}
+                   emptyMessage="No banners found"
+               />
+           </div>
+       );
+   };
+   
+   export default ManageItemCategory;
+   

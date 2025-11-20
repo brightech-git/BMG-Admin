@@ -1,5 +1,4 @@
-// NewOrderContext.js
-"use client";
+
 import React, { createContext, useContext, useState, useCallback } from "react";
 
 const NewOrderContext = createContext();

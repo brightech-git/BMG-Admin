@@ -13,11 +13,8 @@ export const getCategories = async () => {
 };
 
 
-export const uploadCategory = async ({image, itemName}) => {
-    try {
-        const formData = new FormData();
-        formData.append('image', image);       // 'image' must match backend @RequestParam name
-        formData.append('itemName', itemName); // 'itemName' must match backend @RequestParam name
+export const uploadCategory = async (formData) => {
+    try { // 'itemName' must match backend @RequestParam name
 
         for (const [key, value] of formData.entries()) {
             console.log(key, value);
@@ -34,15 +31,9 @@ export const uploadCategory = async ({image, itemName}) => {
         return null;
     }
 };
-export const updateCategory = async ({ id, itemName, image }) => {
+export const updateCategory = async (formData) => {
     try {
-        const formData = new FormData();
-        formData.append("id", id);
-        formData.append("itemName", itemName);
 
-        if (image) {
-            formData.append("image", image); // only append if selected
-        }
 
         const response = await axiosInstance.put(`${baseUrl}/update`, formData, {
             headers: {

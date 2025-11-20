@@ -130,8 +130,11 @@ const AdminRoutes = () => {
 
 
                         <Route path="genderbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageGenderBanner /></ProtectedRoute>} />
-                        <Route path="latestbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageLatestBanner /></ProtectedRoute>} />
-                        <Route path="featurebanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFeaturedBanner /></ProtectedRoute>} />
+                        <Route path="manage/featurebanner" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFeaturedBanner /></ProtectedRoute> } />
+
+                        <Route path="latestbanner/manage" element={ <ProtectedRoute allowedRoles={allowedRoles}> <ManageLatestBanner /> </ProtectedRoute>  } />
+           
+
                         <Route path="bestbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBestDesignBanner /></ProtectedRoute>} />
                         <Route path="banner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBanner /></ProtectedRoute>} />
                         <Route path="occasionbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageOccasionBanner /></ProtectedRoute>} />

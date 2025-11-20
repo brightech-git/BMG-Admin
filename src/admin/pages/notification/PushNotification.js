@@ -1,12 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useMediaQuery } from 'react-responsive';
 import { usePushNotification } from '../../hooks/notification/useNotificationQuery';
-import {
-    Box, Typography, TextField, Button, Card, CardContent, Alert, CircularProgress, InputAdornment
-} from '@mui/material';
-import { Send as SendIcon, Error as ErrorIcon, CheckCircle as CheckIcon } from '@mui/icons-material';
 import { MyContext } from '../../context/themeContext/themeContext';
-import './NotificationForm.css';
 
 const NotificationForm = () => {
     const { themeMode } = useContext(MyContext);
@@ -60,109 +55,128 @@ const NotificationForm = () => {
     }, [showError]);
 
     return (
-        <div className={`notification-form-container ${themeMode}`}>
-            <Card className="notification-form-card">
-                <CardContent>
-                    <Box className="header-section" mb={3}>
-                        <Typography variant={isSmallScreen ? 'h6' : 'h4'} className="header-title">
-                            Send Notification
-                        </Typography>
-                    </Box>
+        <div className={` p-2 md:p-4 mt-5`}>
+            <div className="bg-white rounded-lg shadow-md p-2 max-w-2xl mx-auto">
+                {/* Header Section */}
+                <div className="header-section mb-6 border-b">
+                    <h1 className={`font-bold text-primaryText text-sm`}>
+                        Send Notification
+                    </h1>
+                </div>
 
-                    {showError && (
-                        <Alert
-                            severity="error"
-                            icon={<ErrorIcon />}
-                            className="alert error"
-                            onClose={() => setShowError(false)}
+                {/* Error Alert */}
+                {showError && (
+                    <div className="mb-2 p-2 bg-error bg-opacity-10 border border-red  flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <i className="fas fa-exclamation-circle text-red"></i>
+                            <span className="text-red text-xs">Title and Message are required!</span>
+                        </div>
+                        <button
+                            onClick={() => setShowError(false)}
+                            className="text-red hover:opacity-70"
                         >
-                            Title and Message are required!
-                        </Alert>
-                    )}
+                            <i className="fas fa-times"></i>
+                        </button>
+                    </div>
+                )}
 
-                    {showSuccess && (
-                        <Alert
-                            severity="success"
-                            icon={<CheckIcon />}
-                            className="alert success"
-                            onClose={() => setShowSuccess(false)}
+                {/* Success Alert */}
+                {showSuccess && (
+                    <div className="mb-2 p-2 bg-success bg-opacity-10 border border-success rounded-lg flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <i className="fas fa-check-circle text-success"></i>
+                            <span className="text-success text-xs ">Notification sent successfully!</span>
+                        </div>
+                        <button
+                            onClick={() => setShowSuccess(false)}
+                            className="text-success hover:opacity-70"
                         >
-                            Notification sent successfully!
-                        </Alert>
-                    )}
+                            <i className="fas fa-times"></i>
+                        </button>
+                    </div>
+                )}
 
-                    <Box className="input-container" mb={2}>
-                        <Typography variant="body2" className="input-label">
-                            Title <span className="required">*</span>
-                        </Typography>
-                        <TextField
+                <form onSubmit={handleSubmit}>
+                    {/* Title Input */}
+                    <div className="md-1">
+                        <label className="block text-xs font-medium text-primaryText mb-2">
+                            Title <span className="text-red">*</span>
+                        </label>
+                        <input
+                            type="text"
                             name="title"
                             value={notification.title}
                             onChange={handleChange}
                             placeholder="Enter notification title"
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            className="form-input"
-                            inputProps={{ maxLength: 100 }}
+                            maxLength={100}
+                            className="w-full px-1 py-1.5 text-xs border border-border "
                         />
-                    </Box>
+                        <div className="text-right text-xs text-secondaryText mt-1">
+                            {notification.title.length}/100
+                        </div>
+                    </div>
 
-                    <Box className="input-container" mb={2}>
-                        <Typography variant="body2" className="input-label">
-                            Message <span className="required">*</span>
-                        </Typography>
-                        <TextField
+                    {/* Message Input */}
+                    <div className="mb-1">
+                        <label className="block text-xs font-medium text-primaryText mb-2">
+                            Message <span className="text-red">*</span>
+                        </label>
+                        <textarea
                             name="message"
                             value={notification.message}
                             onChange={handleChange}
                             placeholder="Enter notification message"
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            className="form-input"
-                            multiline
                             rows={4}
-                            inputProps={{ maxLength: 500 }}
+                            maxLength={500}
+                            className="w-full px-1  text-xs py-1.5 border"
                         />
-                    </Box>
+                        <div className="text-right text-xs text-secondaryText mt-1">
+                            {notification.message.length}/500
+                        </div>
+                    </div>
 
-                    <Box className="input-container" mb={2}>
-                        <Typography variant="body2" className="input-label">
+                    {/* Image URL Input */}
+                    <div className="mb-2">
+                        <label className="block text-xs font-medium text-primaryText mb-2">
                             Image URL (optional)
-                        </Typography>
-                        <TextField
-                            name="imageUrl"
-                            value={notification.imageUrl}
-                            onChange={handleChange}
-                            placeholder="Enter image URL"
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            className="form-input"
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Box className="input-adornment">🌐</Box>
-                                    </InputAdornment>
-                                )
-                            }}
-                        />
-                    </Box>
+                        </label>
+                        <div className="relative">
+                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary">
+                                <i className="fas fa-link"></i>
+                            </div>
+                            <input
+                                type="url"
+                                name="imageUrl"
+                                value={notification.imageUrl}
+                                onChange={handleChange}
+                                placeholder="Enter image URL"
+                                className="w-full pl-10 pr-4 py-2 border text-xs"
+                            />
+                        </div>
+                    </div>
 
-                    <Box className="action-buttons" display="flex" justifyContent="flex-end">
-                        <Button
-                            variant="contained"
-                            onClick={handleSubmit}
+                    {/* Action Button */}
+                    <div className="action-buttons flex justify-end">
+                        <button
+                            type="submit"
                             disabled={pushNotification.isPending}
-                            startIcon={pushNotification.isPending ? <CircularProgress size={16} /> : <SendIcon />}
-                            className="btn primary"
+                            className="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            {pushNotification.isPending ? 'Sending...' : 'Send'}
-                        </Button>
-                    </Box>
-                </CardContent>
-            </Card>
+                            {pushNotification.isPending ? (
+                                <>
+                                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <span className='text-xs'>Sending...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <i className="fas fa-paper-plane"></i>
+                                        <span className='text-xs' >Send</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 };

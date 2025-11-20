@@ -7,7 +7,7 @@ export const useUploadCategory = () => {
     const queryClient = useQueryClient();
     return useMutation({
        
-        mutationFn: ({ image, itemName }) => uploadCategory({ image, itemName }),
+        mutationFn: (formData) => uploadCategory(formData),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['categories'] });
         },
@@ -23,7 +23,7 @@ export const useUpdateCategory = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, itemName, image }) => updateCategory({ id, itemName, image }),
+        mutationFn: (formData) => updateCategory(formData),
         onSuccess: (data) => {
             console.log('Category updated:', data);
             queryClient.invalidateQueries({ queryKey: ['categories'] });

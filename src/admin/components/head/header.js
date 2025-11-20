@@ -90,9 +90,9 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
             {isSidebarOpen ? <MdMenuOpen size={20} /> : <MdOutlineMenu size={20} />}
           </button>
           <div className="staradmin-brand">
-            <img src={logo} alt="BMG Jewelers Logo" className="staradmin-logo-image" />
+            <img src={logo} alt="BMG Jewellers Logo" className="staradmin-logo-image" />
             {windowWidth > 576 && (
-              <span className="staradmin-company-name">BMG Jewelers <span >  pvt ltd</span></span>
+              <span className="staradmin-company-name">BMG Jewellers <span >  pvt ltd</span></span>
             )}
           </div>
         </div>

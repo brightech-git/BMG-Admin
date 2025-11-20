@@ -8,7 +8,9 @@ const BannerTable = ({
     data = [],           
     renderCell = null, 
     emptyMessage = ''  ,
-    loading = false
+    loading = false,
+    button,
+    onClick
 }) => {
     return (
         <div className="w-full">
@@ -18,6 +20,12 @@ const BannerTable = ({
                         {title && <h2 className="text-sm font-semibold">{title}</h2>}
                         {subtitle && <p className="text-xs opacity-75">{subtitle}</p>}
                     </div>
+                    {button?.trim() && <div>
+                        <button onClick={onClick} className="bg-white border p-1 text-xs primaryText">
+                            {button}
+                        </button>
+                    </div>}
+                    
                 </div>
             )}
 

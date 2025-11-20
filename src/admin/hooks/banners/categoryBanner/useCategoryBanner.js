@@ -5,8 +5,8 @@ export const useCategoryUploadMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ image, title, subtitle, itemName, subItemName }) =>
-            CategoryBannersService.createCategoryBanner(image, title, subtitle, itemName, subItemName),
+        mutationFn: (formData) =>
+            CategoryBannersService.createCategoryBanner(formData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['categorybanners'] }); // Refetch banners list
         },
@@ -17,8 +17,8 @@ export const useCategoryUpdateMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ image, id, title, subtitle, itemName, subItemName }) =>
-            CategoryBannersService.updateCategoryBanner(image, id, title, subtitle, itemName, subItemName),
+        mutationFn: (formData) =>
+            CategoryBannersService.updateCategoryBanner(formData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['categorybanners'] }); // Refetch banners list after update
         },

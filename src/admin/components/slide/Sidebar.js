@@ -70,7 +70,7 @@ const menuItems = [
             { title: 'Manage BreadCrumb', path: '/admin/breadcrumbbanner/manage' },
             { title: 'Manage Gender', path: '/admin/genderbanner/manage' },
             { title: 'Manage BestDesign', path: '/admin/bestbanner/manage' },
-            { title: 'Manage Featured', path: '/admin/featurebanner/manage' },
+            { title: 'Manage Featured', path: '/admin/manage/featurebanner' },
             { title: 'Manage Latest', path: '/admin/latestbanner/manage' },
         ],
     },
@@ -83,22 +83,22 @@ const menuItems = [
             { title: 'Manage Category', path: '/admin/item-category/manage' },
         ],
     },
-    {
-        title: 'Video',
-        icon: <FaVideo className="staradmin-menu-icon" />,
-        submenu: [
-            { title: 'Add Video', path: '/admin/video/add' },
-            { title: 'Manage Videos', path: '/admin/video/manage' },
-        ],
-    },
-    {
-        title: 'Rates',
-        icon: <FaDollarSign className="staradmin-menu-icon" />,
-        submenu: [
-            { title: 'Add Rates', path: '/admin/rates/add' },
-            { title: 'Manage Rates', path: '/admin/rates/manage' },
-        ],
-    },
+    // {
+    //     title: 'Video',
+    //     icon: <FaVideo className="staradmin-menu-icon" />,
+    //     submenu: [
+    //         { title: 'Add Video', path: '/admin/video/add' },
+    //         { title: 'Manage Videos', path: '/admin/video/manage' },
+    //     ],
+    // },
+    // {
+    //     title: 'Rates',
+    //     icon: <FaDollarSign className="staradmin-menu-icon" />,
+    //     submenu: [
+    //         { title: 'Add Rates', path: '/admin/rates/add' },
+    //         { title: 'Manage Rates', path: '/admin/rates/manage' },
+    //     ],
+    // },
     {
         title: 'Notification',
         icon: <MdNotificationsActive className="staradmin-menu-icon" />,

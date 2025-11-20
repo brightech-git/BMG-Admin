@@ -2,7 +2,9 @@ import React, { useState, useCallback, useRef, useContext, useEffect } from 'rea
 import { useProductContext } from '../../../context/product/productContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { MyContext } from '../../../context/themeContext/themeContext';
-import { getProductImages, getProductVideos } from '../../../../utils/mediaUtils/mediaUtils.js.js';
+import { getProductImages, getProductVideos } from '../../../../utils/mediaUtils/mediaUtils.js';
+import { compressAndCollectFiles } from '../../../../utils/compress/compressAndCollectFiles.js';
+
 
 const AddImage = () => {
     // -------------------------------------------------------------------------
@@ -11,12 +13,10 @@ const AddImage = () => {
     const location = useLocation();
     const {
         tagkey: initialTagkey,
-        itemName,
-        subItemName,
         isUpdate = false          // <-- NEW: true = UPDATE, false = CREATE
     } = location.state || {};
 
-    console.log("Received:", { initialTagkey, itemName, subItemName, isUpdate });
+    // console.log("Received:", { initialTagkey, itemName, subItemName, isUpdate });
 
     // -------------------------------------------------------------------------
     // 2. CONTEXT
@@ -49,11 +49,11 @@ const AddImage = () => {
         selectedVideos: [],
     });
 
-    console.log(formData ,'datain get')
+    // console.log(formData ,'datain get')
 
     const [existingMedia, setExistingMedia] = useState({ images: [], videos: [] });
 
-    console.log(existingMedia, 'datain get media')
+    // console.log(existingMedia, 'datain get media')
     const [isUpdateMode, setIsUpdateMode] = useState(isUpdate);   // <-- from state
 
     const [uiState, setUiState] = useState({
@@ -99,7 +99,7 @@ const AddImage = () => {
 
                     setExistingMedia({ images, videos });
 
-                    console.log(detailsRes ,'details')
+                    console.log(detailsRes, 'details')
 
                     // Set description & tag key
                     setFormData(prev => ({
@@ -115,7 +115,7 @@ const AddImage = () => {
             };
             fetchExisting();
         }
-    }, [isUpdate, initialTagkey, getMedia, getProductDetails, ]);
+    }, [isUpdate, initialTagkey, getMedia, getProductDetails,]);
 
     // -------------------------------------------------------------------------
     // 6. FEEDBACK HELPERS
@@ -309,7 +309,6 @@ const AddImage = () => {
 
     // -------------------------------------------------------------------------
     // 14. MAIN SUBMIT (CREATE or UPDATE)
-    // -------------------------------------------------------------------------
     const handleUpload = useCallback(async () => {
         clearAllFeedback();
         const validation = validateForm();
@@ -319,35 +318,35 @@ const AddImage = () => {
         }
 
         setUiState(prev => ({ ...prev, isUploading: true, uploadProgress: 0 }));
-        let progressInterval;
 
         try {
+            
             const fd = createFormData(
+                isUpdateMode,
                 formData.tagKey.trim(),
                 formData.selectedImages,
                 formData.selectedVideos,
                 formData.description.trim()
             );
 
-            progressInterval = setInterval(() => {
-                setUiState(prev => ({
-                    ...prev,
-                    uploadProgress: Math.min(prev.uploadProgress + 10, 90)
-                }));
-            }, 200);
+            // REAL PROGRESS CALLBACK
+            const onProgress = (percent) => {
+                setUiState(prev => ({ ...prev, uploadProgress: percent }));
+            };
 
             let result;
+
             if (isUpdateMode) {
-                result = await updateAllFields(fd);   // PUT
+                result = await updateAllFields(fd, onProgress);
             } else {
-                result = await uploadImages(fd);      // POST
+                result = await uploadImages(fd, onProgress);
             }
 
-            clearInterval(progressInterval);
+            // Instantly 100% when done
             setUiState(prev => ({ ...prev, uploadProgress: 100, snackbarOpen: true }));
             setFeedback('success', isUpdateMode ? 'Product updated!' : 'Product uploaded!');
-            localStorage.setItem('productTagkey', formData.tagKey);
 
+            localStorage.setItem('productTagkey', formData.tagKey);
             resetForm();
 
             setTimeout(() => {
@@ -355,7 +354,6 @@ const AddImage = () => {
             }, 1500);
 
         } catch (err) {
-            if (progressInterval) clearInterval(progressInterval);
             setUiState(prev => ({ ...prev, isUploading: false, uploadProgress: 0 }));
             setFeedback('error', err.message || 'Operation failed');
         }
@@ -364,7 +362,6 @@ const AddImage = () => {
         isUpdateMode,
         validateForm,
         createFormData,
-        existingMedia,
         updateAllFields,
         uploadImages,
         clearAllFeedback,
@@ -372,7 +369,6 @@ const AddImage = () => {
         navigate,
         resetForm
     ]);
-
     // -------------------------------------------------------------------------
     // 15. COMPLETION STATUS (for button)
     // -------------------------------------------------------------------------
@@ -700,7 +696,7 @@ const AddImage = () => {
                                 <div>
                                     {isUpdateMode && <ExistingMediaGrid items={existingMedia.images} type="image" />}
                                 </div>
-                               
+
                             </div>
 
                             {/* RIGHT – Media */}

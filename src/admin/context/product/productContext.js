@@ -83,28 +83,24 @@ export const ProductProvider = ({ children }) => {
     }, []);
 
     // === UPDATE ALL FIELDS (PUT /update-all-fields) ===
-    const updateAllFields = useCallback(async (formData) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await productService.updateAllFields(formData);
-            if (result.error) throw new Error(result.error);
-
-            // Update local state with new paths
-            const newImages = result.images || [];
-            const newVideos = result.videos || [];
-            setImages(newImages);
-            setVideos(newVideos);
-
-            return result;
-        } catch (err) {
-            const msg = err.error || err.message || 'Update failed';
-            setError(msg);
-            throw err;
-        } finally {
-            setLoading(false);
+   const updateAllFields = useCallback(async (formData, onProgress) => {
+    setLoading(true);
+    setError(null);
+    try {
+        const result = await productService.updateAllFields(formData, onProgress);
+        if (result.images || result.videos) {
+            setImages(result.images || []);
+            setVideos(result.videos || []);
         }
-    }, []);
+        return result;
+    } catch (err) {
+        const msg = err.error || err.message || 'Update failed';
+        setError(msg);
+        throw err;
+    } finally {
+        setLoading(false);
+    }
+}, []);
 
     // === VALIDATE BEFORE SUBMIT ===
     const validateProductData = useCallback((tagkey, images, description) => {
@@ -119,9 +115,10 @@ export const ProductProvider = ({ children }) => {
 
     // === CREATE FormData for update-all-fields ===
     const createFormData = useCallback((
+        isUpdateMode,
         tagkey,
-        newImages = [],
-        newVideos = [],
+        images = [],        // ← now correctly named (represents selected files)
+        videos = [],        // ← same
         description = '',
         trendingOptions = {},
         productAttributes = {}
@@ -129,7 +126,6 @@ export const ProductProvider = ({ children }) => {
         const formData = new FormData();
 
         formData.append('tagkey', tagkey?.trim() || '');
-
         if (description?.trim()) formData.append('description', description.trim());
 
         // Marketing flags
@@ -137,7 +133,7 @@ export const ProductProvider = ({ children }) => {
         formData.append('featured_products', trendingOptions.featuredProducts ?? false);
         formData.append('best_design', trendingOptions.bestDesign ?? false);
 
-        // Product attributes (exact @RequestParam names)
+        // Product attributes
         const attrMap = {
             gender: 'gender',
             occasion: 'occasion',
@@ -151,20 +147,24 @@ export const ProductProvider = ({ children }) => {
             if (value) formData.append(backendKey, value);
         });
 
-        // New files
-        newImages.forEach(file => formData.append('newImages', file));
-        newVideos.forEach(file => formData.append('newVideos', file));
+        // THE FIX: Use the correct parameter names!
+        if (isUpdateMode) {
+            images.forEach(file => formData.append('newImages', file));
+            videos.forEach(file => formData.append('newVideos', file));
+        } else {
+            images.forEach(file => formData.append('images', file));
+            videos.forEach(file => formData.append('videos', file));
+        }
 
         return formData;
     }, []);
 
     // === UPLOAD NEW PRODUCT (first time) ===
-    const uploadImages = useCallback(async (formData) => {
+    const uploadImages = useCallback(async (formData, onProgress) => {
         setLoading(true);
         setError(null);
         try {
-            const result = await productService.uploadImagesWithParams(formData);
-            if (result.error) throw new Error(result.error);
+            const result = await productService.uploadImagesWithParams(formData, onProgress);
             return result;
         } catch (err) {
             const msg = err.error || err.message || 'Upload failed';

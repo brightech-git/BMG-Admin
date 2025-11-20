@@ -20,6 +20,10 @@ import {
 import { MyContext } from '../../../context/themeContext/themeContext';
 import './ManageBudgetBanner.css';
 
+import BannerTable from '../../../components/banner/manageBannerTable';
+import { FaTrash, FaEdit } from 'react-icons/fa';
+import { getProductImages } from '../../../../utils/mediaUtils/mediaUtils';
+
 const BASE_IMAGE_URL = 'https://app.bmgjewellers.com';
 
 const ManageBudgetBanner = () => {
@@ -48,7 +52,9 @@ const ManageBudgetBanner = () => {
     const { mutate: deleteBudgetBanner, isLoading: isDeleting } = useDeleteBudgetBannerMutation();
 
 
-    const banners = useMemo(() => bannersData?.data?.categories || [], [bannersData?.data]);
+    const banners = useMemo(() => bannersData?.data?.categories || [], [bannersData]);
+
+    
 
     useEffect(() => {
         if (banners.length > 0) {
@@ -227,10 +233,33 @@ const ManageBudgetBanner = () => {
         setSelectedBanner(banner);
         setPreviewModal(true);
     };
+    const handleOnClick = () => {
+        navigate('/admin/budgetbanner/add')
+    }
+
+    //Banner Table Fields
+    const tableData = banners.map((bannerData, idx) => ({
+        id: bannerData.id,
+        title: bannerData.title,
+        // subtitle: bannerData.subtitle,
+        min_price: bannerData.min_price,
+        max_price: bannerData.max_price,
+        image_path: bannerData.image_path,
+    }));
+
+    const headers = [
+        { key: 'id', label: 'ID' },
+        { key: 'image_path', label: 'Image' },
+        { key: 'title', label: 'Title' },
+        // { key: 'subtitle', label: 'Subtitle' },
+        { key: 'min_price', label: 'Minimum Price' },
+        { key: 'max_price', label: 'Maximum Price' },
+        { key: 'actions', label: 'Actions', align: 'center' },
+    ];
 
     if (error) {
         return (
-            <div className={`manage-budget-banner-container ${themeMode}`}>
+            <div className={`manage-budget-banner-container`}>
                 <Box p={3}>
                     <Alert severity="error" className="alert error">
                         Failed to load banners. Please try again.
@@ -248,8 +277,57 @@ const ManageBudgetBanner = () => {
     }
 
     return (
-        <div className={`manage-budget-banner-container ${themeMode}`}>
-            <Card className="manage-budget-banner-card">
+        <div className={`manage-budget-banner-container `}>
+
+            <BannerTable   
+                            title="Manage Budget Banners"
+                            button={banners.length < 4 ? ("Add Banner") : ('')}
+                            onClick={handleOnClick}
+                            headers={headers}
+                            data={tableData}
+                            renderCell={(key, row) => {
+                                // Image column
+                                if (key === "image_path") {
+                                    return (
+                                        <img
+                                            src={getProductImages(row.image_path)}
+                                            alt={row.title}
+                                            style={{ width: 50, height: 45, objectFit: "contain"}}
+                                            className="rounded  object-contain"
+                                        />
+                                    );
+                                }
+            
+                                // Actions column
+                                if (key === "actions") {
+                                    return (
+                                        <div className="flex gap-2 justify-center">
+                                            <button
+                                                onClick={() => navigate('/admin/budgetbanner/add', { state: { id: row.id, mode: 'edit' } })}
+                                                className="text-blue-600 hover:text-blue-800 transition-colors"
+                                                title="Edit"
+                                            >
+                                                <FaEdit size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(row.id)}
+                                                className="text-red-600 hover:text-red-800 transition-colors"
+                                                title="Delete"
+                                            >
+                                                <FaTrash size={16} />
+                                            </button>
+                                        </div>
+                                    );
+                                }
+            
+                                // Default value display
+                                return row[key];
+                            }}
+                            loading={isLoading}
+                            emptyMessage="No banners found" />
+
+
+            {/* <Card className="manage-budget-banner-card">
                 <CardContent>
                     <Box className="header-section" mb={3}>
                         <Box display="flex" flexDirection={isMobile ? 'column' : 'row'} justifyContent="space-between" alignItems={isMobile ? 'flex-start' : 'center'}>
@@ -280,7 +358,7 @@ const ManageBudgetBanner = () => {
                                 </Button>
                             </Stack>
                         </Box>
-                    </Box>
+                    </Box> */}
 
                     {/* <Box className="summary-section" mb={3}>
                         <Box className="summary-content">
@@ -298,7 +376,7 @@ const ManageBudgetBanner = () => {
                         </Box>
                     </Box> */}
 
-                    <Box mb={3}>
+                    {/* <Box mb={3}>
                         <TextField
                             fullWidth
                             placeholder="Search banners by title or ID..."
@@ -309,9 +387,9 @@ const ManageBudgetBanner = () => {
                             }}
                             className="search-input"
                         />
-                    </Box>
+                    </Box> */}
 
-                    <AnimatePresence>
+                    {/* <AnimatePresence>
                         {errorMessage && (
                             <motion.div
                                 initial={{ opacity: 0, height: 0 }}
@@ -336,9 +414,9 @@ const ManageBudgetBanner = () => {
                                 </Alert>
                             </motion.div>
                         )}
-                    </AnimatePresence>
+                    </AnimatePresence> */}
 
-                    {isLoading ? (
+                    {/* {isLoading ? (
                         <Box className="loading-container">
                             <CircularProgress className="loading-spinner" />
                         </Box>
@@ -603,9 +681,9 @@ const ManageBudgetBanner = () => {
                                 Close
                             </Button>
                         </DialogActions>
-                    </Dialog>
-                </CardContent>
-            </Card>
+                    </Dialog> */}
+                {/* </CardContent>
+            </Card> */}
         </div>
     );
 };

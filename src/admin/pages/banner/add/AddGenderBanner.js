@@ -1,6 +1,5 @@
-"use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect ,useMemo  } from "react";
 import { useGenderBanner } from "../../../hooks/banners/genderBanner/useGenderBanners";
 import { useItemNames } from "../../../hooks/itemName/useItemNames";
 import FileUploader from "../../../components/banner/FileUploader";
@@ -15,203 +14,323 @@ import {
     Paper,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useNavigate ,useLocation } from "react-router-dom";
 
 const AddGenderBanner = () => {
-    const [title, setTitle] = useState("");
-    const [subtitle, setSubtitle] = useState("");
-    const [itemName, setItemName] = useState("");
-    const [subItemName, setSubItemName] = useState("");
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [error, setError] = useState("");
-    const [openBackdrop, setOpenBackdrop] = useState(false);
-    const [progress, setProgress] = useState(0);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const state = location.state || {};
+    const isEdit = state?.mode === "edit" && state?.id;
+    const editId = state?.id ?? null;
 
-    const { uploadGenderImages, isUploading } = useGenderBanner();
+    // queries / mutations
+    const { genderBanners, uploadGenderImages, updateGenderImages  } = useGenderBanner();
+
+    const bannersData = genderBanners;
+    
+
+    const banners = useMemo(() => bannersData || [], [bannersData]);
+
     const { items: itemNames = [] } = useItemNames();
 
-    // find selected item ID for sub-item fetching
-    const itemCtrId = itemNames.find(
-        (item) => item.ITEMCTRNAME.toLowerCase() === itemName.toLowerCase()
-    )?.ITEMCTRID;
+    // const uploadMutation = uploadGenderImages;
+    // const updateMutation = updateGenderImages;
+    const isUploading = uploadGenderImages.isPending || uploadGenderImages.isLoading;
+    const isUpdating = updateGenderImages.isPending || updateGenderImages.isLoading;
 
-    const { items: subitemNames = [] } = useItemNames(itemCtrId);
-    const subItemNameOptions = subitemNames?.[0]?.subitems || [];
+    // form state
+    const [title, setTitle] = useState("");
+    const [subtitle, setSubtitle] = useState("");
+    const [itemname, setItemname] = useState("");
+    const [file, setFile] = useState(null); // new File
+    const [existingImagePath, setExistingImagePath] = useState(null); // show existing image for edit
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
-    // Handle file selection
-    const handleFileSelect = (file, err) => {
-        if (err) {
-            setError(err);
-        } else {
-            setSelectedFile(file);
-            setError("");
+    // find banner for edit (if editing)
+    const currentBanner = useMemo(() => {
+        if (!isEdit) return null;
+        return banners.find((b) => Number(b.id) === Number(editId)) || null;
+    }, [isEdit, editId, banners]);
+
+
+    // pre-fill on load when editing
+    useEffect(() => {
+        if (isEdit && currentBanner) {
+            setTitle(currentBanner.title ?? "");
+            setSubtitle(currentBanner.subtitle ?? "");
+            setItemname(currentBanner.itemName ?? "");
+            setExistingImagePath(currentBanner.image_path ?? null);
         }
+    }, [isEdit, currentBanner]);
+
+    // File input handlers
+    const onFileChange = (e) => {
+        setError("");
+        const f = e.target.files?.[0] ?? null;
+        if (!f) {
+            setFile(null);
+            return;
+        }
+        if (!f.type.startsWith("image/")) {
+            setError("Only image files are allowed (jpg, png, webp).");
+            return;
+        }
+        if (f.size > 5 * 1024 * 1024) {
+            setError("Image must be smaller than 5 MB.");
+            return;
+        }
+        setFile(f);
     };
 
-    const handleSubmit = async () => {
-        if (!title || !subtitle || !itemName || !subItemName || !selectedFile) {
-            toast.error("⚠️ Please fill all fields before uploading!");
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setSuccess("");
+
+        // validation
+        if (!title.trim()) {
+            setError("Please enter a title.");
+            return;
+        }
+        // if (!subtitle.trim()) {
+        //     setError("Please enter a subtitle.");
+        //     return;
+        // }
+        if (!itemname) {
+            setError("Please select an item category.");
+            return;
+        }
+        // For Add: image required. For Edit: optional
+        if (!isEdit && !file) {
+            setError("Please choose an image for the banner.");
             return;
         }
 
-        const formData = new FormData();
-        formData.append("title", title);
-        formData.append("subtitle", subtitle);
-        formData.append("itemName", itemName);
-        formData.append("subItemName", subItemName);
-        formData.append("image", selectedFile);
+        // build payload (FormData if file present)
+        const payload = new FormData();
+        if (isEdit) {
 
-        setOpenBackdrop(true);
-        setProgress(0);
+            console.log(editId, title, subtitle, itemname, 'formdata')
+            payload.append("id", editId);
+            // only append image if user selected a new one
+            if (file instanceof File) payload.append("image", file);
+            payload.append("title", title);
+            // payload.append("subtitle", subtitle);
+            payload.append("itemName", itemname);
+            // omit gender as requested
+        } else {
+            // Add
+            payload.append("image", file);
+            payload.append("title", title);
+            // payload.append("subtitle", subtitle);
+            payload.append("itemName", itemname);
+        }
 
-        // Simulate progress
-        const interval = setInterval(() => {
-            setProgress((prev) => {
-                if (prev >= 90) {
-                    clearInterval(interval);
-                    return prev;
-                }
-                return prev + 10;
+        // call correct mutation
+        if (isEdit) {
+            updateGenderImages(payload, {
+                onSuccess: () => {
+                    setSuccess("Banner updated successfully.");
+                    setTimeout(() => {
+                        navigate("/genderbanner/manage"); // go back to list (change if needed)
+                    }, 700);
+                },
+                onError: (err) => {
+                    const msg = err?.response?.data?.error || err?.message || "Update failed.";
+                    setError(msg);
+                },
             });
-        }, 200);
-
-        uploadGenderImages(formData, {
-            onSuccess: () => {
-                clearInterval(interval);
-                setProgress(100);
-                toast.success("🎉 Banner uploaded successfully!");
-                setTimeout(() => {
-                    setOpenBackdrop(false);
-                    resetForm();
-                }, 800);
-                setTimeout(() => {
-                    window.location.href = "/genderbanner/manage";
-                }, 1000);
-            },
-            onError: (err) => {
-                clearInterval(interval);
-                setOpenBackdrop(false);
-                toast.error(err?.message || "❌ Failed to upload banner.");
-            },
-        });
-    };
-
-    const resetForm = () => {
-        setTitle("");
-        setSubtitle("");
-        setItemName("");
-        setSubItemName("");
-        setSelectedFile(null);
-        setError("");
+        } else {
+            uploadGenderImages(payload, {
+                onSuccess: () => {
+                    setSuccess("Banner uploaded successfully.");
+                    // clear form
+                    setTitle("");
+                    setSubtitle("");
+                    setItemname("");
+                    setFile(null);
+                    setExistingImagePath(null);
+                    setTimeout(() => {
+                        navigate("/genderbanner/manage"); // go back to list
+                    }, 700);
+                },
+                onError: (err) => {
+                    const msg = err?.response?.data?.error || err?.message || "Upload failed.";
+                    setError(msg);
+                },
+            });
+        }
     };
 
     return (
-        <Box sx={{ maxWidth: 700, margin: "0 auto", p: { xs: 2, md: 4 }  ,mt:{xs:2,md:3}}} >
-            <Paper sx={{ p: { xs: 3, md: 4 }, borderRadius: 2, boxShadow: 2 }}>
-                <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 700, mb: 3, textAlign: "center" }}
-                >
-                    Add Gender Banner
-                </Typography>
-
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    <TextField
-                        label="Title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        fullWidth
-                    />
-
-                    <TextField
-                        label="Subtitle"
-                        value={subtitle}
-                        onChange={(e) => setSubtitle(e.target.value)}
-                        fullWidth
-                    />
-
-                    <Select
-                        value={itemName}
-                        onChange={(e) => setItemName(e.target.value)}
-                        displayEmpty
-                        fullWidth
+        <div className="max-w-7xl mx-auto mt-8 p-2 border">
+            <div className="">
+                <div className="flex items-center justify-between mb-1">
+                    <h2 className="text-sm font-semibold">
+                        {isEdit ? "Edit Gender Banner" : "Add New Gender Banner"}
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="px-2 py-1.5 rounded-md border text-xs bg-white dark:bg-slate-700"
+                        disabled={isUploading || isUpdating}
                     >
-                        <MenuItem value="">
-                            <em>Select Item Name</em>
-                        </MenuItem>
-                        {itemNames.map((item) => (
-                            <MenuItem key={item.ITEMCTRID} value={item.ITEMCTRNAME}>
-                                {item.ITEMCTRNAME}
-                            </MenuItem>
-                        ))}
-                    </Select>
+                        Back
+                    </button>
+                </div>
 
-                    <Select
-                        value={subItemName}
-                        onChange={(e) => setSubItemName(e.target.value)}
-                        displayEmpty
-                        fullWidth
-                        disabled={!itemName}
-                    >
-                        <MenuItem value="">
-                            <em>Select Sub Item Name</em>
-                        </MenuItem>
-                        {subItemNameOptions.map((item) => (
-                            <MenuItem key={item.SUBITEMID} value={item.SUBITEMNAME}>
-                                {item.SUBITEMNAME}
-                            </MenuItem>
-                        ))}
-                    </Select>
+                {/* messages */}
+                {error && (
+                    <div className="mb-1 text-xs text-red-700 bg-red-50 p-3 rounded">{error}</div>
+                )}
+                {success && (
+                    <div className="mb-1 text-xs text-green-700 bg-green-50 p-3 rounded">{success}</div>
+                )}
 
-                    <FileUploader
-                        selectedFile={selectedFile}
-                        onFileSelect={handleFileSelect}
-                        height={200}
-                    />
+                <form onSubmit={handleSubmit} className="space-y-2">
+                    {/* Title */}
+                    <div>
+                        <label className="block text-xs font-medium  mb-1">
+                            Banner Title <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="w-full border px-2 py-1.5 text-xs"
+                            placeholder="Enter banner title"
+                            disabled={isUploading || isUpdating}
+                        />
+                    </div>
 
-                    {error && (
-                        <Typography color="error" sx={{ fontSize: 14 }}>
-                            {error}
-                        </Typography>
-                    )}
+                    {/* Subtitle */}
+                    {/* <div>
+                        <label className="block text-xs font-medium mb-1">
+                            Banner Subtitle <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            value={subtitle}
+                            onChange={(e) => setSubtitle(e.target.value)}
+                            className="w-full border px-2 py-1.5 text-xs"
+                            placeholder="Enter banner subtitle"
+                            disabled={isUploading || isUpdating}
+                        />
+                    </div> */}
 
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            gap: 2,
-                            mt: 2,
-                        }}
-                    >
-                        <Button
-                            variant="outlined"
-                            color="secondary"
-                            onClick={resetForm}
-                            disabled={isUploading}
+                    {/* Item Category */}
+                    <div>
+                        <label className="block text-xs font-medium  mb-1">
+                            Item Category <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            value={itemname}
+                            onChange={(e) => setItemname(e.target.value)}
+                            className="w-full border px-2 py-1.5 text-xs"
+                            disabled={isUploading || isUpdating}
                         >
-                            Cancel
-                        </Button>
+                            <option value="">Select item category</option>
+                            {itemNames.map((it) => (
+                                <option key={it.ITEMCTRID} value={it.ITEMCTRNAME}>
+                                    {it.ITEMCTRNAME}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={handleSubmit}
-                            disabled={isUploading}
+                    {/* Image */}
+                    <div>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-200 mb-1">
+                            Banner Image {isEdit ? "(optional - leave to keep current)" : "*"}
+                        </label>
+
+                        <div className="flex items-center gap-2">
+                            {/* Preview */}
+                            <div className="w-30 h-20 bg-slate-50 dark:bg-slate-700 rounded overflow-hidden border">
+                                {file ? (
+                                    <img
+                                        src={URL.createObjectURL(file)}
+                                        alt="preview"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : existingImagePath ? (
+                                    <img
+                                        src={`${existingImagePath.startsWith("http") ? "" : "https://app.bmgjewellers.com"}${existingImagePath}`}
+                                        alt="current"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-sm text-slate-400">
+                                        No image
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex-1">
+                                <input
+                                    id="banner-file"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={onFileChange}
+                                    disabled={isUploading || isUpdating}
+                                    className="text-xs"
+                                />
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Accepts JPG, PNG or WEBP. Max 5MB.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-between gap-3 pt-2">
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setTitle("");
+                                    setSubtitle("");
+                                    setItemname("");
+                                    setFile(null);
+                                    setError("");
+                                    setSuccess("");
+                                }}
+                                className="px-2 py-1.5 rounded-md border text-xs bg-white dark:bg-slate-700"
+                                disabled={isUploading || isUpdating}
+                            >
+                                Clear
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => navigate(-1)}
+                                className="px-2 py-1.5 rounded-md border text-xs bg-white dark:bg-slate-700"
+                                disabled={isUploading || isUpdating}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isUploading || isUpdating}
+                            className={`px-4 py-2 rounded-md text-white text-sm ${isUploading || isUpdating ? "bg-indigo-300" : "bg-indigo-600 hover:bg-indigo-700"
+                                }`}
                         >
-                            {isUploading ? "Uploading..." : "Upload Banner"}
-                        </Button>
-                    </Box>
-                </Box>
-            </Paper>
-
-            {/* Backdrop progress indicator */}
-            <BackdropProgress
-                open={openBackdrop}
-                title="Uploading Banner"
-                body="Please wait while the banner is uploaded..."
-                progress={progress}
-            />
-        </Box>
+                            {(isUploading || isUpdating) ? (
+                                <span className="flex items-center gap-2 ">
+                                    <svg className="w-2 h-2 animate-spin" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>
+                                    {isUploading ? "Uploading..." : "Updating..."}
+                                </span>
+                            ) : (
+                                <span className="text-xs" >{isEdit ? "Update Banner" : "Upload Banner"}</span>
+                            )}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     );
 };
+
 
 export default AddGenderBanner;

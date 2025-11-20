@@ -1,21 +1,20 @@
-import React,{ useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useMediaQuery } from 'react-responsive';
-import {
-    Box, Button, TextField, Typography, Card, CardContent, CardActions, Grid,
-    Chip, CircularProgress, Divider, Avatar, Stack, Dialog, DialogTitle,
-    DialogContent, DialogActions, FormControlLabel, Checkbox, Snackbar, Alert, Fade, Slide,IconButton
-} from '@mui/material';
-import {
-    Delete, Edit, Add, Home, Phone, LocationOn, CheckCircle, Error, PersonPin,
-} from '@mui/icons-material';
 import { useAddressQuery } from '../../hooks/address/useAddressQuery';
 import { MyContext } from '../../context/themeContext/themeContext';
 import './ManageAddress.css';
-
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
+import {
+    FaTrash,      // delete
+    FaEdit,       // edit
+    FaPlus,       // add
+    FaHome,       // home
+    FaPhone,      // phone
+    FaMapMarkerAlt, // location_on
+    FaCheckCircle,  // check_circle
+    FaExclamationCircle, // error
+    FaUserAlt,     // person_pin
+    FaTimes
+} from "react-icons/fa";
 
 const ManageAddress = () => {
     const { themeMode } = useContext(MyContext);
@@ -24,16 +23,16 @@ const ManageAddress = () => {
     const { useGetAllAddresses, useAddAddress, useUpdateAddress, useDeleteAddress } = useAddressQuery();
 
     const { data: addresses, isLoading } = useGetAllAddresses();
-    console.log(addresses ,'address bmg')
     const addAddressMutation = useAddAddress();
     const updateAddressMutation = useUpdateAddress();
     const deleteAddressMutation = useDeleteAddress();
 
-    const [address,setAddress] =useState([]);
+    const [address, setAddress] = useState([]);
 
-useEffect(()=>{
-    setAddress(addresses)
-},[addresses]);
+    useEffect(() => {
+        setAddress(addresses);
+    }, [addresses]);
+
     const [open, setOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [currentAddressId, setCurrentAddressId] = useState(null);
@@ -115,10 +114,8 @@ useEffect(()=>{
 
     const handleCheckboxChange = (e) => {
         setFormData((prev) => ({ ...prev, isDefault: e.target.checked }));
-        console.log(e.target.checked,'formdataforAddress');
     };
-    
-    console.log(formData ,'formdataforAddress')
+
     const handleSubmit = async () => {
         if (!validateForm()) {
             showSnackbar('Please correct the form errors.', 'error');
@@ -154,367 +151,409 @@ useEffect(()=>{
 
     const isFormLoading = addAddressMutation.isLoading || updateAddressMutation.isLoading;
 
-    return (
-        <div className={`manage-address-container ${themeMode}`}>
-            <Card className="header-card">
-                <CardContent>
-                    <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar className="header-avatar">
-                            <Home />
-                        </Avatar>
-                        <Box>
-                            <Typography variant={isSmallScreen ? 'h6' : 'h4'} className="header-title">
-                                Manage Addresses
-                            </Typography>
-                            <Typography variant="body2" className="header-subtitle">
-                                Add, edit, and manage your delivery addresses
-                            </Typography>
-                        </Box>
-                    </Stack>
-                    <Box mt={2}>
-                        <Button
-                            variant="contained"
-                            onClick={() => handleOpen()}
-                            startIcon={<Add />}
-                            className="btn primary"
-                        >
-                            Add New Address
-                        </Button>
-                    </Box>
-                </CardContent>
-            </Card>
+    // Icons as components since we removed MUI
+    const Icon = ({ children, className = '' }) => (
+        <span className={`material-icons ${className}`}>{children}</span>
+    );
 
+    const DeleteIcon = () => <FaTrash />;
+    const EditIcon = () => <FaEdit />;
+    const AddIcon = () => <FaPlus />;
+    const HomeIcon = () => <FaHome />;
+    const PhoneIcon = () => <FaPhone /> ;
+    const LocationOnIcon = () => <FaMapMarkerAlt />;
+    const CheckCircleIcon = () => <FaCheckCircle />;
+    const ErrorIcon = () => <FaExclamationCircle />;
+    const PersonPinIcon = () => <FaUserAlt/>;
+
+    return (
+        <div className={`manage-address-container ${themeMode} min-h-screen bg-background p-4 md:p-6`}>
+            {/* Header Card */}
+            <div className=" mb-2 p-2">
+                <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-2 md:space-y-0">
+                    <div className="flex items-center space-x-1">
+                      
+                        <div>
+                            <h1 className={`text-sm font-bold text-primaryText`}>
+                                Manage Addresses
+                            </h1>
+                            <p className="text-secondaryText text-xs">
+                                Add, edit, and manage your delivery addresses
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex-1">
+                        <button
+                            onClick={() => handleOpen()}
+                            className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center space-x-2 w-full md:w-auto justify-center"
+                        >
+                            <AddIcon />
+                            <span className='text-xs'>Add New Address</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Loading State */}
             {isLoading ? (
-                <Card className="loading-card">
-                    <CardContent className="loading-content">
-                        <CircularProgress size={48} />
-                        <Typography variant="h6" className="loading-text">
-                            Loading your addresses...
-                        </Typography>
-                    </CardContent>
-                </Card>
+                <div className="bg-card rounded-lg shadow-md p-8 text-center">
+                    <div className="flex flex-col items-center space-y-4">
+                        <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-primaryText font-semibold">Loading your addresses...</p>
+                    </div>
+                </div>
             ) : (
-                <Grid container spacing={2}>
-                        {Array.isArray(address) && address.length > 0 ? (
-                            address.map((address, index) => (
-                            <Grid size={{xs:12,sm:6,md:4}} key={address.id}>
-                                <Fade in={true} timeout={300 + index * 100}>
-                                    <Card className={`address-card ${address.isDefault ? 'default' : ''}`}>
-                                        <CardContent>
-                                            <Stack spacing={2}>
-                                                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                                                    <Stack direction="row" alignItems="center" spacing={1}>
-                                                        <PersonPin className="icon" />
-                                                        <Typography variant="h6" className="address-name">
-                                                            {address.name}
-                                                        </Typography>
-                                                    </Stack>
-                                                    {address.isDefault && (
-                                                        <Chip
-                                                            label="Default"
-                                                            size="small"
-                                                            icon={<CheckCircle />}
-                                                            className="chip default"
-                                                        />
-                                                    )}
-                                                </Stack>
-                                                <Divider />
-                                                <Stack spacing={1}>
-                                                    <Stack direction="row" spacing={1}>
-                                                        <LocationOn className="icon" />
-                                                        <Typography variant="body2" className="address-text">
-                                                            {address.addressLine1}
-                                                            {address.addressLine2 && `, ${address.addressLine2}`}
-                                                        </Typography>
-                                                    </Stack>
-                                                    <Typography variant="body2" className="address-text" sx={{ ml: 3 }}>
-                                                        {address.city}, {address.state}
-                                                    </Typography>
-                                                    <Typography variant="body2" className="address-text" sx={{ ml: 3 }}>
-                                                        {address.country} - {address.pincode}
-                                                    </Typography>
-                                                    <Stack direction="row" spacing={1}>
-                                                        <Phone className="icon" />
-                                                        <Typography variant="body2" className="address-text">
-                                                            {address.phone}
-                                                            {address.alternatePhone && ` | ${address.alternatePhone}`}
-                                                        </Typography>
-                                                    </Stack>
-                                                </Stack>
-                                            </Stack>
-                                        </CardContent>
-                                        <Divider />
-                                        <CardActions className="card-actions">
-                                            <IconButton
-                                                onClick={() => handleOpen(address)}
-                                                className="icon-btn edit"
-                                                size="small"
-                                            >
-                                                <Edit />
-                                            </IconButton>
-                                            <IconButton
-                                                onClick={() => handleDelete(address.id, address.name)}
-                                                className="icon-btn delete"
-                                                size="small"
-                                                disabled={deleteAddressMutation.isLoading}
-                                            >
-                                                <Delete />
-                                            </IconButton>
-                                        </CardActions>
-                                    </Card>
-                                </Fade>
-                            </Grid>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
+                    {Array.isArray(address) && address.length > 0 ? (
+                        address.map((address, index) => (
+                            <div
+                                key={address.id}
+                                className={`bg-card rounded-lg shadow-md border-2 transition-all duration-300 ${address.isDefault ? 'border-primary shadow-lg' : 'border-transparent'
+                                    }`}
+                                style={{ animationDelay: `${index * 100}ms` }}
+                            >
+                                <div className="p-4">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-1 ">
+                                                <PersonPinIcon className="text-primary w-3 h-3" />
+                                                <h3 className="font-semibold text-xs text-primaryText">{address.name}</h3>
+                                            </div>
+                                            {address.isDefault && (
+                                                <span className="bg-success text-white px-2 py-1 rounded-full text-xs flex items-center space-x-1">
+                                                    <CheckCircleIcon className="text-xs" />
+                                                    <span>Default</span>
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="border-t border-border"></div>
+                                        <div className="space-y-1">
+                                            <div className="flex items-start space-x-1">
+                                                <LocationOnIcon className="text-primary mt-0.5 flex-shrink-0" />
+                                                <p className="text-secondaryText text-sm">
+                                                    {address.addressLine1}
+                                                    {address.addressLine2 && `, ${address.addressLine2}`}
+                                                </p>
+                                            </div>
+                                            <p className="text-secondaryText text-xs ml-6">
+                                                {address.city}, {address.state}
+                                            </p>
+                                            <p className="text-secondaryText text-xs ml-6">
+                                                {address.country} - {address.pincode}
+                                            </p>
+                                            <div className="flex items-center space-x-2 ml-6">
+                                                <PhoneIcon className="text-primary" />
+                                                <p className="text-secondaryText text-xs m-2">
+                                                    {address.phone}
+                                                    {address.alternatePhone && ` | ${address.alternatePhone}`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="border-t border-border"></div>
+                                <div className="p-2 flex justify-end space-x-2">
+                                    <button
+                                        onClick={() => handleOpen(address)}
+                                        className="p-2 text-primary hover:bg-primary hover:bg-opacity-10 rounded-lg transition-colors"
+                                    >
+                                        <EditIcon />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(address.id, address.name)}
+                                        className="p-2 text-red-500 hover:bg-error hover:bg-opacity-10 rounded-lg transition-colors"
+                                        disabled={deleteAddressMutation.isLoading}
+                                    >
+                                        <DeleteIcon />
+                                    </button>
+                                </div>
+                            </div>
                         ))
                     ) : (
-                        <Grid item xs={12}>
-                            <Card className="no-address-card">
-                                <CardContent className="no-address-content">
-                                    <Home className="no-address-icon" />
-                                    <Typography variant="h6" className="no-address-title">
-                                        No addresses found
-                                    </Typography>
-                                    <Typography variant="body2" className="no-address-text">
-                                        Start by adding your first delivery address
-                                    </Typography>
-                                    <Button
-                                        variant="outlined"
+                        <div className="col-span-full">
+                            <div className="bg-card rounded-lg shadow-md p-8 text-center">
+                                <div className="flex flex-col items-center space-y-4">
+                                    <HomeIcon className="text-4xl text-primary" />
+                                    <h3 className="text-sm font-semibold text-primaryText">No addresses found</h3>
+                                    <p className="text-secondaryText">Start by adding your first delivery address</p>
+                                    <button
                                         onClick={() => handleOpen()}
-                                        startIcon={<Add />}
-                                        className="btn secondary"
+                                        className="border border-primary text-primary hover:bg-primary hover:bg-opacity-10 px-4 py-2 rounded-lg flex items-center space-x-2"
                                     >
-                                        Add Your First Address
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        </Grid>
+                                        <AddIcon />
+                                        <span>Add Your First Address</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     )}
-                </Grid>
+                </div>
             )}
 
-            <Dialog
-                open={open}
-                onClose={handleClose}
-                TransitionComponent={Transition}
-                fullWidth
-                maxWidth="md"
-                fullScreen={isMobile}
-                PaperProps={{ className: 'dialog-paper' }}
-            >
-                <DialogTitle>
-                    <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar className={isEditMode ? 'avatar edit' : 'avatar add'}>
-                            {isEditMode ? <Edit /> : <Add />}
-                        </Avatar>
-                        <Box>
-                            <Typography variant={isSmallScreen ? 'h6' : 'h5'} className="dialog-title">
-                                {isEditMode ? 'Edit Address' : 'Add New Address'}
-                            </Typography>
-                            <Typography variant="body2" className="dialog-subtitle">
-                                {isEditMode ? 'Update your address details' : 'Fill in your address information'}
-                            </Typography>
-                        </Box>
-                    </Stack>
-                </DialogTitle>
-                <DialogContent>
-                    <Grid container spacing={2}>
-                        <Grid size={{xs:12 ,md:6}}>
-                            <TextField
-                                fullWidth
-                                label="Full Name"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleInputChange}
-                                required
-                                variant="outlined"
-                                size="small"
-                                className="form-input"
-                                error={!!formErrors.name}
-                                helperText={formErrors.name}
-                                InputProps={{
-                                    startAdornment: <PersonPin className="input-icon" />
-                                }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Phone Number"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleInputChange}
-                                required
-                                variant="outlined"
-                                size="small"
-                                className="form-input"
-                                error={!!formErrors.phone}
-                                helperText={formErrors.phone}
-                                InputProps={{
-                                    startAdornment: <Phone className="input-icon" />
-                                }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Alternate Phone"
-                                name="alternatePhone"
-                                value={formData.alternatePhone}
-                                onChange={handleInputChange}
-                                variant="outlined"
-                                size="small"
-                                className="form-input"
-                                error={!!formErrors.alternatePhone}
-                                helperText={formErrors.alternatePhone}
-                                InputProps={{
-                                    startAdornment: <Phone className="input-icon" />
-                                }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Address Line 1"
-                                name="addressLine1"
-                                value={formData.addressLine1}
-                                onChange={handleInputChange}
-                                required
-                                variant="outlined"
-                                size="small"
-                                className="form-input"
-                                multiline
-                                rows={2}
-                                error={!!formErrors.addressLine1}
-                                helperText={formErrors.addressLine1}
-                                InputProps={{
-                                    startAdornment: <LocationOn className="input-icon" sx={{ mt: 1 }} />
-                                }}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Address Line 2 (Optional)"
-                                name="addressLine2"
-                                value={formData.addressLine2}
-                                onChange={handleInputChange}
-                                variant="outlined"
-                                size="small"
-                                className="form-input"
-                                multiline
-                                rows={1}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Pincode"
-                                name="pincode"
-                                value={formData.pincode}
-                                onChange={handleInputChange}
-                                required
-                                variant="outlined"
-                                size="small"
-                                className="form-input"
-                                error={!!formErrors.pincode}
-                                helperText={formErrors.pincode}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="City"
-                                name="city"
-                                value={formData.city}
-                                onChange={handleInputChange}
-                                required
-                                variant="outlined"
-                                size="small"
-                                className="form-input"
-                                error={!!formErrors.city}
-                                helperText={formErrors.city}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="State"
-                                name="state"
-                                value={formData.state}
-                                onChange={handleInputChange}
-                                required
-                                variant="outlined"
-                                size="small"
-                                className="form-input"
-                                error={!!formErrors.state}
-                                helperText={formErrors.state}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <TextField
-                                fullWidth
-                                label="Country"
-                                name="country"
-                                value={formData.country}
-                                onChange={handleInputChange}
-                                required
-                                variant="outlined"
-                                size="small"
-                                className="form-input"
-                                error={!!formErrors.country}
-                                helperText={formErrors.country}
-                            />
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={formData.isDefault}
-                                        onChange={handleCheckboxChange}
-                                        name="isDefault"
-                                        className="checkbox"
-                                    />
-                                }
-                                label="Set as default address"
-                                className="checkbox-label"
-                            />
-                        </Grid>
-                    </Grid>
-                </DialogContent>
-                <DialogActions className="dialog-actions">
-                    <Button
-                        onClick={handleClose}
-                        variant="outlined"
-                        disabled={isFormLoading}
-                        className="btn secondary"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSubmit}
-                        variant="contained"
-                        disabled={isFormLoading}
-                        startIcon={isFormLoading ? <CircularProgress size={16} /> : null}
-                        className="btn primary"
-                    >
-                        {isEditMode ? 'Update Address' : 'Save Address'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            {/* Dialog */}
+            {open && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className={`bg-white rounded-lg shadow-xl w-full max-w-2xl mt-5 max-h-[90vh] overflow-y-auto ${isMobile ? 'h-full' : ''}`}>
+                        {/* Dialog Header */}
+                        <div className="p-2 border-b border-border gap-2">
+                            <div className="flex items-center space-x-1">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${isEditMode ? 'bg-warning' : 'bg-success'
+                                    }`}>
+                                    {isEditMode ? <EditIcon /> : <AddIcon />}
+                                </div>
+                                <div>
+                                    <h2 className={`text-sm font-bold text-primaryText`}>
+                                        {isEditMode ? 'Edit Address' : 'Add New Address'}
+                                    </h2>
+                                    <p className="text-secondaryText text-sm">
+                                        {isEditMode ? 'Update your address details' : 'Fill in your address information'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={4000}
-                onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-            >
-                <Alert
-                    onClose={handleCloseSnackbar}
-                    severity={snackbar.severity}
-                    className={`alert ${snackbar.severity}`}
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
+                        {/* Dialog Content */}
+                        <div className="p-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {/* Name Field */}
+                                <div className="md:col-span-2 lg:col-span-1">
+                                    <label className="block text-xs font-medium text-primaryText mb-1">
+                                        Full Name *
+                                    </label>
+                                    <div className="relative">
+                                        {/* <PersonPinIcon className="absolute left-4 top-2 transform -translate-y-1/2 text-primary" /> */}
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleInputChange}
+                                            className={`w-full pl-1 text-xs  py-1.5 border y ${formErrors.name ? 'border-error' : 'border-border'
+                                                }`}
+                                            placeholder="Enter full name"
+                                        />
+                                    </div>
+                                    {formErrors.name && (
+                                        <p className="text-red-500 text-xs  mt-1">{formErrors.name}</p>
+                                    )}
+                                </div>
+
+                                {/* Phone Field */}
+                                <div className="md:col-span-2 lg:col-span-1">
+                                    <label className="block text-xs  font-medium text-primaryText mb-1">
+                                        Phone Number *
+                                    </label>
+                                    <div className="relative">
+                                        {/* <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary" /> */}
+                                        <input
+                                            type="text"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleInputChange}
+                                            className={`w-full pl-1 py-1.5 text-xs  border  ${formErrors.phone ? 'border-error' : 'border-border'
+                                                }`}
+                                            placeholder="10-digit phone number"
+                                        />
+                                    </div>
+                                    {formErrors.phone && (
+                                        <p className="text-red-500 text-xs  mt-1">{formErrors.phone}</p>
+                                    )}
+                                </div>
+
+                                {/* Alternate Phone Field */}
+                                <div className="md:col-span-2 lg:col-span-1">
+                                    <label className="block text-xs  font-medium text-primaryText mb-1">
+                                        Alternate Phone
+                                    </label>
+                                    <div className="relative">
+                                        {/* <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary" /> */}
+                                        <input
+                                            type="text"
+                                            name="alternatePhone"
+                                            value={formData.alternatePhone}
+                                            onChange={handleInputChange}
+                                            className={`w-full pl-1  py-1.5 text-xs  border  ${formErrors.alternatePhone ? 'border-error' : 'border-border'
+                                                }`}
+                                            placeholder="10-digit alternate phone"
+                                        />
+                                    </div>
+                                    {formErrors.alternatePhone && (
+                                        <p className="text-red-500 text-xs  mt-1">{formErrors.alternatePhone}</p>
+                                    )}
+                                </div>
+
+                                {/* Address Line 1 */}
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs  font-medium text-primaryText mb-1">
+                                        Address Line 1 *
+                                    </label>
+                                    <div className="relative">
+                                        {/* <LocationOnIcon className="absolute left-3 top-3 text-primary" /> */}
+                                        <textarea
+                                            name="addressLine1"
+                                            value={formData.addressLine1}
+                                            onChange={handleInputChange}
+                                            rows={2}
+                                            className={`w-full pl-1 py-1.5 text-xs  border ${formErrors.addressLine1 ? 'border-error' : 'border-border'
+                                                }`}
+                                            placeholder="Enter address line 1"
+                                        />
+                                    </div>
+                                    {formErrors.addressLine1 && (
+                                        <p className="text-red-500 text-xs  mt-1">{formErrors.addressLine1}</p>
+                                    )}
+                                </div>
+
+                                {/* Address Line 2 */}
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs  font-medium text-primaryText mb-1">
+                                        Address Line 2 (Optional)
+                                    </label>
+                                    <textarea
+                                        name="addressLine2"
+                                        value={formData.addressLine2}
+                                        onChange={handleInputChange}
+                                        rows={1}
+                                        className="w-full px-1 py-1.5 text-xs  border border-border "
+                                        placeholder="Enter address line 2"
+                                    />
+                                </div>
+
+                                {/* Pincode */}
+                                <div>
+                                    <label className="block text-xs  font-medium text-primaryText mb-1">
+                                        Pincode *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="pincode"
+                                        value={formData.pincode}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-1 py-1.5 text-xs  border  ${formErrors.pincode ? 'border-error' : 'border-border'
+                                            }`}
+                                        placeholder="6-digit pincode"
+                                    />
+                                    {formErrors.pincode && (
+                                        <p className="text-red-500 text-xs  mt-1">{formErrors.pincode}</p>
+                                    )}
+                                </div>
+
+                                {/* City */}
+                                <div>
+                                    <label className="block text-xs  font-medium text-primaryText mb-1">
+                                        City *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="city"
+                                        value={formData.city}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-1 text-xs  py-1.5 border ${formErrors.city ? 'border-error' : 'border-border'
+                                            }`}
+                                        placeholder="Enter city"
+                                    />
+                                    {formErrors.city && (
+                                        <p className="text-red-500 text-xs  mt-1">{formErrors.city}</p>
+                                    )}
+                                </div>
+
+                                {/* State */}
+                                <div>
+                                    <label className="block text-xs  font-medium text-primaryText mb-1">
+                                        State *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="state"
+                                        value={formData.state}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-4 py-2 text-xs  border ${formErrors.state ? 'border-error' : 'border-border'
+                                            }`}
+                                        placeholder="Enter state"
+                                    />
+                                    {formErrors.state && (
+                                        <p className="text-red-500 text-xs  mt-1">{formErrors.state}</p>
+                                    )}
+                                </div>
+
+                                {/* Country */}
+                                <div>
+                                    <label className="block text-xs font-medium text-primaryText mb-1">
+                                        Country *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="country"
+                                        value={formData.country}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-4 py-2 text-xs  border ${formErrors.country ? 'border-error' : 'border-border'
+                                            }`}
+                                        placeholder="Enter country"
+                                    />
+                                    {formErrors.country && (
+                                        <p className="text-red-500 text-red text-xs mt-1">{formErrors.country}</p>
+                                    )}
+                                </div>
+
+                                {/* Default Address Checkbox */}
+                                <div className="md:col-span-2">
+                                    <label className="flex items-center space-x-1">
+                                        <input
+                                            type="checkbox"
+                                            name="isDefault"
+                                            checked={formData.isDefault}
+                                            onChange={handleCheckboxChange}
+                                            className="w-3 h-3 text-primary border-border"
+                                        />
+                                        <span className="text-primaryText text-xs ">Set as default address</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Dialog Actions */}
+                        <div className="p-2 border-t border-border flex justify-end space-x-1">
+                            <button
+                                onClick={handleClose}
+                                disabled={isFormLoading}
+                                className="px-2 py-1.5 border border-primary text-xs text-primary rounded-lg hover:bg-primary hover:bg-opacity-10 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isFormLoading}
+                                className="px-2 py-1.5 bg-primary text-white text-xs rounded-lg hover:bg-primary-dark disabled:opacity-50 flex items-center space-x-2"
+                            >
+                                {isFormLoading && (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                )}
+                                <span>{isEditMode ? 'Update Address' : 'Save Address'}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Snackbar */}
+            {snackbar.open && (
+                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+                    <div className={`px-2 py-1.5  shadow-lg ${snackbar.severity === 'success' ? 'bg-success text-white' :
+                            snackbar.severity === 'error' ? 'bg-error text-white' :
+                                'bg-warning text-primaryText'
+                        }`}>
+                        <div className="flex items-center space-x-2">
+                            {snackbar.severity === 'success' ? <CheckCircleIcon size={14} /> : <ErrorIcon size={14} />}
+                            <span className='text-xs'>{snackbar.message}</span>
+                            <button
+                                onClick={handleCloseSnackbar}
+                                className="ml-4 hover:opacity-70"
+                            >
+                                <FaTimes size={14}/>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

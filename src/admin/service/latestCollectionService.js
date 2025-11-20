@@ -22,6 +22,9 @@ const LatestBanner = {
     },
 
     updateLatestBanner: async (formData) => {
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ', ' + pair[1]);
+        }
         const response = await axiosInstance.put(`${baseUrl}/update`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });

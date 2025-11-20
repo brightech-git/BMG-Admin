@@ -5,9 +5,8 @@ const productService = {
     // Upload images and product details
 
 
-    uploadImagesWithParams: async (formData) => {
+    uploadImagesWithParams: async (formData, onProgress = null) => {
         try {
-            // LOG FINAL DATA
             console.log('Final FormData in service:');
             for (let [key, value] of formData.entries()) {
                 if (value instanceof File) {
@@ -17,7 +16,19 @@ const productService = {
                 }
             }
 
-            const response = await axiosInstance.post('product_image/upload-record-images', formData);
+            const response = await axiosInstance.post(
+                'product_image/upload-record-images',
+                formData,
+                {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    onUploadProgress: (progressEvent) => {
+                        if (onProgress && progressEvent.total) {
+                            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            onProgress(percent);
+                        }
+                    },
+                }
+            );
             return response.data;
         } catch (error) {
             console.error('Upload error:', error.response?.data || error.message);
@@ -128,17 +139,24 @@ const productService = {
     },
     // productService.js (add these two methods)
 
-    updateAllFields: async (formData) => {
-        try {
-            const response = await axiosInstance.put('/product_image/update-all-fields', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Update all fields error:', error);
-            throw error.response?.data || { error: error.message };
-        }
-    },
+    updateAllFields: async (formData, onProgress = null) => {
+    try {
+        const response = await axiosInstance.put('/product_image/update-all-fields', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+                onUploadProgress: (progressEvent) => {
+                    if (onProgress && progressEvent.total) {
+                        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        onProgress(percent);
+                    }
+                },
+            }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { error: error.message };
+    }
+},
+    
 
     deleteMedia: async (tagkey, mediaPath, type) => {
         try {

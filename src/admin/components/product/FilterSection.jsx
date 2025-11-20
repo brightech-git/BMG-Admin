@@ -1,4 +1,4 @@
-'use client';
+
 import React, { useContext, useState } from 'react';
 import { useItemNames } from '../../hooks/itemName/useItemNames';
 import { MyContext } from '../../context/themeContext/themeContext';
@@ -40,10 +40,11 @@ export default function FilterSection() {
 
     // Handle item selection and go to subitems
     const handleItemSelect = (item) => {
-        // setSelectedItem(item);
+        setSelectedItem(item);
         //setSelectedSubItems([]);
         // setModalStep('subitems');
-        updateFilter('itemName', item.ITEMNAME);
+        console.log(item ,'items')
+        updateFilter('itemName', item.ITEMCTRNAME);
         // updateFilter('subItemName', '');
     };
 
@@ -100,7 +101,7 @@ export default function FilterSection() {
 
     return (
         <div
-            className={`w-full  flex flex-col ${themeMode === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'}`}
+            className={`w-full  flex flex-col`}
             style={{ fontFamily: 'var(--font-primary, system-ui)' }}
         >
             {/* Header */}
@@ -120,7 +121,7 @@ export default function FilterSection() {
                     )}
                 </div> */}
 
-                <div className="flex justify-between items-center p-1 border-b dark:border-gray-700">
+                <div className="flex justify-between items-center p-1 ">
                 <button
                     onClick={() => setShowModal(true)}
                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"

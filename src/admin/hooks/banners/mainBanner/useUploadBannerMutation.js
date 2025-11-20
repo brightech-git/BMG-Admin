@@ -5,26 +5,41 @@ export const useUploadBannerMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ image, title, itemname, subtitle, gender }) =>
-            bannersService.createBanner(image, title, itemname, subtitle, gender),
+        mutationFn: (formData) =>
+            bannersService.createBanner(formData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['banners'] }); // Refetch banners list
         },
     });
 };
+// export const useUpdateBannerMutation = () => {
+//     const queryClient = useQueryClient();
+
+//     return useMutation({
+//         mutationFn: ({ id, image, title, subtitle, itemname }) =>
+
+          
+//             bannersService.updateBanner(
+//                 id,
+//                 image,
+//                 title,
+//                 subtitle,
+//                 itemname,
+           
+//             ),
+//         onSuccess: () => {
+//             queryClient.invalidateQueries({ queryKey: ['banners'] });
+//         },
+//     });
+// };
 export const useUpdateBannerMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, image, title, subtitle, itemname, gender }) =>
-            bannersService.updateBanner(
-                id,
-                image,
-                title,
-                subtitle,
-                itemname,
-                gender
-            ),
+        mutationFn: (formData) =>
+            bannersService.updateBanner(formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['banners'] });
         },
