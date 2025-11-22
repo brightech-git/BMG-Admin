@@ -507,7 +507,7 @@ const AddOccasionBanner = () => {
                             className="w-full border px-2 py-1.5 text-xs"
                             disabled={isUploading || isUpdating}
                         >
-                            <option value="">Select item category</option>
+                            <option value="" disabled>Select item category</option>
                             {Array.isArray(itemNames) && itemNames.map((it) => (
                                 <option key={it.ITEMCTRID} value={it.ITEMCTRNAME}>
                                     {it.ITEMCTRNAME}

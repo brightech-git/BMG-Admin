@@ -5,7 +5,6 @@ import { useFilterItemsQuery } from '../../../hooks/products/useFilterItemsQuery
 import { useFilters } from '../../../context/product/FilterContext';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import FilterSection from '../../../components/product/FilterSection';
-import './ManageProduct.css';
 
 // Helper to remove empty filters
 const getActiveFilters = (filters) =>
@@ -412,8 +411,8 @@ const ManageProduct = () => {
     };
 
     return (
-        <div className={`product-container`}>
-            <div className="p-2 sm:p-6 lg:p-8 mt-4">
+        <div className="p-3 mt-4">
+            <div className="p-2 border ">
                 {/* Breadcrumb */}
                 <nav aria-label="breadcrumb" className="p-1">
                     <ol className="breadcrumb flex gap-2 text-xs">

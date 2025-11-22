@@ -81,14 +81,8 @@ console.log(banners ,'banner')
         setSuccess("");
 
         // validation
-        if (!title.trim()) {
-            setError("Please enter a title.");
-            return;
-        }
-        if (!subtitle.trim()) {
-            setError("Please enter a subtitle.");
-            return;
-        }
+       
+        
         if (!itemname) {
             setError("Please select an item category.");
             return;
@@ -219,7 +213,7 @@ console.log(banners ,'banner')
                             className="w-full border px-2 py-1.5 text-xs"
                             disabled={isUploading || isUpdating}
                         >
-                            <option value="">Select item category</option>
+                            <option value="" disabled>\</option>
                             {itemNames.map((it) => (
                                 <option key={it.ITEMCTRID} value={it.ITEMCTRNAME}>
                                     {it.ITEMCTRNAME}

@@ -16,12 +16,7 @@ export const useUploadFeaturedBannerMutation = () => {
     return useMutation({
 
 
-        mutationFn: ({image,name}) => {
-            const formData = new FormData();
-           
-            formData.append("image", image);
-            formData.append("name", name);
-            
+        mutationFn: (formData) => {
             FeatureBanner.uploadFeaturedBanner(formData)},
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["featuredBanners"] });

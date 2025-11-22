@@ -206,7 +206,7 @@ export const FestivalBannersService = {
         // formData.append("item_name", itemname);
         // formData.append("sub_item_name", sub_item_name);
 
-        // console.log([...formData.entries()], 'Data for banner');
+        console.log([...formData.entries()], 'Data for banner');
 
         return axiosInstance.post("/festival_banner/upload", formData);
     },
@@ -245,25 +245,15 @@ export const FestivalBannersService = {
 export const BreadCrumbBannersService = {
     getBreadCrumbBanners: () => axiosInstance.get("/category_image/getAll" ),
 
-    createBreadCrumbBanner: (image, title, subtitle, itemname, subItemName, pages, occasion ,gender) => {
-        const formData = new FormData();
-        formData.append("image", image);
-        formData.append("title", title);
-        formData.append("subtitle", subtitle);
-        formData.append("itemName", itemname);
-        formData.append("subItemName", subItemName);
-        formData.append("pages", pages);
-        formData.append("occasion", occasion);
-        formData.append("gender", gender);
-
-        console.log([...formData.entries()], 'Data for banner');
+    createBreadCrumbBanner: (formData) => {
+     
 
         return axiosInstance.post("/category_image/upload", formData);
     },
 
 
-    updateBreadCrumbBanner: (formData) => {
-        return axiosInstance.put("/category_image/update", formData, {
+    updateBreadCrumbBanner: (formData, id) => {
+        return axiosInstance.put(`/category_image/update-details/${id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
     },

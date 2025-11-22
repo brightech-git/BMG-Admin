@@ -20,6 +20,13 @@ export default function FilterSection() {
     const { items: subItem, loading: loadingSub } = useItemNames(selectedItem?.ITEMCTRID || null);
     const subItems = subItem?.[0]?.subitems || [];
 
+    const [tempSelectedItem, setTempSelectedItem] = useState(selectedItem);
+    // const [tempSelectedSubItems, setTempSelectedSubItems] = useState([]);
+    const [tempMinPrice, setTempMinPrice] = useState(filters.minGrandTotal);
+    const [tempMaxPrice, setTempMaxPrice] = useState(filters.maxGrandTotal);
+    const [tempSearch, setTempSearch] = useState(filters.search || '');
+    const [tempWithImage, setTempWithImage] = useState(filters.withImage || '');
+    const [tempTagKey, setTempTagKey] = useState(filters.tagKey || '');
 
     console.log('Selected SubItems:', subItems);
 
@@ -40,12 +47,8 @@ export default function FilterSection() {
 
     // Handle item selection and go to subitems
     const handleItemSelect = (item) => {
-        setSelectedItem(item);
-        //setSelectedSubItems([]);
-        // setModalStep('subitems');
-        console.log(item ,'items')
-        updateFilter('itemName', item.ITEMCTRNAME);
-        // updateFilter('subItemName', '');
+        setTempSelectedItem(item);
+        // setTempSelectedSubItems([]); // if subitems reset
     };
 
     // Handle subitem checkbox
@@ -65,29 +68,56 @@ export default function FilterSection() {
 
     // Handle price range selection
     const handlePriceRangeSelect = (type, value) => {
-        if (type === 'min') {
-            updateFilter('minGrandTotal', value);
-        } else {
-            updateFilter('maxGrandTotal', value);
-        }
+        if (type === 'min') setTempMinPrice(value);
+        else setTempMaxPrice(value);
     };
 
     // Remove a chip (excluding page and pageSize)
-    const removeChip = (key, value) => {
+    // Remove a single chip
+    const removeChip = (key) => {
         if (key === 'itemName') {
-            setSelectedItem(null);
-            // setSelectedSubItems([]);
-        } else if (key === 'subItemName') {
-            //setSelectedSubItems([]);
+            setTempSelectedItem(null);
+            updateFilter('itemName', '');
         }
-        updateFilter(key, '');
+        // else if (key === 'subItemName') {
+        //     setTempSelectedSubItems([]);
+        //     updateFilter('subItemName', '');
+        // }
+        else if (key === 'minGrandTotal') {
+            setTempMinPrice(null);
+            updateFilter('minGrandTotal', '');
+        }
+        else if (key === 'maxGrandTotal') {
+            setTempMaxPrice(null);
+            updateFilter('maxGrandTotal', '');
+        }
+        else if (key === 'search') {
+            setTempSearch('');
+            updateFilter('search', '');
+        }
+        else if (key === 'withImage') {
+            setTempWithImage('');
+            updateFilter('withImage', '');
+        }
+        else if (key === 'tagKey') {
+            setTempTagKey('');
+            updateFilter('tagKey', '');
+        }
     };
 
+    // Clear all filters
     const clearAll = () => {
-        setSelectedItem(null);
-       // setSelectedSubItems([]);
-        resetFilters();
+        setTempSelectedItem(null);
+        // setTempSelectedSubItems([]);
+        setTempMinPrice(null);
+        setTempMaxPrice(null);
+        setTempSearch('');
+        setTempWithImage('');
+        setTempTagKey('');
+
+        resetFilters(); // resets the global filters
     };
+
 
     // Filter out page and pageSize from chips display
     const displayFilters = Object.entries(filters).filter(([key]) =>
@@ -96,9 +126,19 @@ export default function FilterSection() {
 
     // Apply filters and close modal
     const applyFilters = () => {
+        if (tempSelectedItem) updateFilter('itemName', tempSelectedItem.ITEMCTRNAME);
+        else updateFilter('itemName', '');
+
+        updateFilter('minGrandTotal', tempMinPrice ?? '');
+        updateFilter('maxGrandTotal', tempMaxPrice ?? '');
+        updateFilter('search', tempSearch ?? '');
+        updateFilter('withImage', tempWithImage ?? '');
+        updateFilter('tagKey', tempTagKey ?? '');
+        // Update subitems if using
+        // updateFilter('subItemName', tempSelectedSubItems.join(','));
+
         setShowModal(false);
     };
-
     return (
         <div
             className={`w-full  flex flex-col`}
@@ -238,87 +278,71 @@ export default function FilterSection() {
                         <div className="flex-1 overflow-y-auto p-4">
                             {modalStep === 'filters' && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                                    {/* Search Filter */}
                                     <div className="space-y-1">
-                                        <h4
-                                            className="font-semibold flex items-center gap-2"
-                                            style={{ fontSize: 'var(--font-size-md, 16px)' }}
-                                        >
+                                        <h4 className="font-semibold flex items-center gap-2" style={{ fontSize: 'var(--font-size-md, 16px)' }}>
                                             <Search size={18} />
                                             Search
                                         </h4>
                                         <input
                                             type="text"
                                             placeholder="Search products..."
-                                            value={filters.search || ''}
-                                            onChange={(e) => updateFilter('search', e.target.value)}
-                                            className=" bg-[var(--background-color)] w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500  transition-all "
+                                            value={tempSearch}
+                                            onChange={(e) => setTempSearch(e.target.value)}
+                                            className="bg-[var(--background-color)] w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 transition-all"
                                             style={{
                                                 fontSize: 'var(--font-size-sm, 14px)',
                                                 borderRadius: 'var(--border-radius-md, 8px)',
-                                                fontWeight:'bold'
+                                                fontWeight: 'bold'
                                             }}
                                         />
                                     </div>
 
-                                    {/* Image Filter */}
+
                                     <div className="space-y-3">
-                                        <h4
-                                            className="font-semibold flex items-center gap-2"
-                                            style={{ fontSize: 'var(--font-size-md, 16px)' }}
-                                        >
+                                        <h4 className="font-semibold flex items-center gap-2" style={{ fontSize: 'var(--font-size-md, 16px)' }}>
                                             <Image size={18} />
                                             Image Filter
                                         </h4>
                                         <div className="space-y-2">
-                                            <label className="flex items-center gap-3 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer  transition-colors">
+                                            <label className="flex items-center gap-3 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer transition-colors">
                                                 <input
                                                     type="checkbox"
-                                                    checked={filters.withImage === 'true'}
-                                                    onChange={(e) => updateFilter('withImage', e.target.checked ? 'true' : '')}
+                                                    checked={tempWithImage === 'true'}
+                                                    onChange={(e) => setTempWithImage(e.target.checked ? 'true' : '')}
                                                     className="w-3 h-3 accent-blue-600"
                                                 />
                                                 <div className="flex items-center gap-2">
                                                     <Image size={16} />
-                                                    <span style={{ fontSize: 'var(--font-size-sm, 14px)' }}>
-                                                        With Images Only
-                                                    </span>
+                                                    <span style={{ fontSize: 'var(--font-size-sm, 14px)' }}>With Images Only</span>
                                                 </div>
                                             </label>
-                                            <label className="flex items-center gap-3 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer   transition-colors">
+                                            <label className="flex items-center gap-3 p-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer transition-colors">
                                                 <input
                                                     type="checkbox"
-                                                    checked={filters.withImage === 'false'}
-                                                    onChange={(e) => updateFilter('withImage', e.target.checked ? 'false' : '')}
+                                                    checked={tempWithImage === 'false'}
+                                                    onChange={(e) => setTempWithImage(e.target.checked ? 'false' : '')}
                                                     className="w-3 h-3 accent-blue-600"
                                                 />
                                                 <div className="flex items-center gap-2">
                                                     <ImageOff size={16} />
-                                                    <span style={{ fontSize: 'var(--font-size-sm, 14px)' }}>
-                                                        Without Images
-                                                    </span>
+                                                    <span style={{ fontSize: 'var(--font-size-sm, 14px)' }}>Without Images</span>
                                                 </div>
                                             </label>
                                         </div>
                                     </div>
 
-                                    
 
-                                    {/* Tag Key Filter */}
                                     <div className="space-y-3">
-                                        <h4
-                                            className="font-semibold flex items-center gap-2"
-                                            style={{ fontSize: 'var(--font-size-md, 16px)' }}
-                                        >
+                                        <h4 className="font-semibold flex items-center gap-2" style={{ fontSize: 'var(--font-size-md, 16px)' }}>
                                             <Tag size={18} />
                                             Tag Key
                                         </h4>
                                         <input
                                             type="text"
                                             placeholder="Enter tag key..."
-                                            value={filters.tagKey || ''}
-                                            onChange={(e) => updateFilter('tagKey', e.target.value)}
-                                            className=" bg-[var(--background-color)] w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 transition-all"
+                                            value={tempTagKey}
+                                            onChange={(e) => setTempTagKey(e.target.value)}
+                                            className="bg-[var(--background-color)] w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 transition-all"
                                             style={{
                                                 fontSize: 'var(--font-size-sm, 14px)',
                                                 borderRadius: 'var(--border-radius-md, 8px)'
@@ -332,7 +356,8 @@ export default function FilterSection() {
                                             className="font-semibold"
                                             style={{ fontSize: 'var(--font-size-md, 16px)' }}
                                         >
-                                            Item & Subitems
+                                            Item
+                                             {/* & Subitems */}
                                         </h4>
                                         <button
                                             onClick={() => setModalStep('items')}
@@ -385,8 +410,8 @@ export default function FilterSection() {
                                                     <input
                                                         type="number"
                                                         placeholder="0"
-                                                        value={filters.minGrandTotal || ''}
-                                                        onChange={(e) => updateFilter('minGrandTotal', e.target.value)}
+                                                    value={tempMinPrice ?? ''}
+                                                    onChange={(e) => setTempMinPrice(e.target.value)}
                                                     className="bg-[var(--background-color)] bg w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-800"
                                                         style={{ fontSize: 'var(--font-size-sm, 14px)' }}
                                                     />
@@ -401,8 +426,8 @@ export default function FilterSection() {
                                                     <input
                                                         type="number"
                                                         placeholder="100000"
-                                                        value={filters.maxGrandTotal || ''}
-                                                        onChange={(e) => updateFilter('maxGrandTotal', e.target.value)}
+                                                    value={tempMaxPrice ?? ''}
+                                                    onChange={(e) => setTempMaxPrice(e.target.value)}
                                                     className=" bg-[var(--background-color)] w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-800"
                                                         style={{ fontSize: 'var(--font-size-sm, 14px)' }}
                                                     />
@@ -410,54 +435,40 @@ export default function FilterSection() {
                                             </div>
 
                                             {/* Quick Select Ranges */}
-                                            <div className="space-y-2">
-                                                <div>
-                                                    <label
-                                                        className="font-medium mb-1 block"
-                                                        style={{ fontSize: 'var(--font-size-xs, 13px)' }}
-                                                    >
-                                                        Quick Min Price
-                                                    </label>
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {minPriceRanges.map(range => (
-                                                            <button
-                                                                key={`min-${range.value}`}
-                                                                onClick={() => handlePriceRangeSelect('min', range.value)}
-                                                                className={`px-2 py-1 border rounded-md transition-all ${filters.minGrandTotal == range.value
-                                                                    ? 'bg-blue-600 text-white border-blue-600'
-                                                                    : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                                                    }`}
-                                                                style={{ fontSize: 'var(--font-size-xxs, 12px)' }}
-                                                            >
-                                                                {range.label}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label
-                                                        className="font-medium mb-1 block"
-                                                        style={{ fontSize: 'var(--font-size-xs, 13px)' }}
-                                                    >
-                                                        Quick Max Price
-                                                    </label>
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {maxPriceRanges.map(range => (
-                                                            <button
-                                                                key={`max-${range.value}`}
-                                                                onClick={() => handlePriceRangeSelect('max', range.value)}
-                                                                className={`px-2 py-1 border rounded-md transition-all ${filters.maxGrandTotal == range.value
-                                                                    ? 'bg-blue-600 text-white border-blue-600'
-                                                                    : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                                                    }`}
-                                                                style={{ fontSize: 'var(--font-size-xxs, 12px)' }}
-                                                            >
-                                                                {range.label}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
+                                           
+                                        <div className="flex flex-wrap gap-1">
+                                            {minPriceRanges.map(range => (
+                                                <button
+                                                    key={`min-${range.value}`}
+                                                    onClick={() => setTempMinPrice(range.value)}
+                                                    className={`px-2 py-1 border rounded-md transition-all ${tempMinPrice === range.value
+                                                            ? 'bg-blue-600 text-white border-blue-600'
+                                                            : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                                        }`}
+                                                    style={{ fontSize: 'var(--font-size-xxs, 12px)' }}
+                                                >
+                                                    {range.label}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-1">
+                                            {maxPriceRanges.map(range => (
+                                                <button
+                                                    key={`max-${range.value}`}
+                                                    onClick={() => setTempMaxPrice(range.value)}
+                                                    className={`px-2 py-1 border rounded-md transition-all ${tempMaxPrice === range.value
+                                                            ? 'bg-blue-600 text-white border-blue-600'
+                                                            : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                                        }`}
+                                                    style={{ fontSize: 'var(--font-size-xxs, 12px)' }}
+                                                >
+                                                    {range.label}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                      
                                         </div>
                                 </div>
                             )}
@@ -472,13 +483,13 @@ export default function FilterSection() {
                                     ) : (
                                         allItems.map(item => (
                                             <button
-                                                key={`item-${item.ITEMCTRID}`}
-                                                onClick={() => handleItemSelect(item)}
-                                                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-left hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-500 transition-all"
-                                                style={{
-                                                    fontSize: 'var(--font-size-xs, 14px)',
-                                                    borderRadius: 'var(--border-radius-md, 8px)'
-                                                }}
+                                                key={item.ITEMCTRID}
+                                                onClick={() => setTempSelectedItem(item)}
+                                                className={`w-full px-3 py-2 border rounded-lg text-left transition-all ${tempSelectedItem?.ITEMCTRID === item.ITEMCTRID
+                                                        ? 'bg-blue-600 text-white border-blue-600'
+                                                        : 'border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-500'
+                                                    }`}
+                                                style={{ fontSize: 'var(--font-size-xs, 14px)', borderRadius: 'var(--border-radius-md, 8px)' }}
                                             >
                                                 {item.ITEMCTRNAME}
                                             </button>
@@ -527,12 +538,12 @@ export default function FilterSection() {
                         </div>
 
                         {/* Modal Footer */}
-                        {/* <div className="p-2 border-t dark:border-gray-700 flex justify-end gap-3">
+                        <div className="p-2 border-t dark:border-gray-700 flex justify-end gap-3">
                             <button
                                 onClick={() => setShowModal(false)}
-                                className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                                 style={{
-                                    fontSize: 'var(--font-size-sm, 14px)',
+                                    fontSize: 'var(--font-size-xs, 14px)',
                                     borderRadius: 'var(--border-radius-md, 8px)'
                                 }}
                             >
@@ -540,15 +551,15 @@ export default function FilterSection() {
                             </button>
                             <button
                                 onClick={applyFilters}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                className="px-2 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                 style={{
-                                    fontSize: 'var(--font-size-sm, 14px)',
+                                    fontSize: 'var(--font-size-xs, 14px)',
                                     borderRadius: 'var(--border-radius-md, 8px)'
                                 }}
                             >
                                 Apply Filters
                             </button>
-                        </div> */}
+                        </div>
                     </div>
                 </div>
                

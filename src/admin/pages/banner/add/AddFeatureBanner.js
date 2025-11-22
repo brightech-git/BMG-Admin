@@ -110,7 +110,6 @@ const UploadFeatureDesign = () => {
         const payload = new FormData();
         if (isEdit) {
 
-            console.log(editId, title, subtitle, itemname, 'formdata')
             payload.append("id", editId);
             // only append image if user selected a new one
             if (file instanceof File) payload.append("image", file);

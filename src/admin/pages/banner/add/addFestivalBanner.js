@@ -117,20 +117,20 @@ const AddFestivalBanner = () => {
         const payload = new FormData();
         if (isEdit) {
 
-            console.log(editId, title, subtitle, itemname, 'formdata')
+            console.log(editId, title,itemname, 'formdata')
             payload.append("id", editId);
             // only append image if user selected a new one
             if (file instanceof File) payload.append("image", file);
             payload.append("title", title);
             // payload.append("subtitle", subtitle);
-            payload.append("itemname", itemname);
+            payload.append("item_name", itemname);
             // omit gender as requested
         } else {
             // Add
             payload.append("image", file);
             payload.append("title", title);
             // payload.append("subtitle", subtitle);
-            payload.append("itemname", itemname);
+            payload.append("item_name", itemname);
         }
 
         // call correct mutation
@@ -234,7 +234,7 @@ const AddFestivalBanner = () => {
                             className="w-full border px-2 py-1.5 text-xs"
                             disabled={isUploading || isUpdating}
                         >
-                            <option value="">Select item category</option>
+                            <option value="" disabled>Select item category</option>
                             {itemNames.map((it) => (
                                 <option key={it.ITEMCTRID} value={it.ITEMCTRNAME}>
                                     {it.ITEMCTRNAME}

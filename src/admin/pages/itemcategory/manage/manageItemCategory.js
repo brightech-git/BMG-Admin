@@ -68,11 +68,13 @@ const ManageItemCategory = () => {
            image_path: item.image_path,
            itemname: item.item_name || "—",
        }));
-   
+    const hnadleClick = () => navigate('/item-category/add')
        return (
            <div className="max-w-8xl mx-auto mt-3 p-3 sm:p-4 sm:mt-4">
                <BannerTable
                    title="Manage Banners"
+                   button="Add New"
+                   onClick={hnadleClick}
                    headers={[
                        { key: "sno", label: "S.No" },
                        { key: "image_path", label: "Image" },

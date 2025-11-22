@@ -57,12 +57,19 @@ const OrderTable = () => {
     const { useGetAllAddresses } = useAddressQuery();
     const { data: addressesData } = useGetAllAddresses();
 
-    const addresses = addressesData || [];
+    const addresses = Array.isArray(addressesData) ? addressesData : [];
 
-    // Find default origin address
+    // Find default origin address safely
     const defaultOriginAddress = useMemo(() => {
-        return addresses.find(addr => addr.default === false);
+        if (!addresses.length) return null;
+
+        // If default address is stored as default: true
+        return addresses.find(a => a.default === true) || null;
+
+        // If your backend uses default === false for default (rare case)
+        // return addresses.find(a => a.default === false) || null;
     }, [addresses]);
+
     const handleSnackbarClose = () => setSnackbar(prev => ({ ...prev, open: false }));
 
     const normalizeOrder = (order = {}) => ({

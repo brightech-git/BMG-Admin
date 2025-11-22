@@ -552,11 +552,14 @@ console.log(banners ,'categoriesbanner');
             keyValue: item.keyValue,   // Item value
         }))
     );
+    const handleClick = () => navigate('/category/add')
 
     return (
         <div className="max-w-8xl mx-auto mt-3 p-3 sm:p-4 sm:mt-4">
             <BannerTable
                 title="Manage Banners"
+                button= "Add New"
+                onClick={handleClick}
                 headers={[
                     { key: "sno", label: "S.No" },
                     { key: "image_path", label: "Image" },

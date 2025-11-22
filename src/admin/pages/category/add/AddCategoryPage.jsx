@@ -467,15 +467,19 @@ const AddMenuItemPage = () => {
     return (
         <div className="max-w-7xl mx-auto mt-8 p-2 border">
             <div className="">
-                <h2 className="text-sm font-semibold mb-1">
-                    {isEdit ? "Edit Banner" : "Add New Banner"}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-300 mb-4">
-                    {isEdit
-                        ? `Editing banner #${editId}`
-                        : "Create a new banner. Image must be JPG/PNG/WEBP (max 5MB)."}
-                </p>
-
+                <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-semibold mb-1">
+                        {isEdit ? "Edit Header Banner" : "Add New Header Banner"}
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="px-2 py-1.5 rounded-md border text-xs bg-white dark:bg-slate-700"
+                        disabled={isUploading || isUpdating}
+                    >
+                        Back
+                    </button>
+                </div>
                 {/* messages */}
                 {error && (
                     <div className="mb-1 text-xs text-red-700 bg-red-50 p-3 rounded">{error}</div>
@@ -549,7 +553,7 @@ const AddMenuItemPage = () => {
                             className="w-full border px-2 py-1.5 text-xs"
                             disabled={isUploading || isUpdating}
                         >
-                            <option value="">Select item category</option>
+                            <option value="" disabled>Select item category</option>
                             {keyValues.map((it) => (
                                 <option key={it.ITEMCTRID} value={it.ITEMCTRNAME}>
                                     {it.ITEMCTRNAME}
@@ -635,7 +639,7 @@ const AddMenuItemPage = () => {
 
                             <button
                                 type="button"
-                                onClick={() => navigate("/admin/banner")}
+                                onClick={() => navigate(-1)}
                                 className="px-2 py-1.5 rounded-md border text-xs bg-white dark:bg-slate-700"
                                 disabled={isUploading || isUpdating}
                             >
