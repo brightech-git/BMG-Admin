@@ -5,10 +5,12 @@ import { MdDarkMode, MdOutlineLightMode, MdOutlineMenu, MdMenuOpen } from 'react
 import { MyContext } from '../../context/themeContext/themeContext';
 import logo from '../../assets/logo/logo.jpg';
 import './NewAdminHeader.css';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth/authContext';
 import { useUserProfile } from '../../hooks/profile/useUserProfile';
 import { debounce } from 'lodash';
+import "./AppSwitchButton.css";
+
 
 const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
   const { themeMode, setThemeMode } = useContext(MyContext);
@@ -17,10 +19,13 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeButton, setActiveButton] = useState(null);
   const navigate = useNavigate();
+  const location =useLocation();
   const { logout } = useAuth();
   const { data: user, isLoading } = useUserProfile();
   const profileRef = useRef(null);
 
+  const isChitApp = location.pathname.startsWith("/app/admin");
+  const buttonText = isChitApp ? "Switch to E-com App" : "Switch to Chit App";
   // Window resize handler
   useEffect(() => {
     const handleResize = debounce(() => {
@@ -99,7 +104,7 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
 
         {/* Right: Action Controls */}
         <div className="staradmin-header-right">
-          <div className="staradmin-actions-group">
+        
             {/* Theme Toggle */}
             {/* <button
               className={`staradmin-action-btn ${activeButton === 'theme' ? 'active' : ''}`}
@@ -112,6 +117,21 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
             >
               {themeMode === 'light' ? <MdDarkMode size={18} /> : <MdOutlineLightMode size={18} />}
             </button> */}
+            <div className="admin-actions-groups">
+              <button
+                className="admin-action-btn"
+                onClick={() => {
+                  if (isChitApp) {
+                    navigate("/admin");      // 👉 Move to E-com Admin
+                  } else {
+                    navigate("/app/admin");  // 👉 Move to Chit App
+                  }
+                }}
+                tabIndex={0}
+              >
+                {buttonText}
+              </button>
+       
           </div>
 
           {/* User Profile Section */}

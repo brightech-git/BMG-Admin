@@ -70,6 +70,8 @@ import ManageGenderBanner from '../../admin/pages/banner/manage/ManageGenderBann
 import AddImage from '../../admin/pages/product/add/addImageProduct';
 
 import OrderTable from '../../admin/pages/order/AllOrders';
+import RefundOrdersTable from '../../admin/pages/refund/refundOrders';
+import NotificationTemplatePage from '../../admin/pages/notification/NotificationTemplatePage';
 
 
 const AdminRoutes = () => {
@@ -152,7 +154,7 @@ const AdminRoutes = () => {
                         <Route path="employee/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddEmployee /></ProtectedRoute>} />
                         <Route path="employee/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageEmployees /></ProtectedRoute>} />
                         <Route path="profile" element={<ProtectedRoute allowedRoles={allowedRoles}><EmployeeProfile /></ProtectedRoute>} />
-                        <Route path="/notification" element={<ProtectedRoute allowedRoles={allowedRoles}><NotificationForm /></ProtectedRoute>} />
+                        <Route path="/notification" element={<ProtectedRoute allowedRoles={allowedRoles}><NotificationTemplatePage /></ProtectedRoute>} />
 
                         <Route path="userDetails" element={<UserDetails />} />
                         <Route path="order/today" element={<OrderHistoryPage />} />
@@ -181,6 +183,7 @@ const AdminRoutes = () => {
                         <Route path="unauthorized" element={<Unauthorized />} />
                         <Route path="item-category/add" element={<ItemCategory />} />
                         <Route path="item-category/manage" element={< ManageItemCategory/>} />
+                        <Route path='order/refund' element={<RefundOrdersTable />} />
 
 
                         <Route path='productSpec' element={<EcomMarketingAttributesTable />} />

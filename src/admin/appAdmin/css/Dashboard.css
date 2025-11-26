@@ -1,0 +1,31 @@
+/* Dashboard.css */
+
+/* Font families */
+.font-primary {
+    font-family: var(--font-primary);
+}
+
+.font-secondary {
+    font-family: var(--font-secondary);
+}
+
+/* Status colors (optional for KPI trends) */
+.status-pending {
+    background-color: var(--status-pending);
+    box-shadow: var(--status-glow-pending);
+}
+
+.status-completed {
+    background-color: var(--status-completed);
+    box-shadow: var(--status-glow-completed);
+}
+
+.status-processing {
+    background-color: var(--status-processing);
+    box-shadow: var(--status-glow-processing);
+}
+
+.status-cancelled {
+    background-color: var(--status-cancelled);
+    box-shadow: var(--status-glow-cancelled);
+}

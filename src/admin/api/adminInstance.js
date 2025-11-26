@@ -1,17 +1,17 @@
-// src/api/axiosInstance.js
+// src/api/adminInstance.js
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_BASE_URL;
+const BASE_URL = 'http://localhost:8083/api/v1';
 
 
 
-const axiosInstance = axios.create({
+const adminInstance = axios.create({
     baseURL: BASE_URL,
     timeout: 500000,
 });
 
 // ✅ Dynamically attach token from localStorage on every request
-axiosInstance.interceptors.request.use(
+adminInstance.interceptors.request.use(
     (config) => {
 
         const authtoken = sessionStorage.getItem('auth_token'); // Moved inside so it's fresh
@@ -23,7 +23,7 @@ axiosInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-axiosInstance.interceptors.response.use(
+adminInstance.interceptors.response.use(
     response => response,
     error => {
         if (error.response?.status === 401) {
@@ -31,5 +31,5 @@ axiosInstance.interceptors.response.use(
         }
         return Promise.reject(error);
     }
-  );
-export default axiosInstance;
+);
+export default adminInstance;

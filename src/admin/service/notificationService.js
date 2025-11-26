@@ -2,7 +2,7 @@ import axiosInstance from "../api/axiosInstance";
 
 const pushNotification = async (data) => {
     try {
-        console.log(data, 'data');
+        console.log(data, 'pushdata');
         const response = await axiosInstance.post(
             "/notifications/sendAll",
             data, // send JSON body

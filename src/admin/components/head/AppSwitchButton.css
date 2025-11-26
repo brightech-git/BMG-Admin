@@ -1,0 +1,52 @@
+.admin-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Main Button */
+.admin-action-btn {
+    background: var(--primary-color, #1a73e8);
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    font-size: clamp(0.85rem, 1vw, 0.95rem);
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    outline: none;
+}
+
+/* Hover */
+.admin-action-btn:hover {
+    background: var(--primary-hover-color, #155fc1);
+    transform: translateY(-1px);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* When button is active/focused */
+.admin-action-btn:focus,
+.admin-action-btn:active {
+    background: var(--primary-focus-color, #0f4ea3);
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.3);
+}
+
+/* Responsive small screens */
+@media (max-width: 768px) {
+    .admin-action-btn {
+        padding: 7px 14px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-action-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
