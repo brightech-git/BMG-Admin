@@ -42,6 +42,7 @@ const AddGenderBanner = () => {
     const [title, setTitle] = useState("");
     const [subtitle, setSubtitle] = useState("");
     const [itemname, setItemname] = useState("");
+    const [existingItemName,setExistingItemName ] =useState('');
     const [file, setFile] = useState(null); // new File
     const [existingImagePath, setExistingImagePath] = useState(null); // show existing image for edit
     const [error, setError] = useState("");
@@ -60,6 +61,7 @@ const AddGenderBanner = () => {
             setTitle(currentBanner.title ?? "");
             setSubtitle(currentBanner.subtitle ?? "");
             setItemname(currentBanner.itemName ?? "");
+            setExistingItemName(currentBanner.itemName ?? "");
             setExistingImagePath(currentBanner.image_path ?? null);
         }
     }, [isEdit, currentBanner]);
@@ -104,6 +106,13 @@ const AddGenderBanner = () => {
         // For Add: image required. For Edit: optional
         if (!isEdit && !file) {
             setError("Please choose an image for the banner.");
+            return;
+        }
+        if (
+            bannersData.some(b => b.itemName.toLowerCase() === itemname.toLowerCase()) &&
+            itemname.toLowerCase() !== existingItemName.toLowerCase()
+        ) {
+            setError("This item category already exists.");
             return;
         }
 

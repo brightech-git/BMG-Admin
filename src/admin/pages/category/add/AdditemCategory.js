@@ -59,6 +59,7 @@ const ItemCategory = () => {
             // setTitle(currentBanner.title ?? "");
             // setSubtitle(currentBanner.subtitle ?? "");
             setItemname(currentBanner.item_name ?? "");
+
             setExistingItemname(currentBanner.item_name ??'');
             setExistingImagePath(currentBanner.image_path ?? null);
         }
@@ -101,7 +102,7 @@ const ItemCategory = () => {
             setError("Please select an item category.");
             return;
         }
-        if (!isEdit && allBanners.includes(itemname)){
+        if (allBanners.includes(itemname) && itemname !== existingItemName) {
             setError("This item category already exists.");
             return;
         }

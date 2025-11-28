@@ -81,6 +81,7 @@ const menuItems = [
             { title: 'Manage Header', path: '/admin/header/manage' },
             // { title: 'Add Category', path: '/admin/item-category/add' },
             { title: 'Manage Category', path: '/admin/item-category/manage' },
+            { title: 'Manage Footer', path: '/admin/category/footer/manage' },
         ],
     },
     // {

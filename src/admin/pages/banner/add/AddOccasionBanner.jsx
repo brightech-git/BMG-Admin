@@ -286,7 +286,7 @@ const AddOccasionBanner = () => {
     const [existingImagePath, setExistingImagePath] = useState(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-
+    const [existingItemName ,setExistingItemName] = useState("");
     const isEdit = state?.mode === "edit";
     const editId = state?.id ?? null;
 
@@ -326,6 +326,7 @@ const AddOccasionBanner = () => {
             setSubtitle(currentBanner.subtitle ?? "");
             setItemname(currentBanner.occasion ?? "");
             setExistingImagePath(currentBanner.image_path ?? null);
+            setExistingItemName(currentBanner.occasion ?? "");
         }
     }, [isEdit, currentBanner]);
 
@@ -368,6 +369,13 @@ const AddOccasionBanner = () => {
         // For Add: image required. For Edit: optional
         if (!isEdit && !file) {
             setError("Please choose an image for the banner.");
+            return;
+        }
+        if (
+            banners.some(b => b.occasion.toLowerCase() === itemname.toLowerCase()) &&
+            itemname.toLowerCase() !== existingItemName.toLowerCase()
+        ) {
+            setError("This item category already exists.");
             return;
         }
 

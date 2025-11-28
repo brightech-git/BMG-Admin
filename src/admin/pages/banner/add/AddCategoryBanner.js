@@ -20,6 +20,7 @@ const AddCategoryBanner = () => {
     const [title, setTitle] = useState("");
     const [subtitle, setSubtitle] = useState("");
     const [itemName, setItemName] = useState("");
+    const [existingItemName, setExistingItemName] = useState("");
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState("");
     const [error, setError] = useState("");
@@ -46,6 +47,7 @@ const AddCategoryBanner = () => {
                 setTitle(existing.title || "");
                 setSubtitle(existing.subtitle || "");
                 setItemName(existing.itemName || "");
+                setExistingItemName(existing.itemName ?? "");
                 setPreview(getProductImages(existing.image_path) || "");
             }
         }
@@ -96,6 +98,14 @@ const handleClear = () =>{
         if (!title.trim()) return setError("Please enter a title");
         if (!itemName) return setError("Please select an item category");
         if (!isEdit && !image) return setError("Please select an image");
+        if (
+            bannerData.some(b => b.itemName.toLowerCase() === itemName.toLowerCase()) &&
+            itemName.toLowerCase() !== existingItemName.toLowerCase()
+        ) {
+            setError("This item category already exists.");
+            return;
+        }
+
 
         setOpenBackdrop(true);
         setProgress(0);

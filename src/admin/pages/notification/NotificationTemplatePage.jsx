@@ -16,6 +16,15 @@ const NotificationTemplatePage = () => {
     const [showForm, setShowForm] = useState(false);
     const [editTemplate, setEditTemplate] = useState(null);
 
+    const templateData =
+        templates?.map((t, i) => ({
+            sno: i + 1,
+            ...t,
+        })) ?? [];
+
+    const finalData = templateData?.reverse();
+    console.log(finalData,'finalData')
+
     const headers = [
         { key: "Id", label: "Temp Id" ,align:"center"},
         { key: "Title", label: "Title" },
@@ -42,36 +51,43 @@ const NotificationTemplatePage = () => {
                 <div className="flex items-center justify-center gap-2">
 
                     {/* SEND: directly trigger push notification using row data */}
-                    <button
-                        className="p-1 text-blue-600 hover:text-blue-800"
-                        onClick={() =>{
 
-                         
-                            pushMutation.mutate(
-                                {
-                                    title: row.Title,
-                                    message: row.Message,
-                                    imageUrl: `${BASE_URL}${row.ImageUrl}` ,
-                                    url: row.Url,
-                                },
-                                {
-                                    onSuccess: () => {
-                                        alert("Notification sent successfully!");
+                    {!row.singleUser && (
+                        <button
+                            className="p-1 text-blue-600 hover:text-blue-800"
+                            aria-label="send"
+                            name="send"
+                            title="Send to All"  
+                            onClick={() =>
+                                pushMutation.mutate(
+                                    {
+                                        title: row.Title,
+                                        message: row.Message,
+                                        imageUrl: `${BASE_URL}${row.ImageUrl}`,
+                                        url: row.Url,
                                     },
-                                    onError: () => {
-                                        alert("Failed to send notification");
-                                    },
-                                }
-                            )
-                        }
-                    }
-                    >
-                        <Send size={16} />
-                    </button>
+                                    {
+                                        onSuccess: () => {
+                                            alert("Notification sent successfully!");
+                                        },
+                                        onError: () => {
+                                            alert("Failed to send notification");
+                                        },
+                                    }
+                                )
+                            }
+                        >
+                            <Send size={16} />
+                        </button>
+                    )}
+
 
                     {/* EDIT */}
                     <button
                         className="p-1 text-green-600 hover:text-green-800"
+                        title="Edit"
+                        name="Edit"
+                        aria-label="Edit"
                         onClick={() => {
                             setEditTemplate(row);
                             setShowForm(true);
@@ -81,12 +97,17 @@ const NotificationTemplatePage = () => {
                     </button>
 
                     {/* DELETE */}
+                    {!row.singleUser && (
                     <button
                         className="p-1 text-red-600 hover:text-red-800"
+                            aria-label="delete"
+                            name="delete"
+                            title="Delete"  
                         onClick={() => deleteMutation.mutate(row.id, { onSuccess: refetch })}
                     >
                         <Trash2 size={16} />
                     </button>
+                )}
 
                 </div>
             );
@@ -95,13 +116,7 @@ const NotificationTemplatePage = () => {
         return row[key];
     };
 
-    const templateData =
-        templates?.map((t, i) => ({
-            sno: i + 1,
-            ...t,
-        })) ?? [];
-
-    const finalData = templateData?.reverse();
+   
 
     return (
         <div className="p-3 mt-3">

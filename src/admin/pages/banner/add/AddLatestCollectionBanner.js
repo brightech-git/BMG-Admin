@@ -41,6 +41,7 @@ console.log(state ,'state')
     const [title, setTitle] = useState("");
     const [subtitle, setSubtitle] = useState("");
     const [itemname, setItemname] = useState("");
+    const [existingItemName ,setExistingItemName]=useState("");
     const [file, setFile] = useState(null); // new File
     const [existingImagePath, setExistingImagePath] = useState(null); // show existing image for edit
     const [error, setError] = useState("");
@@ -57,6 +58,7 @@ console.log(currentBanner ,'banner')
     useEffect(() => {
         if (isEdit && currentBanner) {
             setTitle(currentBanner.Name ?? "");
+            setExistingItemName(currentBanner.Name?? '');
             // setSubtitle(currentBanner.subtitle ?? "");
             // setItemname(currentBanner.itemname ?? "");
             setExistingImagePath(currentBanner.Image ?? null);
@@ -103,6 +105,13 @@ console.log(currentBanner ,'banner')
         // For Add: image required. For Edit: optional
         if (!isEdit && !file) {
             setError("Please choose an image for the banner.");
+            return;
+        }
+        if (
+            banners.some(b => b.Name.toLowerCase() === itemname.toLowerCase()) &&
+            itemname.toLowerCase() !== existingItemName.toLowerCase()
+        ) {
+            setError("This item category already exists.");
             return;
         }
 

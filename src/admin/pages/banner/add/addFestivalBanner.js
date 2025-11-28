@@ -49,6 +49,7 @@ const AddFestivalBanner = () => {
     const [subtitle, setSubtitle] = useState("");
     const [itemname, setItemname] = useState("");
     const [file, setFile] = useState(null); // new File
+    const [existingItemName, setExistingItemName] = useState(""); // show existing image for edit
     const [existingImagePath, setExistingImagePath] = useState(null); // show existing image for edit
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -66,6 +67,7 @@ const AddFestivalBanner = () => {
             setTitle(currentBanner.title ?? "");
             setSubtitle(currentBanner.subtitle ?? "");
             setItemname(currentBanner.item_name ?? "");
+            setExistingItemName(currentBanner.item_name ?? "");
             setExistingImagePath(currentBanner.image_path ?? null);
         }
     }, [isEdit, currentBanner]);
@@ -112,7 +114,10 @@ const AddFestivalBanner = () => {
             setError("Please choose an image for the banner.");
             return;
         }
-
+        if(banners.some(b=>b.item_name.toLowerCase() === itemname.toLowerCase() ) && itemname.toLowerCase() !== existingItemName.toLowerCase()){
+            setError("This item category already exists.");
+            return;
+        }
         // build payload (FormData if file present)
         const payload = new FormData();
         if (isEdit) {
@@ -124,6 +129,7 @@ const AddFestivalBanner = () => {
             payload.append("title", title);
             // payload.append("subtitle", subtitle);
             payload.append("item_name", itemname);
+
             // omit gender as requested
         } else {
             // Add

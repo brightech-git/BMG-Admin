@@ -49,7 +49,7 @@ const AddOfferBanner = () => {
     const [existingImagePath, setExistingImagePath] = useState(null); // show existing image for edit
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-
+    const [existingItemName ,setExistingItemName] =useState("")
     // find banner for edit (if editing)
     const currentBanner = useMemo(() => {
         if (!isEdit) return null;
@@ -63,6 +63,7 @@ const AddOfferBanner = () => {
             setTitle(currentBanner.title ?? "");
             setSubtitle(currentBanner.subtitle ?? "");
             setItemname(currentBanner.item_name ?? "");
+            setExistingItemName(currentBanner.item_name ?? "");
             setExistingImagePath(currentBanner.image_path ?? null);
         }
     }, [isEdit, currentBanner]);
@@ -109,7 +110,13 @@ const AddOfferBanner = () => {
             setError("Please choose an image for the banner.");
             return;
         }
-
+        if (
+            banners.some(b => b.item_name.toLowerCase() === itemname.toLowerCase()) &&
+            itemname.toLowerCase() !== existingItemName.toLowerCase()
+        ) {
+            setError("This item category already exists.");
+            return;
+        }
         // build payload (FormData if file present)
         const payload = new FormData();
         if (isEdit) {

@@ -27,6 +27,7 @@ const UploadFeatureDesign = () => {
     const { data: bannersData, isLoading: bannersLoading } = useFeaturedBannersQuery();
 
     const banners = useMemo(() => bannersData || [], [bannersData]);
+    console.log(banners ,'banners')
 
 
     const { items: itemNames = [] } = useItemNames();
@@ -58,7 +59,7 @@ const UploadFeatureDesign = () => {
         if (isEdit && currentBanner) {
             setTitle(currentBanner.Name ?? "");
             // setSubtitle(currentBanner.subtitle ?? "");
-            // setItemname(currentBanner.itemname ?? "");
+            setItemname(currentBanner.Name ?? "");
             setExistingImagePath(currentBanner.Image ?? null);
         }
     }, [isEdit, currentBanner]);
@@ -96,10 +97,10 @@ const UploadFeatureDesign = () => {
         //     setError("Please enter a subtitle.");
         //     return;
         // }
-        // if (!itemname) {
-        //     setError("Please select an item category.");
-        //     return;
-        // }
+        if (banners.some(b => b.Name.toLowerCase() === title.toLowerCase() && title.toLowerCase() !== itemname.toLowerCase())) {
+            setError("This item category already exists.");
+            return;
+        }
         // For Add: image required. For Edit: optional
         if (!isEdit && !file) {
             setError("Please choose an image for the banner.");

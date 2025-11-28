@@ -57,8 +57,8 @@ import ManageSingleProduct from '../../admin/pages/product/manage/ManageSinglePr
 import PackingOrders from '../../admin/pages/order/PackingOrders';
 import GlobalSnackbar from '../../admin/components/snackBar/GlobalSnackbar';
 import EcomMarketingAttributesTable from '../../admin/pages/market-option/EcomMarketingAttributesTable';
-import ItemCategory from '../../admin/pages/itemcategory/add/AdditemCategory';
-import ManageItemCategory from '../../admin/pages/itemcategory/manage/manageItemCategory';
+import ItemCategory from '../../admin/pages/category/add/AdditemCategory';
+import ManageItemCategory from '../../admin/pages/category/manage/manageItemCategory';
 import UploadBestDesign from '../../admin/pages/banner/add/UploadBestDesign';
 import ManageBestDesignBanner from '../../admin/pages/banner/manage/ManageBestDesignBanner';
 import UploadFeatureDesign from '../../admin/pages/banner/add/AddFeatureBanner';
@@ -72,7 +72,8 @@ import AddImage from '../../admin/pages/product/add/addImageProduct';
 import OrderTable from '../../admin/pages/order/AllOrders';
 import RefundOrdersTable from '../../admin/pages/refund/refundOrders';
 import NotificationTemplatePage from '../../admin/pages/notification/NotificationTemplatePage';
-
+import FooterCategory from '../../admin/pages/category/manage/ManageFooterCategory';
+import AddFooterEntryPage from '../../admin/pages/category/add/AddFooterCategory';
 
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
@@ -126,16 +127,16 @@ const AdminRoutes = () => {
                         <Route path="featurebanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><UploadFeatureDesign /></ProtectedRoute>} />
                         <Route path="latestbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><UploadLatestBanner /></ProtectedRoute>} />
                         <Route path="genderbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddGenderBanner /></ProtectedRoute>} />
-                       
 
-                        
+
+
 
 
                         <Route path="genderbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageGenderBanner /></ProtectedRoute>} />
-                        <Route path="manage/featurebanner" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFeaturedBanner /></ProtectedRoute> } />
+                        <Route path="manage/featurebanner" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFeaturedBanner /></ProtectedRoute>} />
 
-                        <Route path="latestbanner/manage" element={ <ProtectedRoute allowedRoles={allowedRoles}> <ManageLatestBanner /> </ProtectedRoute>  } />
-           
+                        <Route path="latestbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}> <ManageLatestBanner /> </ProtectedRoute>} />
+
 
                         <Route path="bestbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBestDesignBanner /></ProtectedRoute>} />
                         <Route path="banner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBanner /></ProtectedRoute>} />
@@ -182,9 +183,11 @@ const AdminRoutes = () => {
                         <Route path="monthlySales" element={<MonthlySalesPage />} />
                         <Route path="unauthorized" element={<Unauthorized />} />
                         <Route path="item-category/add" element={<ItemCategory />} />
-                        <Route path="item-category/manage" element={< ManageItemCategory/>} />
+                        <Route path="item-category/manage" element={< ManageItemCategory />} />
                         <Route path='order/refund' element={<RefundOrdersTable />} />
 
+                        <Route path='category/footer/manage' element={<FooterCategory />} />
+                        <Route path='category/footer/add' element={<AddFooterEntryPage />} />
 
                         <Route path='productSpec' element={<EcomMarketingAttributesTable />} />
                         <Route path="*" element={<Navigate to="/admin" replace />} />

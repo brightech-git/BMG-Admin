@@ -3,14 +3,15 @@ import { useCreateTemplate, useUpdateTemplate } from "../../hooks/notificationTe
 
 const TemplateFormModal = ({ editData, onClose, onSuccess }) => {
     const isEdit = !!editData;
-    console.log(editData,'edit data')
-    const BASE_URL = "https://app.bmgjewellers.com"; // base URL
+    const BASE_URL = "https://app.bmgjewellers.com";
+
     const createMutation = useCreateTemplate();
     const updateMutation = useUpdateTemplate(editData?.Id);
 
     const [title, setTitle] = useState("");
     const [message, setMessage] = useState("");
     const [url, setUrl] = useState("");
+    const [singleUser, setSingleUser] = useState(false); // ✅ NEW STATE
     const [image, setImage] = useState(null);
     const [existingImagePath, setExistingImagePath] = useState("");
     const [previewImage, setPreviewImage] = useState("");
@@ -20,13 +21,18 @@ const TemplateFormModal = ({ editData, onClose, onSuccess }) => {
             setTitle(editData.Title);
             setMessage(editData.Message);
             setUrl(editData.Url);
-            setExistingImagePath(`${BASE_URL}${Array.isArray(editData.ImageUrl) ? editData.ImageUrl[0] : editData.ImageUrl}`);
+            setSingleUser(editData.singleUser || false); // ✅ Prefill from backend
+
+            setExistingImagePath(
+                `${BASE_URL}${Array.isArray(editData.ImageUrl) ? editData.ImageUrl[0] : editData.ImageUrl}`
+            );
         }
     }, [editData]);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         setImage(file);
+
         if (file) {
             const reader = new FileReader();
             reader.onload = () => setPreviewImage(reader.result);
@@ -41,6 +47,8 @@ const TemplateFormModal = ({ editData, onClose, onSuccess }) => {
         formData.append("title", title);
         formData.append("message", message);
         formData.append("url", url);
+        formData.append("singleUser", singleUser);  // ✅ Add this
+
         if (image) formData.append("image", image);
 
         if (isEdit) {
@@ -51,8 +59,8 @@ const TemplateFormModal = ({ editData, onClose, onSuccess }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50   mx-auto">
-            <div className="bg-white p-4  rounded shadow-lg w-96 max-w-2xl">
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 mx-auto">
+            <div className="bg-white p-4 rounded shadow-lg w-96 max-w-2xl">
 
                 <h2 className="text-sm font-semibold mb-3">
                     {isEdit ? "Edit Template" : "Add New Template"}
@@ -83,7 +91,17 @@ const TemplateFormModal = ({ editData, onClose, onSuccess }) => {
                         onChange={(e) => setUrl(e.target.value)}
                     />
 
-                    {/* Image input with label and preview */}
+                    {/* ✅ Single User Checkbox */}
+                    <label className="flex items-center gap-2 text-xs font-medium">
+                        <input
+                            type="checkbox"
+                            checked={singleUser}
+                            onChange={(e) => setSingleUser(e.target.checked)}
+                        />
+                        <span>Send to Single User Only</span>
+                    </label>
+
+                    {/* Image input */}
                     <label className="block w-full border p-2 rounded cursor-pointer text-center text-xs bg-gray-100 hover:bg-gray-200">
                         {image || existingImagePath || previewImage ? "Change Image" : "Upload Image"}
                         <input
@@ -93,7 +111,6 @@ const TemplateFormModal = ({ editData, onClose, onSuccess }) => {
                         />
                     </label>
 
-                    {/* Show preview */}
                     {(previewImage || existingImagePath) && (
                         <img
                             src={previewImage || existingImagePath}

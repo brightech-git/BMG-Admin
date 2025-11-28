@@ -22,6 +22,7 @@ const AddEditBanner = () => {
     const { data: bannersData, isLoading: bannersLoading } = useBannersQuery();
 
     const banners = useMemo(() => bannersData?.data || [], [bannersData]);
+    console.log(banners ,'bannerdata')
 
     const { items: itemNames = [] } = useItemNames();
 
@@ -34,11 +35,12 @@ const AddEditBanner = () => {
     const [title, setTitle] = useState("");
     const [subtitle, setSubtitle] = useState("");
     const [itemname, setItemname] = useState("");
+    const [existingItemName ,setExistingItemName] =useState("")
     const [file, setFile] = useState(null); // new File
     const [existingImagePath, setExistingImagePath] = useState(null); // show existing image for edit
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-console.log(banners ,'banner')
+
     // find banner for edit (if editing)
     const currentBanner = useMemo(() => {
         if (!isEdit) return null;
@@ -52,6 +54,7 @@ console.log(banners ,'banner')
             setTitle(currentBanner.title ?? "");
             setSubtitle(currentBanner.subtitle ?? "");
             setItemname(currentBanner.itemname ?? "");
+            setExistingItemName(currentBanner.itemname ?? "");
             setExistingImagePath(currentBanner.image_path ?? null);
         }
     }, [isEdit, currentBanner]);
@@ -92,8 +95,15 @@ console.log(banners ,'banner')
             setError("Please choose an image for the banner.");
             return;
         }
+        if (
+            banners.some(b => b.itemname.toLowerCase() === itemname.toLowerCase()) &&
+            itemname.toLowerCase() !== existingItemName.toLowerCase()
+        ) {
+            setError("This item category already exists.");
+            return;
+        }
 
-        // build payload (FormData if file present)
+   
         const payload = new FormData();
         if (isEdit) {
 
@@ -213,7 +223,7 @@ console.log(banners ,'banner')
                             className="w-full border px-2 py-1.5 text-xs"
                             disabled={isUploading || isUpdating}
                         >
-                            <option value="" disabled>\</option>
+                            <option  value="" disabled>Select Item Category</option>
                             {itemNames.map((it) => (
                                 <option key={it.ITEMCTRID} value={it.ITEMCTRNAME}>
                                     {it.ITEMCTRNAME}

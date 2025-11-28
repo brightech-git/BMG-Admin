@@ -56,7 +56,7 @@ const ManageFeaturedBanner = () => {
                 data={tableData}
                 loading={isLoading}
                 emptyMessage="No banners found"
-                button={designs.length < 3 ? "Add Banner" : ""}
+                button={designs.length <= 3 ? "Add Banner" : ""}
                 onClick={handleAdd}
                 renderCell={(key, row) => {
                     // Image rendering
