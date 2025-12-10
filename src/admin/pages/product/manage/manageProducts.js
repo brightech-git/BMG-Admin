@@ -77,7 +77,7 @@ const SkeletonCard = ({ themeMode, isMobileView }) => (
 const MediaDisplay = ({ product, navigate }) => {
     const images = constructImageUrls(product.ImagePath);
     const videos = constructVideoUrls(product.VideoPath);
-    console.log(videos ,'vidoes')
+    console.log (product ,'vidoes')
 
     const hasImages = images.length > 0;
     const hasVideos = videos.length > 0;
@@ -259,7 +259,9 @@ const ProductList = ({ products, isMobileView, themeMode, themeColor, isFetching
                     <thead className={`bg-gray-100 ${themeMode === 'dark' ? 'bg-gray-700 text-white' : ''}`}>
                         <tr>
                             <th className="px-1 py-1 border border-gray-300 text-center">S.No</th>
-                            <th className="px-3 py-1 border border-gray-300 text-center">Product</th>
+                            <th className="px-2 py-1 border border-gray-300 ">Product</th>
+                            <th className="px-2 py-1 border border-gray-300 ">ItemId</th>
+                            <th className="px-2 py-1 border border-gray-300 ">TagNo</th>
                             <th className="px-2 py-1 border border-gray-300">Product Key</th>
                             <th className="px-2 py-1 border border-gray-300">Media</th>
                             <th className="px-2 py-1 border border-gray-300 text-center">Details</th>
@@ -268,10 +270,12 @@ const ProductList = ({ products, isMobileView, themeMode, themeColor, isFetching
                     <tbody>
                         {products.map((p, index) => (
                             <tr key={p.TAGKEY} className={`${themeMode === 'dark' ? 'bg-gray-800 text-white' : 'bg-white'}`}>
-                                <td className="px-1 py-1 border border-gray-300 text-center w-13">{index + 1}</td>
-                                <td className="px-3 py-1 border border-gray-300 truncate text-xs w-30">{p.ITEMNAME} - {p.SUBITEMNAME}</td>
+                                <td className="px-1 py-1 border border-gray-300 text-center w-12">{index + 1}</td>
+                                <td className="px-2 py-1 border border-gray-300 truncate text-xs w-auto">{p.ITEMNAME} - {p.SUBITEMNAME}</td>
+                                <td className="px-2 py-1 border border-gray-300  w-1">{p.ITEMID}</td>
+                                <td className="px-2 py-1 border border-gray-300  w-auto">{p.TAGNO}</td>
                                 <td className="px-2 py-1 border border-gray-300 truncate w-30">{p.TAGKEY}</td>
-                                <td className="px-1 py-1 border border-gray-300 w-30">
+                                <td className="px-2 py-1 border border-gray-300 w-30">
                                     <MediaDisplay product={p} navigate={navigate} />
                                 </td>
                                 <td className="px-2 py-1 border border-gray-300 text-center">
@@ -299,7 +303,7 @@ const ProductList = ({ products, isMobileView, themeMode, themeColor, isFetching
                     <tr>
                         <th className="px-1 py-1 border border-gray-300 text-center">S.No</th>
                         <th className="px-1 py-1 border border-gray-300">Product Key</th>
-                        <th className="px-1 py-1 border border-gray-300 text-center">Product</th>
+                        <th className="px-1 py-1 border border-gray-300 ">Product</th>
                         <th className="px-1 py-1 border border-gray-300">Media</th>
                         <th className="px-1 py-1 border border-gray-300 text-center">Details</th>
                     </tr>

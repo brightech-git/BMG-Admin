@@ -7,6 +7,8 @@ import axiosInstance from "../api/axiosInstance";
  * @returns {Promise<Object>} - API response
  */
 export const createConsignment = async (consignmentData) => {
+
+    console.log(consignmentData,'consignmentData in service')
     try {
         const response = await axiosInstance.post(
             "/dtdc/create-consignment",

@@ -117,11 +117,13 @@ export const ProductProvider = ({ children }) => {
     const createFormData = useCallback((
         isUpdateMode,
         tagkey,
-        images = [],        // ← now correctly named (represents selected files)
-        videos = [],        // ← same
+        images = [],        // New image files
+        videos = [],        // New video files
         description = '',
         trendingOptions = {},
-        productAttributes = {}
+        productAttributes = {},
+        orderedImagePaths = [],  // Array: ['path1', null, 'path2'] - null for new files
+        orderedVideoPaths = []   // Array: ['path1', null, 'path2'] - null for new files
     ) => {
         const formData = new FormData();
 
@@ -129,31 +131,76 @@ export const ProductProvider = ({ children }) => {
         if (description?.trim()) formData.append('description', description.trim());
 
         // Marketing flags
-        formData.append('top_trending', trendingOptions.topTrending ?? false);
-        formData.append('featured_products', trendingOptions.featuredProducts ?? false);
-        formData.append('best_design', trendingOptions.bestDesign ?? false);
+        // formData.append('top_trending', trendingOptions.topTrending ?? false);
+        // formData.append('featured_products', trendingOptions.featuredProducts ?? false);
+        // formData.append('best_design', trendingOptions.bestDesign ?? false);
 
         // Product attributes
-        const attrMap = {
-            gender: 'gender',
-            occasion: 'occasion',
-            collectionType: 'collection_type',
-            materialFinish: 'material_finish',
-            colorAccents: 'color_accents',
-        };
+        // const attrMap = {
+        //     gender: 'gender',
+        //     occasion: 'occasion',
+        //     collectionType: 'collection_type',
+        //     materialFinish: 'material_finish',
+        //     colorAccents: 'color_accents',
+        // };
 
-        Object.entries(attrMap).forEach(([uiKey, backendKey]) => {
-            const value = productAttributes[uiKey];
-            if (value) formData.append(backendKey, value);
-        });
+        // Object.entries(attrMap).forEach(([uiKey, backendKey]) => {
+        //     const value = productAttributes[uiKey];
+        //     if (value) formData.append(backendKey, value);
+        // });
 
         // THE FIX: Use the correct parameter names!
         if (isUpdateMode) {
-            images.forEach(file => formData.append('newImages', file));
-            videos.forEach(file => formData.append('newVideos', file));
+            // ✅ Append new files
+           images.forEach((item) => {
+    if (item instanceof File) {
+        formData.append("newImages", item);
+    }
+    if (item?.file instanceof File) {
+        formData.append("newImages", item.file);
+    }
+});
+
+
+            videos.forEach((file, index) => {
+                if (file instanceof File) {
+                    formData.append('newVideos', file);
+                }
+            });
+
+            // ✅ Send the ordered paths array (with nulls for new files)
+            // Backend will understand null = new file being uploaded
+            if (orderedImagePaths.length > 0) {
+             
+                formData.append('imageOrder', JSON.stringify(orderedImagePaths));
+            }
+
+            if (orderedVideoPaths.length > 0) {
+                formData.append('videoOrder', JSON.stringify(orderedVideoPaths));
+            }
+
+            console.log('📤 Sending to backend:', {
+                tagkey: tagkey,
+                description: description.trim(),
+                newImages: images.map(f => f?.name || 'N/A'),
+                newVideos: videos.map(f => f?.name || 'N/A'),
+                orderedImagePaths: orderedImagePaths,
+                orderedVideoPaths: orderedVideoPaths
+            });
+
         } else {
-            images.forEach(file => formData.append('images', file));
-            videos.forEach(file => formData.append('videos', file));
+            // Create mode - just send files
+            images.forEach(file => {
+                if (file instanceof File) {
+                    formData.append('images', file);
+                }
+            });
+
+            videos.forEach(file => {
+                if (file instanceof File) {
+                    formData.append('videos', file);
+                }
+            });
         }
 
         return formData;

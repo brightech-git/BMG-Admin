@@ -7,7 +7,7 @@ const Snackbar = ({
     open,
     message,
     type = "info",
-    duration = 5000,
+    duration = 3000,
     onClose,
     title,
     action,

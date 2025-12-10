@@ -10,12 +10,14 @@ import StatusChip from '../../components/statusChip/StatusChip.jsx';
 import { useCreateConsignment } from '../../hooks/shipping/useCreateConsignment.js';
 import { useAddressQuery } from '../../hooks/address/useAddressQuery.js'
 import { getProductImages } from '../../../utils/mediaUtils/mediaUtils.js';
+import { useLabelQuery } from '../../hooks/shipping/useLabelQuery';
 
 const OrderTable = () => {
     const location = useLocation();
 
     const navigate = useNavigate();
 
+    const [downloadLabel, setDownloadLabel] =useState(false)
 
     const { key } = location.state || {};
     console.log(key, 'keytoget')
@@ -59,12 +61,13 @@ const OrderTable = () => {
 
     const addresses = Array.isArray(addressesData) ? addressesData : [];
 
+    console.log(selectedOrder ,'selectedOrder')
     // Find default origin address safely
     const defaultOriginAddress = useMemo(() => {
         if (!addresses.length) return null;
 
         // If default address is stored as default: true
-        return addresses.find(a => a.default === true) || null;
+        return addresses.find(a => a.isDefault === true) || null;
 
         // If your backend uses default === false for default (rare case)
         // return addresses.find(a => a.default === false) || null;
@@ -83,6 +86,7 @@ const OrderTable = () => {
         order_time: order.order_time || order.orderTime || order.date || 'N/A',
         payment_mode: order.paymentMode || order.payment_mode || 'payment',
         payment_status: order.paymentStatus || order.payment_status || 'N/A',
+        courierTrackingId: order.courierTrackingId || 'N/A',
         address: order.address ? {
             addressLine: order.address.addressLine || '',
             alternatePhone: order.address.alternatePhone || '',
@@ -138,6 +142,45 @@ const OrderTable = () => {
         });
     }, [orders, searchTerm]);
 
+    const labelPayload = {
+        reference_number: selectedOrder?.courierTrackingId || 'NA',
+        label_code: "SHIP_LABEL_4X6",
+        label_format: "pdf"
+    };
+
+    const {
+        data: labelData,
+        isLoading: isLabelLoading,
+        isError: isLabelError,
+        error: labelError,
+    } = useLabelQuery(labelPayload, {
+        enabled: status?.toLowerCase() === "packed" && !!selectedOrder?.courierTrackingId,
+    });
+
+   
+    useEffect(()=>{
+        if (status.toLowerCase() === 'packed') {
+          setDownloadLabel(true);
+        }
+        else{
+            setDownloadLabel(false)
+        }
+    },[status,key]);
+
+
+      
+const handleDownloadLabel = () => {
+    if (!labelData) return;
+    window.open(labelData, "_blank");
+    const link = document.createElement("a");
+    link.href = labelData;
+    link.download = `label_${labelPayload.reference_number}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+
     const handleViewOrder = (order) => {
         setSelectedOrder(order);
         setOpenViewModal(true);
@@ -175,22 +218,27 @@ const OrderTable = () => {
     // MAIN SUBMIT – Consignment + Label + Status Update
     // ────────────────────────────────────────────────────────────────
     const buildConsignment = (order, origin) => {
-        // Total weight = 5 g per item (you can adjust logic later)
-        const totalWeight = order.orderItems.reduce((sum, it) => sum + it.quantity * 5, 0);
-        const totalQty = order.orderItems.reduce((sum, it) => sum + it.quantity, 0);
-
         const consignment = {
-            customer_code: "EO2243",                         // <-- keep your static code
+            customer_code: "EO2243",
             service_type_id: "B2C SMART EXPRESS",
             load_type: "NON-DOCUMENT",
+
+            // PRODUCT DESCRIPTION
             description: order.orderItems.map(i => i.product_name).join(", "),
+
             dimension_unit: "cm",
-            length: "30",                                    // you can make dynamic later
-            width: "20",
-            height: "15",
-            weight: totalWeight.toString(),                  // dynamic
+
+            // REQUIRED TOP-LEVEL DIMENSIONS (must be present)
+            length: "3",
+            width: "5",
+            height: "3",
+
+            // REQUIRED TOP-LEVEL WEIGHT
+            weight: "5",
+
             declared_value: order.total_amount.toString(),
-            num_pieces: totalQty.toString(),
+            num_pieces: order.orderItems.length.toString(),
+          
             origin_details: {
                 name: origin.name,
                 phone: origin.phone,
@@ -200,20 +248,22 @@ const OrderTable = () => {
                 pincode: origin.pincode,
                 city: origin.city,
                 state: origin.state,
-                country: origin.country || "India",
+                country: "India",
             },
+
             destination_details: {
                 name: order.address.name,
                 phone: order.address.phone,
                 alternate_phone: order.address.alternatePhone || order.address.phone,
                 address_line_1: order.address.addressLine,
                 address_line_2: order.address.landmark || "",
+                pincode: order.address.pincode,
                 city: order.address.city,
                 state: order.address.state,
-                pincode: order.address.pincode,
                 country: "India",
             },
-            return_details: {                                 // same as origin
+
+            return_details: {
                 name: origin.name,
                 phone: origin.phone,
                 alternate_phone: origin.alternatePhone || "",
@@ -222,31 +272,39 @@ const OrderTable = () => {
                 pincode: origin.pincode,
                 city: origin.city,
                 state: origin.state,
-                country: origin.country || "India",
+                country: "India",
             },
+
             customer_reference_number: order.order_id,
             commodity_id: "COM005",
             is_risk_surcharge_applicable: false,
+
             invoice_number: `INV${order.order_id}`,
-            invoice_date: new Date().toISOString().split("T")[0], // today
-            pieces_detail: order.orderItems.map((it, idx) => ({
+            invoice_date: new Date().toISOString().split("T")[0],
+
+            // ITEM-WISE DETAILS
+            pieces_detail: order.orderItems.map((it) => ({
                 description: it.product_name,
-                declared_value: (it.price * it.quantity).toFixed(2),
-                weight: (it.quantity * 5).toString(),          // 5 g per unit
+                declared_value: it.price.toString(),
+                weight: "5",
                 length: "30",
                 width: "20",
                 height: "15",
             })),
         };
+        console.log(order.payment_mode ,'paymentmode')
 
-        // COD only for non-ONLINE payments
-        if (order.payment_mode !== "ONLINE") {
+        if (order.payment_mode.toLowerCase() !== "online") {
             consignment.cod_collection_mode = "cash";
-            consignment.cod_amount = order.total_amount;
+            consignment.cod_amount = order.total_amount.toString();
         }
+        
 
         return consignment;
     };
+
+
+
     const handleEditSubmit = async (formData) => {
         if (!formData.status) {
             setSnackbar({ open: true, message: "Status is required.", type: "error" });
@@ -267,7 +325,10 @@ const OrderTable = () => {
             };
 
             progressInterval = setInterval(() => {
-                setProgress(prev => Math.min(prev + Math.random() * 5, 90));
+                setProgress(prev =>
+                    Math.min(Math.floor(prev + Math.random() * 5), 90)
+                );
+
             }, 150);
 
             // ── CANCELLED (no consignment) ───────────────────────
@@ -281,30 +342,48 @@ const OrderTable = () => {
             }
 
             // ── PACKING → PACKED: Create Consignment ─────────────
-            if (status === 'PACKING' && formData.status === 'PACKED') {
+            if (status === "PACKING" && formData.status === "PACKED") {
+
                 if (!defaultOriginAddress) {
                     throw new Error("Default origin address not found.");
                 }
 
+                // Create consignment
                 const consignment = buildConsignment(selectedOrder, defaultOriginAddress);
                 const consignmentPayload = { consignments: [consignment] };
 
                 const consignmentResponse = await createConsignmentMutation.mutateAsync(consignmentPayload);
-                const result = consignmentResponse?.data?.[0];
 
-                if (!result || result.success === false || !result.reference_number) {
+                const result = consignmentResponse?.data?.[0];
+                if (!result?.success || !result?.reference_number) {
                     throw new Error(result?.message || "Consignment creation failed");
                 }
 
+           
+                // Generate shipping label
+
+                
+
                 setSnackbar({
                     open: true,
-                    message: `Consignment created: ${result.reference_number}`,
+                    message: `Consignment created & Label generated`,
                     type: "success",
                 });
             }
 
+
             // ── PACKED → READY_TO_SHIP: Label (simulate) ────────
-            if (status === 'PACKED' && formData.status === 'READY_TO_SHIP') {
+            if (status === 'PACKED' && formData.status === 'SHIPPED') {
+                const confirmLabel = window.confirm(
+                    "⚠️ Please confirm that the shipping label is correctly pasted on the package before updating the status."
+                );
+                if (!confirmLabel) {
+                    clearInterval(progressInterval);
+                    setShowBackdrop(false);
+                    setProgress(0);
+                    return;  // Stop everything when user does NOT confirm
+                }
+
                 await new Promise(r => setTimeout(r, 1000));
                 setSnackbar({ open: true, message: "Label generated!", type: "success" });
             }
@@ -419,7 +498,7 @@ const OrderTable = () => {
                 { value: 'CANCELLED', label: 'Cancel Order' },
             ],
             'PACKED': [
-                { value: 'READY_TO_SHIP', label: 'Move to Ready to Ship' },
+                { value: 'SHIPPED', label: 'Move to Ready to Ship' },
                 { value: 'CANCELLED', label: 'Cancel Order' },
             ],
             'READY_TO_SHIP': [
@@ -643,6 +722,8 @@ const OrderTable = () => {
                         showTotal={true}
                         totalLabel="Grand Total"
                         totalValue={`₹${selectedOrder?.total_amount?.toFixed(2)}`}
+                        downloadLabel={downloadLabel}
+                        onDownload={handleDownloadLabel}
                     />
 
                     <EditStatusModalTailwind
@@ -662,6 +743,8 @@ const OrderTable = () => {
                         userTableColumns={[]}
                         userTableData={selectedOrder || []}
                         errorMessage={formError}
+                        downloadLabel={downloadLabel}
+                        onDownload={handleDownloadLabel}
                     />
                 </>
             )}

@@ -15,6 +15,8 @@ const EditStatusModalTailwind = ({
     itemTableData = [],
     userTableColumns = [],
     userTableData = [],
+    downloadLabel = false,
+    onDownload = () => { },
 }) => {
     const [editForm, setEditForm] = useState({ status: '', remarks: '' });
     console.log(editForm ,'editform')
@@ -74,6 +76,13 @@ const EditStatusModalTailwind = ({
                             Order ID: {orderData?.order_id || '-'}
                         </p>
                     </div>
+                    {downloadLabel && <button
+                        onClick={onDownload}
+                        className={`px-2 py-1 rounded text-xs border  font-[var(--font-primary)]
+                            }`}
+                    >
+                        Download Shipping Label
+                    </button>}
                     <button
                         onClick={onClose}
                         className="p-1 rounded hover:bg-[var(--active-bg)]"

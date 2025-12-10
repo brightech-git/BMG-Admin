@@ -62,8 +62,9 @@ const productService = {
             const formData = new FormData();
             formData.append("tagkey", tagkey);
             if (description) formData.append("newDescription", description);
-            if (newImageFile) formData.append("newImage", newImageFile); // optional
+            if (newImageFile) formData.append("newImage", newImageFile); 
 
+            console.log()
             const response = await axiosInstance.put(
                 `/product_image/update-image-description`,
                 formData,
@@ -140,7 +141,16 @@ const productService = {
     // productService.js (add these two methods)
 
     updateAllFields: async (formData, onProgress = null) => {
-    try {
+    try {   
+
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(`${key}: [File] ${value.name} (${value.size} bytes)`);
+            } else {
+                console.log(`${key}: ${value}`);
+            }
+        }
+
         const response = await axiosInstance.put('/product_image/update-all-fields', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
                 onUploadProgress: (progressEvent) => {
@@ -158,17 +168,24 @@ const productService = {
 },
     
 
-    deleteMedia: async (tagkey, mediaPath, type) => {
+    deleteMedia: async (tagkey, mediaPathArray, type) => {
+
+        console.log(mediaPathArray ,'mediapath')
         try {
-            const response = await axiosInstance.delete('/product_image/delete-media', {
-                params: { tagkey, mediaPath, type }
+            const response = await axiosInstance.delete('/product_image/delete-media',{
+                params: { tagkey }, 
+                data:mediaPathArray          // ✔ sent as URL params
+              
             });
+
             return response.data;
+
         } catch (error) {
             console.error('Delete media error:', error);
             throw error.response?.data || { error: error.message };
         }
     },
+
 
     // 🔹 NEW: Filter products
     filterItems: async (filters = {}) => {

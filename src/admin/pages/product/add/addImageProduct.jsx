@@ -4,8 +4,349 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import { getProductImages, getProductVideos } from '../../../../utils/mediaUtils/mediaUtils.js';
 import { compressAndCollectFiles } from '../../../../utils/compress/compressAndCollectFiles.js';
+import * as LucideIcons from 'lucide-react';
+
+// Lucide icons
+const {
+    Upload,
+    X,
+    RefreshCw,
+    CheckCircle,
+    AlertCircle,
+    Info,
+    Image,
+    Video,
+    AlertTriangle,
+    GripVertical,
+    Plus,
+    Loader2,
+    Trash2,
+    FileImage,
+    FileVideo,
+    Globe,
+    FileText,
+    Edit,
+} = LucideIcons;
+
+// -------------------------------------------------------------------------
+// Media Item Interface
+// -------------------------------------------------------------------------
+
+// -------------------------------------------------------------------------
+// Drag & Drop Media Component
+// -------------------------------------------------------------------------
 
 
+export function DragDropMedia({
+    items,
+    onItemsChange,
+    maxItems = 10,
+    accept = 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/mov,video/avi,video/webm',
+    type,
+    onDeleteExisting,
+}) {
+    const [isDragActive, setIsDragActive] = useState(false);
+    const [draggedIndex, setDraggedIndex] = useState  (null);
+    const fileInputRef = useRef (null);
+    const dragSourceRef = useRef (null);
+
+    const handleDragEnter = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragActive(true);
+    }, []);
+
+    const handleDragLeave = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.currentTarget === e.target) {
+            setIsDragActive(false);
+        }
+    }, []);
+
+    const handleDragOver = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    }, []);
+
+    const processFiles = useCallback((files) => {
+        if (!files) return;
+
+        const newFiles = Array.from(files).filter((file) =>
+            type === 'image' ? file.type.startsWith('image/') : file.type.startsWith('video/')
+        );
+
+        if (newFiles.length === 0) return;
+
+        const newItems= newFiles.map((file) => ({
+            id: `${Date.now()}-${Math.random()}-${file.name}`,
+            src: URL.createObjectURL(file),
+            alt: file.name,
+            file,
+            type,
+            isExisting: false,
+        }));
+
+        const combined = [...items, ...newItems].slice(0, maxItems);
+        onItemsChange(combined);
+        setIsDragActive(false);
+    }, [items, onItemsChange, maxItems, type]);
+
+    const handleDrop = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        processFiles(e.dataTransfer.files);
+    }, [processFiles]);
+
+    const handleFileInput = useCallback(
+        (e) => {
+            processFiles(e.target.files);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        },
+        [processFiles]
+    );
+
+    const handleRemoveItem = useCallback(
+        (index) => {
+            const item = items[index];
+
+            // If it's an existing file, ask for confirmation
+            if (item.isExisting && item.serverPath && onDeleteExisting) {
+                const ok = window.confirm(`Delete this ${type}? This action cannot be undone.`);
+
+                // ❌ If user CANCELS → stop here, do NOT delete from UI
+                if (!ok) return;
+                console.log(item.serverPath ,'serverPath');
+                const baseUrl = 'https://app.bmgjewellers.com'
+                // User accepted → call backend delete
+                onDeleteExisting([`${baseUrl}${item.serverPath}`], type);
+            }
+
+            // Clean new file preview (only for newly added files)
+            if (!item.isExisting && item.src.startsWith('blob:')) {
+                URL.revokeObjectURL(item.src);
+            }
+
+            // Now remove from UI
+            const updated = items.filter((_, i) => i !== index);
+            onItemsChange(updated);
+        },
+        [items, onItemsChange, type, onDeleteExisting]
+    );
+
+
+
+    const handleDragStart = (index) => {
+        dragSourceRef.current = index;
+        setDraggedIndex(index);
+    };
+
+    const handleDragEndItem = useCallback(() => {
+        dragSourceRef.current = null;
+        setDraggedIndex(null);
+    }, []);
+
+    const handleDropItem = useCallback(
+        (targetIndex) => {
+            if (dragSourceRef.current === null || dragSourceRef.current === targetIndex) {
+                handleDragEndItem();
+                return;
+            }
+
+            const newItems = [...items];
+            const [draggedItem] = newItems.splice(dragSourceRef.current, 1);
+            newItems.splice(targetIndex, 0, draggedItem);
+            onItemsChange(newItems);
+            handleDragEndItem();
+        },
+        [items, onItemsChange, handleDragEndItem]
+    );
+
+    const canAddMore = items.length < maxItems;
+    const typeName = type === 'image' ? 'Image' : 'Video';
+
+    return (
+        <div className="w-full">
+            {/* Upload Area */}
+            <div
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`
+          relative border-2 border-dashed rounded-lg p-2 text-center cursor-pointer transition-all duration-200
+          ${isDragActive
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border-color bg-background-color hover:border-primary hover:bg-primary/10'
+                    }
+        `}
+            >
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept={accept}
+                    onChange={handleFileInput}
+                    className="hidden"
+                />
+                <div className="flex flex-col items-center gap-1">
+                    {type === 'image' ? (
+                        <FileImage className={`w-8 h-8 ${isDragActive ? 'text-primary' : 'text-secondaryText'}`} />
+                    ) : (
+                        <FileVideo className={`w-8 h-8 ${isDragActive ? 'text-primary' : 'text-secondaryText'}`} />
+                    )}
+                    <div className='m-0 p-0'>
+                        <p className="font-semibold text-sm text-primaryText">
+                            {isDragActive ? `Drop ${type}s here` : `Drag ${type}s here to upload`}
+                        </p>
+                        <p className="text-xs text-secondaryText ">
+                            or click to select files
+                        </p>
+                    </div>
+                    <p className="text-xs text-secondaryText">
+                        {items.length}/{maxItems} {type}s •
+                        {canAddMore ? ` ${maxItems - items.length} more allowed` : ' Max reached'}
+                    </p>
+                </div>
+            </div>
+
+            {/* Media Grid */}
+            {items.length > 0 && (
+                <div className="mt-6">
+                    <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-sm font-semibold text-primaryText font-primary">
+                            {typeName}s ({items.length})
+                        </h3>
+                        <p className="text-xs text-secondaryText font-secondary">
+                            Drag to reorder • Upload order: <span className="font-bold">#{items.findIndex(i => !i.isExisting) + 1 || 1}</span> onwards are new
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                        {items.map((item, index) => (
+                            <div
+                                key={item.id}
+                                draggable
+                                onDragStart={() => handleDragStart(index)}
+                                onDragEnd={handleDragEndItem}
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (draggedIndex !== null && draggedIndex !== index) {
+                                        e.currentTarget.style.border = '2px dashed #3b82f6';
+                                    }
+                                }}
+                                onDragLeave={(e) => {
+                                    e.currentTarget.style.border = '';
+                                }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.currentTarget.style.border = '';
+                                    handleDropItem(index);
+                                }}
+                                className={`
+                  group relative aspect-square rounded-lg overflow-hidden cursor-move transition-all duration-200
+                  ${draggedIndex === index
+                                        ? 'opacity-50 scale-95 ring-2 ring-primary z-10'
+                                        : 'hover:scale-[1.02] shadow-md hover:shadow-lg border-2 border-transparent'
+                                    }
+                `}
+                            >
+                                {/* Media Preview - FIXED: Use img/video tags directly */}
+                                {type === 'image' ? (
+                                    <img
+                                        src={item.src}
+                                        alt={item.alt}
+                                        className="w-full h-full object-cover bg-gray-100"
+                                        onError={(e) => {
+                                            console.error('Image load error:', item.src);
+                                            e.currentTarget.src = '/fallback.png';
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="relative w-full h-full bg-gray-900">
+                                        <video
+                                            src={item.src}
+                                            className="w-full h-full object-cover"
+                                            controls={false}
+                                            preload="metadata"
+                                            onError={(e) => {
+                                                console.error('Video load error:', item.src);
+                                            }}
+                                        />
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <FileVideo className="w-8 h-8 text-white/70" />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Overlay */}
+                                <div className="absolute z-59 inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent 
+                transition-opacity duration-200">
+
+                                    <div className="absolute top-1 left-1 bg-primary text-white p-1 rounded-full text-xs font-semibold">
+                                        {index + 1}
+                                    </div>
+
+                                    {item.isExisting && (
+                                        <div className="absolute bottom-2 left-2 bg-green-600 text-white p-1 rounded text-[6px] ">
+                                            Exists
+                                        </div>
+                                    )}
+
+                                    {/* Delete Button */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRemoveItem(index);
+                                        }}
+                                        className="absolute bottom-1 right-1  bg-red-600 hover:bg-red-700 text-white rounded-full p-2 shadow-lg"
+                                        title={`Remove ${type}`}
+                                    >
+                                        <Trash2 className="w-2 h-2 " />
+                                    </button>
+                                </div>
+
+
+
+                                {/* Loading indicator for new files */}
+                                {!item.isExisting && (
+                                    <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="bg-black/70 text-white px-3 py-1 rounded-full text-xs">
+                                            New
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
+                        {/* Add more button */}
+                        {canAddMore && (
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="aspect-square rounded-lg border-2 border-dashed border-border-color flex items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group"
+                            >
+                                <div className="flex flex-col items-center gap-1">
+                                    <Plus className="w-6 h-6 text-secondaryText group-hover:text-primary transition-colors" />
+                                    <span className="text-sm font-medium text-secondaryText group-hover:text-primary transition-colors">
+                                        Add More
+                                    </span>
+                                </div>
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// -------------------------------------------------------------------------
+// Main Component
+// -------------------------------------------------------------------------
 const AddImage = () => {
     // -------------------------------------------------------------------------
     // 1. STATE FROM ROUTE – determines CREATE vs UPDATE
@@ -13,10 +354,8 @@ const AddImage = () => {
     const location = useLocation();
     const {
         tagkey: initialTagkey,
-        isUpdate = false          // <-- NEW: true = UPDATE, false = CREATE
+        isUpdate = false
     } = location.state || {};
-
-    // console.log("Received:", { initialTagkey, itemName, subItemName, isUpdate });
 
     // -------------------------------------------------------------------------
     // 2. CONTEXT
@@ -36,35 +375,27 @@ const AddImage = () => {
     const { themeMode } = useContext(MyContext);
     const navigate = useNavigate();
 
-    const imageInputRef = useRef(null);
-    const videoInputRef = useRef(null);
-
     // -------------------------------------------------------------------------
     // 3. LOCAL UI STATE
     // -------------------------------------------------------------------------
     const [formData, setFormData] = useState({
         tagKey: initialTagkey || '',
         description: '',
-        selectedImages: [],
-        selectedVideos: [],
     });
 
-    // console.log(formData ,'datain get')
+    // Combined media state for both existing and new files
+    const [combinedMedia, setCombinedMedia] = useState({
+        images: [],
+        videos: []
+    });
 
-    const [existingMedia, setExistingMedia] = useState({ images: [], videos: [] });
-
-    // console.log(existingMedia, 'datain get media')
-    const [isUpdateMode, setIsUpdateMode] = useState(isUpdate);   // <-- from state
+    const [isUpdateMode, setIsUpdateMode] = useState(isUpdate);
 
     const [uiState, setUiState] = useState({
         feedback: { error: '', success: '', info: '' },
-        showAllImages: false,
-        showAllVideos: false,
-        isDragOver: false,
-        snackbarOpen: false,
         uploadProgress: 0,
         isUploading: false,
-        dragType: null,
+        snackbarOpen: false,
     });
 
     // -------------------------------------------------------------------------
@@ -82,7 +413,7 @@ const AddImage = () => {
     };
 
     // -------------------------------------------------------------------------
-    // 5. FETCH EXISTING DATA (only in UPDATE mode)
+    // 5. FETCH EXISTING DATA (only in UPDATE mode) - UPDATED
     // -------------------------------------------------------------------------
     useEffect(() => {
         if (isUpdate && initialTagkey) {
@@ -93,30 +424,89 @@ const AddImage = () => {
                         getProductDetails(initialTagkey)
                     ]);
 
-                    // FIX 1: Use utils to parse raw image/video strings
-                    const images = mediaRes.images;
-                    const videos = mediaRes.videos;
+                    const existingImages = mediaRes.images || [];
+                    const existingVideos = mediaRes.videos || [];
 
-                    setExistingMedia({ images, videos });
+                    // Convert existing media to MediaItem format
+                    const imageItems = existingImages.map((path, index) => ({
+                        id: `existing-image-${index}-${path}`,
+                        src: getProductImages(path),
+                        alt: `Existing image ${index + 1}`,
+                        type: 'image' ,
+                        isExisting: true,
+                        serverPath: path,
+                    }));
 
-                    console.log(detailsRes, 'details')
+                    const videoItems = existingVideos.map((path, index) => ({
+                        id: `existing-video-${index}-${path}`,
+                        src: getProductVideos(path),
+                        alt: `Existing video ${index + 1}`,
+                        type: 'video' ,
+                        isExisting: true,
+                        serverPath: path,
+                    }));
 
-                    // Set description & tag key
+                    setCombinedMedia({
+                        images: imageItems,
+                        videos: videoItems,
+                    });
+
                     setFormData(prev => ({
                         ...prev,
                         description: detailsRes.Description || detailsRes?.[0]?.Description || '',
                         tagKey: initialTagkey
                     }));
 
-                    console.log("Loaded for update:", { images, videos, description: detailsRes.Description || detailsRes?.[0]?.Description });
+                    console.log("Loaded existing media:", {
+                        images: imageItems.length,
+                        videos: videoItems.length,
+                        description: detailsRes.Description || detailsRes?.[0]?.Description
+                    });
                 } catch (err) {
                     console.error('Failed to load existing data:', err);
+                    setFeedback('error', 'Failed to load existing product data');
                 }
             };
             fetchExisting();
         }
-    }, [isUpdate, initialTagkey, getMedia, getProductDetails,]);
+    }, [isUpdate, initialTagkey, getMedia, getProductDetails]);
 
+    // -------------------------------------------------------------------------
+    // 6. FEEDBACK HELPERS
+    
+    // Replace the prepareMediaForUpload function with this:
+    const prepareMediaForUpload = useCallback((mediaItems) => {
+        // Create array of ALL items in their current order
+        // For existing: serverPath, for new: null (will be uploaded separately)
+        const pathsArray = mediaItems.map((item) => {
+            if (item.isExisting) {
+                return item.serverPath;  // Existing file path
+            } else {
+                return null;  // New file - will be uploaded separately
+            }
+        });
+
+        // Filter out only new files for upload
+        const newFiles = mediaItems
+            .filter(item => !item.isExisting)
+            .map(item => item.file)
+            .filter(Boolean);
+
+        console.log(`📋 Prepared media order:`, {
+            totalItems: mediaItems.length,
+            existingPaths: pathsArray.filter(p => p !== null).length,
+            newFiles: newFiles.length,
+            pathsArray: pathsArray  // This shows the exact order with null for new files
+        });
+
+        return {
+            pathsArray,    // Array in current order: ['path1', null, 'path2', null, 'path3']
+            newFiles,      // New file objects for upload
+            totalCount: mediaItems.length,
+            existingCount: pathsArray.filter(p => p !== null).length,
+            newCount: newFiles.length,
+        };
+    }, []);
     // -------------------------------------------------------------------------
     // 6. FEEDBACK HELPERS
     // -------------------------------------------------------------------------
@@ -158,72 +548,38 @@ const AddImage = () => {
     }, []);
 
     // -------------------------------------------------------------------------
-    // 8. DRAG & DROP
+    // 8. MEDIA HANDLERS - UPDATED
     // -------------------------------------------------------------------------
-    const handleDragEnter = useCallback((e, type) => {
-        e.preventDefault();
-        setUiState(prev => ({ ...prev, isDragOver: true, dragType: type }));
+    const handleImagesChange = useCallback((images) => {
+        setCombinedMedia(prev => ({ ...prev, images }));
     }, []);
 
-    const handleDragLeave = useCallback((e) => {
-        e.preventDefault();
-        setUiState(prev => ({ ...prev, isDragOver: false, dragType: null }));
-    }, []);
-
-    const handleDragOver = useCallback((e) => { e.preventDefault(); }, []);
-
-    const handleDrop = useCallback((e, type) => {
-        e.preventDefault();
-        setUiState(prev => ({ ...prev, isDragOver: false, dragType: null }));
-        processFiles(Array.from(e.dataTransfer.files), type);
+    const handleVideosChange = useCallback((videos ) => {
+        setCombinedMedia(prev => ({ ...prev, videos }));
     }, []);
 
     // -------------------------------------------------------------------------
-    // 9. PROCESS SELECTED FILES
+    // 9. DELETE EXISTING MEDIA HANDLER
     // -------------------------------------------------------------------------
-    const processFiles = useCallback((files, type) => {
-        clearAllFeedback();
-        const validation = validateFiles(files, type);
-        if (!validation.isValid) {
-            setFeedback('error', validation.error);
-            return;
-        }
-
-        const field = type === 'image' ? 'selectedImages' : 'selectedVideos';
-        setFormData(prev => ({ ...prev, [field]: files }));
-        setFeedback('success', `${files.length} ${type}(s) selected.`, 2000);
-    }, [validateFiles, clearAllFeedback, setFeedback]);
-
-    const handleFileChange = useCallback((e, type) => {
-        processFiles(Array.from(e.target.files || []), type);
-    }, [processFiles]);
-
-    const removeFile = useCallback((index, type) => {
-        const field = type === 'image' ? 'selectedImages' : 'selectedVideos';
-        setFormData(prev => ({ ...prev, [field]: prev[field].filter((_, i) => i !== index) }));
-        setFeedback('info', `${type} removed.`, 1500);
-    }, [setFeedback]);
-
-    // -------------------------------------------------------------------------
-    // 10. DELETE EXISTING MEDIA
-    // -------------------------------------------------------------------------
-    const deleteExistingMedia = useCallback(async (path, type) => {
-        if (!window.confirm(`Delete this ${type}?`)) return;
-
+    const handleDeleteExisting = useCallback(async (type, path) => {
+        console.log(path , 'neededpath')
         try {
             await deleteMedia(formData.tagKey, path, type);
-            setExistingMedia(prev => ({
+
+            // Remove from combined media
+            setCombinedMedia(prev => ({
                 ...prev,
-                [type + 's']: prev[type + 's'].filter(p => p !== path)
+                [type + 's']: prev[type + 's'].filter(item => item.serverPath !== path)
             }));
-            setFeedback('success', `${type} deleted`);
+
+            setFeedback('success', `${type} deleted successfully`);
         } catch (err) {
-            setFeedback('error', err.message || 'Delete failed');
+            setFeedback('error', err.message || 'Failed to delete media');
         }
     }, [formData.tagKey, deleteMedia, setFeedback]);
 
     // -------------------------------------------------------------------------
-    // 11. INPUT CHANGE
+    // 10. INPUT CHANGE
     // -------------------------------------------------------------------------
     const handleInputChange = useCallback((field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -231,103 +587,171 @@ const AddImage = () => {
     }, [clearAllFeedback]);
 
     // -------------------------------------------------------------------------
-    // 12. FORM VALIDATION
+    // 11. FORM VALIDATION - UPDATED
     // -------------------------------------------------------------------------
-    // ────────────────────────────────────────────────────────────────────────
-    // 12. FORM VALIDATION – now counts existing + new media
-    // ────────────────────────────────────────────────────────────────────────
+    // In validateForm - Update the images validation section:
+    // Update your validateForm function:
     const validateForm = useCallback(() => {
         const errors = [];
 
-        const { tagKey, description, selectedImages, selectedVideos } = formData;
+        const { tagKey, description } = formData;
+        const { images, videos } = combinedMedia;
 
-        // ── Tag Key ────────────────────────────────────────────────────────
-        if (!tagKey.trim()) errors.push('Tag Key is required');
-        else if (tagKey.trim().length < CONFIG.minTagLength)
+        // 🔥 STEP 1: Clean valid image entries
+        const cleanImages = images.filter(img =>
+            (img.isExisting && img.serverPath) ||
+            (img.file instanceof File)
+        );
+
+        // 🔥 STEP 2: Count valid images only
+        const totalImages = cleanImages.length;
+
+        // NEW images for validation
+        const newImages = cleanImages.filter(img => !img.isExisting);
+
+        // ── Tag Key ───────────────────────────
+        if (!tagKey.trim()) {
+            errors.push('Tag Key is required');
+        } else if (tagKey.trim().length < CONFIG.minTagLength) {
             errors.push(`Tag Key must be ≥ ${CONFIG.minTagLength} chars`);
+        }
 
-        // ── Description (optional) ────────────────────────────────────────
-        if (description.trim() && description.trim().length < CONFIG.minDescriptionLength)
+        // ── Description optional ──────────────
+        if (description.trim() && description.trim().length < CONFIG.minDescriptionLength) {
             errors.push(`Description must be ≥ ${CONFIG.minDescriptionLength} chars`);
+        }
 
-        // ── Images ────────────────────────────────────────────────────────
-        const totalImages = existingMedia.images.length + selectedImages.length;
+        // ── Images (min/max) ──────────────────
         if (totalImages < CONFIG.minImages) {
-            errors.push(`You need at least ${CONFIG.minImages} images in total.`);
-        }
-        if (totalImages > CONFIG.maxImages) {
-            errors.push(`Maximum ${CONFIG.maxImages} images allowed (old + new).`);
+            errors.push(
+                `You need at least ${CONFIG.minImages} images. Currently have ${totalImages}.`
+            );
         }
 
-        // Validate the **new** files only (type, size, etc.)
-        if (selectedImages.length > 0) {
-            const v = validateFiles(selectedImages, 'image');
+        if (totalImages > CONFIG.maxImages) {
+            errors.push(
+                `Maximum ${CONFIG.maxImages} images allowed. Currently have ${totalImages}.`
+            );
+        }
+
+        // ── Validate NEW image files only ─────
+        const newImageFiles = newImages
+            .filter(img => img.file instanceof File)
+            .map(img => img.file);
+
+        if (newImageFiles.length > 0) {
+            const v = validateFiles(newImageFiles, "image");
             if (!v.isValid) errors.push(v.error);
         }
 
-        // ── Videos (optional) ─────────────────────────────────────────────
-        const totalVideos = existingMedia.videos.length + selectedVideos.length;
-        if (totalVideos > CONFIG.maxVideos) {
+        // ── Videos (same logic) ───────────────
+        const cleanVideos = videos.filter(v =>
+            (v.isExisting && v.serverPath) ||
+            (v.file instanceof File)
+        );
+
+        if (cleanVideos.length > CONFIG.maxVideos) {
             errors.push(`Maximum ${CONFIG.maxVideos} videos allowed.`);
         }
-        if (selectedVideos.length > 0) {
-            const v = validateFiles(selectedVideos, 'video');
+
+        const newVideoFiles = cleanVideos
+            .filter(v => !v.isExisting && v.file instanceof File)
+            .map(v => v.file);
+
+        if (newVideoFiles.length > 0) {
+            const v = validateFiles(newVideoFiles, 'video');
             if (!v.isValid) errors.push(v.error);
         }
-
+        console.log("RAW IMAGES:", images);
+        console.log("CLEAN IMAGES:", cleanImages);
+        console.log("newImages:", newImages);
         return { isValid: errors.length === 0, errors };
-    }, [
-        formData,
-        existingMedia.images.length,
-        existingMedia.videos.length,
-        validateFiles,
-    ]);
+    }, [formData, combinedMedia, validateFiles]);
+
 
     // -------------------------------------------------------------------------
-    // 13. RESET FORM
+    // 12. RESET FORM - UPDATED
     // -------------------------------------------------------------------------
     const resetForm = useCallback(() => {
+        // Clean up object URLs for new files only
+        [...combinedMedia.images, ...combinedMedia.videos].forEach(item => {
+            if (!item.isExisting && item.src && item.src.startsWith('blob:')) {
+                URL.revokeObjectURL(item.src);
+            }
+        });
+
         setFormData({
             tagKey: initialTagkey || '',
             description: '',
-            selectedImages: [],
-            selectedVideos: [],
         });
-        setUiState({
+
+        // Keep existing media in update mode, clear in create mode
+        if (isUpdateMode && initialTagkey) {
+            // Keep only existing media
+            setCombinedMedia({
+                images: combinedMedia.images.filter(img => img.isExisting),
+                videos: combinedMedia.videos.filter(vid => vid.isExisting),
+            });
+        } else {
+            setCombinedMedia({ images: [], videos: [] });
+        }
+
+        setUiState(prev => ({
+            ...prev,
             feedback: { error: '', success: '', info: '' },
-            showAllImages: false,
-            showAllVideos: false,
-            isDragOver: false,
-            snackbarOpen: false,
             uploadProgress: 0,
             isUploading: false,
-            dragType: null,
-        });
-        if (imageInputRef.current) imageInputRef.current.value = '';
-        if (videoInputRef.current) videoInputRef.current.value = '';
-    }, [initialTagkey]);
+            snackbarOpen: false,
+        }));
+
+        setFeedback('info', 'Form reset successfully', 2000);
+    }, [initialTagkey, isUpdateMode, combinedMedia, setFeedback]);
 
     // -------------------------------------------------------------------------
-    // 14. MAIN SUBMIT (CREATE or UPDATE)
+    // 13. MAIN SUBMIT (CREATE or UPDATE) - UPDATED
+    // -------------------------------------------------------------------------
+    // In handleUpload function - replace lines 406-439:
     const handleUpload = useCallback(async () => {
         clearAllFeedback();
-        const validation = validateForm();
-        if (!validation.isValid) {
-            setFeedback('error', `Fix: ${validation.errors.join(', ')}`);
-            return;
-        }
+        // const validation = validateForm();
+        // if (!validation.isValid) {
+        //     setFeedback('error', `Fix: ${validation.errors.join(', ')}`);
+        //     return;
+        // }
 
         setUiState(prev => ({ ...prev, isUploading: true, uploadProgress: 0 }));
 
         try {
+            // Prepare media data - returns paths array with nulls for new files
+            const imagesData = prepareMediaForUpload(combinedMedia.images);
+            const videosData = prepareMediaForUpload(combinedMedia.videos);
+
             
+
+
             const fd = createFormData(
                 isUpdateMode,
                 formData.tagKey.trim(),
-                formData.selectedImages,
-                formData.selectedVideos,
-                formData.description.trim()
+                imagesData.newFiles,          // New images to upload
+                videosData.newFiles,          // New videos to upload
+                formData.description.trim(),
+                {}, // trendingOptions
+                {}, // productAttributes
+                imagesData.pathsArray,        // Ordered array with paths & nulls
+                videosData.pathsArray         // Ordered array with paths & nulls
             );
+
+            // Log FormData
+            console.log('📦 Final FormData:');
+            for (let [key, value] of fd.entries()) {
+                if (value instanceof File) {
+                    console.log(`  ${key}: [File] ${value.name} (${value.size} bytes)`);
+                } else if (key === 'imageOrder' || key === 'videoOrder') {
+                    console.log(`  ${key}: ${value.substring(0, 100)}...`); // Truncate long JSON
+                } else {
+                    console.log(`  ${key}: ${value}`);
+                }
+            }
 
             // REAL PROGRESS CALLBACK
             const onProgress = (percent) => {
@@ -347,19 +771,20 @@ const AddImage = () => {
             setFeedback('success', isUpdateMode ? 'Product updated!' : 'Product uploaded!');
 
             localStorage.setItem('productTagkey', formData.tagKey);
-            resetForm();
 
             setTimeout(() => {
                 navigate(`/admin/product/manage/single`, { state: { tagkey: formData.tagKey } });
             }, 1500);
 
         } catch (err) {
+            console.error('❌ Upload Error:', err);
             setUiState(prev => ({ ...prev, isUploading: false, uploadProgress: 0 }));
             setFeedback('error', err.message || 'Operation failed');
         }
     }, [
         formData,
         isUpdateMode,
+        combinedMedia,
         validateForm,
         createFormData,
         updateAllFields,
@@ -367,21 +792,19 @@ const AddImage = () => {
         clearAllFeedback,
         setFeedback,
         navigate,
-        resetForm
+        prepareMediaForUpload,
     ]);
     // -------------------------------------------------------------------------
-    // 15. COMPLETION STATUS (for button)
+    // 14. COMPLETION STATUS (for button) - UPDATED
     // -------------------------------------------------------------------------
     const getCompletionStatus = useCallback(() => {
-        const { tagKey, description, selectedImages, selectedVideos } = formData;
-
-        const totalImages = existingMedia.images.length + selectedImages.length;
-        const totalVideos = existingMedia.videos.length + selectedVideos.length;
+        const { tagKey, description } = formData;
+        const { images, videos } = combinedMedia;
 
         const required = [
             !!tagKey.trim() && tagKey.trim().length >= CONFIG.minTagLength,
             !!description.trim() && description.trim().length >= CONFIG.minDescriptionLength,
-            totalImages >= CONFIG.minImages,
+            images.length >= CONFIG.minImages,
             // videos are optional → always true
             true,
         ];
@@ -394,19 +817,33 @@ const AddImage = () => {
             text: completed === total ? 'Ready' : completed === 0 ? 'Not Started' : 'In Progress',
             count: `${completed}/${total}`,
         };
-    }, [formData, isUpdateMode, existingMedia.images.length, existingMedia.videos.length]);
+    }, [formData, combinedMedia]);
 
     const completionStatus = getCompletionStatus();
 
     // -------------------------------------------------------------------------
-    // 16. UI HELPERS (unchanged from your original)
+    // 15. COMPONENT CLEANUP - UPDATED
+    // -------------------------------------------------------------------------
+    useEffect(() => {
+        return () => {
+            // Clean up object URLs for new files only
+            [...combinedMedia.images, ...combinedMedia.videos].forEach(item => {
+                if (!item.isExisting && item.src && item.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(item.src);
+                }
+            });
+        };
+    }, [combinedMedia]);
+
+    // -------------------------------------------------------------------------
+    // 16. UI HELPERS
     // -------------------------------------------------------------------------
     const getStatusStyles = (status) => {
-        const base = "inline-flex items-center gap-1 px-1 py-1 rounded-full text-xs border";
+        const base = "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border";
         switch (status) {
-            case 'complete': return `${base} bg-status-completed/10 text-status-completed border-status-completed/20`;
-            case 'incomplete': return `${base} bg-status-cancelled/10 text-status-cancelled border-status-cancelled/20`;
-            case 'partial': return `${base} bg-status-pending/10 text-status-pending border-status-pending/20`;
+            case 'complete': return `${base} bg-green-100 text-green-800 border-green-200`;
+            case 'incomplete': return `${base} bg-red-100 text-red-800 border-red-200`;
+            case 'partial': return `${base} bg-yellow-100 text-yellow-800 border-yellow-200`;
             default: return base;
         }
     };
@@ -414,438 +851,336 @@ const AddImage = () => {
     const getStatusIcon = (status) => {
         switch (status) {
             case 'complete':
-                return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>;
+                return <CheckCircle className="w-4 h-4" />;
             case 'incomplete':
-                return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>;
+                return <AlertTriangle className="w-4 h-4" />;
             case 'partial':
-                return <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>;
+                return <AlertCircle className="w-4 h-4" />;
             default: return null;
         }
     };
 
-    const FileList = ({ files, type, showAll, onToggleShowAll, onRemove }) => {
-        if (files.length === 0) return null;
-        const display = showAll ? files : files.slice(0, 8);
-        const hasMore = files.length > 8;
-
-        return (
-            <div className="mt-2">
-                <h4 className="text-xs font-semibold text-primaryText mb-spacing-xs font-primary">
-                    Selected {type === 'image' ? 'Images' : 'Videos'} ({files.length})
-                </h4>
-                <div className={`flex flex-wrap gap-spacing-sm ${showAll ? '' : 'max-h-48 overflow-y-auto'}`}>
-                    {display.map((file, i) => (
-                        <div key={i} className="flex items-center justify-between px-spacing-sm py-spacing-xs border border-border-color rounded-lg bg-background-color">
-                            <span className="text-xs text-primaryText truncate max-w-[120px] sm:max-w-[200px] font-primary">{file.name}</span>
-                            <button onClick={() => onRemove(i, type)} className="text-error hover:text-error/80 ml-spacing-sm p-1">
-                                <svg className="w-3 h-3" style={{ color: 'var(--error-color)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
-                        </div>
-                    ))}
-                </div>
-                {hasMore && (
-                    <button onClick={onToggleShowAll} className="text-primary hover:text-primary/80 text-xs font-medium mt-spacing-sm font-primary">
-                        {showAll ? 'Show Less' : `View All ${files.length} Files`}
-                    </button>
-                )}
-            </div>
-        );
-    };
-
-    const ExistingMediaGrid = ({ items, type }) => {
-        if (!items || items.length === 0) return null;
-
-        const isImage = type === 'image';
-        const fallbackSrc = isImage ? '/fallback.png' : '/fallback-video.mp4';
-
-        return (
-            <div className="mt-4">
-                <h4 className="text-xs font-semibold text-primaryText mb-2 font-primary">
-                    Existing {isImage ? 'Images' : 'Videos'} ({items.length})
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {items.map((url, i) => (
-                        <div
-                            key={i}
-                            className="relative group rounded-lg overflow-hidden border border-border-color bg-gray-100"
-                        >
-                            {isImage ? (
-                                <img
-                                    src={getProductImages(url)}  // ← Already full URL
-                                    alt={`Existing ${type} ${i + 1}`}
-                                    className="w-full h-28 object-cover"
-                                    onError={(e) => { e.currentTarget.src = fallbackSrc; }}
-                                />
-                            ) : (
-                                <video
-                                    src={getProductVideos(url)}
-                                    className="w-full h-28 object-cover"
-                                    controls={true}  // ← play button
-                                    onError={(e) => { e.currentTarget.src = fallbackSrc; }}
-                                />
-                            )}
-
-                            {/* Delete Overlay – fixed hover */}
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (window.confirm(`Delete this ${type}?`)) {
-                                        deleteExistingMedia(url, type);
-                                    }
-                                }}
-                                className="absolute top-1 right-1 bg-[var(--error-color)] text-white p-1.5 rounded-full hover:scale-110 transition-transform shadow-md z-10"
-                                title="Delete"
-                            >
-                                <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    };
-
-    const UploadArea = ({ type, files, inputRef, onFileChange, onDragEnter, onDragLeave, onDragOver, onDrop }) => {
-        const isActive = uiState.isDragOver && uiState.dragType === type;
-        const hasFiles = files.length > 0;
-        const typeName = type === 'image' ? 'Image' : 'Video';
-        const accept = type === 'image' ? 'image/jpeg,image/png,image/webp' : 'video/mp4,video/mov,video/avi,video/webm';
-        const fileTypes = type === 'image' ? 'JPG, PNG, WEBP' : 'MP4, MOV, AVI, WEBM';
-        const maxFiles = type === 'image' ? CONFIG.maxImages : CONFIG.maxVideos;
-        const minFiles = type === 'image' ? CONFIG.minImages : 0;
-
-        return (
-            <div
-                className={`border-1 border-solid rounded-lg p-1 text-center cursor-pointer transition-all duration-300 ${isActive
-                    ? 'border-primary bg-primary/10'
-                    : hasFiles
-                        ? 'border-success bg-success/10'
-                        : 'border-border-color bg-background-color hover:border-primary hover:bg-primary/10'
-                    }`}
-                onClick={() => inputRef.current?.click()}
-                onDragEnter={(e) => onDragEnter(e, type)}
-                onDragLeave={onDragLeave}
-                onDragOver={onDragOver}
-                onDrop={(e) => onDrop(e, type)}
-            >
-                <input ref={inputRef} type="file" accept={accept} multiple onChange={(e) => onFileChange(e, type)} className="hidden" />
-                {hasFiles ? (
-                    <>
-                        <svg className="w-5 h-5 text-success mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <h3 className="text-sm font-semibold text-primaryText mb-1 font-primary">{files.length} {typeName}{files.length !== 1 ? 's' : ''} Selected</h3>
-                        <p className="text-secondaryText text-xs font-secondary">Click or drag to add more</p>
-                    </>
-                ) : (
-                    <>
-                        <svg className="w-5 h-5 text-primary mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <h3 className="text-sm font-semibold text-primaryText mb-1 font-primary">
-                            {isUpdateMode ? `Add New ${typeName}s` : `Upload Product ${typeName}s`}
-                        </h3>
-                        <p className="text-secondaryText text-xs font-secondary">
-                            {fileTypes} • {minFiles > 0 ? `${minFiles}-${maxFiles}` : `Max ${maxFiles}`} files • Max 50MB each
-                        </p>
-                    </>
-                )}
-            </div>
-        );
-    };
-
     // -------------------------------------------------------------------------
-    // 17. RENDER
+    // 17. MAIN RENDER
     // -------------------------------------------------------------------------
     return (
-        <div className="py-8 max-w-8xl px-3 bg-[var(--background-color)]">
+        <div className="max-w-8xl mt-6 px-3">
 
             {/* Progress Overlay */}
             {uiState.isUploading && (
-                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                    <div className="bg-[var(--card-background-color)] rounded-2xl p-8 text-center max-w-md w-full">
-                        <div className="w-12 h-12 border-4 border-[var(--primary-color)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                        <h3 className="text-lg font-semibold text-[var(--primary-text-color)] mb-4">
-                            {isUpdateMode ? 'Updating...' : 'Uploading...'}
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-3 text-center max-w-md w-full shadow-xl">
+                        <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-2" />
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            {isUpdateMode ? 'Updating Product...' : 'Uploading Product...'}
                         </h3>
-                        <div className="w-full bg-[var(--border-color)] rounded-full h-2 mb-2 overflow-hidden">
-                            <div className="bg-[var(--primary-color)] h-full transition-all duration-300" style={{ width: `${uiState.uploadProgress}%` }}></div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2 overflow-hidden">
+                            <div
+                                className="bg-primary h-full transition-all duration-300 ease-out"
+                                style={{ width: `${uiState.uploadProgress}%` }}
+                            ></div>
                         </div>
-                        <p className="text-sm text-[var(--secondary-text-color)]">{uiState.uploadProgress}% Complete</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                            {uiState.uploadProgress}% Complete • Please don't close this window
+                        </p>
                     </div>
                 </div>
             )}
 
-            <div className=" mx-auto">
-                <div className="border overflow-hidden">
-                    <div className="p-2 lg:p-1">
+            <div className="mx-auto max-w-8xl">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                    <div className="p-2 lg:p-8">
 
                         {/* Header */}
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-1">
-                            <div>
-                                <h1 className="text-lg font-bold text-[var(--primary-text-color)] font-[var(--font-primary)]">
-                                    {isUpdateMode ? 'Update Product Media' : 'Add Product Media'}
-                                </h1>
-                                <p className="text-sm text-[var(--secondary-text-color)] font-[var(--font-secondary)] mt-1">
-                                    {isUpdateMode ? `Tagkey: ${formData.tagKey}` : 'Upload images and videos for your product'}
-                                </p>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-lg">
+                                    {isUpdateMode ? (
+                                        <Edit className="w-5 h-5 text-primary" />
+                                    ) : (
+                                        <Plus className="w-5 h-5 text-primary" />
+                                    )}
+                                </div>
+                                <div>
+                                    <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                                        {isUpdateMode ? 'Update Product Media' : 'Add Product Media'}
+                                    </h1>
+                                    <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                                        {isUpdateMode
+                                            ? `Editing: ${formData.tagKey || 'Product'} • Drag to reorder existing and new files`
+                                            : 'Upload and arrange images and videos for your product'
+                                        }
+                                    </p>
+                                </div>
                             </div>
                             <div className={getStatusStyles(completionStatus.status)}>
                                 {getStatusIcon(completionStatus.status)}
-                                <span className="text-xs font-medium">
+                                <span className="text-xs font-semibold">
                                     {completionStatus.text} ({completionStatus.count})
                                 </span>
                             </div>
                         </div>
 
-                        {/* Feedback */}
-                        <div className="space-y-2 mb-2">
+                        {/* Feedback Messages */}
+                        <div className="space-y-3 mb-2">
                             {uiState.feedback.error && (
-                                <div className="bg-[var(--error-color)]/10 border border-[var(--error-color)]/20 rounded-lg p-3 flex justify-between items-center">
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-3 h-3 text-[var(--error-color)]" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="text-[var(--error-color)] text-sm font-medium font-[var(--font-primary)]">
-                                            {uiState.feedback.error}
-                                        </span>
+                                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2 flex justify-between items-center">
+                                    <div className="flex items-center gap-1">
+                                        <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                        <div>
+                                            <span className="text-red-800 dark:text-red-200 text-xs font-medium">
+                                                {uiState.feedback.error}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <button onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, error: '' } }))} className="text-[var(--error-color)] hover:opacity-80">
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
+                                    <button
+                                        onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, error: '' } }))}
+                                        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+                                    >
+                                        <X className="w-5 h-5" />
                                     </button>
                                 </div>
                             )}
                             {uiState.feedback.success && (
-                                <div className="bg-[var(--success-color)]/10 border border-[var(--success-color)]/20 rounded-lg p-3 flex justify-between items-center">
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-3 h-3 text-[var(--success-color)]" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="text-[var(--success-color)] text-sm font-medium font-[var(--font-primary)]">
-                                            {uiState.feedback.success}
-                                        </span>
-                                    </div>
+                                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2 flex items-center gap-1">
+                                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                    <span className="text-green-800 text-xs dark:text-green-200 font-medium">
+                                        {uiState.feedback.success}
+                                    </span>
                                 </div>
                             )}
                             {uiState.feedback.info && (
-                                <div className="bg-[var(--info-color)]/10 border border-[var(--info-color)]/20 rounded-lg p-3 flex justify-between items-center">
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-3 h-3 text-[var(--info-color)]" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="text-[var(--info-color)] text-sm font-medium font-[var(--font-primary)]">
-                                            {uiState.feedback.info}
-                                        </span>
-                                    </div>
+                                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 flex items-center gap-1">
+                                    <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                    <span className="text-blue-800 text-xs dark:text-blue-200 font-medium">
+                                        {uiState.feedback.info}
+                                    </span>
                                 </div>
                             )}
                         </div>
 
-                        {/* GRID */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                        {/* Main Form Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-1">
 
-                            {/* LEFT – Basic Info */}
+                            {/* LEFT – Basic Information */}
                             <div className="space-y-2">
-                                <div className="flex items-center gap-1 mb-2">
-                                    <svg className="w-3 h-3 text-[var(--primary-color)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <h2 className="text-sm mt-1.5 font-semibold text-[var(--primary-text-color)] font-[var(--font-primary)]">
-                                        Basic Information
-                                    </h2>
-                                </div>
-
-                                <div className="grid grid-cols-1 gap-2">
-                                    <div>
-                                        <label className="block text-sm font-medium text-[var(--primary-text-color)] mb-2 font-[var(--font-primary)]">
-                                            Product Tag Key *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            placeholder="e.g., 125612"
-                                            value={formData.tagKey}
-                                            onChange={e => handleInputChange('tagKey', e.target.value)}
-                                            className="w-full px-2 py-2 border border-[var(--border-color)] rounded-md text-[var(--primary-text-color)] bg-[var(--card-background-color)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent transition-all text-sm font-[var(--font-primary)]"
-                                            disabled={isUpdateMode}
-                                        />
+                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2 border border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center gap-1">
+                                        <FileText className="w-4 h-4 text-primary" />
+                                        <h2 className="text-sm mt-1.5 font-semibold text-gray-900 dark:text-white">
+                                            Basic Information
+                                        </h2>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-[var(--primary-text-color)] mb-2 font-[var(--font-primary)]">
-                                            Product Description
-                                        </label>
-                                        <textarea
-                                            placeholder="Provide a detailed description..."
-                                            value={formData.description}
-                                            onChange={e => handleInputChange('description', e.target.value)}
-                                            rows={4}
-                                            className="w-full px-2 py-2 border border-[var(--border-color)] rounded-md text-[var(--primary-text-color)] bg-[var(--card-background-color)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent transition-all text-sm font-[var(--font-primary)] resize-none"
-                                        />
+
+                                    <div className="space-y-5">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Product Tag Key *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g., PROD-001-2024"
+                                                value={formData.tagKey}
+                                                onChange={e => handleInputChange('tagKey', e.target.value)}
+                                                className="w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                                disabled={isUpdateMode}
+                                            />
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                                Unique identifier for this product
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Product Description
+                                            </label>
+                                            <textarea
+                                                placeholder="Describe your product in detail..."
+                                                value={formData.description}
+                                                onChange={e => handleInputChange('description', e.target.value)}
+                                                rows={5}
+                                                className="w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
+                                            />
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                                Optional but recommended for better product presentation
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    {isUpdateMode && <ExistingMediaGrid items={existingMedia.images} type="image" />}
-                                </div>
-
                             </div>
 
-                            {/* RIGHT – Media */}
-                            <div className="space-y-4">
-
-                                {/* Images */}
-                                <div>
-                                    <div className="flex items-center gap-1 mb-2">
-                                        <svg className="w-3 h-3 text-[var(--primary-color)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        <h2 className="text-sm mt-1.5 font-semibold text-[var(--primary-text-color)] font-[var(--font-primary)]">
+                            {/* RIGHT – Media Upload & Management */}
+                            <div className="space-y-2">
+                                {/* Images Section */}
+                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2 border border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center gap-1 mb-1">
+                                        <Image className="w-4 h-4 text-primary" />
+                                        <h2 className="text-sm mt-1.5 font-semibold text-gray-900 dark:text-white">
                                             Product Images *
                                         </h2>
+                                        <span className="ml-auto text-xs font-medium px-2 py-1 bg-blue-500/10 text-blue-500 rounded-full">
+                                            {combinedMedia.images.filter(img => !img.isExisting).length} new • {combinedMedia.images.filter(img => img.isExisting).length} existing
+                                        </span>
                                     </div>
 
+                                    <div className="mb-2">
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                            Minimum {CONFIG.minImages} images required • Maximum {CONFIG.maxImages} total • Drag to reorder
+                                        </p>
+                                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-500 gap-4">
+                                            <div className="flex items-center gap-1">
+                                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                                <span>Existing files</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                                <span>New uploads</span>
+                                            </div>
+                                        </div>
+                                    </div>
 
-
-                                    <UploadArea
+                                    <DragDropMedia
+                                        items={combinedMedia.images}
+                                        onItemsChange={handleImagesChange}
+                                        maxItems={CONFIG.maxImages}
+                                        accept="image/jpeg,image/png,image/webp"
                                         type="image"
-                                        files={formData.selectedImages}
-                                        inputRef={imageInputRef}
-                                        onFileChange={handleFileChange}
-                                        onDragEnter={handleDragEnter}
-                                        onDragLeave={handleDragLeave}
-                                        onDragOver={handleDragOver}
-                                        onDrop={handleDrop}
-                                    />
-                                    <FileList
-                                        files={formData.selectedImages}
-                                        type="image"
-                                        showAll={uiState.showAllImages}
-                                        onToggleShowAll={() => setUiState(prev => ({ ...prev, showAllImages: !prev.showAllImages }))}
-                                        onRemove={removeFile}
+                                        onDeleteExisting={(path) => handleDeleteExisting('image', path)}
                                     />
                                 </div>
 
-                                {/* Videos */}
-                                <div>
-                                    <div className="flex items-center gap-1 mb-1">
-                                        <svg className="w-3 h-3 text-[var(--primary-color)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                        </svg>
-                                        <h2 className="text-sm mt-1.5 font-semibold text-[var(--primary-text-color)] font-[var(--font-primary)]">
+                                {/* Videos Section */}
+                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2 border border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Video className="w-4 h-4 text-primary" />
+                                        <h2 className="text-sm mt-1.5 font-semibold text-gray-900 dark:text-white">
                                             Product Videos
                                         </h2>
+                                        <span className="ml-auto text-xs font-medium px-2 py-1 bg-blue-500/10 text-blue-500 rounded-full">
+                                            {combinedMedia.videos.filter(vid => !vid.isExisting).length} new • {combinedMedia.videos.filter(vid => vid.isExisting).length} existing
+                                        </span>
                                     </div>
 
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                        Optional • Maximum {CONFIG.maxVideos} total • Drag to reorder
+                                    </p>
 
-
-                                    <UploadArea
+                                    <DragDropMedia
+                                        items={combinedMedia.videos}
+                                        onItemsChange={handleVideosChange}
+                                        maxItems={CONFIG.maxVideos}
+                                        accept="video/mp4,video/mov,video/avi,video/webm"
                                         type="video"
-                                        files={formData.selectedVideos}
-                                        inputRef={videoInputRef}
-                                        onFileChange={handleFileChange}
-                                        onDragEnter={handleDragEnter}
-                                        onDragLeave={handleDragLeave}
-                                        onDragOver={handleDragOver}
-                                        onDrop={handleDrop}
+                                        onDeleteExisting={(path) => handleDeleteExisting('video', path)}
                                     />
-                                    <FileList
-                                        files={formData.selectedVideos}
-                                        type="video"
-                                        showAll={uiState.showAllVideos}
-                                        onToggleShowAll={() => setUiState(prev => ({ ...prev, showAllVideos: !prev.showAllVideos }))}
-                                        onRemove={removeFile}
-                                    />
-                                </div>
-                                <div>
-                                    {isUpdateMode && <ExistingMediaGrid items={existingMedia.videos} type="video" />}
                                 </div>
                             </div>
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-2 justify-center mt-5">
-                            <button
-                                onClick={resetForm}
-                                disabled={uiState.isUploading}
-                                className="w-full sm:w-auto px-2 py-1.5 border border-[var(--primary-color)] text-[var(--primary-color)] rounded-lg font-semibold hover:bg-[var(--primary-color)]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 text-sm font-[var(--font-primary)]"
-                            >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Reset Form
-                            </button>
-                            <button
-                                onClick={handleUpload}
-                                disabled={uiState.isUploading || completionStatus.status !== 'complete'}
-                                className="w-full sm:w-auto px-2 py-1.5 bg-[var(--primary-color)] text-white rounded-lg font-semibold hover:bg-[var(--primary-color)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 text-sm font-[var(--font-primary)]"
-                            >
-                                {uiState.isUploading ? (
-                                    <>
-                                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        {isUpdateMode ? 'Updating...' : 'Uploading...'}
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                        </svg>
-                                        {isUpdateMode ? 'Update Product' : 'Upload Product'}
-                                    </>
-                                )}
-                            </button>
+                        <div className="mt-3 pt-2 ">
+                            <div className="flex flex-col sm:flex-row gap-2 justify-between">
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <button
+                                        onClick={resetForm}
+                                        disabled={uiState.isUploading}
+                                        className="px-2 py-1 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm flex items-center justify-center gap-1"
+                                    >
+                                        <RefreshCw className="w-4 h-4" />
+                                        Reset Form
+                                    </button>
+                                    <button
+                                        onClick={() => navigate(-1)}
+                                        className="px-2 py-1 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 flex items-center text-sm justify-center gap-1"
+                                    >
+                                        <X className="w-4 h-4" />
+                                        Cancel
+                                    </button>
+                                </div>
+
+                                <button
+                                    onClick={handleUpload}
+                                    disabled={uiState.isUploading || completionStatus.status !== 'complete'}
+                                    className={`
+                                        px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-3 text-sm
+                                        ${uiState.isUploading || completionStatus.status !== 'complete'
+                                            ? 'bg-gray-400 dark:bg-gray-700 text-gray-300 cursor-not-allowed'
+                                            : 'bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl'
+                                        }
+                                    `}
+                                >
+                                    {uiState.isUploading ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            {isUpdateMode ? 'Updating...' : 'Uploading...'}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="w-5 h-5" />
+                                            {isUpdateMode ? 'Update Product' : 'Upload Product'}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Validation Status */}
-                        <div className="mt-4 text-center">
-                            <h3 className="text-sm font-semibold text-[var(--primary-text-color)] mb-2 font-[var(--font-primary)]">
-                                Validation Status
+                        {/* Validation Summary */}
+                        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white ">
+                                Validation Summary
                             </h3>
-                            <div className="flex flex-wrap gap-1 justify-center">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                                 {[
                                     {
                                         label: 'Tag Key',
                                         valid: formData.tagKey.trim().length >= CONFIG.minTagLength,
+                                        required: true,
+                                        description: `≥ ${CONFIG.minTagLength} characters`,
                                     },
                                     {
                                         label: 'Description',
                                         valid: formData.description.trim().length >= CONFIG.minDescriptionLength,
+                                        required: false,
+                                        description: `Optional or ≥ ${CONFIG.minDescriptionLength} chars`,
                                     },
                                     {
-                                        label: `Images (${existingMedia.images.length + formData.selectedImages.length}/${CONFIG.minImages}+)`,
-                                        valid: (existingMedia.images.length + formData.selectedImages.length) >= CONFIG.minImages,
+                                        label: 'Images',
+                                        valid: combinedMedia.images.length >= CONFIG.minImages,
+                                        required: true,
+                                        description: `${combinedMedia.images.length}/${CONFIG.minImages}+ (${CONFIG.maxImages} max)`,
                                     },
                                     {
-                                        label: `Videos (${existingMedia.videos.length + formData.selectedVideos.length})`,
-                                        valid: true,
-                                        optional: true,
+                                        label: 'Videos',
+                                        valid: combinedMedia.videos.length < CONFIG.maxVideos,
+                                        required: false,
+                                        description: `${combinedMedia.videos.length}/${CONFIG.maxVideos} max`,
                                     },
-                                ].map(({ label, valid, optional }, i) => (
-                                    <span
+                                ].map(({ label, valid, required, description }, i) => (
+                                    <div
                                         key={i}
-                                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium font-[var(--font-primary)]
-                    ${valid
-                                                ? optional
-                                                    ? 'bg-[var(--info-color)]/10 text-[var(--info-color)] border border-[var(--info-color)]/20'
-                                                    : 'bg-[var(--success-color)]/10 text-[var(--success-color)] border border-[var(--success-color)]/20'
-                                                : 'bg-[var(--background-color)] text-[var(--secondary-text-color)] border border-[var(--border-color)]'
-                                            }`}
+                                        className={`
+                                            p-2 rounded-lg border-2 transition-all
+                                            ${valid
+                                                ? required
+                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                                    : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                                                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                            }
+                                        `}
                                     >
-                                        {valid && !optional && (
-                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        )}
-                                        {label}
-                                    </span>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="font-medium text-gray-900 dark:text-white">
+                                                {label}
+                                            </span>
+                                            {valid ? (
+                                                <CheckCircle className={`w-4 h-4 ${required ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`} />
+                                            ) : (
+                                                <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            {description}
+                                        </p>
+                                    </div>
                                 ))}
                             </div>
                         </div>
@@ -855,12 +1190,17 @@ const AddImage = () => {
 
             {/* Success Snackbar */}
             {uiState.snackbarOpen && (
-                <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-                    <div className="bg-[var(--success-color)] text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 animate-in slide-in-from-bottom">
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-medium">{isUpdateMode ? 'Product updated!' : 'Product uploaded!'}</span>
+                <div className="fixed bottom-2 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-bottom">
+                    <div className="bg-green-600 text-white px-4 py-2 rounded-xl shadow-2xl flex items-center gap-2">
+                        <CheckCircle className="w-6 h-6" />
+                        <div>
+                            <span className="font-bold text-sm">
+                                {isUpdateMode ? 'Product Updated!' : 'Product Uploaded!'}
+                            </span>
+                            <p className="text-xs text-green-100">
+                                Redirecting to product management...
+                            </p>
+                        </div>
                     </div>
                 </div>
             )}

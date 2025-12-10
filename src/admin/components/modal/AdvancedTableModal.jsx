@@ -19,6 +19,8 @@ const AdvancedTableModal = ({
     totalValue,
     trackDetails=[],
     currentStatus = '',
+    downloadLabel = false,
+    onDownload = () => { },
 }) => {
     const [activeTable, setActiveTable] = useState("order"); // 'user' or 'order'
 
@@ -115,6 +117,14 @@ const AdvancedTableModal = ({
                     >
                         Order Items
                     </button>
+
+                    { downloadLabel && <button
+                        onClick={onDownload}
+                        className={`px-2 py-1 rounded text-xs border  font-[var(--font-primary)]
+                            }`}
+                    >
+                        Download Shipping Label
+                    </button> }
                 </div>
 
                 {/* Body */}
