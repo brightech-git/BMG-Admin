@@ -45,8 +45,18 @@
   --status-glow-refunded: 0 0 10px rgba(255, 107, 53, 0.5);
 
   /* Fonts */
-  --font-primary: 'Domine', 'Saira', 'Trajan Pro', 'Poppins', 'Roboto', 'Open Sans', Arial, sans-serif;
-  --font-secondary:'Cinzel' 'Saira', 'Inter', 'Inter', 'Open Sans', Arial, sans-serif;
+  --font-primary:-apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol";
+  --font-primaryss: 'Domine', 'Saira', 'Trajan Pro', 'Poppins', 'Roboto', 'Open Sans', Arial, sans-serif;
+  --font-secondary:'Domine' 'Saira', 'Inter', 'Inter', 'Open Sans', Arial, sans-serif;
 
   /* Font Sizes */
   --font-size-xxs: 10px;
@@ -106,7 +116,16 @@
 
 /* Global styles */
 body {
-  font-family: 'Domine', 'Source Code Pro', 'Inter', 'Inter', 'Open Sans', Arial, sans-serif !important;
+  font-family:  -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      Helvetica,
+      Arial,
+      sans-serif,
+      "Apple Color Emoji",
+      "Segoe UI Emoji",
+      "Segoe UI Symbol";
   color: var(--primary-text-color);
   background-color: var(--background-color);
 }

@@ -839,7 +839,7 @@ const AddImage = () => {
     // 16. UI HELPERS
     // -------------------------------------------------------------------------
     const getStatusStyles = (status) => {
-        const base = "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border";
+        const base = "inline-flex items-center gap-1 px-2 py-1.5 rounded-full text-xs border";
         switch (status) {
             case 'complete': return `${base} bg-green-100 text-green-800 border-green-200`;
             case 'incomplete': return `${base} bg-red-100 text-red-800 border-red-200`;
@@ -864,23 +864,23 @@ const AddImage = () => {
     // 17. MAIN RENDER
     // -------------------------------------------------------------------------
     return (
-        <div className="max-w-8xl mt-6 px-3">
+        <div className="max-w-8xl mt-8 px-3">
 
             {/* Progress Overlay */}
             {uiState.isUploading && (
                 <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-3 text-center max-w-md w-full shadow-xl">
+                    <div className="bg-white  rounded-2xl p-3 text-center max-w-md w-full shadow-xl">
                         <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-2" />
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900  mb-4">
                             {isUpdateMode ? 'Updating Product...' : 'Uploading Product...'}
                         </h3>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2 overflow-hidden">
+                        <div className="w-full bg-gray-200  rounded-full h-2.5 mb-2 overflow-hidden">
                             <div
                                 className="bg-primary h-full transition-all duration-300 ease-out"
                                 style={{ width: `${uiState.uploadProgress}%` }}
                             ></div>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                        <p className="text-sm text-gray-600 ">
                             {uiState.uploadProgress}% Complete • Please don't close this window
                         </p>
                     </div>
@@ -888,24 +888,18 @@ const AddImage = () => {
             )}
 
             <div className="mx-auto max-w-8xl">
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                    <div className="p-2 lg:p-8">
+                <div className="bg-white  rounded-xl shadow-lg overflow-hidden">
+                    <div className="p-2 sm:p-3">
 
                         {/* Header */}
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2 border-b border-gray-200 dark:border-gray-700">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-primary/10 rounded-lg">
-                                    {isUpdateMode ? (
-                                        <Edit className="w-5 h-5 text-primary" />
-                                    ) : (
-                                        <Plus className="w-5 h-5 text-primary" />
-                                    )}
-                                </div>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center  border-b border-gray-200 ">
+                            <div className="flex items-center gap-2">
+                               
                                 <div>
-                                    <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                                    <h1 className="text-base font-bold text-gray-900">
                                         {isUpdateMode ? 'Update Product Media' : 'Add Product Media'}
                                     </h1>
-                                    <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                                    <p className="text-xs text-gray-600">
                                         {isUpdateMode
                                             ? `Editing: ${formData.tagKey || 'Product'} • Drag to reorder existing and new files`
                                             : 'Upload and arrange images and videos for your product'
@@ -924,35 +918,35 @@ const AddImage = () => {
                         {/* Feedback Messages */}
                         <div className="space-y-3 mb-2">
                             {uiState.feedback.error && (
-                                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-2 flex justify-between items-center">
+                                <div className="bg-red-50  border border-red-200 rounded-lg p-2 flex justify-between items-center">
                                     <div className="flex items-center gap-1">
-                                        <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                        <AlertCircle className="w-5 h-5 text-red-600 " />
                                         <div>
-                                            <span className="text-red-800 dark:text-red-200 text-xs font-medium">
+                                            <span className="text-red-800 text-xs font-medium">
                                                 {uiState.feedback.error}
                                             </span>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => setUiState(prev => ({ ...prev, feedback: { ...prev.feedback, error: '' } }))}
-                                        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+                                        className="text-red-600hover:text-red-800 "
                                     >
                                         <X className="w-5 h-5" />
                                     </button>
                                 </div>
                             )}
                             {uiState.feedback.success && (
-                                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2 flex items-center gap-1">
-                                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                                    <span className="text-green-800 text-xs dark:text-green-200 font-medium">
+                                <div className="bg-green-50  border border-green-200  rounded-lg p-2 flex items-center gap-1">
+                                    <CheckCircle className="w-5 h-5 text-green-600 " />
+                                    <span className="text-green-800 text-xs font-medium">
                                         {uiState.feedback.success}
                                     </span>
                                 </div>
                             )}
                             {uiState.feedback.info && (
-                                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 flex items-center gap-1">
-                                    <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                    <span className="text-blue-800 text-xs dark:text-blue-200 font-medium">
+                                <div className="bg-blue-50  border border-blue-200 rounded-lg p-2 flex items-center gap-1">
+                                    <Info className="w-5 h-5 text-blue-600" />
+                                    <span className="text-blue-800 text-xs  font-medium">
                                         {uiState.feedback.info}
                                     </span>
                                 </div>
@@ -964,17 +958,17 @@ const AddImage = () => {
 
                             {/* LEFT – Basic Information */}
                             <div className="space-y-2">
-                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2 border border-gray-200 dark:border-gray-700">
+                                <div className="bg-gray-50  rounded-xl p-2 border border-gray-200 ">
                                     <div className="flex items-center gap-1">
                                         <FileText className="w-4 h-4 text-primary" />
-                                        <h2 className="text-sm mt-1.5 font-semibold text-gray-900 dark:text-white">
+                                        <h2 className="text-sm mt-1.5 font-semibold text-gray-900">
                                             Basic Information
                                         </h2>
                                     </div>
 
                                     <div className="space-y-5">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 Product Tag Key *
                                             </label>
                                             <input
@@ -982,15 +976,15 @@ const AddImage = () => {
                                                 placeholder="e.g., PROD-001-2024"
                                                 value={formData.tagKey}
                                                 onChange={e => handleInputChange('tagKey', e.target.value)}
-                                                className="w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                                                className="w-full px-2 py-2 border border-gray-300 rounded-lg text-gray-900  bg-white focus:outline-none focus:ring-2 text-sm focus:ring-primary focus:border-transparent transition-all"
                                                 disabled={isUpdateMode}
                                             />
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                            <p className="text-xs text-gray-500  mt-2">
                                                 Unique identifier for this product
                                             </p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            <label className="block text-sm font-medium text-gray-700  mb-2">
                                                 Product Description
                                             </label>
                                             <textarea
@@ -998,9 +992,9 @@ const AddImage = () => {
                                                 value={formData.description}
                                                 onChange={e => handleInputChange('description', e.target.value)}
                                                 rows={5}
-                                                className="w-full px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
+                                                className="w-full px-2 py-2 text-sm border border-gray-300  rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
                                             />
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                            <p className="text-xs text-gray-500  mt-2">
                                                 Optional but recommended for better product presentation
                                             </p>
                                         </div>
@@ -1011,10 +1005,10 @@ const AddImage = () => {
                             {/* RIGHT – Media Upload & Management */}
                             <div className="space-y-2">
                                 {/* Images Section */}
-                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2 border border-gray-200 dark:border-gray-700">
+                                <div className="bg-gray-50 rounded-xl p-2 border border-gray-200 ">
                                     <div className="flex items-center gap-1 mb-1">
                                         <Image className="w-4 h-4 text-primary" />
-                                        <h2 className="text-sm mt-1.5 font-semibold text-gray-900 dark:text-white">
+                                        <h2 className="text-sm mt-1.5 font-semibold text-gray-900">
                                             Product Images *
                                         </h2>
                                         <span className="ml-auto text-xs font-medium px-2 py-1 bg-blue-500/10 text-blue-500 rounded-full">
@@ -1023,10 +1017,10 @@ const AddImage = () => {
                                     </div>
 
                                     <div className="mb-2">
-                                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                        <p className="text-xs text-gray-600  mb-2">
                                             Minimum {CONFIG.minImages} images required • Maximum {CONFIG.maxImages} total • Drag to reorder
                                         </p>
-                                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-500 gap-4">
+                                        <div className="flex items-center text-xs text-gray-500 gap-4">
                                             <div className="flex items-center gap-1">
                                                 <div className="w-3 h-3 rounded-full bg-green-500"></div>
                                                 <span>Existing files</span>
@@ -1049,10 +1043,10 @@ const AddImage = () => {
                                 </div>
 
                                 {/* Videos Section */}
-                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-2 border border-gray-200 dark:border-gray-700">
+                                <div className="bg-gray-50 rounded-xl p-2 border border-gray-200 ">
                                     <div className="flex items-center gap-2 mb-1">
                                         <Video className="w-4 h-4 text-primary" />
-                                        <h2 className="text-sm mt-1.5 font-semibold text-gray-900 dark:text-white">
+                                        <h2 className="text-sm mt-1.5 font-semibold text-gray-900 ">
                                             Product Videos
                                         </h2>
                                         <span className="ml-auto text-xs font-medium px-2 py-1 bg-blue-500/10 text-blue-500 rounded-full">
@@ -1060,7 +1054,7 @@ const AddImage = () => {
                                         </span>
                                     </div>
 
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                    <p className="text-xs text-gray-600  mb-2">
                                         Optional • Maximum {CONFIG.maxVideos} total • Drag to reorder
                                     </p>
 
@@ -1083,14 +1077,14 @@ const AddImage = () => {
                                     <button
                                         onClick={resetForm}
                                         disabled={uiState.isUploading}
-                                        className="px-2 py-1 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm flex items-center justify-center gap-1"
+                                        className="px-2 py-1 border-2 border-gray-300  text-gray-700 rounded-lg font-semibold hover:bg-gray-50  disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm flex items-center justify-center gap-1"
                                     >
                                         <RefreshCw className="w-4 h-4" />
                                         Reset Form
                                     </button>
                                     <button
                                         onClick={() => navigate(-1)}
-                                        className="px-2 py-1 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 flex items-center text-sm justify-center gap-1"
+                                        className="px-2 py-1 border-2 border-gray-300  text-gray-700 rounded-sm font-semibold hover:bg-gray-50 transition-all duration-200 flex items-center text-sm justify-center gap-1"
                                     >
                                         <X className="w-4 h-4" />
                                         Cancel
@@ -1103,7 +1097,7 @@ const AddImage = () => {
                                     className={`
                                         px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-3 text-sm
                                         ${uiState.isUploading || completionStatus.status !== 'complete'
-                                            ? 'bg-gray-400 dark:bg-gray-700 text-gray-300 cursor-not-allowed'
+                                            ? 'bg-gray-400 text-gray-300 cursor-not-allowed'
                                             : 'bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl'
                                         }
                                     `}
@@ -1124,8 +1118,8 @@ const AddImage = () => {
                         </div>
 
                         {/* Validation Summary */}
-                        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white ">
+                        <div >
+                            <h3 className="text-sm font-semibold text-gray-900  ">
                                 Validation Summary
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
@@ -1158,26 +1152,26 @@ const AddImage = () => {
                                     <div
                                         key={i}
                                         className={`
-                                            p-2 rounded-lg border-2 transition-all
+                                             rounded-lg border-2 p-2 transition-all
                                             ${valid
                                                 ? required
-                                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                                                    : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                                                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                                                    ? 'bg-green-50 border-green-200 '
+                                                    : 'bg-blue-50  border-blue-200 '
+                                                : 'bg-red-50 border-red-200 '
                                             }
                                         `}
                                     >
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="font-medium text-gray-900 dark:text-white">
+                                        <div className="flex items-center m-0 justify-between">
+                                            <span className="text-sm  text-gray-900">
                                                 {label}
                                             </span>
                                             {valid ? (
-                                                <CheckCircle className={`w-4 h-4 ${required ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`} />
+                                                <CheckCircle className={`w-4 h-4 ${required ? 'text-green-600' : 'text-blue-600'}`} />
                                             ) : (
-                                                <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                                                <AlertCircle className="w-4 h-4 text-red-600" />
                                             )}
                                         </div>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                                        <p className="text-xs m-0 text-gray-600">
                                             {description}
                                         </p>
                                     </div>

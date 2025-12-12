@@ -199,15 +199,17 @@ function ManageSingleProduct() {
                                 />
                             ) : (
                                 <div className="w-64 h-64 md:w-80 md:h-80 bg-black rounded-lg flex items-center justify-center">
-                                    <video
-                                        className="w-full h-full object-contain rounded-lg"
-                                        controls
-                                        playsInline
-                                        preload="metadata"
-                                    >
-                                        <source src={mainMedia} type="video/mp4" />
-                                        Your browser does not support the video tag.
-                                    </video>
+                                        <video
+                                            key={mainMedia}          // 🔥 Forces React to remount on media change
+                                            className="w-full h-full object-contain rounded-lg"
+                                            controls
+                                            playsInline
+                                            preload="metadata"
+                                        >
+                                            <source src={mainMedia} type="video/mp4" />
+                                            Your browser does not support the video tag.
+                                        </video>
+
                                     <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
                                         VIDEO
                                     </div>

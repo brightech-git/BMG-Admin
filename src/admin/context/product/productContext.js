@@ -172,11 +172,14 @@ export const ProductProvider = ({ children }) => {
             // Backend will understand null = new file being uploaded
             if (orderedImagePaths.length > 0) {
              
-                formData.append('imageOrder', JSON.stringify(orderedImagePaths));
+                const cleanImageOrder = orderedImagePaths.filter((p) => p !== null && p !== undefined && p !== "");
+                formData.append("imageOrder", JSON.stringify(cleanImageOrder));
+
             }
 
             if (orderedVideoPaths.length > 0) {
-                formData.append('videoOrder', JSON.stringify(orderedVideoPaths));
+                const cleanVideoOrder = orderedVideoPaths.filter((p) => p !== null && p !== undefined && p !== "");
+                formData.append("videoOrder", JSON.stringify(cleanVideoOrder));
             }
 
             console.log('📤 Sending to backend:', {

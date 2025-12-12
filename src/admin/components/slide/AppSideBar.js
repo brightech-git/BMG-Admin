@@ -104,7 +104,7 @@ const menuItems = [
         title: 'Notification',
         icon: <MdNotificationsActive className="staradmin-menu-icon" />,
         submenu: [
-            { title: 'Send Notification', path: '/admin/notification' },
+            { title: 'Send Notification', path: '/app/admin/notification/manage' },
         ],
     },
     // {

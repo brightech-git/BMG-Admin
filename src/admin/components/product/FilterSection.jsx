@@ -24,6 +24,7 @@ export default function FilterSection() {
     // const [tempSelectedSubItems, setTempSelectedSubItems] = useState([]);
     const [tempMinPrice, setTempMinPrice] = useState(filters.minGrandTotal);
     const [tempMaxPrice, setTempMaxPrice] = useState(filters.maxGrandTotal);
+    const [tempMinPriceRange, setTempMaxPriceRange] = useState(filters.priceRange)
     const [tempSearch, setTempSearch] = useState(filters.search || '');
     const [tempWithImage, setTempWithImage] = useState(filters.withImage || '');
     const [tempTagKey, setTempTagKey] = useState(filters.tagKey || '');
@@ -72,6 +73,7 @@ export default function FilterSection() {
         else setTempMaxPrice(value);
     };
 
+
     // Remove a chip (excluding page and pageSize)
     // Remove a single chip
     const removeChip = (key) => {
@@ -83,14 +85,13 @@ export default function FilterSection() {
         //     setTempSelectedSubItems([]);
         //     updateFilter('subItemName', '');
         // }
-        else if (key === 'minGrandTotal') {
-            setTempMinPrice(null);
-            updateFilter('minGrandTotal', '');
+        else if (key === "priceRange") {
+            setTempMinPrice('');
+            setTempMaxPrice('');
+            updateFilter("priceRange", "");
         }
-        else if (key === 'maxGrandTotal') {
-            setTempMaxPrice(null);
-            updateFilter('maxGrandTotal', '');
-        }
+
+     
         else if (key === 'search') {
             setTempSearch('');
             updateFilter('search', '');
@@ -111,6 +112,7 @@ export default function FilterSection() {
         // setTempSelectedSubItems([]);
         setTempMinPrice(null);
         setTempMaxPrice(null);
+        setTempMaxPriceRange(null);
         setTempSearch('');
         setTempWithImage('');
         setTempTagKey('');
@@ -126,19 +128,32 @@ export default function FilterSection() {
 
     // Apply filters and close modal
     const applyFilters = () => {
-        if (tempSelectedItem) updateFilter('itemName', tempSelectedItem.ITEMCTRNAME);
-        else updateFilter('itemName', '');
+        if (tempSelectedItem)
+            updateFilter("itemName", tempSelectedItem.ITEMCTRNAME);
+        else
+            updateFilter("itemName", "");
 
-        updateFilter('minGrandTotal', tempMinPrice ?? '');
-        updateFilter('maxGrandTotal', tempMaxPrice ?? '');
-        updateFilter('search', tempSearch ?? '');
-        updateFilter('withImage', tempWithImage ?? '');
-        updateFilter('tagKey', tempTagKey ?? '');
-        // Update subitems if using
-        // updateFilter('subItemName', tempSelectedSubItems.join(','));
+       
 
+        // price range as string
+       
+
+        updateFilter("search", tempSearch ?? "");
+        updateFilter("withImage", tempWithImage ?? "");
+        updateFilter("tagKey", tempTagKey ?? "");
+        
+        if ((tempMinPrice && !tempMaxPrice) || (!tempMinPrice && tempMaxPrice)) {
+            alert("Please select BOTH Min and Max price.");
+            return; // stop applying filters
+        }
+        if (tempMinPrice && tempMaxPrice) {
+            updateFilter("priceRange", `${tempMinPrice}-${tempMaxPrice}`);
+        } else {
+            updateFilter("priceRange", "");
+        }
         setShowModal(false);
     };
+
     return (
         <div
             className={`w-full  flex flex-col`}

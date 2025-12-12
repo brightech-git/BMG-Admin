@@ -100,3 +100,23 @@ export const trackOrderById = async (orderId) => {
           
       };
 };
+
+export const OrderTracking  = async( trackingId) =>{
+
+      console.log("Tracking ID:", trackingId);
+      try{
+            if (!trackingId) throw new Error("Tracking ID is required");
+            const response = await axiosInstance.post('/dtdc/track',{
+                  trkType : "cnno",
+                  trackingId:trackingId,
+                  addtnDtl: "Y"
+
+            } );
+            return response.data;
+      }
+      catch(err){
+            console.error('Order tracking error:', err);
+            throw err;
+      }
+     
+}

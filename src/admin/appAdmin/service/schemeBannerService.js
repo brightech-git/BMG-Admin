@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const base_url = 'https://scheme.bmgjeweller.com/api/v1/schemes';
+const base_url = 'https://scheme.bmgjewellers.com/api/v1/schemes';
 
 export const getAllSliders = async () => {
     const response = await axios.get(`https://scheme.bmgjewellers.com/api/v1/schemes/all`);

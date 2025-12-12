@@ -12,6 +12,7 @@ import AddSchemeBanner from '../../admin/appAdmin/pages/banner/AddSchemeBanner';
 import SchemeBannerTable from '../../admin/appAdmin/pages/banner/manageSchemeBanner';
 import ManageOnBoard from '../../admin/appAdmin/pages/banner/ManageOnBoard';
 import UpdateOnBoard from '../../admin/appAdmin/pages/banner/UpdateOnBoard';
+import TemplateNotifications from '../../admin/appAdmin/pages/notification/ManageNotification';
 
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
@@ -48,7 +49,6 @@ const AdminRoutes = () => {
                 />
                 <main className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
                     <Routes>
-                      
                         <Route path='*' element={<DashboardPage />} />
                         <Route path='dashboard' element={<DashboardPage />} />
                         <Route path='sliderbanner/manage' element={<SchemeSliderTable />} />
@@ -57,6 +57,7 @@ const AdminRoutes = () => {
                         <Route path='schemeBanner/add' element={<AddSchemeBanner />} />
                         <Route path='onBoard/manage' element={<ManageOnBoard />} />
                         <Route path='onBoard/add' element={<UpdateOnBoard />} />
+                        <Route path='notification/manage' element={<TemplateNotifications />} />
                     </Routes>
                 </main>
             </div>

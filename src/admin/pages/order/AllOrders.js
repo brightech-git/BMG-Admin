@@ -11,6 +11,7 @@ import { useCreateConsignment } from '../../hooks/shipping/useCreateConsignment.
 import { useAddressQuery } from '../../hooks/address/useAddressQuery.js'
 import { getProductImages } from '../../../utils/mediaUtils/mediaUtils.js';
 import { useLabelQuery } from '../../hooks/shipping/useLabelQuery';
+import { useTrackOrderBydtdc } from '../../hooks/order/useTrackOrder.js';
 
 const OrderTable = () => {
     const location = useLocation();
@@ -58,6 +59,7 @@ const OrderTable = () => {
     const updateOrderStatus = useUpdateOrderStatus();
     const { useGetAllAddresses } = useAddressQuery();
     const { data: addressesData } = useGetAllAddresses();
+    const updateOrderTracking = useTrackOrderBydtdc();
 
     const addresses = Array.isArray(addressesData) ? addressesData : [];
 
@@ -383,7 +385,8 @@ const handleDownloadLabel = () => {
                     setProgress(0);
                     return;  // Stop everything when user does NOT confirm
                 }
-
+                console.log(orders[0].courierTrackingId,'trackingOrders')
+                 await updateOrderTracking.mutateAsync(orders[0].courierTrackingId)
                 await new Promise(r => setTimeout(r, 1000));
                 setSnackbar({ open: true, message: "Label generated!", type: "success" });
             }
