@@ -1,6 +1,6 @@
 import axiosInstance from "../api/axiosInstance";
 
-const pushNotification = async (data ) => {
+export const pushNotification = async (data ) => {
     try {
         console.log(data, 'pushdata');
         const response = await axiosInstance.post(
@@ -16,5 +16,20 @@ const pushNotification = async (data ) => {
         throw error;
     }
 };
+export const pushNotificationSingle = async (data) => {
+    try {
+        console.log(data)
+      
+        const response = await axiosInstance.post(
+            "/notifications/send",
+            data, // send JSON body
 
-export default pushNotification;
+        );
+        console.log(response.data, 'data');
+        return response.data;
+
+    } catch (error) {
+        console.error("Push notification error:", error);
+        throw error;
+    }
+};

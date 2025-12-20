@@ -5,6 +5,8 @@ import { MyContext } from '../../../context/themeContext/themeContext';
 import { getProductImages, getProductVideos } from '../../../../utils/mediaUtils/mediaUtils.js';
 import { compressAndCollectFiles } from '../../../../utils/compress/compressAndCollectFiles.js';
 import * as LucideIcons from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { getProducts } from '../../../service/filterService.js';
 
 // Lucide icons
 const {
@@ -352,6 +354,7 @@ const AddImage = () => {
     // 1. STATE FROM ROUTE – determines CREATE vs UPDATE
     // -------------------------------------------------------------------------
     const location = useLocation();
+    const queryClient = useQueryClient();
     const {
         tagkey: initialTagkey,
         isUpdate = false
@@ -765,7 +768,8 @@ const AddImage = () => {
             } else {
                 result = await uploadImages(fd, onProgress);
             }
-
+            await getProducts()
+            queryClient.invalidateQueries(["filter-items"]);
             // Instantly 100% when done
             setUiState(prev => ({ ...prev, uploadProgress: 100, snackbarOpen: true }));
             setFeedback('success', isUpdateMode ? 'Product updated!' : 'Product uploaded!');

@@ -143,13 +143,13 @@ const productService = {
     updateAllFields: async (formData, onProgress = null) => {
     try {   
 
-        for (let [key, value] of formData.entries()) {
-            if (value instanceof File) {
-                console.log(`${key}: [File] ${value.name} (${value.size} bytes)`);
-            } else {
-                console.log(`${key}: ${value}`);
-            }
-        }
+        // for (let [key, value] of formData.entries()) {
+        //     if (value instanceof File) {
+        //         console.log(`${key}: [File] ${value.name} (${value.size} bytes)`);
+        //     } else {
+        //         console.log(`${key}: ${value}`);
+        //     }
+        // }
 
         const response = await axiosInstance.put('/product_image/update-all-fields', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
@@ -161,6 +161,7 @@ const productService = {
                 },
             }
         );
+        
         return response.data;
     } catch (error) {
         throw error.response?.data || { error: error.message };

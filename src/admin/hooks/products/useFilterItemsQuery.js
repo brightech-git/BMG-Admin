@@ -5,9 +5,6 @@ export const useFilterItemsQuery = (filters = {}) => {
   
     return useQuery({
         queryKey: ['filter-items', filters],
-        queryFn: () => getProducts(filters),
-
-        keepPreviousData: false,
-        staleTime:0, // 5 minutes
+        queryFn: () => getProducts(filters)
     });
 }

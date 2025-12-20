@@ -22,7 +22,12 @@ export const sendAppNotification = async (id) => {
 };
 
 export const createAppNotificationTemplate = async(data) =>{
-  console.log(data,'createtemp')
+
+  for( const[key,value] of data.entries()){
+    console.log(`${key}: ${value}` );
+  }
+   
+
     try {
       const response = await schemeAppAxios.post("/notifications/saveMessage", data);
         return  response.data;

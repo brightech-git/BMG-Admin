@@ -378,22 +378,29 @@ const ManageProduct = () => {
     useEffect(() => {
         if (!data?.data) return;
 
-        const filtersChanged = JSON.stringify(prevFiltersRef.current) !== JSON.stringify(activeFilters);
+        const filtersChanged =
+            JSON.stringify(prevFiltersRef.current) !== JSON.stringify(activeFilters);
 
         if (filtersChanged || isInitialFetch) {
-            setAllProducts(data.data); // Reset products on filter change or initial fetch
+            // FULL RESET on filter change
+            setAllProducts(data.data);
         } else {
+            // 🔥 MERGE & UPDATE EXISTING PRODUCTS
             setAllProducts((prev) => {
-                const newProducts = data.data.filter(
-                    (newProduct) => !prev.some((existing) => existing.TAGKEY === newProduct.TAGKEY)
-                );
-                return [...prev, ...newProducts];
+                const map = new Map(prev.map((p) => [p.TAGKEY, p]));
+
+                data.data.forEach((item) => {
+                    map.set(item.TAGKEY, item); // overwrite if exists
+                });
+
+                return Array.from(map.values());
             });
         }
 
         prevFiltersRef.current = activeFilters;
         setIsInitialFetch(false);
     }, [data, activeFilters, isInitialFetch]);
+
 
     const totalCount = data?.totalProducts || allProducts.length;
     const hasMore = data?.hasMore || allProducts.length < totalCount;

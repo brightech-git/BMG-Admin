@@ -12,6 +12,9 @@ import { useAddressQuery } from '../../hooks/address/useAddressQuery.js'
 import { getProductImages } from '../../../utils/mediaUtils/mediaUtils.js';
 import { useLabelQuery } from '../../hooks/shipping/useLabelQuery';
 import { useTrackOrderBydtdc } from '../../hooks/order/useTrackOrder.js';
+import OrderStatusNotification from '../../components/notifications/OrderStatusNotification.jsx';
+import NotificationTemplate from '../../components/notifications/NotificationTemplate.jsx';
+import { Bell } from "lucide-react";
 
 const OrderTable = () => {
     const location = useLocation();
@@ -21,8 +24,9 @@ const OrderTable = () => {
     const [downloadLabel, setDownloadLabel] =useState(false)
 
     const { key } = location.state || {};
-    console.log(key, 'keytoget')
+    console.log(key, 'keytoget');
 
+    const [statusUpdated, setStatusUpdated] = useState(false);
     // Redirect if key is not present
     // useEffect(() => {
     //     if (!key) {
@@ -37,6 +41,7 @@ const OrderTable = () => {
         message: "",
         type: "info"
     });
+
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchTerm, setSearchTerm] = useState('');
@@ -60,6 +65,9 @@ const OrderTable = () => {
     const { useGetAllAddresses } = useAddressQuery();
     const { data: addressesData } = useGetAllAddresses();
     const updateOrderTracking = useTrackOrderBydtdc();
+
+    const [showNotification, setShowNotification] = useState(false);
+    const [notificationPayload, setNotificationPayload] = useState(null);
 
     const addresses = Array.isArray(addressesData) ? addressesData : [];
 
@@ -171,6 +179,9 @@ const OrderTable = () => {
 
 
       
+
+
+
 const handleDownloadLabel = () => {
     if (!labelData) return;
     window.open(labelData, "_blank");
@@ -390,16 +401,20 @@ const handleDownloadLabel = () => {
                 await new Promise(r => setTimeout(r, 1000));
                 setSnackbar({ open: true, message: "Label generated!", type: "success" });
             }
-
+            
             // ── FINAL: Update Order Status ───────────────────────
             await updateOrderStatus.mutateAsync(payload);
-
+            
             clearInterval(progressInterval);
             setProgress(100);
+            
+     
+            await setStatusUpdated(true);
             setSnackbar({ open: true, message: "Order updated!", type: "success" });
-
             setTimeout(() => {
                 setShowBackdrop(false);
+          
+                setSnackbar({ open: true, message: "Notification sent to the user Successfully!", type: "success" });
                 refetch();
                 handleCloseEditModal();
             }, 600);
@@ -417,6 +432,121 @@ const handleDownloadLabel = () => {
         }
     };
 
+    const sendNotification = (selectedOrder) => {
+        if (!selectedOrder) return;
+
+        const status = selectedOrder.status?.toLowerCase();
+        const userId = selectedOrder?.address?.customerId;
+        const orderId = selectedOrder?.order_id || selectedOrder?.id;
+        const imageUrl = selectedOrder?.orderItems?.[0]?.image_path || null;
+
+        let templateId;
+
+        switch (status) {
+            case "pending":
+                templateId = 6;
+                break;
+
+            case "placed":
+                templateId = 5;
+                break;
+
+            case "shipped":
+                templateId = 7;
+                break;
+
+            case "delivered":
+                templateId = 8;
+                break;
+
+            default:
+                return; // ❌ do not send notification
+        }
+
+        return {
+            userId,
+            templateId,
+            data: {
+                orderId,
+                status,
+                imageUrl,
+            },
+        };
+    };
+
+
+    
+   
+    // Status options based on current status
+    const getStatusOptions = () => {
+        const statusFlow = {
+            'PLACED': [
+                { value: 'IN_PROCESSING', label: 'Move to Quality Check' },
+                { value: 'CANCELLED', label: 'Cancel Order' },
+            ],
+            'IN_PROCESSING': [
+                { value: 'PACKING', label: 'Move to Packing' },
+                { value: 'CANCELLED', label: 'Cancel Order' },
+            ],
+            'PACKING': [
+                { value: 'PACKED', label: 'Product has been packing' },
+                { value: 'CANCELLED', label: 'Cancel Order' },
+            ],
+            'PACKED': [
+                { value: 'SHIPPED', label: 'Move to Ready to Ship' },
+                { value: 'CANCELLED', label: 'Cancel Order' },
+            ],
+            'READY_TO_SHIP': [
+                { value: 'SHIPPED', label: 'Move to Shipped' },
+                { value: 'CANCELLED', label: 'Cancel Order' },
+            ],
+
+        };
+
+        return statusFlow[status] || [];
+    };
+
+    const notificationStatus = {
+        placed: {
+            current: "placed",
+            next: "in_processing",
+        },
+        in_processing: {
+            current: "in_processing",
+            next: "packing",
+        },
+        packing: {
+            current: "packing",
+            next: "packed",
+        },
+        packed: {
+            current: "packed",
+            next: "ready_to_ship",
+        },
+        ready_to_ship: {
+            current: "ready_to_ship",
+            next: "shipped",
+        },
+        shipped: {
+            current: "shipped",
+            next: "delivered",
+        },
+        delivered: {
+            current: "delivered",
+            next: null,
+        },
+        cancelled: {
+            current: "cancelled",
+            next: null,
+        },
+        pending: {
+            current: "pending",
+            next: "in_processing", // or whatever makes sense in your flow
+        },
+    };
+    console.log(selectedOrder?.status || null, 'console')
+    console.log(notificationStatus[selectedOrder?.status?.toLowerCase()]?.current || null ,'console')
+  
     const orderHeaders = [
         { key: "order_id", label: "Order ID", align: "left" },
         { key: "customer", label: "Customer", align: "left" },
@@ -427,6 +557,10 @@ const handleDownloadLabel = () => {
         { key: "actions", label: "Actions", align: "center" },
     ];
 
+    const NON_EDITABLE_STATUSES = ["shipped", "cancelled", "delivered" , "pending"];
+
+    const sendIcon = [ "pending" ]
+    
     const formattedOrders = filteredOrders.map(order => ({
         order_id: (
             <span className="text-xs font-semibold text-primaryText">
@@ -475,49 +609,56 @@ const handleDownloadLabel = () => {
                 >
                     <ViewIcon className="w-4 h-4" />
                 </button>
-                <button
-                    onClick={() => handleEditOrder(order)}
-                    className="btn-icon-warning p-1 rounded-md  transition-colors"
-                >
-                    <EditIcon className="w-4 h-4" />
-                </button>
+        
+                {!NON_EDITABLE_STATUSES.includes(order.status.toLowerCase()) && (
+                    <button
+                        onClick={() => handleEditOrder(order)}
+                        className="btn-icon-warning p-1 rounded-md  transition-colors"
+                    >
+                        <EditIcon className="w-4 h-4" />
+                    </button>
+                )}
+                {sendIcon.includes(order.status.toLowerCase()) && 
+                
+                <div className="relative group inline-flex">
+                    <button
+                        onClick={() => {
+                            setSelectedOrder(order);
+                            const payload = sendNotification(selectedOrder);
+
+                            if (!payload) {
+
+                                return;
+                            }
+
+                            setNotificationPayload(payload);
+                            setShowNotification(true);
+                        }}
+                        className="p-1 rounded-md border border-gray-300 
+               hover:bg-gray-100 text-gray-700 
+               transition-colors"
+                    >
+                        <Bell className="w-3 h-3" />
+                    </button>
+
+                    {/* Tooltip */}
+                    <span
+                        className="absolute -top-8 left-1/2 -translate-x-1/2 
+               scale-0 group-hover:scale-100
+               rounded bg-gray-900 px-2 py-1 text-xs 
+               text-white transition-transform"
+                    >
+                        Send Notification
+                    </span>
+                </div>}
+                
+
+           
             </div>
         ),
     }));
 
-    // Status options based on current status
-    const getStatusOptions = () => {
-        const statusFlow = {
-            'PLACED': [
-                { value: 'IN_PROCESSING', label: 'Move to Quality Check' },
-                { value: 'CANCELLED', label: 'Cancel Order' },
-            ],
-            'IN_PROCESSING': [
-                { value: 'PACKING', label: 'Move to Packing' },
-                { value: 'CANCELLED', label: 'Cancel Order' },
-            ],
-            'PACKING': [
-                { value: 'PACKED', label: 'Product has been packing' },
-                { value: 'CANCELLED', label: 'Cancel Order' },
-            ],
-            'PACKED': [
-                { value: 'SHIPPED', label: 'Move to Ready to Ship' },
-                { value: 'CANCELLED', label: 'Cancel Order' },
-            ],
-            'READY_TO_SHIP': [
-                { value: 'SHIPPED', label: 'Move to Shipped' },
-                { value: 'CANCELLED', label: 'Cancel Order' },
-            ],
-            'SHIPPED': [
-                { value: 'DELIVERED', label: 'Mark as Delivered' },
-            ],
-        };
-
-        return statusFlow[status] || [
-            { value: 'CANCELLED', label: 'Cancel Order' },
-        ];
-    };
-
+  
     if (isLoading) {
         return (
             <div className="min-h-[200px] bg-background flex items-center justify-center">
@@ -611,7 +752,9 @@ const handleDownloadLabel = () => {
                                 actions: "center",
                                 payment_mode: "left",
                             }}
-                            actionColumn="actions" // This will show actions column
+                           actionColumn="actions" // This will show actions column
+                           actionOptions ={getStatusOptions()}
+
                         />
                     )}
 
@@ -728,6 +871,27 @@ const handleDownloadLabel = () => {
                         downloadLabel={downloadLabel}
                         onDownload={handleDownloadLabel}
                     />
+                    <OrderStatusNotification
+                        userId={selectedOrder?.address?.customerId}
+                        orderId={selectedOrder?.order_id}
+                        currentStatus={
+                            notificationStatus[
+                                selectedOrder?.status
+                                    ?.trim()
+                                    ?.toLowerCase()
+                                    ?.replace(/\s+/g, "_")
+                            ]?.next ?? null
+                        }
+                        trackingNumber={
+                            selectedOrder?.courierTrackingId !== "N/A"
+                                ? selectedOrder?.courierTrackingId
+                                : null
+                        }
+                        supportContact="+91 93428 84232"
+                        redirectUrl={`https://bmgjewellers.com/account/orderdetails/${selectedOrder?.order_id}`}
+                        trigger={statusUpdated}
+                        imageUrl={selectedOrder?.orderItems[0].image_path}
+                    />
 
                     <EditStatusModalTailwind
                         open={openEditModal}
@@ -749,6 +913,27 @@ const handleDownloadLabel = () => {
                         downloadLabel={downloadLabel}
                         onDownload={handleDownloadLabel}
                     />
+                    {showNotification && notificationPayload && (
+                        <NotificationTemplate
+                            userId={notificationPayload.userId}
+                            templateId={notificationPayload.templateId}
+                            orderId={notificationPayload.data.orderId}
+                            imageUrl={notificationPayload.data.imageUrl}
+                            onSuccess={() =>
+                                setSnackbar({
+                                    open: true,
+                                    message: "Notification sent",
+                                    type: "success",
+                                })
+                            }
+                            onClose={() => setShowNotification(false)}
+                            // ✅ unique key to re-trigger useEffect
+                            key={Date.now()}
+                        />
+                    )}
+
+
+
                 </>
             )}
         </div>

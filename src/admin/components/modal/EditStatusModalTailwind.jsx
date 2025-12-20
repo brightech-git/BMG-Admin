@@ -19,7 +19,8 @@ const EditStatusModalTailwind = ({
     onDownload = () => { },
 }) => {
     const [editForm, setEditForm] = useState({ status: '', remarks: '' });
-    console.log(editForm ,'editform')
+    console.log(editForm ,'editform');
+    console.log(statusOptions, 'statusOptions')
 
     useEffect(() => {
         if (orderData)
@@ -36,7 +37,7 @@ const EditStatusModalTailwind = ({
         if (onSubmit )onSubmit(editForm); // send to parent
     };
 
-
+   
     const orderItemData = itemTableData.map((item) => ({
         sno: item.sno,
         product: (
@@ -131,8 +132,7 @@ const EditStatusModalTailwind = ({
                                 <StatusChip status={orderData?.status} size="medium" />
                             </div>
                         </div>
-
-                        <div className="flex-1">
+                        {statusOptions.length > 0 && <div className="flex-1">
                             <label className="text-xs text-[var(--secondary-text-color)]">
                                 Select New Status
                             </label>
@@ -156,7 +156,8 @@ const EditStatusModalTailwind = ({
                                     </label>
                                 ))}
                             </div>
-                        </div>
+                        </div>}
+                       
                     </div>
 
                     {/* Remarks */}

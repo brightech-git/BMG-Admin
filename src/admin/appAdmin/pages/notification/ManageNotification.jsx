@@ -7,10 +7,12 @@ import AdvancedTable from "../../../components/table/ResponsiveTable";
 
 import { Pencil, Trash2, Send, Plus } from "lucide-react";
 import AppTemplateFormModal from "./NotificationTemplate";
+import { formatDateTime } from "../../../../utils/date&time/dateTime";
 // import { getProductImages } from "../../../utils/mediaUtils/mediaUtils";
 
 const NotificationTemplatePage = () => {
     const { data: templates, isLoading, isError, error, refetch } = useTemplateNotifications();
+    console.log(templates, 'templates')
      //const deleteMutation = useDeleteTemplate();
      const pushMutation = useSendAppNotificationByTemplate();
     const BASE_URL = "https://app.bmgjewellers.com"; // your base URL
@@ -23,19 +25,22 @@ const NotificationTemplatePage = () => {
             ...t,
         })) ?? [];
 
-    const finalData = templateData?.reverse();
+    const finalData = templateData;
     console.log(finalData, 'finalData')
 
     const headers = [
+        {key:'sno' , label:'S.No'},
         { key: "id", label: "Temp Id", align: "center" },
         { key: "title", label: "Title" },
         { key: "message", label: "Message" },
+        { key: "scheduledTimeFormatted", label: "ScheduledTime" },
         { key: "ImageUrl", label: "Image", align: "center" },
         // { key: "url", label: "Redirect Url" },
         { key: "actions", label: "Actions", align: "center" },
     ];
 
-    const renderCell = (key, row) => {
+    const renderCell = (key, row,index ) => {
+
         if (key === "sno") return row.sno;
 
         if (key === "ImageUrl")
@@ -46,6 +51,14 @@ const NotificationTemplatePage = () => {
                     className="w-10 h-10 rounded object-cover mx-auto"
                 />
             );
+            if (key === "scheduledTimeFormatted") {
+                return (
+                    <div className="flex flex-col">
+                        <span className="text-xs">{formatDateTime(row.scheduledTimeFormatted)} </span>
+                    </div>
+                );
+            }
+
 
         if (key === "actions") {
             return (
@@ -59,8 +72,10 @@ const NotificationTemplatePage = () => {
                             aria-label="send"
                             name="send"
                             title="Send to All"
-                            onClick={() =>
+                            onClick={() =>{
+                                console.log(row.id);
                                 pushMutation.mutate(row.id, {
+
                                     onSuccess: () => {
                                         alert("Notification sent successfully!");
                                     },
@@ -68,6 +83,8 @@ const NotificationTemplatePage = () => {
                                         alert("Failed to send notification");
                                     },
                                 })
+                            }
+                                
                             }
                         >
                             <Send size={16} />
