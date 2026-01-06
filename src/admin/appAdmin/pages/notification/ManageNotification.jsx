@@ -1,4 +1,4 @@
-import { useTemplateNotifications ,useSendAppNotificationByTemplate } from "../../hooks/template/useTemplateNotifications";
+import { useTemplateNotifications ,useSendAppNotificationByTemplate ,useAppTempDeleteById } from "../../hooks/template/useTemplateNotifications";
 import React, { useState } from "react";
 import AdvancedTable from "../../../components/table/ResponsiveTable";
 
@@ -11,13 +11,18 @@ import { formatDateTime } from "../../../../utils/date&time/dateTime";
 // import { getProductImages } from "../../../utils/mediaUtils/mediaUtils";
 
 const NotificationTemplatePage = () => {
+
     const { data: templates, isLoading, isError, error, refetch } = useTemplateNotifications();
+    const deleteMutation = useAppTempDeleteById();
+
     console.log(templates, 'templates')
      //const deleteMutation = useDeleteTemplate();
      const pushMutation = useSendAppNotificationByTemplate();
     const BASE_URL = "https://app.bmgjewellers.com"; // your base URL
     const [showForm, setShowForm] = useState(false);
     const [editTemplate, setEditTemplate] = useState(null);
+
+
 
     const templateData =
         templates?.data.map((t, i) => ({
@@ -94,31 +99,38 @@ const NotificationTemplatePage = () => {
 
 
                     {/* EDIT */}
-                    {/* <button
+                    <button
                         className="p-1 text-green-600 hover:text-green-800"
                         title="Edit"
                         name="Edit"
                         aria-label="Edit"
-                        // onClick={() => {
-                        //     setEditTemplate(row);
-                        //     setShowForm(true);
-                        // }}
+                        onClick={() => {
+                            setEditTemplate(row);
+                            setShowForm(true);
+                        }}
                     >
                         <Pencil size={16} />
-                    </button> */}
+                    </button>
 
                     {/* DELETE */}
-                    {/* {!row.singleUser && (
+                    {!row.singleUser && (
                         <button
                             className="p-1 text-red-600 hover:text-red-800"
                             aria-label="delete"
                             name="delete"
                             title="Delete"
-                            // onClick={() => deleteMutation.mutate(row.id, { onSuccess: refetch })}
+                            onClick={() => {
+                                const confirm = window.confirm('Are you sure want to delete the template');
+                                if (confirm){
+                                    deleteMutation.mutate(row.id, { onSuccess: refetch })
+                                }
+                                }
+                              
+                            }
                         >
                             <Trash2 size={16} />
                         </button>
-                    )} */}
+                    )}
 
                 </div>
             );

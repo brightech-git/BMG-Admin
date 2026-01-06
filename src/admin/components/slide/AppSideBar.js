@@ -75,6 +75,23 @@ const menuItems = [
             // { title: 'Manage Latest', path: '/admin/latestbanner/manage' },
         ],
     },
+    {
+        title: 'Scheme Details',
+        icon: <FaImage className="staradmin-menu-icon" />,
+        submenu: [
+            { title: 'Manage Scheme', path: '/app/admin/scheme/manage' },
+           
+
+            // { title: 'Manage BudgetBanner', path: '/admin/budgetbanner/manage' },
+            // { title: 'Manage CategoryBanner', path: '/admin/categorybanner/manage' },
+            // { title: 'Manage FestivalBanner', path: '/admin/festivalbanner/manage' },
+            // { title: 'Manage BreadCrumb', path: '/admin/breadcrumbbanner/manage' },
+            // { title: 'Manage Gender', path: '/admin/genderbanner/manage' },
+            // { title: 'Manage BestDesign', path: '/admin/bestbanner/manage' },
+            // { title: 'Manage Featured', path: '/admin/manage/featurebanner' },
+            // { title: 'Manage Latest', path: '/admin/latestbanner/manage' },
+        ],
+    },
     // {
     //     title: 'Category',
     //     icon: <FaTag className="staradmin-menu-icon" />,

@@ -38,3 +38,29 @@ export const createAppNotificationTemplate = async(data) =>{
     }
 
 } 
+
+export const updateAppNotificationTemplate = async (id, data) => {
+
+  for( let values of data.values()){
+    console.log(values);
+  }
+  try {
+    const response = await schemeAppAxios.patch(`/notifications/updateMessage/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.warn("Error updating notification template:", error);
+    throw error;
+  }
+};
+
+export const deleteAppnotiTemp = async(id) => {
+  try{
+    const response = await schemeAppAxios.delete(`/notifications/deleteMessage/${id}`);
+    return response.data;
+  }
+  catch(error){
+    console.warn("Error fetching notification template:", error);
+    throw error;
+  }
+} 
+
