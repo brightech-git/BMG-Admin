@@ -6,23 +6,22 @@ import { useTemplateById } from "../../hooks/notificationTemplates/useNotificati
 import { ApplyNotification } from "../../../utils/notification/NotificationEngine";
 
 export default function NotificationTemplate({
-    templateId,
-    orderId,
-    userId,
-    imageUrl,
+    payload,
     onClose,
-    onSuccess, // ✅ callback for showing toast/snackbar
+    onSuccess,
 }) {
+    const { templateId, userId, imageUrl, data } = payload;
+
     const { data: template } = useTemplateById(templateId);
     const { mutate: sendNotification } = usePushNotificationSingle();
 
     useEffect(() => {
-        if (!template) return;
+        if (!template || !data) return;
 
-        const data = { orderId };
         const title = ApplyNotification(template.Title, data);
         const message = ApplyNotification(template.Message, data);
         const url = ApplyNotification(template.Url, data);
+        console.log(message, "messageField");
 
         sendNotification(
             {
@@ -35,7 +34,7 @@ export default function NotificationTemplate({
             {
                 onSuccess: (res) => {
                     console.log("✅ Notification sent:", res);
-                    onSuccess?.(res); // call the parent callback
+                    onSuccess?.(res);
                     onClose?.();
                 },
                 onError: (err) => {
@@ -43,7 +42,7 @@ export default function NotificationTemplate({
                 },
             }
         );
-    }, [template, orderId, userId, imageUrl, sendNotification, onClose, onSuccess]);
+    }, [template,sendNotification ,payload, onClose, onSuccess]);
 
     return null;
 }

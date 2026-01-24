@@ -130,7 +130,7 @@ function UserDetails() {
   // Debounced search handler
   const handleSearch = debounce((term) => {
     setSearchTerm(term);
-  }, 300);
+  }, 10);
 
   // Toggle column visibility
   const toggleColumnVisibility = (key) => {

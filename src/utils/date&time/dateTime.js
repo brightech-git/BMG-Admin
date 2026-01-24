@@ -1,10 +1,7 @@
 export const formatDateTime = (iso) => {
     if (!iso) return "";
-    console.log(iso ,'isoooo');
-
-    
     const d = new Date(iso);
-console.log(d,'datasss') 
+
     const dd = String(d.getDate()).padStart(2, "0");
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const yyyy = d.getFullYear();
@@ -28,4 +25,17 @@ export const toLocalISO = (date) => {
     const ss = pad(date.getSeconds());
 
     return `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`;
+};
+
+
+export const formatDate = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+
+  
+    return `${dd}-${mm}-${yyyy}`;
 };

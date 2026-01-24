@@ -1,0 +1,13 @@
+@keyframes trackFill {
+    from {
+        height: 0;
+    }
+
+    to {
+        height: 100%;
+    }
+}
+
+.animate-track-fill {
+    animation: trackFill 0.6s ease-out forwards;
+}

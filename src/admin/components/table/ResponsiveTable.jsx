@@ -26,6 +26,7 @@ const AdvancedTable = ({
     fontSizeRow = 'text-[var(--font-size-xs)]',
     tableWidth = 'w-full',
     emptyMessage = '',
+
 }) => {
     // ---- Build final column alignment map ----
     const finalAlignments = headers.reduce((acc, h) => {
@@ -73,7 +74,7 @@ const AdvancedTable = ({
         return true;
     });
 
-    if (isLoading) return <SkeletonTable rows={6} columns={filteredHeaders.length} themeMode={themeMode} withHeader />;
+    if (isLoading) return <SkeletonTable rows={5} columns={filteredHeaders.length} themeMode={themeMode} withHeader />;
 
     if (isError) {
         return (
@@ -101,7 +102,7 @@ const AdvancedTable = ({
                         {filteredHeaders.map((h) => (
                             <th
                                 key={h.key}
-                                className={`px-0.5 sm:px-1 py-sm font-bold ${fontFamilyHeader} ${headerText} 
+                                className={`px-0.5 sm:px-1 py-sm font-medium ${fontFamilyHeader} ${headerText} 
     ${fontSizeHeader} ${alignClass(finalAlignments[h.key])} 
     whitespace-nowrap border border-[var(--border-color)]`}
 
@@ -118,7 +119,7 @@ const AdvancedTable = ({
                                 {filteredHeaders.map((h) => (
                                     <td
                                         key={`${row.id ?? i}-${h.key}`}
-                                        className={`px-0.5 sm:px-1  ${fontFamilyRow} ${rowText} 
+                                        className={`px-1 sm:px-2 py-1 sm:py-2 ${fontFamilyRow} ${rowText} 
     ${fontSizeRow} ${alignClass(finalAlignments[h.key])} 
     border border-[var(--border-color)]`}
 

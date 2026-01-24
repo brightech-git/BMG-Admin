@@ -1,14 +1,66 @@
 /* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Trajan+Pro:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Domine:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cinzel&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*--------------Fonts ----------------*/
+@font-face {
+  font-family: 'Dancing Script';
+  src: url('./admin/assets/fonts/dancing-script/dancing-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('./admin/assets/fonts/lato/lato.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lato';
+  src: url('./admin/assets/fonts/lato//lato-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Domine';
+  src: url('./admin/assets/fonts/domine/domine-v25-latin-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Domine';
+  src: url('./admin/assets/fonts/domine/domine-v25-latin-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Domine';
+  src: url('./admin/assets/fonts/domine/domine-v25-latin-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Domine';
+  src: url('./admin/assets/fonts/domine/domine-v25-latin-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+
 
 /* Light theme (default) */
 :root {
@@ -16,7 +68,7 @@
   --primary-text-color: #041f60;
   --secondary-text-color: #0c2c50;
   --background-color: #f9f9f9;
-  --primary-color: #cd865c;
+  --primary-color: #f16137;
   --secondary-color: #6c757d;
   --success-color: #28a745;
   --error-color: #dc3545;
@@ -45,18 +97,8 @@
   --status-glow-refunded: 0 0 10px rgba(255, 107, 53, 0.5);
 
   /* Fonts */
-  --font-primary:-apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji",
-    "Segoe UI Symbol";
-  --font-primaryss: 'Domine', 'Saira', 'Trajan Pro', 'Poppins', 'Roboto', 'Open Sans', Arial, sans-serif;
-  --font-secondary:'Domine' 'Saira', 'Inter', 'Inter', 'Open Sans', Arial, sans-serif;
+  --font-primary: 'Lato', 'Saira', 'Trajan Pro', 'Poppins', 'Roboto', 'Open Sans', Arial, sans-serif;
+  --font-secondary:'Lato' ,'Saira', 'Inter', 'Inter', 'Open Sans', Arial, sans-serif;
 
   /* Font Sizes */
   --font-size-xxs: 10px;
@@ -93,39 +135,10 @@
   --submenu-indicator-active: #2563eb;
 }
 
-/* Dark theme overrides */
-/* .dark {
-  --primary-text-color: #e0e0e0;
-  --secondary-text-color: #b0b0b0;
-  --background-color: #02021d;
-  --primary-color: #3399ff;
-  --secondary-color: #888888;
-  --success-color: #28a745;
-  --error-color: #ff6b6b;
-  --warning-color: #ffc107;
-  --info-color: #17a2b8;
-  --border-color: #333333;
-  --card-background-color: #02021d;
-
-  --active-bg: rgba(37, 99, 235, 0.55);
-  --active-border: #60a5fa;
-  --submenu-indicator: #a0aec0;
-  --submenu-indicator-active: #60a5fa;
-  --both-text-color: #041f60;
-} */
 
 /* Global styles */
 body {
-  font-family:  -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      Roboto,
-      Helvetica,
-      Arial,
-      sans-serif,
-      "Apple Color Emoji",
-      "Segoe UI Emoji",
-      "Segoe UI Symbol";
+  font-family: 'Lato';
   color: var(--primary-text-color);
   background-color: var(--background-color);
 }
@@ -332,4 +345,31 @@ body {
 /* Smooth transitions */
 .transition-smooth {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tooltip {
+  @apply 
+  pointer-events-none 
+  absolute 
+  -top-12 
+  left-1/2 
+  -translate-x-1/2 
+  z-50 
+  whitespace-nowrap 
+  rounded bg-gray-900 px-2 py-1 text-xs text-white opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-150;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite linear;
 }

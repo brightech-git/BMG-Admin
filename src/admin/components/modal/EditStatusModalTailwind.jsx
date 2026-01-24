@@ -207,21 +207,21 @@ const EditStatusModalTailwind = ({
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end gap-2 p-lg border-t border-[var(--border-color)]">
+                <div className="flex mt-2 justify-end gap-2 p-lg ">
                     <button
                         onClick={onClose}
-                        className="px-md py-sm border border-[var(--border-color)] rounded-md hover:bg-[var(--active-bg)]"
+                        className="px-1 py-1 border p-1 text-xs border-[var(--border-color)] rounded-md hover:bg-[var(--active-bg)]"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={!editForm.status || isLoading}
-                        className={`px-md py-sm rounded-md transition
+                        className={`p-1 rounded-md transition text-xs
                             ${editForm.status &&
                                 editForm.status.toUpperCase() === 'CANCELLED'
                                 ? 'bg-[var(--error-color)] text-white hover:bg-[var(--error-color)]'
-                                : 'bg-[var(--primary-color)] text-white hover:bg-[var(--active-border)]'
+                                : 'bg-[var(--active-border)] text-white hover:bg-[var(--primary-color)]'
                             }
                             ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
                         `}

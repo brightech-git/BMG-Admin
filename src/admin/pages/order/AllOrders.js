@@ -14,7 +14,9 @@ import { useLabelQuery } from '../../hooks/shipping/useLabelQuery';
 import { useTrackOrderBydtdc } from '../../hooks/order/useTrackOrder.js';
 import OrderStatusNotification from '../../components/notifications/OrderStatusNotification.jsx';
 import NotificationTemplate from '../../components/notifications/NotificationTemplate.jsx';
-import { Bell } from "lucide-react";
+import { Bell, TrainTrackIcon } from "lucide-react";
+import { FaRoute } from "react-icons/fa";
+
 
 const OrderTable = () => {
     const location = useLocation();
@@ -48,6 +50,10 @@ const OrderTable = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [openViewModal, setOpenViewModal] = useState(false);
     const [openEditModal, setOpenEditModal] = useState(false);
+
+    const [showNotification, setShowNotification] = useState(false);
+    const [notificationPayload, setNotificationPayload] = useState(null);
+    
     const [editForm, setEditForm] = useState({
         status: '',
         remarks: '',
@@ -66,8 +72,6 @@ const OrderTable = () => {
     const { data: addressesData } = useGetAllAddresses();
     const updateOrderTracking = useTrackOrderBydtdc();
 
-    const [showNotification, setShowNotification] = useState(false);
-    const [notificationPayload, setNotificationPayload] = useState(null);
 
     const addresses = Array.isArray(addressesData) ? addressesData : [];
 
@@ -210,6 +214,13 @@ const handleDownloadLabel = () => {
         setOpenEditModal(true);
     };
 
+    const handleTrackOrder = (order) =>{
+        setSelectedOrder(order);
+        const OrderId = order.order_id;
+        navigate(`/track/order/${OrderId}`);
+
+    }
+
     const handleCloseViewModal = () => {
         setOpenViewModal(false);
         setSelectedOrder(null);
@@ -319,8 +330,22 @@ const handleDownloadLabel = () => {
 
 
     const handleEditSubmit = async (formData) => {
-        if (!formData.status) {
+
+        const currentStatus = selectedOrder.status?.toUpperCase();
+        const newStatus = formData.status?.toUpperCase();
+
+        if (!newStatus) {
             setSnackbar({ open: true, message: "Status is required.", type: "error" });
+            return;
+        }
+
+        if (newStatus === "CANCELLED" && !formData.remarks?.trim()) {
+            setFormError("Remarks are required when cancelling an order.");
+            return;
+        }
+
+        if (currentStatus === newStatus) {
+            setFormError("Please change the order status.");
             return;
         }
 
@@ -434,11 +459,16 @@ const handleDownloadLabel = () => {
 
     const sendNotification = (selectedOrder) => {
         if (!selectedOrder) return;
+    
 
         const status = selectedOrder.status?.toLowerCase();
+        const userName = selectedOrder?.user_name?.toUpperCase();
         const userId = selectedOrder?.address?.customerId;
         const orderId = selectedOrder?.order_id || selectedOrder?.id;
         const imageUrl = selectedOrder?.orderItems?.[0]?.image_path || null;
+        const trackingNumber = selectedOrder.courierTrackingId;
+        const totalAmount = selectedOrder?.total_amount || 0 ;
+
 
         let templateId;
 
@@ -466,10 +496,13 @@ const handleDownloadLabel = () => {
         return {
             userId,
             templateId,
+            imageUrl,
             data: {
                 orderId,
                 status,
                 imageUrl,
+                userName,
+                totalAmount
             },
         };
     };
@@ -559,7 +592,7 @@ const handleDownloadLabel = () => {
 
     const NON_EDITABLE_STATUSES = ["shipped", "cancelled", "delivered" , "pending"];
 
-    const sendIcon = [ "pending" ]
+    const sendNotificationIcon = [ "pending" ]
     
     const formattedOrders = filteredOrders.map(order => ({
         order_id: (
@@ -603,59 +636,65 @@ const handleDownloadLabel = () => {
         ),
         actions: (
             <div className="flex items-center justify-center gap-1">
-                <button
-                    onClick={() => handleViewOrder(order)}
-                    className="btn-icon-primary p-1 rounded-md  transition-colors"
-                >
-                    <ViewIcon className="w-4 h-4" />
-                </button>
-        
-                {!NON_EDITABLE_STATUSES.includes(order.status.toLowerCase()) && (
-                    <button
-                        onClick={() => handleEditOrder(order)}
-                        className="btn-icon-warning p-1 rounded-md  transition-colors"
-                    >
-                        <EditIcon className="w-4 h-4" />
-                    </button>
-                )}
-                {sendIcon.includes(order.status.toLowerCase()) && 
-                
+                {/* VIEW ORDER */}
                 <div className="relative group inline-flex">
                     <button
-                        onClick={() => {
-                            setSelectedOrder(order);
-                            const payload = sendNotification(selectedOrder);
-
-                            if (!payload) {
-
-                                return;
-                            }
-
-                            setNotificationPayload(payload);
-                            setShowNotification(true);
-                        }}
-                        className="p-1 rounded-md border border-gray-300 
-               hover:bg-gray-100 text-gray-700 
-               transition-colors"
+                        onClick={() => handleViewOrder(order)}
+                        className="btn-icon-primary p-1 rounded-md transition-colors"
                     >
-                        <Bell className="w-3 h-3" />
+                        <ViewIcon className="w-4 h-4" />
                     </button>
+                    <span className="tooltip">View Order</span>
+                </div>
 
-                    {/* Tooltip */}
-                    <span
-                        className="absolute -top-8 left-1/2 -translate-x-1/2 
-               scale-0 group-hover:scale-100
-               rounded bg-gray-900 px-2 py-1 text-xs 
-               text-white transition-transform"
+                {/* EDIT ORDER */}
+                {!NON_EDITABLE_STATUSES.includes(order.status.toLowerCase()) && (
+                    <div className="relative group inline-flex">
+                        <button
+                            onClick={() => handleEditOrder(order)}
+                            className="btn-icon-warning p-1 rounded-md transition-colors"
+                        >
+                            <EditIcon className="w-4 h-4" />
+                        </button>
+                        <span className="tooltip">Edit Order</span>
+                    </div>
+                )}
+
+                {/* TRACK ORDER */}
+                <div className="relative group inline-flex">
+                    <button
+                        onClick={() => handleTrackOrder(order)}
+                        className="btn-icon-warning p-1 rounded-md transition-colors"
                     >
-                        Send Notification
-                    </span>
-                </div>}
-                
+                        <FaRoute className="w-4 h-4" />
+                    </button>
+                    <span className="tooltip">Track Order</span>
+                </div>
 
-           
+                {/* SEND NOTIFICATION */}
+                {sendNotificationIcon.includes(order.status.toLowerCase()) && (
+                    <div className="relative group inline-flex">
+                        <button
+                            onClick={() => {
+                                const payload = sendNotification(order); // ✅ FIXED
+
+                                if (!payload) return;
+
+                                setSelectedOrder(order);
+                                setNotificationPayload(payload);
+                                setShowNotification(true);
+                            }}
+                            className="p-1 rounded-md border border-gray-300
+            hover:bg-gray-100 text-gray-700 transition-colors"
+                        >
+                            <Bell className="w-3 h-3" />
+                        </button>
+                        <span className="tooltip">Send Notification</span>
+                    </div>
+                )}
             </div>
-        ),
+        )
+
     }));
 
   
@@ -704,9 +743,6 @@ const handleDownloadLabel = () => {
                             </li>
                         </ol>
                     </nav>
-
-
-
 
                     {/* Title and Search */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -913,12 +949,10 @@ const handleDownloadLabel = () => {
                         downloadLabel={downloadLabel}
                         onDownload={handleDownloadLabel}
                     />
+                   
                     {showNotification && notificationPayload && (
                         <NotificationTemplate
-                            userId={notificationPayload.userId}
-                            templateId={notificationPayload.templateId}
-                            orderId={notificationPayload.data.orderId}
-                            imageUrl={notificationPayload.data.imageUrl}
+                            payload={notificationPayload}
                             onSuccess={() =>
                                 setSnackbar({
                                     open: true,
@@ -933,7 +967,7 @@ const handleDownloadLabel = () => {
                     )}
 
 
-
+                 
                 </>
             )}
         </div>

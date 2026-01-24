@@ -74,6 +74,7 @@ import RefundOrdersTable from '../../admin/pages/refund/refundOrders';
 import NotificationTemplatePage from '../../admin/pages/notification/NotificationTemplatePage';
 import FooterCategory from '../../admin/pages/category/manage/ManageFooterCategory';
 import AddFooterEntryPage from '../../admin/pages/category/add/AddFooterCategory';
+import TrackOrder from '../../admin/pages/order/TrackOrder';
 
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
@@ -190,6 +191,10 @@ const AdminRoutes = () => {
                         <Route path='category/footer/add' element={<AddFooterEntryPage />} />
 
                         <Route path='productSpec' element={<EcomMarketingAttributesTable />} />
+
+                        <Route path='track/order/:orderId' element={<TrackOrder />} />
+
+
                         <Route path="*" element={<Navigate to="/admin" replace />} />
                     </Routes>
                 </main>

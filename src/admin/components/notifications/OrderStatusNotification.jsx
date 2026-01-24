@@ -18,7 +18,8 @@ export default function OrderStatusNotification({
  
    
     useEffect(() => {
-        if (!trigger || !userId || !orderId || !currentStatus) return;
+        if (!trigger || !userId || !orderId || !currentStatus)
+        return;
 
         const formattedTime = new Date().toLocaleString("en-IN", {
             dateStyle: "medium",

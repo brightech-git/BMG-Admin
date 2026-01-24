@@ -23,6 +23,7 @@ import RoleBasedSection from '../common/RoleBasedSection';
 import { useUserProfile } from '../../hooks/profile/useUserProfile';
 import { useAuth } from '../../context/auth/authContext';
 import { debounce } from 'lodash';
+import { Star, Gift, Award, User } from "lucide-react";
 
 const menuItems = [
     {
@@ -30,25 +31,25 @@ const menuItems = [
         icon: <FaTachometerAlt className="staradmin-menu-icon" />,
         path: '/app/admin/dashboard',
     },
-    // {
-    //     title: 'Orders',
-    //     icon: <FaClipboardList className="staradmin-menu-icon" />,
-    //     submenu: [
-    //         { title: 'Today Orders', path: '/admin/order/today', key: '', values: [''] },
-    //         { title: 'Pending Orders', path: '/admin/order/status', key: 'PENDING', values: [''] },
-    //         { title: 'Placed', path: '/admin/order/status', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
-    //         { title: 'Quality Checking', path: '/admin/order/status', key: 'IN_PROCESSING', values: ['PACKING', 'CANCELLED'] },
-    //         { title: 'Packing', path: '/admin/order/status', key: 'PACKING', values: ['PACKED', 'CANCELLED'] },
-    //         { title: 'Packed', path: '/admin/order/status', key: 'PACKED', values: ['SHIPPED', 'CANCELLED'] },
-    //         { title: 'Dispatch', path: '/admin/order/status', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
-    //         // { title: 'Shipped', path: '/admin/order/status/shipping', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
-    //         { title: 'In-Transit', path: '/admin/order/status', key: 'IN_TRANSIT', values: ['SHIPPED', 'CANCELLED'] },
-    //         { title: 'Delivered', path: '/admin/order/status', key: 'DELIVERED', values: ['SHIPPED', 'CANCELLED'] },
-    //         { title: 'Cancelled', path: '/admin/order/status', key: 'CANCELLED', values: ['SHIPPED', 'CANCELLED'] },
-    //         { title: 'Returned', path: '/admin/order/status', key: 'RETURNED', values: ['SHIPPED', 'CANCELLED'] },
-    //         { title: 'Refunded', path: '/admin/order/status', key: 'REFUNDED', values: ['SHIPPED', 'CANCELLED'] },
-    //     ],
-    // },
+    {
+        title: 'Scheme',
+        icon: <FaClipboardList className="staradmin-menu-icon" />,
+        submenu: [
+            { title: 'Member Entrolled', path: '/app/admin/enrolledUsers/manage', key: '', values: [''] },
+            // { title: 'Pending Orders', path: '/admin/order/status', key: 'PENDING', values: [''] },
+            // { title: 'Placed', path: '/admin/order/status', key: 'PLACED', values: ['IN_PROCESSING', 'CANCELLED'] },
+            // { title: 'Quality Checking', path: '/admin/order/status', key: 'IN_PROCESSING', values: ['PACKING', 'CANCELLED'] },
+            // { title: 'Packing', path: '/admin/order/status', key: 'PACKING', values: ['PACKED', 'CANCELLED'] },
+            // { title: 'Packed', path: '/admin/order/status', key: 'PACKED', values: ['SHIPPED', 'CANCELLED'] },
+            // { title: 'Dispatch', path: '/admin/order/status', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
+            // // { title: 'Shipped', path: '/admin/order/status/shipping', key: 'SHIPPED', values: ['SHIPPED', 'CANCELLED'] },
+            // { title: 'In-Transit', path: '/admin/order/status', key: 'IN_TRANSIT', values: ['SHIPPED', 'CANCELLED'] },
+            // { title: 'Delivered', path: '/admin/order/status', key: 'DELIVERED', values: ['SHIPPED', 'CANCELLED'] },
+            // { title: 'Cancelled', path: '/admin/order/status', key: 'CANCELLED', values: ['SHIPPED', 'CANCELLED'] },
+            // { title: 'Returned', path: '/admin/order/status', key: 'RETURNED', values: ['SHIPPED', 'CANCELLED'] },
+            // { title: 'Refunded', path: '/admin/order/status', key: 'REFUNDED', values: ['SHIPPED', 'CANCELLED'] },
+        ],
+    },
     // {
     //     title: 'Images',
     //     icon: <FaBox className="staradmin-menu-icon" />,
@@ -76,10 +77,10 @@ const menuItems = [
         ],
     },
     {
-        title: 'Scheme Details',
+        title: 'Web Scheme Banners',
         icon: <FaImage className="staradmin-menu-icon" />,
         submenu: [
-            { title: 'Manage Scheme', path: '/app/admin/scheme/manage' },
+            { title: 'Manage Web Scheme Banners', path: '/app/admin/scheme/manage' },
            
 
             // { title: 'Manage BudgetBanner', path: '/admin/budgetbanner/manage' },
@@ -124,6 +125,20 @@ const menuItems = [
             { title: 'Send Notification', path: '/app/admin/notification/manage' },
         ],
     },
+    {
+        title: 'Redemption',
+        icon: <Gift className="staradmin-menu-icon" />, // 🎁 Gift icon, clear for rewards
+        submenu: [
+            { title: 'Redemption Centre', path: '/app/admin/redemption/centre' },
+        ],
+    },
+    {
+        title: 'Users',
+        icon: <User className="staradmin-menu-icon" />, // 🎁 Gift icon, clear for rewards
+        submenu: [
+            { title: 'Users Centre', path: '/app/admin/scheme/users' },
+        ],
+    }
     // {
     //     title: 'Address',
     //     icon: <FaMapMarkerAlt className="staradmin-menu-icon" />,

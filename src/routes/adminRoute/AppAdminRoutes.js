@@ -13,8 +13,11 @@ import SchemeBannerTable from '../../admin/appAdmin/pages/banner/manageSchemeBan
 import ManageOnBoard from '../../admin/appAdmin/pages/banner/ManageOnBoard';
 import UpdateOnBoard from '../../admin/appAdmin/pages/banner/UpdateOnBoard';
 import TemplateNotifications from '../../admin/appAdmin/pages/notification/ManageNotification';
-import ManageScheme from '../../admin/appAdmin/pages/scheme/manageScheme';
-import AddSchemeDetails from '../../admin/appAdmin/pages/scheme/AddScheme';
+import ManageScheme from '../../admin/appAdmin/pages/schemeBanner/manageScheme';
+import AddSchemeDetails from '../../admin/appAdmin/pages/schemeBanner/AddScheme';
+import Redemption from '../../admin/appAdmin/pages/redemption/RedemptionPage';
+import ManageUsers from '../../admin/appAdmin/pages/users/manageUsers';
+import EntrolledUsers from '../../admin/appAdmin/pages/scheme/EntrolledUsers';
 
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
@@ -62,6 +65,9 @@ const AdminRoutes = () => {
                         <Route path='notification/manage' element={<TemplateNotifications />} />
                         <Route path='scheme/manage' element={<ManageScheme />} />
                         <Route path='scheme/add' element={<AddSchemeDetails />} />
+                        <Route path='redemption/centre' element={<Redemption />} />
+                        <Route path='scheme/users' element={<ManageUsers />} />
+                        <Route path='enrolledUsers/manage' element={<EntrolledUsers />} />
 
                     </Routes>
                 </main>
