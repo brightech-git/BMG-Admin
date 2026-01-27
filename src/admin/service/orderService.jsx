@@ -87,18 +87,10 @@ export const getOrderStatus = async (orderId, trackingId) => {
 export const trackOrderById = async (orderId) => {
       if (!orderId) throw new Error("Order ID is required");
 
-      const { data } = await axiosInstance.get(`/order/track-order`, {
-            params: { orderId },
-      });
+      const { data } = await axiosInstance.get(`/order/trackingAdmin/${orderId}`);
 
       // We only need current_status and history
-      return {
-            current_status: data.current_status,
-            history: data.history || [],
-            items:data.items || [],
-            order_id:data.order_id || null,
-          
-      };
+     return data;
 };
 
 export const OrderTracking  = async( trackingId) =>{

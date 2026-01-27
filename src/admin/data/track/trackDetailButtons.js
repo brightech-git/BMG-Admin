@@ -1,5 +1,5 @@
 // orderStatusMaster.ts
-export const ORDER_DETAIL_BUUTON = [
+export const ORDER_DETAIL_BUTTON = [
     {
         key: "HISTORY",
         label: "Order History",

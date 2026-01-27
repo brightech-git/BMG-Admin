@@ -1,7 +1,7 @@
 // orderStatusMaster.ts
 export const ORDER_STATUS_MASTER = [
     {
-        key: "CREATED",
+        key: "PENDING",
         label: "Order Created",
         sequence: 1,
         icon: "shopping-bag",
@@ -13,8 +13,14 @@ export const ORDER_STATUS_MASTER = [
         icon: "shopping-bag",
     },
     {
-        key: "PACKED",
-        label: "Order Packed",
+        key: "PACKING",
+        label: "Order Packing",
+        sequence: 2,
+        icon: "shopping-bag",
+    },
+    {
+        key: "READY TO SHIP",
+        label: "Ready to Ship",
         sequence: 3,
         icon: "shopping-bag",
     },

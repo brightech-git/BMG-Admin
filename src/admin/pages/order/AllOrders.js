@@ -11,7 +11,6 @@ import { useCreateConsignment } from '../../hooks/shipping/useCreateConsignment.
 import { useAddressQuery } from '../../hooks/address/useAddressQuery.js'
 import { getProductImages } from '../../../utils/mediaUtils/mediaUtils.js';
 import { useLabelQuery } from '../../hooks/shipping/useLabelQuery';
-import { useTrackOrderBydtdc } from '../../hooks/order/useTrackOrder.js';
 import OrderStatusNotification from '../../components/notifications/OrderStatusNotification.jsx';
 import NotificationTemplate from '../../components/notifications/NotificationTemplate.jsx';
 import { Bell, TrainTrackIcon } from "lucide-react";
@@ -70,7 +69,6 @@ const OrderTable = () => {
     const updateOrderStatus = useUpdateOrderStatus();
     const { useGetAllAddresses } = useAddressQuery();
     const { data: addressesData } = useGetAllAddresses();
-    const updateOrderTracking = useTrackOrderBydtdc();
 
 
     const addresses = Array.isArray(addressesData) ? addressesData : [];
@@ -168,12 +166,12 @@ const OrderTable = () => {
         isError: isLabelError,
         error: labelError,
     } = useLabelQuery(labelPayload, {
-        enabled: status?.toLowerCase() === "packed" && !!selectedOrder?.courierTrackingId,
+        enabled: status?.toLowerCase() === "ready_to_ship" && !!selectedOrder?.courierTrackingId,
     });
 
    
     useEffect(()=>{
-        if (status.toLowerCase() === 'packed') {
+        if (status.toLowerCase() === 'ready_to_ship') {
           setDownloadLabel(true);
         }
         else{
@@ -379,8 +377,8 @@ const handleDownloadLabel = () => {
                 return;
             }
 
-            // ── PACKING → PACKED: Create Consignment ─────────────
-            if (status === "PACKING" && formData.status === "PACKED") {
+            // ── PACKING → READY_TO_SHIP: Create Consignment ─────────────
+            if (status === "PACKING" && formData.status === "READY_TO_SHIP") {
 
                 if (!defaultOriginAddress) {
                     throw new Error("Default origin address not found.");
@@ -397,10 +395,7 @@ const handleDownloadLabel = () => {
                     throw new Error(result?.message || "Consignment creation failed");
                 }
 
-           
                 // Generate shipping label
-
-                
 
                 setSnackbar({
                     open: true,
@@ -411,21 +406,21 @@ const handleDownloadLabel = () => {
 
 
             // ── PACKED → READY_TO_SHIP: Label (simulate) ────────
-            if (status === 'PACKED' && formData.status === 'SHIPPED') {
-                const confirmLabel = window.confirm(
-                    "⚠️ Please confirm that the shipping label is correctly pasted on the package before updating the status."
-                );
-                if (!confirmLabel) {
-                    clearInterval(progressInterval);
-                    setShowBackdrop(false);
-                    setProgress(0);
-                    return;  // Stop everything when user does NOT confirm
-                }
-                console.log(orders[0].courierTrackingId,'trackingOrders')
-                 await updateOrderTracking.mutateAsync(orders[0].courierTrackingId)
-                await new Promise(r => setTimeout(r, 1000));
-                setSnackbar({ open: true, message: "Label generated!", type: "success" });
-            }
+            // if (status === 'PACKED' && formData.status === 'SHIPPED') {
+            //     const confirmLabel = window.confirm(
+            //         "⚠️ Please confirm that the shipping label is correctly pasted on the package before updating the status."
+            //     );
+            //     if (!confirmLabel) {
+            //         clearInterval(progressInterval);
+            //         setShowBackdrop(false);
+            //         setProgress(0);
+            //         return;  // Stop everything when user does NOT confirm
+            //     }
+            //     console.log(orders[0].courierTrackingId,'trackingOrders')
+            //      await updateOrderTracking.mutateAsync(orders[0].courierTrackingId)
+            //     await new Promise(r => setTimeout(r, 1000));
+            //     setSnackbar({ open: true, message: "Label generated!", type: "success" });
+            // }
             
             // ── FINAL: Update Order Status ───────────────────────
             await updateOrderStatus.mutateAsync(payload);
@@ -522,15 +517,7 @@ const handleDownloadLabel = () => {
                 { value: 'CANCELLED', label: 'Cancel Order' },
             ],
             'PACKING': [
-                { value: 'PACKED', label: 'Product has been packing' },
-                { value: 'CANCELLED', label: 'Cancel Order' },
-            ],
-            'PACKED': [
-                { value: 'SHIPPED', label: 'Move to Ready to Ship' },
-                { value: 'CANCELLED', label: 'Cancel Order' },
-            ],
-            'READY_TO_SHIP': [
-                { value: 'SHIPPED', label: 'Move to Shipped' },
+                { value: 'READY_TO_SHIP', label: 'Move to Ready to Ship' },
                 { value: 'CANCELLED', label: 'Cancel Order' },
             ],
 
@@ -550,10 +537,6 @@ const handleDownloadLabel = () => {
         },
         packing: {
             current: "packing",
-            next: "packed",
-        },
-        packed: {
-            current: "packed",
             next: "ready_to_ship",
         },
         ready_to_ship: {
@@ -562,8 +545,17 @@ const handleDownloadLabel = () => {
         },
         shipped: {
             current: "shipped",
+            next: "in_transit",
+        },
+        in_transit: {
+            current: "in_transit",
+            next: "out_for_delivery",
+        },
+        out_for_delivery: {
+            current: "out_for_delivery",
             next: "delivered",
         },
+        
         delivered: {
             current: "delivered",
             next: null,

@@ -77,6 +77,7 @@
   --border-color: #dbdada;
   --card-background-color: #ffffff;
   --both-text-color: #041f60;
+  --green-color : rgb(0, 100, 0);
 
   /* Super Colors for Status */
   --status-pending: #ffd700;

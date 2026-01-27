@@ -3,16 +3,16 @@ import { useEffect, useState } from "react";
 import { useParams ,useNavigate  } from "react-router-dom";
 import { useTrackOrderById } from "../../hooks/order/useTrackOrder";
 import OrderTrackingWrapper from "../../wrapper/track/OrderTrackingTimeline";
-import { ORDER_DETAIL_BUUTON } from "../../data/track/trackDetailButtons";
+import { ORDER_DETAIL_BUTTON } from "../../data/track/trackDetailButtons";
 import AdvancedTable from "../../components/table/ResponsiveTable";
 import dayjs from "dayjs";
+import { FiArrowLeft } from "react-icons/fi";
 
 function TrackOrder() {
     const { orderId } = useParams();
     const navigate = useNavigate();
 
     const [activeView ,setActiveView] = useState('HISTORY');
-    const [orderedItems , setOrderedItems] = useState([]);
 
     const {
         data,
@@ -26,7 +26,7 @@ function TrackOrder() {
         setActiveView(viewKey);
     };
 
-
+    console.log(data ,'order tracking')
     useEffect(() => {
         if (!orderId) {
             navigate("/orders", { replace: true });
@@ -45,10 +45,19 @@ function TrackOrder() {
     const timelineHeaderColumn = [
 
         { key: 'status', label: 'Status' },
-        { key: 'updated_at', label: 'Time' },
+        
+        { key: 'updated_at', label: 'Completed At' },
         { key: 'remarks', label: 'Remark' },
 
     ];
+
+    const customerAddress = [
+        { key:'customerId' , label:'Customer'},
+        { key:'phone' , label:'Contact No'},
+        {key:'address' , label:'Address'},
+        {key:'state' , label:'State'},
+    ]
+
 
 
 
@@ -99,6 +108,14 @@ function TrackOrder() {
                             : "-"}
                     </span>
                 );
+            case "status":
+                return (
+                    <span className="text-xs">
+                        {item.status
+                            ? item.label
+                            : "-"}
+                    </span>
+                );
 
 
             default:
@@ -110,20 +127,51 @@ function TrackOrder() {
         }
       
     }
+const renderCustomerDetails = (key ,item) => {
+    switch(key){
+        case "customerId":
+            return (
+                <span className=" flex text-xs gap-2">
+                    <span>{item.customerId}</span> - 
+                    <span>{item.name}</span>
+                </span>
+            );
+        case "phone":
+            return (
+                <span className="text-xs">
+                    {item.phone}
+                </span>
+            );
+        case "address":
+            return (
+                <span className="flex flex-col gap-0 text-xs m-0 " >
+                    <p className="m-0">{item.addressLine}</p>
+                    <p className="m-0" >{item.city}</p>
+                    <p className="m-0">{item.pincode}</p>
+                    <p className="m-0"> {item.state}</p>
+                </span>
+            );
+        default:
+            return (
+                <span className="text-xs">
+                    {item[key] ?? " "}
+                </span>
+            );
+    }
 
-
+}
     return(
         <div className="max-w-full m-2 p-2">
             <div className="flex flex-col gap-2">
                 <header className="mt-3">
-                    <h6 className="text-xs sm:text-base"> Tracking Details : {orderId} </h6>
+                    <h6 className="flex items-center gap-2 text-xs sm:text-base"><span onClick={()=>navigate(-1)}> <FiArrowLeft /></span> Tracking Details : {orderId} </h6>
                 </header>
                 <main className="bg-white">
                     <OrderTrackingWrapper currentStatus={data?.current_status}/>
                 </main>
                 <footer className="bg-white border-t">
                     <div className="flex justify-around text-xs sm:text-sm">
-                        {ORDER_DETAIL_BUUTON.map(item => (
+                        {ORDER_DETAIL_BUTTON.map(item => (
                             <div
                                 key={item.key}
                                 onClick={() => setActiveView(item.key)}
@@ -184,17 +232,31 @@ function TrackOrder() {
                         )}
 
                         {activeView === "CUSTOMER-DETAIL" && (
-                            <div className="p-3 text-xs text-gray-500">
-                                Customer details coming soon…
+                            <>
+                            <div className="p-3">
+
+                                {/* Customer Details */}
+                                
+                                <AdvancedTable
+                                    headers={customerAddress}
+                                    data={data?.delivery_address? [data?.delivery_address]: [] }
+                                    fontSizeRow="text-xs"
+                                    isLoading={isLoading}
+                                    isError={isError}
+                                    emptyMessage="Customer Details Not Found"
+                                    renderCell={renderCustomerDetails}
+                                    onRetry={refetch}
+                                    fontSizeHeader="text-sm"
+                                    headerText="text-white"
+                                    headerBg="bg-[var(--info-color)]"
+                                />
                             </div>
+                            </>
                         )}
                     </div>
                 </footer>
       
-                   
-        
-
-                
+    
 
             </div>
         </div>
