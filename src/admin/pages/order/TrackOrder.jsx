@@ -8,6 +8,7 @@ import AdvancedTable from "../../components/table/ResponsiveTable";
 import dayjs from "dayjs";
 import { FiArrowLeft } from "react-icons/fi";
 
+
 function TrackOrder() {
     const { orderId } = useParams();
     const navigate = useNavigate();
@@ -18,7 +19,6 @@ function TrackOrder() {
         data,
         isLoading,
         isError,
-        error,
         refetch,
     } = useTrackOrderById(orderId);
 
@@ -167,7 +167,7 @@ const renderCustomerDetails = (key ,item) => {
                     <h6 className="flex items-center gap-2 text-xs sm:text-base"><span onClick={()=>navigate(-1)}> <FiArrowLeft /></span> Tracking Details : {orderId} </h6>
                 </header>
                 <main className="bg-white">
-                    <OrderTrackingWrapper currentStatus={data?.current_status}/>
+                    <OrderTrackingWrapper currentStatus={data?.current_status} />
                 </main>
                 <footer className="bg-white border-t">
                     <div className="flex justify-around text-xs sm:text-sm">

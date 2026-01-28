@@ -84,6 +84,18 @@ export const getOrderStatus = async (orderId, trackingId) => {
       return data; // return full response; filter in hook/page if needed
 };
 
+export const getAllOrderSummary = async() =>{
+      try{
+            const { data } = await axiosInstance.get('/order/status-summary');
+            return data;
+      }
+     
+      catch(err){
+            console.error('Error fetching order summary:', err);
+            throw new Error(`${err},Failed to fetch order summary`);
+      }
+}
+
 export const trackOrderById = async (orderId) => {
       if (!orderId) throw new Error("Order ID is required");
 

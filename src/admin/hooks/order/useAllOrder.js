@@ -1,7 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { orderService } from "../../service/orderService";
-import { getOrderStatus } from "../../service/orderService";
-
+import { getOrderStatus, getAllOrderSummary } from "../../service/orderService";
 // 🔹 1. Get All Orders (paginated)
 export const useAllOrders = (page, size) => {
     return useQuery({
@@ -62,6 +61,15 @@ export const useOrderStatus = (orderId, trackingId) => {
         queryKey: ["orderStatus", orderId, trackingId],
         queryFn: () => getOrderStatus(orderId, trackingId),
         enabled: !!orderId && !!trackingId, // only run if both exist
+        refetchInterval: 60 * 1000, // refresh every 1 min
+    });
+};
+
+// 🔹 6. Order Summary (mutation)
+export const useAllOrderSummary = () => {
+    return useQuery({
+        queryKey: ["orderSummary"],
+        queryFn: () => getAllOrderSummary(),
         refetchInterval: 60 * 1000, // refresh every 1 min
     });
 };

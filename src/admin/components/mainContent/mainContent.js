@@ -20,7 +20,8 @@ const MainContent = () => {
             <div className="dashboard-cards-section">
                 <DashboardCards />
             </div>
-            <button
+            
+            {/* <button
                 onClick={() => {
     
                     showNewOrder({
@@ -39,7 +40,7 @@ const MainContent = () => {
                 }}
             >
                 Trigger Test Snackbar
-            </button>
+            </button> */}
 
 
             {/* Latest Orders Section */}

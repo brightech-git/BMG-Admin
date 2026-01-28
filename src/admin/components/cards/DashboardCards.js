@@ -2,16 +2,6 @@ import React, { useEffect, useState, useMemo, useCallback, useContext } from 're
 import './DashboardCards.css';
 import { getDashboardData } from '../../service/dashBoardService';
 import { useOrdersByStatus } from '../../hooks/order/useAllOrder';
-import {
-    FaUsers, FaShoppingCart, FaCheckCircle, FaShoppingBag, FaCogs,
-    FaBoxes, FaRocket, FaPlane, FaBan, FaExchangeAlt, FaCreditCard,
-    FaTimesCircle, FaRedo, FaChevronUp, FaChevronDown, FaExternalLinkAlt,
-    FaSync, FaChartLine, FaDollarSign, FaClock, FaTruck, FaBoxOpen,
-    FaEllipsisH, FaArrowUp, FaArrowDown, FaEquals,
-    FaSearch, FaBox, FaShippingFast, FaUndo, FaMoneyBillWave,
-    FaClipboardCheck, FaEye, FaArchive, FaPaperPlane, FaCar,
-    FaMotorcycle, FaHome, FaMapMarkerAlt, FaReceipt
-} from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import Loader from './Loader';
 import { Link } from 'react-router-dom';
@@ -19,6 +9,27 @@ import { MyContext } from '../../context/themeContext/themeContext';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO, isWithinInterval } from "date-fns";
 import { useOrdersByDateRange } from '../../hooks/order/useAllOrder';
+import {
+    FaClock, FaShoppingBag, FaBox, FaBoxOpen, FaTruck, FaMapMarkerAlt, FaHome,
+    FaSpinner, FaRedo, FaTimesCircle, FaUndo, FaMoneyBillWave, FaExclamationCircle, FaShoppingCart, FaCheckCircle, FaUsers, FaSearch, FaShippingFast, FaSync, FaArrowUp, FaArrowDown, FaEquals, FaExternalLinkAlt
+} from 'react-icons/fa';
+import { useAllOrderSummary } from '../../hooks/order/useAllOrder';
+
+const iconMap = {
+    "clock": <FaClock />,
+    "shopping-bag": <FaShoppingBag />,
+    "box": <FaBox />,
+    "package": <FaBoxOpen />,
+    "truck": <FaTruck />,
+    "map-pin": <FaMapMarkerAlt />,
+    "home": <FaHome />,
+    "loader": <FaSpinner />,
+    "alert-circle": <FaExclamationCircle />,
+    "x-circle": <FaTimesCircle />,
+    "rotate-ccw": <FaUndo />,
+    "refresh-ccw": <FaMoneyBillWave />,
+};
+
 
 const DashboardCards = () => {
     const { themeMode } = useContext(MyContext);
@@ -40,6 +51,11 @@ const DashboardCards = () => {
         formattedStartDate,
         formattedEndDate
     );
+    const { data:allOrderSummary ,isLoading:orderSummaryLoading ,isError:orderSummaryError} = useAllOrderSummary();
+    console.log(allOrderSummary,'allOrderSummary');
+
+
+    
 
     useEffect(() => {
         if (!Array.isArray(orders)) return;
@@ -112,23 +128,7 @@ const DashboardCards = () => {
         return num.toLocaleString();
     }, []);
 
-    const calculateChange = useCallback((cardId, dashboardData) => {
-        const percentageMap = {
-            totalOrders: dashboardData?.totalPercentage,
-            deliveredOrders: dashboardData?.deliveredPercentage,
-            shippedOrders: dashboardData?.shippedPercentage,
-            cancelledOrders: dashboardData?.cancelledPercentage
-        };
-
-        if (percentageMap[cardId]) {
-            const percentageValue = parseFloat(percentageMap[cardId]);
-            return {
-                value: Math.abs(percentageValue),
-                direction: percentageValue > 5 ? 'up' : percentageValue < -5 ? 'down' : 'neutral'
-            };
-        }
-        return { value: 0, direction: 'neutral' };
-    }, []);
+ 
 
     // Enhanced cards data with different types
     const cardsData = useMemo(() => {
@@ -180,143 +180,22 @@ const DashboardCards = () => {
 
     // Order status with progress indicators
     const orderStatusCards = useMemo(() => {
-        if (!dashboardData) return [];
-        const total = dashboardData.totalOrders || 1;
+        if (!allOrderSummary || !allOrderSummary?.response?.data) return [];
 
-        return [
-            {
-                id: 'pending',
-                title: 'Payment Pending',
-                value: dashboardData.pendingOrders || 0,
-                icon: <FaClock />,
-                detail: 'Awaiting payment',
-                status: 'PENDING',
-                path: '/admin/order/status',
-                key: 'PENDING',
-                values: ['IN_PROCESSING', 'CANCELLED'],
-                progress: ((dashboardData.pendingOrders || 0) / total) * 100
-            },
-            {
-                id: 'placed',
-                title: 'Order Placed',
-                value: dashboardData.placedOrders || 0,
-                icon: <FaShoppingBag />,
-                detail: 'Recently placed',
-                status: 'PLACED',
-                path: '/admin/order/status',
-                key: 'PLACED',
-                values: ['IN_PROCESSING', 'CANCELLED'],
-                progress: ((dashboardData.placedOrders || 0) / total) * 100
-            },
-            {
-                id: 'inProcessing',
-                title: 'QC Check',
-                value: dashboardData.inProcessingOrders || 0,
-                icon: <FaSearch />, // Quality check icon
-                detail: 'Quality control',
-                status: 'IN_PROCESSING',
-                path: '/admin/order/status',
-                key: 'IN_PROCESSING',
-                values: ['PACKING', 'CANCELLED'],
-                progress: ((dashboardData.inProcessingOrders || 0) / total) * 100
-            },
-            {
-                id: 'packing',
-                title: 'Packing',
-                value: dashboardData.PackingOrders || 0,
-                icon: <FaBoxOpen />, // Better packing icon
-                detail: 'Being packed',
-                status: 'PACKING',
-                path: '/admin/order/status',
-                key: 'PACKING',
-                values: ['PACKED', 'CANCELLED'],
-                progress: ((dashboardData.PackingOrders || 0) / total) * 100
-            },
-            {
-                id: 'packed',
-                title: 'Packed',
-                value: dashboardData.packedOrders || 0,
-                icon: <FaBox />, // Packed box icon
-                detail: 'Ready for shipment',
-                status: 'PACKED',
-                path: '/admin/order/status',
-                key: 'PACKED',
-                values: ['SHIPPED', 'CANCELLED'],
-                progress: ((dashboardData.packedOrders || 0) / total) * 100
-            },
-            {
-                id: 'shipped',
-                title: 'Shipped',
-                value: dashboardData.shippedOrders || 0,
-                icon: <FaShippingFast />, // Shipping icon
-                detail: 'Order shipped',
-                status: 'SHIPPED',
-                path: '/admin/order/status',
-                key: 'SHIPPED',
-                values: ['IN_TRANSIT', 'CANCELLED'],
-                progress: ((dashboardData.shippedOrders || 0) / total) * 100
-            },
-            {
-                id: 'intransit',
-                title: 'In Transit',
-                value: dashboardData.inTransitOrders || 0,
-                icon: <FaTruck />, // Truck icon for transit
-                detail: 'On the way',
-                status: 'IN_TRANSIT',
-                path: '/admin/order/status',
-                key: 'IN_TRANSIT',
-                values: ['DELIVERED', 'CANCELLED'],
-                progress: ((dashboardData.inTransitOrders || 0) / total) * 100
-            },
-            {
-                id: 'delivery',
-                title: 'Delivered',
-                value: dashboardData.deliveredOrders || 0,
-                icon: <FaCheckCircle />, // Check mark for delivered
-                detail: 'Successfully delivered',
-                status: 'DELIVERED',
-                path: '/admin/order/status',
-                key: 'DELIVERED',
-                values: ['COMPLETED'],
-                progress: ((dashboardData.deliveredOrders || 0) / total) * 100
-            },
-            {
-                id: 'cancel',
-                title: 'Cancelled',
-                value: dashboardData.cancelledOrders || 0,
-                icon: <FaTimesCircle />, // X mark for cancelled
-                detail: 'Cancelled orders',
-                status: 'CANCELLED',
-                path: '/admin/order/status',
-                key: 'CANCELLED',
-                values: ['CLOSED'],
-                progress: ((dashboardData.cancelledOrders || 0) / total) * 100
-            },
-            {
-                id: 'returned',
-                title: 'Returned',
-                value: dashboardData.returnedOrders || 0,
-                icon: <FaUndo />, // Return/undo icon
-                detail: 'Order returned',
-                status: 'RETURNED',
-                path: '/admin/order/status',
-                key: 'RETURNED',
-                values: ['REFUNDED', 'CLOSED'],
-                progress: ((dashboardData.returnedOrders || 0) / total) * 100
-            },
-            {
-                id: 'refund',
-                title: 'Refunded',
-                value: dashboardData.refundedOrders || 0,
-                icon: <FaMoneyBillWave />, // Money icon for refund
-                detail: 'Payment refunded',
-                status: 'REFUNDED',
-                path: '/admin/order/status',
-                key: 'REFUNDED',
-                values: ['CLOSED'],
-                progress: ((dashboardData.refundedOrders || 0) / total) * 100
-            },
-        ];
+        const totalOrders = allOrderSummary?.response?.totalOrders || "";
+
+        return allOrderSummary?.response?.data.map((status) => ({
+            id: status.status.toLowerCase(),
+            title: status.label,
+            value: status.totalCount,
+            icon: iconMap[status.icon] || <FaBox />, // fallback icon
+            detail: `${status.percentage}% of total orders`,
+            status: status.status,
+            path: '/admin/order/status',
+            key: status.status,
+            values: [], // add any dependent status if needed
+            progress: (status.totalCount / totalOrders) * 100
+        }));
     }, [dashboardData]);
 
     // Analytics data for charts
@@ -708,22 +587,7 @@ const OrderStatusCard = React.memo(({ card, index, formatNumber, themeMode }) =>
     );
 });
 
-// const QuickStats = ({ dashboardData, formatNumber, themeMode }) => (
-//     <div className="quick-stats">
-//         <div className="quick-stat-item">
-//             <div className="stat-label">Success Rate</div>
-//             <div className="stat-value success">94.2%</div>
-//         </div>
-//         <div className="quick-stat-item">
-//             <div className="stat-label">Avg. Process Time</div>
-//             <div className="stat-value">2.3h</div>
-//         </div>
-//         <div className="quick-stat-item">
-//             <div className="stat-label">Cancellation Rate</div>
-//             <div className="stat-value error">3.1%</div>
-//         </div>
-//     </div>
-// );
+
 
 const OrderDistributionChart = ({ data }) => (
     <div className="distribution-chart">
@@ -748,40 +612,5 @@ const OrderDistributionChart = ({ data }) => (
     </div>
 );
 
-// const PerformanceMetrics = ({ cardsData }) => (
-//     <div className="performance-metrics">
-//         {cardsData.map((card, index) => (
-//             <div key={card.id} className="metric-item">
-//                 <div className="metric-icon">{card.icon}</div>
-//                 <div className="metric-info">
-//                     <div className="metric-title">{card.title}</div>
-//                     <div className="metric-value">{card.value}</div>
-//                 </div>
-//                 <div className={`metric-trend ${card.trend > 0 ? 'positive' : 'negative'}`}>
-//                     {card.trend > 0 ? '+' : ''}{card.trend}%
-//                 </div>
-//             </div>
-//         ))}
-//     </div>
-// );
-
-// const RecentActivity = () => (
-//     <div className="recent-activity">
-//         {[
-//             { action: 'New order placed', time: '2 min ago', type: 'order' },
-//             { action: 'User registration', time: '5 min ago', type: 'user' },
-//             { action: 'Order delivered', time: '10 min ago', type: 'delivery' },
-//             { action: 'Payment received', time: '15 min ago', type: 'payment' },
-//         ].map((activity, index) => (
-//             <div key={index} className="activity-item">
-//                 <div className="activity-dot"></div>
-//                 <div className="activity-content">
-//                     <div className="activity-action">{activity.action}</div>
-//                     <div className="activity-time">{activity.time}</div>
-//                 </div>
-//             </div>
-//         ))}
-//     </div>
-// );
 
 export default DashboardCards;
