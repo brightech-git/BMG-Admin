@@ -1,26 +1,30 @@
-"use client";
-
 import { useEffect } from "react";
 import { usePushNotificationSingle } from "../../hooks/notification/useNotificationQuery";
-import { useTemplateById } from "../../hooks/notificationTemplates/useNotificationTemplates";
+import { useTemplateByTempKey } from "../../hooks/notificationTemplates/useNotificationTemplates";
 import { ApplyNotification } from "../../../utils/notification/NotificationEngine";
+
 
 export default function NotificationTemplate({
     payload,
     onClose,
     onSuccess,
+    trigger = false, // ✅ new prop
 }) {
-    const { templateId, userId, imageUrl, data } = payload;
+    const { tempKey, userId, imageUrl, data } = payload;
 
-    const { data: template } = useTemplateById(templateId);
+    console.log(payload,'payloadfromOrder')
+
+    const { data: template } = useTemplateByTempKey(tempKey);
     const { mutate: sendNotification } = usePushNotificationSingle();
 
     useEffect(() => {
+        if (!trigger) return; // 🔹 Only send when trigger is true
         if (!template || !data) return;
 
         const title = ApplyNotification(template.Title, data);
         const message = ApplyNotification(template.Message, data);
         const url = ApplyNotification(template.Url, data);
+
         console.log(message, "messageField");
 
         sendNotification(
@@ -42,7 +46,7 @@ export default function NotificationTemplate({
                 },
             }
         );
-    }, [template,sendNotification ,payload, onClose, onSuccess]);
+    }, [trigger, template, sendNotification, payload, onClose, onSuccess]);
 
     return null;
 }

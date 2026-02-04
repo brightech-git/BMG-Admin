@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import StatusChip from '../statusChip/StatusChip';
-import AdvancedTable from '../table/ResponsiveTable';
-import { X } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import StatusChip from "../statusChip/StatusChip";
+import AdvancedTable from "../table/ResponsiveTable";
+import { X } from "lucide-react";
 
 const EditStatusModalTailwind = ({
     open,
@@ -18,13 +18,15 @@ const EditStatusModalTailwind = ({
     downloadLabel = false,
     onDownload = () => { },
 }) => {
-    const [editForm, setEditForm] = useState({ status: '', remarks: '' });
-    console.log(editForm ,'editform');
-    console.log(statusOptions, 'statusOptions')
+    const [editForm, setEditForm] = useState({
+        status: "",
+        remarks: "",
+    });
 
     useEffect(() => {
-        if (orderData)
-            setEditForm({ status: orderData.status || '', remarks: '' });
+        if (orderData?.status) {
+            setEditForm({ status: orderData.status, remarks: "" });
+        }
     }, [orderData]);
 
     const handleChange = (e) => {
@@ -33,11 +35,10 @@ const EditStatusModalTailwind = ({
     };
 
     const handleSubmit = () => {
-        console.log("SUBMITTED FROM MODAL:", editForm); // should show updated status + remarks
-        if (onSubmit )onSubmit(editForm); // send to parent
+        if (!editForm.status || isLoading) return;
+        onSubmit?.(editForm);
     };
 
-   
     const orderItemData = itemTableData.map((item) => ({
         sno: item.sno,
         product: (
@@ -46,10 +47,10 @@ const EditStatusModalTailwind = ({
                     <img
                         src={item.image_path}
                         alt={item.product_name}
-                        className="w-10 h-10 rounded-sm object-cover border border-[var(--border-color)]"
+                        className="w-10 h-10 rounded border border-[var(--border-color)] object-cover"
                     />
                 )}
-                <span className="text-xs font-[var(--font-primary)] text-[var(--primary-text-color)]">
+                <span className="text-xs text-[var(--primary-text-color)]">
                     {item.product_name}
                 </span>
             </div>
@@ -61,41 +62,47 @@ const EditStatusModalTailwind = ({
 
     if (!open) return null;
 
+    const isCancelled = editForm.status?.toUpperCase() === "CANCELLED";
+    const hasStatusChanged = editForm.status !== orderData?.status;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-auto">
+        <div className="fixed inset-0 z-50 bg-black/40 flex justify-center items-start p-4 overflow-y-auto">
             <div
-                className="rounded-lg w-full max-w-4xl shadow-lg relative mt-[70px] p-2 lg:mt-[70px] sm:mt-60"
-                style={{ background: 'var(--background-color)' }}
+                className="w-full max-w-4xl mt-16 rounded-lg shadow-xl bg-[var(--background-color)]"
             >
-                {/* Header */}
-                <div className="flex justify-between items-center p-lg ">
-                    <div>
-                        <h2 className="text-sm font-[var(--font-primary)] text-[var(--primary-text-color)] font-semibold">
-                            Edit Order
-                        </h2>
-                        <p className="text-xs font-[var(--font-primary)] text-[var(--secondary-text-color)]">
-                            Order ID: {orderData?.order_id || '-'}
+                {/* HEADER */}
+                <div className="flex items-center bg-[var(--primary-text-color)]  justify-between border-b border-[var(--border-color)] p-2">
+                    <div className="flex flex-col gap-1">
+                        <p className="text-sm m-0 font-semibold text-[var(--primary-color)]">
+                            Edit Order Status
+                        </p>
+                        <p className="text-xs m-0  text-[var(--secondary-color)]">
+                            Order ID: {orderData?.order_id || "-"}
                         </p>
                     </div>
-                    {downloadLabel && <button
-                        onClick={onDownload}
-                        className={`px-2 py-1 rounded text-xs border  font-[var(--font-primary)]
-                            }`}
-                    >
-                        Download Shipping Label
-                    </button>}
-                    <button
-                        onClick={onClose}
-                        className="p-1 rounded hover:bg-[var(--active-bg)]"
-                    >
-                        <X className="w-5 h-5 text-[var(--secondary-text-color)]" />
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                        {downloadLabel && (
+                            <button
+                                onClick={onDownload}
+                                className="px-2 py-1 text-xs border text-[var(--primary-color)] rounded hover:bg-[var(--active-bg)]"
+                            >
+                                Download Label
+                            </button>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="p-1 rounded hover:bg-[var(--active-bg)]"
+                        >
+                            <X className="w-4 h-4 text-[var(--primary-color)]" />
+                        </button>
+                    </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-lg space-y-4 text-xs font-[var(--font-primary)]">
-                    {/* User & Item Details Table */}
-                    <div className="p-md space-y-4">
+                {/* CONTENT */}
+                <div className="p-2 space-y-6 text-xs">
+                    {/* ORDER ITEMS */}
+                    <section className="space-y-3">
                         <AdvancedTable
                             headers={itemTableColumns}
                             data={orderItemData}
@@ -104,9 +111,8 @@ const EditStatusModalTailwind = ({
                             rowHoverBg="hover:bg-[var(--active-bg)]"
                             headerText="text-[var(--primary-text-color)]"
                             rowText="text-[var(--primary-text-color)]"
-                            fontFamilyHeader="font-[var(--font-secondary)]"
-                            fontFamilyRow="font-[var(--font-primary)]"
                         />
+
                         {userTableColumns.length > 0 && userTableData.length > 0 && (
                             <AdvancedTable
                                 headers={userTableColumns}
@@ -116,122 +122,113 @@ const EditStatusModalTailwind = ({
                                 rowHoverBg="hover:bg-[var(--active-bg)]"
                                 headerText="text-[var(--primary-text-color)]"
                                 rowText="text-[var(--primary-text-color)]"
-                                fontFamilyHeader="font-[var(--font-secondary)]"
-                                fontFamilyRow="font-[var(--font-primary)]"
                             />
                         )}
-                    </div>
+                    </section>
 
-                    {/* Current Status & New Status */}
-                    <div className="flex flex-col md:flex-row gap-4 items-start">
+                    {/* STATUS SECTION */}
+                    <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="text-xs text-[var(--secondary-text-color)]">
+                            <label className="block text-[var(--secondary-text-color)] mb-1">
                                 Current Status
                             </label>
-                            <div className="mt-1">
-                                <StatusChip status={orderData?.status} size="medium" />
-                            </div>
+                            <StatusChip status={orderData?.status} size="medium" />
                         </div>
-                        {statusOptions.length > 0 && <div className="flex-1">
-                            <label className="text-xs text-[var(--secondary-text-color)]">
-                                Select New Status
-                            </label>
-                            <div className="mt-1 flex flex-col gap-2">
-                                {statusOptions.map((option) => (
-                                    <label
-                                        key={option.value}
-                                        className="flex items-center gap-2 cursor-pointer"
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value={option.value}
-                                            checked={editForm.status === option.value}
-                                            onChange={handleChange}
-                                            className="accent-[var(--primary-color)]"
-                                        />
-                                        <span className="text-[var(--primary-text-color)]">
-                                            {option.label}
-                                        </span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>}
-                       
-                    </div>
 
-                    {/* Remarks */}
-                    <div>
-                        <label className="text-xs text-[var(--secondary-text-color)]">
-                            Remarks & Notes
+                        {statusOptions.length > 0 && (
+                            <div>
+                                <label className="block text-[var(--secondary-text-color)] mb-1">
+                                    Update Status
+                                </label>
+                                <div className="space-y-2">
+                                    {statusOptions.map((option) => (
+                                        <label
+                                            key={option.value}
+                                            className="flex items-center gap-2 cursor-pointer"
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="status"
+                                                value={option.value}
+                                                checked={editForm.status === option.value}
+                                                onChange={handleChange}
+                                                className="accent-[var(--primary-color)]"
+                                            />
+                                            <span>{option.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </section>
+
+                    {/* REMARKS */}
+                    <section>
+                        <label className="block text-[var(--secondary-text-color)] mb-1">
+                            Remarks / Notes
                         </label>
                         <textarea
                             name="remarks"
                             value={editForm.remarks}
                             onChange={handleChange}
                             rows={4}
-                            placeholder="Enter detailed remarks about this status change..."
-                            className="w-full p-sm border border-[var(--border-color)] rounded-sm text-[var(--primary-text-color)] mt-1 resize-none focus:outline-none focus:ring-1 focus:ring-[var(--primary-color)]"
+                            placeholder="Add internal notes or remarks for this status update..."
+                            className="w-full p-2 border rounded focus:ring-1 focus:ring-[var(--primary-color)]"
                         />
-                    </div>
+                    </section>
 
-                    {/* Error */}
-                    {errorMessage && (
-                        <div className="text-[var(--error-color)]">{errorMessage}</div>
-                    )}
-
-                    {/* Status Preview */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <div className="flex items-center gap-1">
-                            <span className="text-[var(--secondary-text-color)]">Current:</span>
-                            <StatusChip status={orderData?.status} size="small" />
-                        </div>
+                    {/* STATUS PREVIEW */}
+                    <section className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[var(--secondary-text-color)]">Preview:</span>
+                        <StatusChip status={orderData?.status} size="small" />
                         <span className="text-[var(--secondary-text-color)]">→</span>
-                        <div className="flex items-center gap-1">
-                            <span className="text-[var(--secondary-text-color)]">New:</span>
-                            {editForm.status ? (
-                                <StatusChip status={editForm.status} size="small" />
-                            ) : (
-                                <span className="px-sm py-xs border border-[var(--border-color)] rounded-full text-[var(--secondary-text-color)]">
-                                    Select Status
-                                </span>
-                            )}
+                        {editForm.status ? (
+                            <StatusChip status={editForm.status} size="small" />
+                        ) : (
+                            <span className="px-2 py-1 border rounded text-[var(--secondary-text-color)]">
+                                No change
+                            </span>
+                        )}
+                        {hasStatusChanged && (
+                            <span className="px-2 py-1 rounded-full bg-[var(--warning-color)] text-xs">
+                                Pending Update
+                            </span>
+                        )}
+                    </section>
+
+                    {/* ERROR */}
+                    {errorMessage && (
+                        <div className="text-[var(--error-color)]">
+                            {errorMessage}
                         </div>
-                        {editForm.status &&
-                            editForm.status !== orderData?.status && (
-                                <span className="px-sm py-xs rounded-full bg-[var(--warning-color)] text-[var(--primary-text-color)] animate-pulse">
-                                    WILL UPDATE
-                                </span>
-                            )}
-                    </div>
+                    )}
                 </div>
 
-                {/* Actions */}
-                <div className="flex mt-2 justify-end gap-2 p-lg ">
+                {/* FOOTER ACTIONS */}
+                <div className="flex justify-end gap-2 border-t border-[var(--border-color)] p-3 m-0">
                     <button
                         onClick={onClose}
-                        className="px-1 py-1 border p-1 text-xs border-[var(--border-color)] rounded-md hover:bg-[var(--active-bg)]"
+                        className="px-3 py-1 text-xs border rounded hover:bg-[var(--active-bg)]"
                     >
                         Cancel
                     </button>
+
                     <button
                         onClick={handleSubmit}
                         disabled={!editForm.status || isLoading}
-                        className={`p-1 rounded-md transition text-xs
-                            ${editForm.status &&
-                                editForm.status.toUpperCase() === 'CANCELLED'
-                                ? 'bg-[var(--error-color)] text-white hover:bg-[var(--error-color)]'
-                                : 'bg-[var(--active-border)] text-white hover:bg-[var(--primary-color)]'
+                        className={`px-4 py-1 text-xs rounded text-white transition
+                            ${isCancelled
+                                ? "bg-[var(--error-color)]"
+                                : "bg-[var(--primary-color)]"
                             }
-                            ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}
+                            ${isLoading ? "opacity-70 cursor-not-allowed" : ""}
                         `}
                     >
                         {isLoading
-                            ? 'Processing...'
-                            : editForm.status &&
-                                editForm.status.toUpperCase() === 'CANCELLED'
-                                ? 'Cancel Order'
-                                : 'Update Status'}
+                            ? "Updating..."
+                            : isCancelled
+                                ? "Cancel Order"
+                                : "Update Status"}
                     </button>
                 </div>
             </div>

@@ -1,10 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link, useLocation ,useParams} from 'react-router-dom';
 import { useUpdateOrderStatus, useOrdersByStatus } from '../../hooks/order/useAllOrder.js';
 import BackdropProgress from '../../components/backDrop/BackdropProgress.jsx';
 import Snackbar from '../../components/snackBar/Snackbar.jsx';
 import EditStatusModalTailwind from '../../components/modal/EditStatusModalTailwind.jsx';
-import AdvancedTableModal from '../../components/modal/AdvancedTableModal.jsx';
 import AdvancedTable from '../../components/table/ResponsiveTable.jsx';
 import StatusChip from '../../components/statusChip/StatusChip.jsx';
 import { useCreateConsignment } from '../../hooks/shipping/useCreateConsignment.js';
@@ -15,27 +14,26 @@ import OrderStatusNotification from '../../components/notifications/OrderStatusN
 import NotificationTemplate from '../../components/notifications/NotificationTemplate.jsx';
 import { Bell, TrainTrackIcon } from "lucide-react";
 import { FaRoute } from "react-icons/fa";
-
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const OrderTable = () => {
-    const location = useLocation();
-
+    
+    const { orderStatus }= useParams();
     const navigate = useNavigate();
+
+
+    // Redirect if orderStatus is not present
+    useEffect(() => {
+        if (!orderStatus) {
+            navigate('/', { replace: true });
+        }
+    }, [orderStatus, navigate]);
 
     const [downloadLabel, setDownloadLabel] =useState(false)
 
-    const { key } = location.state || {};
-    console.log(key, 'keytoget');
-
     const [statusUpdated, setStatusUpdated] = useState(false);
-    // Redirect if key is not present
-    // useEffect(() => {
-    //     if (!key) {
-    //         navigate('/', { replace: true });
-    //     }
-    // }, [key, navigate]);
-
-
+    const [sendPendingNotification , setSendPendingNotification] = useState(false);
 
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -45,10 +43,14 @@ const OrderTable = () => {
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [inputSearch, setInputSearch] = useState("");
+    const [appliedSearch, setAppliedSearch] = useState("");
+
     const [selectedOrder, setSelectedOrder] = useState(null);
-    const [openViewModal, setOpenViewModal] = useState(false);
     const [openEditModal, setOpenEditModal] = useState(false);
+
+    const [searchScope, setSearchScope] = useState("PAGE"); // PAGE | ALL
+    const [appliedFilter, setAppliedFilter] = useState(null);
 
     const [showNotification, setShowNotification] = useState(false);
     const [notificationPayload, setNotificationPayload] = useState(null);
@@ -63,8 +65,9 @@ const OrderTable = () => {
     const [progress, setProgress] = useState(0);
     const [showBackdrop, setShowBackdrop] = useState(false);
 
-    const status = key;
-    const { data, isLoading, isError, error, refetch } = useOrdersByStatus(status, page, rowsPerPage);
+    const status = orderStatus || "PENDING";
+
+    const { data, isLoading, isError, error, refetch } = useOrdersByStatus(status, page, rowsPerPage, appliedSearch);
     const createConsignmentMutation = useCreateConsignment();
     const updateOrderStatus = useUpdateOrderStatus();
     const { useGetAllAddresses } = useAddressQuery();
@@ -73,7 +76,56 @@ const OrderTable = () => {
 
     const addresses = Array.isArray(addressesData) ? addressesData : [];
 
-    console.log(selectedOrder ,'selectedOrder')
+    const currentPage = page + 1;               // for UI (1-based)
+    const totalPages = data?.totalPages ?? 1;
+    const hasMorePage = data?.hasMore ?? false;
+    const totalOrdersByStatus = data?.totalByStatus ?? 1;
+
+
+
+    const notificationStatus = {
+        placed: {
+            current: "placed",
+            next: "in_processing",
+        },
+        in_processing: {
+            current: "in_processing",
+            next: "packing",
+        },
+        packing: {
+            current: "packing",
+            next: "ready_to_ship",
+        },
+        ready_to_ship: {
+            current: "ready_to_ship",
+            next: "shipped",
+        },
+        shipped: {
+            current: "shipped",
+            next: "in_transit",
+        },
+        in_transit: {
+            current: "in_transit",
+            next: "out_for_delivery",
+        },
+        out_for_delivery: {
+            current: "out_for_delivery",
+            next: "delivered",
+        },
+
+        delivered: {
+            current: "delivered",
+            next: null,
+        },
+        cancelled: {
+            current: "cancelled",
+            next: null,
+        },
+        pending: {
+            current: "pending",
+            next: "in_processing", // or whatever makes sense in your flow
+        },
+    }; 
     // Find default origin address safely
     const defaultOriginAddress = useMemo(() => {
         if (!addresses.length) return null;
@@ -132,27 +184,18 @@ const OrderTable = () => {
 
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
     };
-
-    const handleSearchChange = (event) => {
-        setSearchTerm(event.target.value);
-    };
-
-    const filteredOrders = useMemo(() => {
-        return orders.filter((order) => {
-            const searchTermLower = (searchTerm || '').toLowerCase();
-            const orderId = (order.order_id || '').toLowerCase();
-            const userName = (order.user_name || '').toLowerCase();
-            const contact = (order.contact || '').toLowerCase();
-            const email = (order.email || '').toLowerCase();
-
-            return orderId.includes(searchTermLower) ||
-                userName.includes(searchTermLower) ||
-                contact.includes(searchTermLower) ||
-                email.includes(searchTermLower);
+    const handleChangePage = (dir) => {
+        setPage((prev) => {
+            if (dir === "next" && hasMorePage) {
+                return prev + 1;
+            }
+            if (dir === "prev" && prev > 0) {
+                return prev - 1;
+            }
+            return prev;
         });
-    }, [orders, searchTerm]);
+    };
 
     const labelPayload = {
         reference_number: selectedOrder?.courierTrackingId || 'NA',
@@ -177,10 +220,34 @@ const OrderTable = () => {
         else{
             setDownloadLabel(false)
         }
-    },[status,key]);
+    },[status,orderStatus]);
 
+    const handleSearch = () => {
+        if (!inputSearch.trim()) return;
 
-      
+        setPage(0);
+
+        if (searchScope === "ALL") {
+            setRowsPerPage(orders?.totalByStatus || 1000);
+        } else {
+            setRowsPerPage(10);
+        }
+
+        setAppliedSearch(inputSearch); // 🔥 API TRIGGER
+
+        setAppliedFilter({
+            term: inputSearch,
+            scope: searchScope === "ALL" ? "All Orders" : "This Page",
+        });
+    };
+    const handleClearsearch = () => {
+        setInputSearch("");
+        setAppliedSearch("");
+        setAppliedFilter(null);
+        setPage(0);
+        setRowsPerPage(10);
+    };
+
 
 
 
@@ -195,12 +262,6 @@ const handleDownloadLabel = () => {
     document.body.removeChild(link);
 };
 
-
-    const handleViewOrder = (order) => {
-        setSelectedOrder(order);
-        setOpenViewModal(true);
-    };
-
     const handleEditOrder = (order) => {
         setSelectedOrder(order);
         setEditForm({
@@ -210,6 +271,10 @@ const handleDownloadLabel = () => {
             paymentStatus: order.paymentStatus || order.payment_status || 'PENDING',
         });
         setOpenEditModal(true);
+        //Notification
+        
+       
+       
     };
 
     const handleTrackOrder = (order) =>{
@@ -219,11 +284,7 @@ const handleDownloadLabel = () => {
 
     }
 
-    const handleCloseViewModal = () => {
-        setOpenViewModal(false);
-        setSelectedOrder(null);
-    };
-
+    
     const handleCloseEditModal = () => {
         setOpenEditModal(false);
         setSelectedOrder(null);
@@ -316,7 +377,7 @@ const handleDownloadLabel = () => {
         };
         console.log(order.payment_mode ,'paymentmode')
 
-        if (order.payment_mode.toLowerCase() !== "online") {
+        if (order?.payment_mode?.toLowerCase() !== "online") {
             consignment.cod_collection_mode = "cash";
             consignment.cod_amount = order.total_amount.toString();
         }
@@ -328,7 +389,6 @@ const handleDownloadLabel = () => {
 
 
     const handleEditSubmit = async (formData) => {
-
         const currentStatus = selectedOrder.status?.toUpperCase();
         const newStatus = formData.status?.toUpperCase();
 
@@ -354,48 +414,55 @@ const handleDownloadLabel = () => {
         try {
             const payload = {
                 orderId: selectedOrder.order_id,
-                newStatus: formData.status,
+                newStatus: newStatus,
                 remarks: formData.remarks,
                 paymentMode: editForm.paymentMode,
                 paymentStatus: editForm.paymentStatus,
             };
 
+            // Simulate progress
             progressInterval = setInterval(() => {
-                setProgress(prev =>
-                    Math.min(Math.floor(prev + Math.random() * 5), 90)
-                );
-
+                setProgress(prev => Math.min(Math.floor(prev + Math.random() * 5), 90));
             }, 150);
 
-            // ── CANCELLED (no consignment) ───────────────────────
-            if (formData.status.toUpperCase() === "CANCELLED") {
+            // ── CANCELLED ───────────────────────
+            if (newStatus === "CANCELLED") {
                 await updateOrderStatus.mutateAsync(payload);
                 clearInterval(progressInterval);
                 setProgress(100);
-                setSnackbar({ open: true, message: "Order cancelled!", type: "success" });
-                setTimeout(() => { setShowBackdrop(false); refetch(); handleCloseEditModal(); }, 600);
-                return;
+                setSnackbar({ open: true, message: "Order cancelled successfully!", type: "success" });
+
+                // Build notification with updated status
+                const notiPayload = buildNotificationPayload(
+                    selectedOrder, // ensure payload reflects new status
+                    "order-cancel"
+                );
+                setNotificationPayload(notiPayload);
+                setStatusUpdated(true);
+
+                setTimeout(() => {
+                    setShowBackdrop(false);
+                    setSnackbar({ open: true, message: "Notification sent to the user successfully!", type: "success" });
+                    refetch();
+                    handleCloseEditModal();
+                    setStatusUpdated(false);
+                }, 600);
+
+                return; // ✅ important: stop further execution
             }
 
             // ── PACKING → READY_TO_SHIP: Create Consignment ─────────────
-            if (status === "PACKING" && formData.status === "READY_TO_SHIP") {
+            if (currentStatus === "PACKING" && newStatus === "READY_TO_SHIP") {
+                if (!defaultOriginAddress) throw new Error("Default origin address not found.");
 
-                if (!defaultOriginAddress) {
-                    throw new Error("Default origin address not found.");
-                }
-
-                // Create consignment
                 const consignment = buildConsignment(selectedOrder, defaultOriginAddress);
                 const consignmentPayload = { consignments: [consignment] };
 
                 const consignmentResponse = await createConsignmentMutation.mutateAsync(consignmentPayload);
-
                 const result = consignmentResponse?.data?.[0];
                 if (!result?.success || !result?.reference_number) {
                     throw new Error(result?.message || "Consignment creation failed");
                 }
-
-                // Generate shipping label
 
                 setSnackbar({
                     open: true,
@@ -404,103 +471,104 @@ const handleDownloadLabel = () => {
                 });
             }
 
-
-            // ── PACKED → READY_TO_SHIP: Label (simulate) ────────
-            // if (status === 'PACKED' && formData.status === 'SHIPPED') {
-            //     const confirmLabel = window.confirm(
-            //         "⚠️ Please confirm that the shipping label is correctly pasted on the package before updating the status."
-            //     );
-            //     if (!confirmLabel) {
-            //         clearInterval(progressInterval);
-            //         setShowBackdrop(false);
-            //         setProgress(0);
-            //         return;  // Stop everything when user does NOT confirm
-            //     }
-            //     console.log(orders[0].courierTrackingId,'trackingOrders')
-            //      await updateOrderTracking.mutateAsync(orders[0].courierTrackingId)
-            //     await new Promise(r => setTimeout(r, 1000));
-            //     setSnackbar({ open: true, message: "Label generated!", type: "success" });
-            // }
-            
             // ── FINAL: Update Order Status ───────────────────────
             await updateOrderStatus.mutateAsync(payload);
-            
             clearInterval(progressInterval);
             setProgress(100);
-            
-     
-            await setStatusUpdated(true);
-            setSnackbar({ open: true, message: "Order updated!", type: "success" });
+
+            // Build notification payload for normal updates
+            const notiPayload = buildNotificationPayload(selectedOrder,
+                "order-status-update"
+            );
+            setNotificationPayload(notiPayload);
+
+            setStatusUpdated(true);
+            setSnackbar({ open: true, message: "Order updated successfully!", type: "success" });
+
             setTimeout(() => {
                 setShowBackdrop(false);
-          
-                setSnackbar({ open: true, message: "Notification sent to the user Successfully!", type: "success" });
+                setSnackbar({ open: true, message: "Notification sent to the user successfully!", type: "success" });
                 refetch();
                 handleCloseEditModal();
+                setStatusUpdated(false);
             }, 600);
 
         } catch (err) {
             clearInterval(progressInterval);
             setProgress(0);
             setShowBackdrop(false);
-
-            setSnackbar({
-                open: true,
-                message: `Failed: ${err.message}`,
-                type: "error",
-            });
+            setSnackbar({ open: true, message: `Failed: ${err.message}`, type: "error" });
+            setStatusUpdated(false);
         }
     };
 
-    const sendNotification = (selectedOrder) => {
-        if (!selectedOrder) return;
-    
 
-        const status = selectedOrder.status?.toLowerCase();
+
+    const buildNotificationPayload = (selectedOrder, tempKey) => {
+        if (!selectedOrder) return null;
+
+        const formattedTime = new Date().toLocaleString("en-IN", {
+            dateStyle: "medium",
+            timeStyle: "short",
+        });
+        
+        const status = selectedOrder.status?.toLowerCase()?.trim();
+        const currentStatus = notificationStatus[status]?.current || status;
+
         const userName = selectedOrder?.user_name?.toUpperCase();
         const userId = selectedOrder?.address?.customerId;
         const orderId = selectedOrder?.order_id || selectedOrder?.id;
         const imageUrl = selectedOrder?.orderItems?.[0]?.image_path || null;
-        const trackingNumber = selectedOrder.courierTrackingId;
-        const totalAmount = selectedOrder?.total_amount || 0 ;
+        const trackingNumber =
+            selectedOrder?.courierTrackingId &&
+                selectedOrder.courierTrackingId !== "N/A"
+                ? selectedOrder.courierTrackingId
+                : null;
+        const totalAmount = selectedOrder?.total_amount || 0;
 
+        // ✅ Determine tempKey based on status if not explicitly passed
+        if (!tempKey) {
+            switch (status) {
+                case "pending":
+                    tempKey = "order-pending";
+                    break;
 
-        let templateId;
+                case "placed":
+                    tempKey = "order-placed";
+                    break;
 
-        switch (status) {
-            case "pending":
-                templateId = 6;
-                break;
+                case "shipped":
+                    tempKey = "order-shipped";
+                    break;
 
-            case "placed":
-                templateId = 5;
-                break;
+                case "delivered":
+                    tempKey = "order-delivered";
+                    break;
+                case "cancelled":
+                    tempKey = "order-cancel";
 
-            case "shipped":
-                templateId = 7;
-                break;
-
-            case "delivered":
-                templateId = 8;
-                break;
-
-            default:
-                return; // ❌ do not send notification
+                default:
+                    console.warn("⚠️ Unknown order status, notification skipped:", status);
+                    return null;
+            }
         }
 
         return {
             userId,
-            templateId,
+            tempKey,
             imageUrl,
             data: {
                 orderId,
                 status,
-                imageUrl,
                 userName,
-                totalAmount
+                totalAmount,
+                trackingNumber, // optional, handled in template
+                formattedTime,
+                currentStatus
             },
         };
     };
+
 
 
     
@@ -526,51 +594,9 @@ const handleDownloadLabel = () => {
         return statusFlow[status] || [];
     };
 
-    const notificationStatus = {
-        placed: {
-            current: "placed",
-            next: "in_processing",
-        },
-        in_processing: {
-            current: "in_processing",
-            next: "packing",
-        },
-        packing: {
-            current: "packing",
-            next: "ready_to_ship",
-        },
-        ready_to_ship: {
-            current: "ready_to_ship",
-            next: "shipped",
-        },
-        shipped: {
-            current: "shipped",
-            next: "in_transit",
-        },
-        in_transit: {
-            current: "in_transit",
-            next: "out_for_delivery",
-        },
-        out_for_delivery: {
-            current: "out_for_delivery",
-            next: "delivered",
-        },
-        
-        delivered: {
-            current: "delivered",
-            next: null,
-        },
-        cancelled: {
-            current: "cancelled",
-            next: null,
-        },
-        pending: {
-            current: "pending",
-            next: "in_processing", // or whatever makes sense in your flow
-        },
-    };
+  
     console.log(selectedOrder?.status || null, 'console')
-    console.log(notificationStatus[selectedOrder?.status?.toLowerCase()]?.current || null ,'console')
+    console.log(notificationStatus[selectedOrder?.status?.toLowerCase()]?.current || null ,'currentStatus')
   
     const orderHeaders = [
         { key: "order_id", label: "Order ID", align: "left" },
@@ -586,7 +612,7 @@ const handleDownloadLabel = () => {
 
     const sendNotificationIcon = [ "pending" ]
     
-    const formattedOrders = filteredOrders.map(order => ({
+    const formattedOrders = orders.map(order => ({
         order_id: (
             <span className="text-xs font-semibold text-primaryText">
                 {order.order_id}
@@ -629,7 +655,7 @@ const handleDownloadLabel = () => {
         actions: (
             <div className="flex items-center justify-center gap-1">
                 {/* VIEW ORDER */}
-                <div className="relative group inline-flex">
+                {/* <div className="relative group inline-flex">
                     <button
                         onClick={() => handleViewOrder(order)}
                         className="btn-icon-primary p-1 rounded-md transition-colors"
@@ -637,7 +663,7 @@ const handleDownloadLabel = () => {
                         <ViewIcon className="w-4 h-4" />
                     </button>
                     <span className="tooltip">View Order</span>
-                </div>
+                </div> */}
 
                 {/* EDIT ORDER */}
                 {!NON_EDITABLE_STATUSES.includes(order.status.toLowerCase()) && (
@@ -668,13 +694,13 @@ const handleDownloadLabel = () => {
                     <div className="relative group inline-flex">
                         <button
                             onClick={() => {
-                                const payload = sendNotification(order); // ✅ FIXED
+                                const payload = buildNotificationPayload(order); // ✅ FIXED
 
                                 if (!payload) return;
 
                                 setSelectedOrder(order);
                                 setNotificationPayload(payload);
-                                setShowNotification(true);
+                                setSendPendingNotification(true);
                             }}
                             className="p-1 rounded-md border border-gray-300
             hover:bg-gray-100 text-gray-700 transition-colors"
@@ -736,33 +762,106 @@ const handleDownloadLabel = () => {
                         </ol>
                     </nav>
 
+
                     {/* Title and Search */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-lg font-bold text-primaryText font-primary">
+                    <motion.div
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4"
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                    >
+                        {/* Title and Count */}
+                        <motion.div
+                            className="flex items-center gap-3"
+                            whileHover={{ scale: 1.02 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                        >
+                            <h2 className="text-base sm:text-xl font-bold text-primaryText font-primary">
                                 Order Management
                             </h2>
-                            <span className="bg-activeBg text-primary px-2 py-1 rounded text-xs font-semibold">
-                                {filteredOrders.length} orders
-                            </span>
-                        </div>
+                            <motion.span
+                                className="bg-activeBg text-primary px-3 py-1 rounded-full text-sm font-semibold shadow-md"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+                            >
+                                {totalOrdersByStatus.length} orders
+                            </motion.span>
+                        </motion.div>
 
-                        <div className="relative flex-1 sm:flex-none sm:w-64">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <SearchIcon className="h-3 w-3 text-secondaryText" />
-                            </div>
-                            <input
-                                type="text"
-                                placeholder="Search orders..."
-                                value={searchTerm}
-                                onChange={handleSearchChange}
-                                className="w-full pl-10 pr-3 py-2 bg-card border border-border rounded-md text-sm text-primaryText placeholder-secondaryText focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                            />
-                        </div>
-                    </div>
+                        {/* Search + Scope */}
+                        <motion.div
+                            className="flex gap-2 w-full sm:w-auto"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3, duration: 0.5 }}
+                        >
+                            {/* Search Scope */}
+                            <motion.select
+                                value={searchScope}
+                                onChange={(e) => setSearchScope(e.target.value)}
+                                className="px-3 py-2 text-sm bg-card border border-border rounded-md text-primaryText shadow-sm hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                                whileHover={{ scale: 1.03 }}
+                                whileFocus={{ scale: 1.02 }}
+                            >
+                                <motion.option value="PAGE">This Page</motion.option>
+                                <motion.option value="ALL">All Orders</motion.option>
+                            </motion.select>
+
+                            {/* Search Input */}
+                            <motion.div
+                                className="relative flex-1 sm:w-64"
+                                initial={{ x: 20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.4, duration: 0.5, type: "spring", stiffness: 200 }}
+                            >
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none ">
+                                    <SearchIcon className="h-4 w-4 text-secondaryText" />
+                                </div>
+
+                                <motion.input
+                                    type="text"
+                                    placeholder="Search by name, mobile, order id..."
+                                    value={inputSearch}
+                                    onChange={(e) => setInputSearch(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                                    className="w-full pl-10 pr-3 py-2 bg-card border border-border rounded-md text-sm text-primaryText placeholder-secondaryText focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300 shadow-sm hover:shadow-md"
+                                    whileHover={{ scale: 1.01 }}
+                                    whileFocus={{ scale: 1.02 }}
+                                />
+                            </motion.div>
+                        </motion.div>
+                    </motion.div>
+
+                    {/* Applied Filter */}
+                    <AnimatePresence>
+                        {appliedFilter && (
+                            <motion.div
+                                className="mb-2 text-sm bg-white p-2 text-secondaryText flex flex-wrap items-center gap-2"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.4, ease: "easeOut" }}
+                            >
+                                <span className="font-semibold text-primaryText">Filter applied:</span>
+                                <span className="italic">"{appliedFilter.term}"</span>
+                                <span className="px-2 py-0.5 bg-muted rounded-full text-xs">{appliedFilter.scope}</span>
+
+                                <motion.button
+                                    onClick={handleClearsearch}
+                                    className="text-primary hover:underline"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Clear
+                                </motion.button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
 
                     {/* Table */}
-                    {filteredOrders.length === 0 ? (
+                    {totalOrdersByStatus.length === 0 ? (
                         <div className="text-center py-8">
                             <div className="text-secondaryText text-sm">
                                 No orders found
@@ -782,34 +881,62 @@ const handleDownloadLabel = () => {
                             }}
                            actionColumn="actions" // This will show actions column
                            actionOptions ={getStatusOptions()}
+                            headerBg='bg-[var(--primary-text-color)]'
+                            headerText='text-[var(--white-color)]'
 
                         />
                     )}
 
                     {/* Footer */}
-                    {filteredOrders.length > 0 && (
+                    {totalOrdersByStatus > 0 && (
                         <div className="mt-3  flex flex-row sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div className="flex items-center gap-2">
-                                <span className="bg-info text-black px-2 py-1 rounded text-xs font-semibold">
-                                    {filteredOrders.length} filtered
+                                <span className="bg-info  px-2 py-1 rounded text-xs font-bold">
+                                    Total Orders {totalOrdersByStatus}  in {status} 
                                 </span>
                             </div>
+                            <div className='flex items-center gap-2'> 
 
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs text-secondaryText font-secondary">
-                                    Rows per page:
-                                </span>
-                                <select
-                                    value={rowsPerPage}
-                                    onChange={handleChangeRowsPerPage}
-                                    className="bg-background border border-border rounded text-xs text-primaryText font-secondary px-1 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
-                                >
-                                    <option value={5}>5</option>
-                                    <option value={10}>10</option>
-                                    <option value={25}>25</option>
-                                    <option value={50}>50</option>
-                                </select>
-                            </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-secondaryText font-secondary">
+                                        Rows per page:
+                                    </span>
+                                    <select
+                                        value={rowsPerPage}
+                                        onChange={handleChangeRowsPerPage}
+                                        className="bg-background border border-border rounded text-xs px-1 py-1"
+                                    >
+                                        <option value={5}>5</option>
+                                        <option value={10}>10</option>
+                                        <option value={25}>25</option>
+                                        <option value={50}>50</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex items-center gap-2 text-xs">
+                                    <button
+                                        disabled={page === 0}
+                                        onClick={() => handleChangePage("prev")}
+                                        className="p-1 rounded bg-[var(--primary-color)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-bg-[var(--primary-color)]"
+                                        aria-label="Previous page"
+                                    >
+                                        <ChevronLeft size={16} />
+                                    </button>
+
+                                    <span className="text-gray-600 font-medium">
+                                        {currentPage} / {totalPages}
+                                    </span>
+
+                                    <button
+                                        disabled={!hasMorePage}
+                                        onClick={() => handleChangePage("next")}
+                                        className="p-1 rounded bg-[var(--primary-color)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-bg-[var(--primary-color)]"
+                                        aria-label="Next page"
+                                    >
+                                        <ChevronRight size={16} />
+                                    </button>
+                                </div>
+                                </div>
                         </div>
                     )}
                 </div>
@@ -833,94 +960,7 @@ const handleDownloadLabel = () => {
             {/* Modals */}
             {selectedOrder && (
                 <>
-                    <AdvancedTableModal
-                        open={openViewModal}
-                        onClose={handleCloseViewModal}
-                        title={`Order Details - ${selectedOrder?.order_id}`}
-                        mode="view"
-                        userData={[
-                            {
-                                key: "Order Number",
-                                value: selectedOrder?.order_id,
-                                align: "left",
-                            },
-                            {
-                                key: "Name",
-                                value: selectedOrder?.user_name,
-                            },
-                            {
-                                key: "Email",
-                                value: selectedOrder?.email,
-                            },
-                            {
-                                key: "Mobile Number",
-                                value: selectedOrder?.contact,
-                            },
-                            {
-                                key: "Address",
-                                value: selectedOrder?.address
-                                    ? `${selectedOrder.address.name}, ${selectedOrder.address.addressLine}, ${selectedOrder.address.landmark ? selectedOrder.address.landmark + "," : ""} ${selectedOrder.address.city}, ${selectedOrder.address.state} - ${selectedOrder.address.pincode}`
-                                    : "No address available",
-                            },
-                            {
-                                key: "Order Date",
-                                value: selectedOrder?.order_time
-                                    ? new Date(selectedOrder.order_time).toLocaleString()
-                                    : "-",
-                            },
-                        ]}
-                        userColumns={[
-                            { key: "key", label: "Field" },
-                            { key: "value", label: "Details" },
-                        ]}
-                        orderData={selectedOrder?.orderItems?.map((item, index) => ({
-                            sno: index + 1,
-                            productId: item.tagno || item.sno || "-",
-                            product: (
-                                <span className='flex items-center gap-1 text-xs'>
-                                    <img src={getProductImages(item.image_path)} width={30} height={30} />
-                                    {item.product_name}
-                                </span>
-                            ),
-                            price: item.price.toFixed(2),
-                            total: item.price.toFixed(2),
-                        }))}
-                        orderColumns={[
-                            { key: "sno", label: "S.No", align: "left" },
-                            { key: "productId", label: "Product ID", align: "left" },
-                            { key: "product", label: "Product ", align: "left" },
-                            { key: "price", label: "Price", align: "right" },
-                            { key: "total", label: "Total", align: "right" },
-                        ]}
-                        showNextArrow={false}
-                        showTotal={true}
-                        totalLabel="Grand Total"
-                        totalValue={`₹${selectedOrder?.total_amount?.toFixed(2)}`}
-                        downloadLabel={downloadLabel}
-                        onDownload={handleDownloadLabel}
-                    />
-                    <OrderStatusNotification
-                        userId={selectedOrder?.address?.customerId}
-                        orderId={selectedOrder?.order_id}
-                        currentStatus={
-                            notificationStatus[
-                                selectedOrder?.status
-                                    ?.trim()
-                                    ?.toLowerCase()
-                                    ?.replace(/\s+/g, "_")
-                            ]?.next ?? null
-                        }
-                        trackingNumber={
-                            selectedOrder?.courierTrackingId !== "N/A"
-                                ? selectedOrder?.courierTrackingId
-                                : null
-                        }
-                        supportContact="+91 93428 84232"
-                        redirectUrl={`https://bmgjewellers.com/account/orderdetails/${selectedOrder?.order_id}`}
-                        trigger={statusUpdated}
-                        imageUrl={selectedOrder?.orderItems[0].image_path}
-                    />
-
+                
                     <EditStatusModalTailwind
                         open={openEditModal}
                         onClose={handleCloseEditModal}
@@ -942,7 +982,7 @@ const handleDownloadLabel = () => {
                         onDownload={handleDownloadLabel}
                     />
                    
-                    {showNotification && notificationPayload && (
+                    {selectedOrder && notificationPayload && (
                         <NotificationTemplate
                             payload={notificationPayload}
                             onSuccess={() =>
@@ -952,12 +992,11 @@ const handleDownloadLabel = () => {
                                     type: "success",
                                 })
                             }
-                            onClose={() => setShowNotification(false)}
-                            // ✅ unique key to re-trigger useEffect
-                            key={Date.now()}
+                            onClose={() => setSendPendingNotification(false)}
+                            trigger={sendPendingNotification || statusUpdated}
+                            key={`${selectedOrder.order_id}-${notificationPayload.tempKey}`}
                         />
                     )}
-
 
                  
                 </>

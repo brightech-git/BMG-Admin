@@ -3,6 +3,7 @@ import { getAllNotificationTemplates,
         getNotificationTemplateById, 
         createNotificationTemplate, 
         updateNotificationTemplate,
+        getNotificationTemplateByTempKey,
         deleteNotificationTemplate } from "../../service/notificationTemplateService";
 
 export const useAllTemplates = () => {
@@ -16,6 +17,14 @@ export const useTemplateById = (id) => {
         queryKey: ["notificationTemplate", id],
         queryFn: () => getNotificationTemplateById(id),
         enabled: !!id,
+    });
+};
+
+export const useTemplateByTempKey = (tempKey) => {
+    return useQuery({
+        queryKey: ["notificationTemplate", tempKey],
+        queryFn: () => getNotificationTemplateByTempKey(tempKey),
+        enabled: !!tempKey,
     });
 };
 export const useCreateTemplate = () => {
@@ -37,6 +46,7 @@ export const useUpdateTemplate = (id) => {
             queryClient.invalidateQueries(["notificationTemplates"]);
             queryClient.invalidateQueries(["notificationTemplate", id]);
         },
+        enabled: !!id,
     });
 };
 export const useDeleteTemplate = () => {
@@ -47,5 +57,6 @@ export const useDeleteTemplate = () => {
         onSuccess: () => {
             queryClient.invalidateQueries(["notificationTemplates"]);
         },
+    
     });
 };

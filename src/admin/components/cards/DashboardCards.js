@@ -1,17 +1,15 @@
 import React, { useEffect, useState, useMemo, useCallback, useContext } from 'react';
 import './DashboardCards.css';
-import { getDashboardData } from '../../service/dashBoardService';
-import { useOrdersByStatus } from '../../hooks/order/useAllOrder';
 import { motion, AnimatePresence } from 'framer-motion';
 import Loader from './Loader';
 import { Link } from 'react-router-dom';
 import { MyContext } from '../../context/themeContext/themeContext';
 import { useNavigate } from 'react-router-dom';
-import { format, parseISO, isWithinInterval } from "date-fns";
-import { useOrdersByDateRange } from '../../hooks/order/useAllOrder';
 import {
     FaClock, FaShoppingBag, FaBox, FaBoxOpen, FaTruck, FaMapMarkerAlt, FaHome,
-    FaSpinner, FaRedo, FaTimesCircle, FaUndo, FaMoneyBillWave, FaExclamationCircle, FaShoppingCart, FaCheckCircle, FaUsers, FaSearch, FaShippingFast, FaSync, FaArrowUp, FaArrowDown, FaEquals, FaExternalLinkAlt
+    FaSpinner, FaRedo, FaTimesCircle, FaUndo, FaMoneyBillWave, FaExclamationCircle,
+    FaShoppingCart, FaCheckCircle, FaUsers, FaSearch, FaShippingFast, FaSync,
+    FaArrowUp, FaArrowDown, FaEquals, FaExternalLinkAlt
 } from 'react-icons/fa';
 import { useAllOrderSummary } from '../../hooks/order/useAllOrder';
 
@@ -28,69 +26,54 @@ const iconMap = {
     "x-circle": <FaTimesCircle />,
     "rotate-ccw": <FaUndo />,
     "refresh-ccw": <FaMoneyBillWave />,
+    "shopping-cart": <FaShoppingCart />,
+    "check-circle": <FaCheckCircle />,
+    "users": <FaUsers />,
+    "search": <FaSearch />,
+    "shipping-fast": <FaShippingFast />,
 };
-
 
 const DashboardCards = () => {
     const { themeMode } = useContext(MyContext);
-    const [dashboardData, setDashboardData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
-    const [totalUsers, setTotalUsers] = useState(0);
-    const [todayOrders, setTodayOrders] = useState([]);
     const [refreshInterval, setRefreshInterval] = useState(60);
     const [showToast, setShowToast] = useState(false);
-    const [activeView, setActiveView] = useState('overview'); // 'overview' | 'analytics'
+    const [activeView, setActiveView] = useState('overview');
 
-    const today = new Date();
-    const formattedStartDate = format(today, 'yyyy-MM-dd');
-    const formattedEndDate = format(today, 'yyyy-MM-dd');
+    const navigate = useNavigate();
 
-    const { data: orders = [], isError, refetch } = useOrdersByDateRange(
-        formattedStartDate,
-        formattedEndDate
-    );
-    const { data:allOrderSummary ,isLoading:orderSummaryLoading ,isError:orderSummaryError} = useAllOrderSummary();
-    console.log(allOrderSummary,'allOrderSummary');
+    const {
+        data: summary,
+        isLoading: summaryLoading,
+        isError: summaryError,
+        refetch
+    } = useAllOrderSummary();
 
-
-    
+    console.log(summary, 'allOrderSummary');
 
     useEffect(() => {
-        if (!Array.isArray(orders)) return;
+        if (summary) {
+            setLastUpdated(new Date());
+            setIsLoading(false);
+        }
+    }, [summary]);
 
-        const start = new Date();
-        start.setHours(0, 0, 0, 0);
-        const end = new Date();
-        end.setHours(23, 59, 59, 999);
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            refetch();
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
+        }, refreshInterval * 1000);
 
-        const filtered = orders.filter((order) =>
-            isWithinInterval(parseISO(order.orderTime), { start, end })
-        );
-
-        setTodayOrders(filtered);
-    }, [orders]);
-
-    const page = 0;
-    const size = 100000;
-    const { data: pendingOrders, isLoading: loadingPending } = useOrdersByStatus("PENDING", page, size);
-    const { data: placedOrders, isLoading: loadingPlaced } = useOrdersByStatus("PLACED", page, size);
-    const { data: inProcessingOrders, isLoading: loadingProcessing } = useOrdersByStatus("IN_PROCESSING", page, size);
-    const { data: PackingOrders, isLoading: loadingPacking } = useOrdersByStatus("PACKING", page, size);
-    const { data: packedOrders, isLoading: loadingPacked } = useOrdersByStatus("PACKED", page, size);
-    const { data: shippedOrders, isLoading: loadingShipped } = useOrdersByStatus("SHIPPED", page, size);
-    const { data: inTransitOrders, isLoading: loadingTransit } = useOrdersByStatus("IN_TRANSIT", page, size);
-    const { data: deliveredOrders, isLoading: loadingDelivered } = useOrdersByStatus("DELIVERED", page, size);
-    const { data: cancelledOrders, isLoading: loadingCancelled } = useOrdersByStatus("CANCELLED", page, size);
-    const { data: returnedOrders, isLoading: loadingReturned } = useOrdersByStatus("RETURNED", page, size);
-    const { data: refundedOrders, isLoading: loadingRefunded } = useOrdersByStatus("REFUNDED", page, size);
+        return () => clearInterval(intervalId);
+    }, [refreshInterval, refetch]);
 
     const fetchDashboardData = useCallback(async () => {
         try {
             setIsLoading(true);
-            const data = await getDashboardData();
-            setTotalUsers(data?.totalUsers || 0);
+            await refetch();
             setShowToast(true);
             setTimeout(() => setShowToast(false), 3000);
         } catch (error) {
@@ -100,13 +83,7 @@ const DashboardCards = () => {
             setIsLoading(false);
             setLastUpdated(new Date());
         }
-    }, []);
-
-    useEffect(() => {
-        fetchDashboardData();
-        const intervalId = setInterval(fetchDashboardData, refreshInterval * 1000);
-        return () => clearInterval(intervalId);
-    }, [fetchDashboardData, refreshInterval]);
+    }, [refetch]);
 
     const handleRefreshIntervalChange = useCallback((event) => {
         setRefreshInterval(Number(event.target.value));
@@ -128,149 +105,104 @@ const DashboardCards = () => {
         return num.toLocaleString();
     }, []);
 
- 
-
     // Enhanced cards data with different types
     const cardsData = useMemo(() => {
-        if (!dashboardData) return [];
-        return [
-            {
-                id: 'todayOrders',
-                title: 'Today Orders',
-                value: todayOrders.length,
-                icon: <FaShoppingCart />,
-                detail: 'All orders placed today',
-                link: 'order/today',
-                type: 'primary',
-                trend: 12.5
-            },
-            {
-                id: 'totalOrders',
-                title: 'Total Orders',
-                value: dashboardData.totalOrders,
-                icon: <FaBoxOpen />,
-                detail: 'All time orders',
-                link: 'AllOrderPage',
-                type: 'secondary',
-                trend: 8.2
-            },
-            {
-                id: 'deliveredOrders',
-                title: 'Delivered',
-                value: dashboardData.deliveredOrders,
-                icon: <FaCheckCircle />,
-                detail: 'Successfully delivered',
-                link: 'order/status',
-                key: 'DELIVERED',
-                type: 'success',
-                trend: 15.3
-            },
-            {
-                id: 'totalUsers',
-                title: 'Total Users',
-                value: dashboardData.totalUsers,
-                icon: <FaUsers />,
-                detail: 'Active registered users',
-                link: 'userDetails',
-                type: 'info',
-                trend: 5.7
-            },
-        ].filter(card => !isNaN(card.value));
-    }, [dashboardData, todayOrders]);
+        if (!summary?.meta) return [];
+
+        return [...summary.meta]
+            .sort((a, b) => a.sequence - b.sequence)
+            .map((item) => {
+                let link = "/admin/AllOrderPage";
+           
+
+                switch (item.key) {
+                    case "todayOrders":
+                        link = "/admin/order/today";
+                        break;
+
+                    case "deliveredOrders":
+                        link = "/admin/order/status/DELIVERED";
+                        break;
+
+                    case "totalUsers":
+                        link = "/admin/userDetails";
+                        break;
+
+                    case "totalOrders":
+                    default:
+                        link = "/admin/AllOrderPage";
+                        break;
+                }
+
+                return {
+                    id: item.key,
+                    title: item.label,
+                    value: item.count,
+                    icon: iconMap[item.key] || <FaBox />,
+                    detail: item.description || "View details",
+                    link,
+                    type:
+                        item.key === "todayOrders"
+                            ? "primary"
+                            : item.key === "totalOrders"
+                                ? "secondary"
+                                : item.key === "deliveredOrders"
+                                    ? "success"
+                                    : "info",
+                    key: item.key
+                };
+            });
+    }, [summary]);
+
 
     // Order status with progress indicators
     const orderStatusCards = useMemo(() => {
-        if (!allOrderSummary || !allOrderSummary?.response?.data) return [];
+        if (!summary?.cards) return [];
 
-        const totalOrders = allOrderSummary?.response?.totalOrders || "";
 
-        return allOrderSummary?.response?.data.map((status) => ({
-            id: status.status.toLowerCase(),
-            title: status.label,
-            value: status.totalCount,
-            icon: iconMap[status.icon] || <FaBox />, // fallback icon
-            detail: `${status.percentage}% of total orders`,
-            status: status.status,
-            path: '/admin/order/status',
-            key: status.status,
-            values: [], // add any dependent status if needed
-            progress: (status.totalCount / totalOrders) * 100
-        }));
-    }, [dashboardData]);
+        return [...summary.cards]
+            .sort((a, b) => a.sequence - b.sequence)
+            .map((status) => ({
+                id: status.key,
+                title: status.label,
+                value: status.count,
+                icon: iconMap[status.icon] || <FaBox />,
+                detail: `${status.percentage}% of total orders`,
+                status: status.key,
+                path: `/admin/order/status/${status.key}`,
+                progress: status.percentage || 0
+            }));
+    }, [summary]);
 
     // Analytics data for charts
     const analyticsData = useMemo(() => {
-        if (!dashboardData) return [];
-        return [
-            { status: 'Delivered', value: dashboardData.deliveredOrders || 0, color: '#10b981' },
-            { status: 'InTransit', value: dashboardData.inTransitOrders || 0, color: '#ff960dff' },
-            { status: 'Shipped', value: dashboardData.shippedOrders || 0, color: '#3b82f6' },
-            { status: 'Packed', value: dashboardData.packedOrders || 0, color: '#970bf5ff' },
-            { status: 'Packing', value: dashboardData.PackingOrders || 0, color: '#09796aff' },
-            { status: 'Processing', value: dashboardData.inProcessingOrders || 0, color: '#1b0bf5ff' },
-            { status: 'Placed', value: dashboardData.placedOrders || 0, color: '#9c7125ff' },
-            { status: 'Pending', value: dashboardData.pendingOrders || 0, color: '#6b7280' },
-            { status: 'Cancelled', value: dashboardData.cancelledOrders || 0, color: '#ef4444' },
-        ];
-    }, [dashboardData]);
+        if (!summary?.cards) return [];
 
-    useEffect(() => {
-        if (
-            !pendingOrders &&
-            !placedOrders &&
-            !inProcessingOrders &&
-            !PackingOrders &&
-            !packedOrders &&
-            !shippedOrders &&
-            !inTransitOrders &&
-            !deliveredOrders &&
-            !cancelledOrders &&
-            !returnedOrders &&
-            !refundedOrders
-        ) return;
+        return summary.cards.map((card) => {
+            let color = '#6b7280'; // default
 
-        const transformedData = {
-            totalUsers: totalUsers || 0,
-            totalOrders:
-                (pendingOrders?.totalByStatus || 0) +
-                (placedOrders?.totalByStatus || 0) +
-                (inProcessingOrders?.totalByStatus || 0) +
-                (PackingOrders?.totalByStatus || 0) +
-                (packedOrders?.totalByStatus || 0) +
-                (shippedOrders?.totalByStatus || 0) +
-                (inTransitOrders?.totalByStatus || 0) +
-                (deliveredOrders?.totalByStatus || 0) +
-                (cancelledOrders?.totalByStatus || 0) +
-                (returnedOrders?.totalByStatus || 0) +
-                (refundedOrders?.totalByStatus || 0),
+            // Assign colors based on status
+            if (card.key === 'DELIVERED') color = '#10b981';
+            else if (card.key === 'IN_TRANSIT') color = '#ff960dff';
+            else if (card.key === 'SHIPPED') color = '#3b82f6';
+            else if (card.key === 'PACKED') color = '#970bf5ff';
+            else if (card.key === 'PACKING') color = '#09796aff';
+            else if (card.key === 'IN_PROCESSING') color = '#1b0bf5ff';
+            else if (card.key === 'PLACED') color = '#9c7125ff';
+            else if (card.key === 'PENDING') color = '#6b7280';
+            else if (card.key === 'CANCELLED') color = '#ef4444';
+            else if (card.key === 'RETURNED') color = '#8b5cf6';
+            else if (card.key === 'REFUNDED') color = '#f59e0b';
 
-            pendingOrders: pendingOrders?.totalByStatus || 0,
-            placedOrders: placedOrders?.totalByStatus || 0,
-            inProcessingOrders: inProcessingOrders?.totalByStatus || 0,
-            PackingOrders: PackingOrders?.totalByStatus || 0,
-            packedOrders: packedOrders?.totalByStatus || 0,
-            shippedOrders: shippedOrders?.totalByStatus || 0,
-            inTransitOrders: inTransitOrders?.totalByStatus || 0,
-            deliveredOrders: deliveredOrders?.totalByStatus || 0,
-            cancelledOrders: cancelledOrders?.totalByStatus || 0,
-            returnedOrders: returnedOrders?.totalByStatus || 0,
-            refundedOrders: refundedOrders?.totalByStatus || 0,
-            totalPercentage: placedOrders?.percentage || "0%",
-            deliveredPercentage: deliveredOrders?.percentage || "0%",
-            shippedPercentage: shippedOrders?.percentage || "0%",
-            cancelledPercentage: cancelledOrders?.percentage || "0%",
-        };
+            return {
+                status: card.label,
+                value: card.count,
+                color
+            };
+        });
+    }, [summary]);
 
-        setDashboardData(transformedData);
-        setLastUpdated(new Date());
-        setIsLoading(false);
-    }, [
-        pendingOrders, placedOrders, inProcessingOrders, PackingOrders,
-        packedOrders, shippedOrders, inTransitOrders, deliveredOrders,
-        cancelledOrders, returnedOrders, refundedOrders, totalUsers
-    ]);
-
-    if (error) {
+    if (summaryError) {
         return (
             <motion.div
                 className="dashboard-error"
@@ -278,15 +210,15 @@ const DashboardCards = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
             >
-                <div className="error-message">
+                <div className="flex flex-col items-center text-red-600">
                     <FaTimesCircle className="error-icon" />
                     <h3>Data Loading Error</h3>
-                    <p>{error}</p>
+                    <p>Failed to load dashboard data</p>
                     <motion.button
-                        className="retry-btn"
+                        className="flex bg-red-700 text-white p-2 text-xs items-center gap-1 rounded-sm"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => fetchDashboardData()}
+                        onClick={() => refetch()}
                     >
                         <FaRedo className="mr-2" />
                         Retry
@@ -366,7 +298,7 @@ const DashboardCards = () => {
                 )}
             </AnimatePresence>
 
-            {isLoading ? (
+            {isLoading || summaryLoading ? (
                 <motion.div
                     className="loading-state"
                     initial={{ opacity: 0 }}
@@ -384,7 +316,6 @@ const DashboardCards = () => {
                             orderStatusCards={orderStatusCards}
                             formatNumber={formatNumber}
                             themeMode={themeMode}
-                            dashboardData={dashboardData}
                         />
                     ) : (
                         <AnalyticsView
@@ -401,7 +332,7 @@ const DashboardCards = () => {
 };
 
 // Overview View Component
-const OverviewView = ({ cardsData, orderStatusCards, formatNumber, themeMode, dashboardData }) => (
+const OverviewView = ({ cardsData, orderStatusCards, formatNumber, themeMode }) => (
     <>
         <motion.div
             className="stats-grid"
@@ -414,6 +345,7 @@ const OverviewView = ({ cardsData, orderStatusCards, formatNumber, themeMode, da
                     key={card.id}
                     card={card}
                     index={index}
+                    state={card.state}
                     formatNumber={formatNumber}
                     themeMode={themeMode}
                 />
@@ -444,20 +376,6 @@ const OverviewView = ({ cardsData, orderStatusCards, formatNumber, themeMode, da
                     ))}
                 </div>
             </motion.div>
-
-            {/* <motion.div
-                className="quick-stats-section"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-            >
-                <div className="section-header">
-                    <h2>Quick Stats</h2>
-                    <p>Key performance indicators</p>
-                </div>
-                {/* <QuickStats dashboardData={dashboardData} formatNumber={formatNumber} themeMode={themeMode} />
-        </motion.div>  */}
-
         </div>
     </>
 );
@@ -474,32 +392,14 @@ const AnalyticsView = ({ analyticsData, cardsData, formatNumber, themeMode }) =>
             <div className="analytics-card full-width">
                 <div className="card-header">
                     <h3>Order Distribution</h3>
-                    {/* <button className="icon-btn">
-                        <FaEllipsisH />
-                    </button> */}
                 </div>
                 <OrderDistributionChart data={analyticsData} />
             </div>
-
-            {/* <div className="analytics-card">
-                <div className="card-header">
-                    <h3>Performance Metrics</h3>
-                </div>
-                <PerformanceMetrics cardsData={cardsData} />
-            </div> */}
-
-            {/* <div className="analytics-card">
-                <div className="card-header">
-                    <h3>Recent Activity</h3>
-                </div>
-                {/* <RecentActivity /> 
-            </div> */}
-
         </motion.div>
     </div>
 );
 
-// New Card Components
+// Stat Card Component
 const StatCard = React.memo(({ card, index, formatNumber, themeMode }) => {
     const getTrendIcon = (trend) => {
         if (trend > 0) return <FaArrowUp className="trend-up" />;
@@ -525,37 +425,26 @@ const StatCard = React.memo(({ card, index, formatNumber, themeMode }) => {
                         <p className="card-value">{formatNumber(card.value)}</p>
                     </div>
                     <div>
-                        <Link to={card.link} state={{ key: card.key }} className="card-link">
+                        <Link to={card.link} state={{ key: card.status }} className="card-link">
                             View <FaExternalLinkAlt />
                         </Link>
                     </div>
                 </div>
-                {/* <div className="card-footer">
-                    <div className="trend-indicator">
-                        {getTrendIcon(card.trend)}
-                        <span className={`trend-value ${card.trend > 0 ? 'positive' : card.trend < 0 ? 'negative' : 'neutral'}`}>
-                            {Math.abs(card.trend)}%
-                        </span>
-                    </div>
-                   
-                </div> */}
+                <div className="card-footer">
+                    <div className="card-detail">{card.detail}</div>
+                </div>
             </div>
         </motion.div>
     );
 });
 
+// Order Status Card Component
 const OrderStatusCard = React.memo(({ card, index, formatNumber, themeMode }) => {
     const navigate = useNavigate();
 
     const handleOnClick = (e, card) => {
         e.preventDefault();
-        navigate(card.path, {
-            state: {
-                key: card.key,
-                values: card.values,
-                qc: card.status
-            }
-        });
+        navigate(card.path);
     };
 
     return (
@@ -587,8 +476,7 @@ const OrderStatusCard = React.memo(({ card, index, formatNumber, themeMode }) =>
     );
 });
 
-
-
+// Order Distribution Chart Component
 const OrderDistributionChart = ({ data }) => (
     <div className="distribution-chart">
         {data.map((item, index) => (
@@ -611,6 +499,5 @@ const OrderDistributionChart = ({ data }) => (
         ))}
     </div>
 );
-
 
 export default DashboardCards;

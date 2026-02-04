@@ -47,10 +47,10 @@ export const useOrdersByDateRange = (startDate, endDate) => {
     });
 };
 
-export const useOrdersByStatus = (status, page, size) => {
+export const useOrdersByStatus = (status, page, size, searchTerm) => {
     return useQuery({
-        queryKey: ["getOrdersByStatus", status, page, size],
-        queryFn: () => orderService.getOrdersByStatus(status, page, size),
+        queryKey: ["getOrdersByStatus", status, page, size,searchTerm],
+        queryFn: () => orderService.getOrdersByStatus(status, page, size,searchTerm),
         enabled: !!status && page !== undefined && size !== undefined, // only run when valid inputs
         select: (res) => res.data, // optional: unwrap .data directly
     });

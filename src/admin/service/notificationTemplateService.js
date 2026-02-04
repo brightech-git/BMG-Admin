@@ -23,6 +23,12 @@ export const getNotificationTemplateById = async (id) => {
     const response = await axiosInstance.get(`/notificationTemplates/${id}`);
     return response.data;
 };
+// GET TEMPLATE BY TEMPKEY
+export const getNotificationTemplateByTempKey = async (tempKey) => {
+    const response = await axiosInstance.get(`/notificationTemplates/by-temp-key/${tempKey}`);
+    return response.data;
+};
+
 
 // UPDATE TEMPLATE (PATCH-LIKE)
 export const updateNotificationTemplate = async (id, formData) => {
@@ -38,6 +44,11 @@ export const updateNotificationTemplate = async (id, formData) => {
 
 // DELETE TEMPLATE
 export const deleteNotificationTemplate = async (id) => {
-    const response = await axiosInstance.delete(`/notificationTemplates/delete/${id}`);
-    return response.data;
+    try{
+        const response = await axiosInstance.delete(`/notificationTemplates/delete/${id}`);
+        return response.data;
+    }
+   catch(err){
+        throw new Error(err.response.data.message || "Failed to delete template")
+   }
 };

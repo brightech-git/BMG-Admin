@@ -15,8 +15,8 @@ const AdvancedTable = ({
     actionColumn = 'tracking',
 
     // ---- Tailwind with JIT variable syntax ----
-    headerBg = 'bg-[var(--card-background-color)]',
-    headerText = 'text-[var(--primary-text-color)]',
+    headerBg = 'bg-[var(--primary-text-color)]',
+    headerText = 'text-[var(--white-color)]',
     rowBg = 'bg-[var(--card-background-color)]',
     rowText = 'text-[var(--primary-text-color)]',
     rowHoverBg = 'hover:bg-[var(--active-bg)]',

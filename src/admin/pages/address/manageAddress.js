@@ -71,6 +71,11 @@ const ManageAddress = () => {
 
     const showSnackbar = (message, severity = 'success') => {
         setSnackbar({ open: true, message, severity });
+
+        // Auto close after 3 seconds
+        setTimeout(() => {
+            setSnackbar(prev => ({ ...prev, open: false }));
+        }, 3000);
     };
 
     const handleCloseSnackbar = () => {
@@ -117,6 +122,7 @@ const ManageAddress = () => {
     };
 
     const handleSubmit = async () => {
+        
         if (!validateForm()) {
             showSnackbar('Please correct the form errors.', 'error');
             return;

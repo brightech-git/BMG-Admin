@@ -65,9 +65,12 @@ export const orderService = {
             axiosInstance.get("/order/orders-by-date", {
                   params: { startDate, endDate },
             }),
-      getOrdersByStatus: (status, page, size) =>
+      getOrdersByStatus: (status, page, size, searchTerm) =>
+
+           
             axiosInstance.get("/order/orders-by-status", {
-                  params: { status, page, size },
+
+                  params: { status, page, size, search:searchTerm },
             }),
             
 };

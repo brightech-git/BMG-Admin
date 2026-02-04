@@ -12,6 +12,7 @@ import { useNavigate ,useLocation } from "react-router-dom";
 const ItemCategory = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    
     const state = location.state || {};
     const isEdit = state?.mode === "edit" ;
     const editId = state?.id ?? null;

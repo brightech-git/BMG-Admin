@@ -16,6 +16,8 @@ const NotificationTemplatePage = () => {
     const [showForm, setShowForm] = useState(false);
     const [editTemplate, setEditTemplate] = useState(null);
 
+    const [sendMessageLoading ,setSendMessageLoading] = useState(false);
+
     const templateData =
         templates?.map((t, i) => ({
             sno: i + 1,
@@ -24,6 +26,44 @@ const NotificationTemplatePage = () => {
 
     const finalData = templateData?.reverse();
     console.log(finalData,'finalData')
+
+
+    const handleDeleteNotification = (row) => {
+        const confirmDelete = window.confirm(
+            `Are you sure you want to delete this notification?`
+        );
+
+        if (!confirmDelete) return;
+
+        deleteMutation.mutate(row.id, {
+            onSuccess: () => {
+                refetch();
+            }
+        });
+    };
+    const handleSendNotification = (row) =>{
+
+        setSendMessageLoading(true);
+
+        pushMutation.mutate(
+            {
+                title: row.Title,
+                message: row.Message,
+                imageUrl: `${BASE_URL}${row.ImageUrl}`,
+                url: row.Url,
+            },
+            {
+                onSuccess: () => {
+                    setSendMessageLoading(false);
+                    alert("Notification sent successfully!");
+                },
+                onError: () => {
+                    alert("Failed to send notification");
+                },
+            }
+        )
+    }
+
 
     const headers = [
         { key: "Id", label: "Temp Id" ,align:"center"},
@@ -58,24 +98,7 @@ const NotificationTemplatePage = () => {
                             aria-label="send"
                             name="send"
                             title="Send to All"  
-                            onClick={() =>
-                                pushMutation.mutate(
-                                    {
-                                        title: row.Title,
-                                        message: row.Message,
-                                        imageUrl: `${BASE_URL}${row.ImageUrl}`,
-                                        url: row.Url,
-                                    },
-                                    {
-                                        onSuccess: () => {
-                                            alert("Notification sent successfully!");
-                                        },
-                                        onError: () => {
-                                            alert("Failed to send notification");
-                                        },
-                                    }
-                                )
-                            }
+                            onClick={(row) =>handleSendNotification(row) }
                         >
                             <Send size={16} />
                         </button>
@@ -103,7 +126,7 @@ const NotificationTemplatePage = () => {
                             aria-label="delete"
                             name="delete"
                             title="Delete"  
-                        onClick={() => deleteMutation.mutate(row.id, { onSuccess: refetch })}
+                        onClick={()=>handleDeleteNotification(row)}
                     >
                         <Trash2 size={16} />
                     </button>
@@ -140,7 +163,7 @@ const NotificationTemplatePage = () => {
             <AdvancedTable
                 headers={headers}
                 data={finalData}
-                isLoading={isLoading}
+                isLoading={isLoading | sendMessageLoading}
                 isError={isError}
                 error={error}
                 onRetry={refetch}
@@ -159,6 +182,7 @@ const NotificationTemplatePage = () => {
                         setShowForm(false);
                         refetch();
                     }}
+                    tempCollection={templateData}
                 />
             )}
         </div>

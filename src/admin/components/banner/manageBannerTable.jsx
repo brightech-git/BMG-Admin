@@ -10,7 +10,8 @@ const BannerTable = ({
     emptyMessage = ''  ,
     loading = false,
     button,
-    onClick
+    onClick,
+    error
 }) => {
     return (
         <div className="w-full">
@@ -37,7 +38,8 @@ const BannerTable = ({
                 fontSizeRow="text-xs"
                 actionColumn="actions"
                 emptyMessage={emptyMessage} 
-                isLoading={loading}            
+                isLoading={loading}  
+                isError={error}          
             />
         </div>
     );

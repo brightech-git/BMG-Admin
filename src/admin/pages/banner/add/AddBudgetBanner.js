@@ -1,22 +1,7 @@
 
 import { useState, useMemo ,useEffect} from 'react';
 import { useNavigate ,useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useMediaQuery } from 'react-responsive';
 import { useBannersQuery } from '../../../hooks/banners/budgetBanner/useBudgetBannerQuery';
-import FileUploader from '../../../components/banner/FileUploader';
-import {
-    Box,
-    Typography,
-    TextField,
-    Button,
-    Card,
-    CardContent,
-    Alert,
-    CircularProgress
-} from '@mui/material';
-import { CloudUpload as UploadIcon, CheckCircle as CheckIcon, Error as ErrorIcon, Add as AddIcon } from '@mui/icons-material';
-import { MyContext } from '../../../context/themeContext/themeContext';
 import './AddBudgetBanner.css';
 import BackdropProgress from '../../../components/backDrop/BackdropProgress';
 import { useItemNames } from '../../../hooks/itemName/useItemNames';

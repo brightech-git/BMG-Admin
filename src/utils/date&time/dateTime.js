@@ -1,3 +1,6 @@
+
+import { parse, isValid, format } from "date-fns";
+
 export const formatDateTime = (iso) => {
     if (!iso) return "";
     const d = new Date(iso);
@@ -38,4 +41,23 @@ export const formatDate = (iso) => {
 
   
     return `${dd}-${mm}-${yyyy}`;
+};
+
+
+const INPUT_FORMATS = [
+    "yyyy-MM-dd",
+    "dd-MM-yyyy",
+    "dd/MM/yyyy",
+    "yyyy/MM/dd",
+];
+
+export const parseAnyDate = (value) => {
+    if (!value) return null;
+
+    for (const fmt of INPUT_FORMATS) {
+        const parsed = parse(value, fmt, new Date());
+        if (isValid(parsed)) return parsed;
+    }
+
+    return null;
 };
