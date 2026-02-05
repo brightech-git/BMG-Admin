@@ -5,25 +5,9 @@ import {
     useUpdateBannerSetting
 } from '../../../hooks/banners/bannerSetting/useBannerSettings';
 import Snackbar from '../../../components/snackBar/Snackbar';
+import ImageKeyInput from '../../../components/ui/Input';
+import { Switch } from '../../../components/ui/Switch';
 
-const Switch = ({ checked, onChange, label }) => (
-    <div className="flex items-center justify-between my-2">
-        <span className="text-xs font-medium">{label}</span>
-        <button
-            type="button"
-            onClick={() => onChange(!checked)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-[var(--primary-color)]' : 'bg-gray-300'}`}
-        >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`}>
-                {checked ? (
-                    <i className="fas fa-check text-[10px] text-[var(--primary-color)] flex items-center justify-center h-full"></i>
-                ) : (
-                    <i className="fas fa-times text-[10px] text-gray-400 flex items-center justify-center h-full"></i>
-                )}
-            </span>
-        </button>
-    </div>
-);
 
 const BannerSetting = () => {
     const location = useLocation();
@@ -48,6 +32,7 @@ const BannerSetting = () => {
         mobileRowsDesktop: "",
         mobileRowsMobile: "",
         desktopColumns: "auto",
+        isVisible:true,
     });
 
     const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "info", title: "" });
@@ -75,6 +60,7 @@ const BannerSetting = () => {
                 mobileRowsMobile: Array.isArray(initialData.mobileRows)
                     ? String(initialData.mobileRows[1] || 1)
                     : "1",
+                isVisible:initialData.isVisible ?? true,
             });
         }
     }, [initialData, mode]);
@@ -120,6 +106,7 @@ const BannerSetting = () => {
             mobileRatio: form.mobileRatio,
             mobileRows: [Number(form.mobileRowsDesktop), Number(form.mobileRowsMobile)],
             desktopColumns: form.desktopColumns,
+            isVisible:form.isVisible,
         };
 
         if (mode === "add") {
@@ -225,18 +212,7 @@ const BannerSetting = () => {
 
                 <div className="space-y-3">
                     <div>
-                        <label className="block text-xs font-semibold mb-1">
-                            Image Key <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            name="imageKey"
-                            value={form.imageKey}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border rounded text-sm"
-                            placeholder="Enter image key"
-                            required
-                            disabled={isSubmitting}
-                        />
+                        <ImageKeyInput form={form} setForm={setForm} isSubmitting={isSubmitting} />
                     </div>
                     <div>
                         <label className="block text-xs font-semibold mb-1">
@@ -273,6 +249,7 @@ const BannerSetting = () => {
                         <Switch checked={form.mobileGap} onChange={(val) => handleSwitchChange('mobileGap', val)} label="Mobile gap" />
                         <Switch checked={form.centered} onChange={(val) => handleSwitchChange('centered', val)} label="Center content" />
                         <Switch checked={form.full} onChange={(val) => handleSwitchChange('full', val)} label="Full width" />
+                        <Switch checked={form.isVisible} onChange={(val) => handleSwitchChange('isVisible', val)} label="is Visible" />
                     </div>
                 </div>
 
@@ -302,6 +279,8 @@ const BannerSetting = () => {
                                 <option value="2">2</option>
                                 <option value="3">3</option>
                                 <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
                             </select>
                         </div>
                     </div>
@@ -315,7 +294,7 @@ const BannerSetting = () => {
                             <input
                                 type="number"
                                 min="1"
-                                max="4"
+                                max="6"
                                 name="mobileRowsDesktop"
                                 value={form.mobileRowsDesktop}
                                 onChange={handleChange}
@@ -328,7 +307,7 @@ const BannerSetting = () => {
                             <input
                                 type="number"
                                 min="1"
-                                max="4"
+                                max="6"
                                 name="mobileRowsMobile"
                                 value={form.mobileRowsMobile}
                                 onChange={handleChange}

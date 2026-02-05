@@ -55,8 +55,9 @@ const ManageBannerSettings = () => {
         mobileRows: item.mobileRows,
         desktopColumns: item.desktopColumns || "—",
         alt: item.alt || "—",
-        desktopLink: item.desktopLink || "—",
-        mobileLink: item.mobileLink || "—",
+        isVisible:item.isVisible,
+        _bannerData: item // Store the full item for actions
+
     }));
 
     const handleOnClick = () => {
@@ -84,8 +85,9 @@ const ManageBannerSettings = () => {
     return (
         <div className="max-w-8xl mx-auto mt-3 p-3 sm:p-4 sm:mt-4">
             <BannerTable
+
                 title="Manage Main Banners"
-                button={banners.length <= 5 ? ("Add Banner") : ('')}
+                button={"Add Banner Setting"}
                 onClick={handleOnClick}
                 headers={[
                     { key: "sno", label: "S.No" },
@@ -96,6 +98,7 @@ const ManageBannerSettings = () => {
                     { key: "mobileGap", label: "Mobile Gap" },
                     { key: "centered", label: "Centered" },
                     { key: "full", label: "Full Width" },
+                    { key: "isVisible", label: "Visible" },
                     { key: "actions", label: "Actions", align: "center" },
                 ]}
                 data={tableData}
@@ -122,7 +125,7 @@ const ManageBannerSettings = () => {
                     }
 
                     // Handle boolean fields with icons
-                    if (key === "gap" || key === "mobileGap" || key === "centered" || key === "full") {
+                    if (key === "gap" || key === "mobileGap" || key === "centered" || key === "full" || key === "isVisible") {
                         return renderBooleanWithIcon(row[key]);
                     }
 

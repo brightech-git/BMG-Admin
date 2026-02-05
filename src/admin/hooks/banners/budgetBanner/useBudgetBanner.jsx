@@ -18,22 +18,7 @@ export const useUpdateBudgetBannerMutation = () => {
 
     return useMutation({
         mutationFn: (formData) => {
-            // const formData = new FormData();
-
-            // formData.append('id', id); // int
-            // formData.append('title', title); // String
-            // formData.append('subtitle', subtitle); // String
-            // formData.append('min_price', String(min_price || 0)); // BigDecimal-compatible string
-            // formData.append('max_price', String(max_price || 0)); // BigDecimal-compatible string
-
-            // if (image instanceof File) {
-            //     formData.append('image', image);
-            // }
-
-            // // Debug: log FormData before sending
-            // for (let [key, value] of formData.entries()) {
-            //     console.log(key, value , 'budget');
-            // }
+        
 
             return BudgetBannersService.updateBudgetBanner(formData);
         },

@@ -118,29 +118,23 @@ export const offerBannersService = {
 /*----------------------BugetCategory Banner---------------------- */
 
 export const BudgetBannersService = {
-    getBudgetBanners: () => axiosInstance.get("/budget-categories/all"),
-
-    createBudgetBanner: (formData) => {
-        // const formData = new FormData();
-        // formData.append("image", image);
-        // formData.append("title", title);
-        // formData.append("subtitle", subtitle);
-        // formData.append("min_price", Number(min_price)); // ensure number
-        // formData.append("max_price", Number(max_price));
-        // formData.append("isPremium", "true");
-        // formData.append("alt", "Glorious");
-
-        // console.log([...formData.entries()], 'Data for banner');
-
-        return axiosInstance.post("/budget-categories/upload", formData);
+    getBudgetBanners: async () => {
+        const response = await axiosInstance.get("/budget-categories/all");
+        return response.data;
+    },
+    createBudgetBanner: async(formData) => {
+        const response = await axiosInstance.post("/budget-categories/upload", formData);
+        return response.data;
     },
 
 
-    updateBudgetBanner: (formData) => {
+    updateBudgetBanner: async(formData) => {
 
-        return axiosInstance.put("/budget-categories/update", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-        });
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+        const response = await axiosInstance.put("/budget-categories/update", formData);
+        return response.data;
     },
 
     deleteBudgetBanner: (id) => {

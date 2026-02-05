@@ -1,79 +1,82 @@
-
-import { useState, useMemo ,useEffect} from 'react';
-import { useNavigate ,useLocation } from 'react-router-dom';
-import { useBannersQuery } from '../../../hooks/banners/budgetBanner/useBudgetBannerQuery';
-import './AddBudgetBanner.css';
-import BackdropProgress from '../../../components/backDrop/BackdropProgress';
-import { useItemNames } from '../../../hooks/itemName/useItemNames';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUpdateBudgetBannerMutation, useBudgetBanner } from '../../../hooks/banners/budgetBanner/useBudgetBanner';
+import { Switch } from '../../../components/ui/Switch';
 
 const AddBudgetBanner = () => {
-
     const navigate = useNavigate();
     const location = useLocation();
     const state = location.state || {};
-    const isEdit = state?.mode === "edit" && state?.id;
-    const editId = state?.id ?? null;
 
-   
+    // Get banner data from state when editing
+    const isEdit = state?.mode === "edit" && state?.bannerData;
+    const bannerData = state?.bannerData || null;
 
-    // queries / mutations
-    const { data: bannersData, isLoading: bannersLoading } = useBannersQuery();
+    console.log(bannerData ,'isEdit');
 
-   
-    const banners = useMemo(() => {
-        return Array.isArray(bannersData?.data?.categories)
-            ? bannersData.data.categories
-            : [];
-    }, [bannersData]);
-
-    console.log(banners, 'bannersssss')
-
-    const { items: itemNames = [] } = useItemNames();
-
+    // mutations
     const uploadMutation = useBudgetBanner();
     const updateMutation = useUpdateBudgetBannerMutation();
+    
     const isUploading = uploadMutation.isPending || uploadMutation.isLoading;
     const isUpdating = updateMutation.isPending || updateMutation.isLoading;
 
-    // form state
-    const [title, setTitle] = useState("");
-    const [subtitle, setSubtitle] = useState("");
-    const [minGrandTotal, setMinGrandTotal] = useState("");
-    const [maxGrandTotal, setMaxGrandTotal] = useState("");
-    const [itemname, setItemname] = useState("");
-    const [file, setFile] = useState(null); // new File
-    const [existingImagePath, setExistingImagePath] = useState(null); // show existing image for edit
+    // form state - simplified to only needed fields
+    const [categoryKey, setCategoryKey] = useState("");
+    const [desktopLink, setDesktopLink] = useState("");
+    const [mobileLink, setMobileLink] = useState("");
+    const [imageDesktop, setImageDesktop] = useState(null);
+    const [imageMobile, setImageMobile] = useState(null);
+    const [mobileRatio ,setMobileRatio] = useState("");
+    const [desktopRatio ,setDesktopRatio] = useState("");
+    const [isSingle ,setIsSingle] = useState(false);
+
+    const [existingDesktopImage, setExistingDesktopImage] = useState(null);
+    const [existingMobileImage, setExistingMobileImage] = useState(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
-    // find banner for edit (if editing)
+    // pre-fill form when editing
+   useEffect(() => {
+    if (isEdit && bannerData && Array.isArray(bannerData.images) && bannerData.images.length > 0) {
+        // Get first image safely
+        const firstImage = bannerData.images[0] || {};
 
-    const currentBanner = useMemo(() => {
-        if (!isEdit) return null;
-        return banners.find(b => Number(b.id) === Number(editId)) || null;
-    }, [isEdit, editId, banners]);
+        // Set category key safely
+        setCategoryKey(bannerData.categoryKey || "");
 
+        // Set links safely
+        setDesktopLink(bannerData.desktopLink || "");
+        setMobileLink(bannerData.mobileLink || "");
 
-    console.log(currentBanner ,'bannerforbudget');
-    // pre-fill on load when editing
-    useEffect(() => {
-        if (isEdit && currentBanner) {
-            setTitle(currentBanner.title ?? "");
-            setSubtitle(currentBanner.subtitle ?? "");
-            setItemname(currentBanner.itemname ?? "");
-            setMinGrandTotal(currentBanner.min_price ?? "");
-            setMaxGrandTotal(currentBanner.max_price ?? "");
-            setExistingImagePath(currentBanner.image_path ?? null);
+        // Set boolean safely
+        setIsSingle(!!bannerData.isSingle);
+
+        // Set ratios safely
+        setDesktopRatio(firstImage?.desktop?.ratio || "");
+        setMobileRatio(firstImage?.mobile?.ratio || "");
+
+        // Set existing images if they exist
+        if (firstImage?.desktop?.url) {
+            setExistingDesktopImage(firstImage.desktop.url);
         }
-    }, [isEdit, currentBanner]);
+        if (firstImage?.mobile?.url) {
+            setExistingMobileImage(firstImage.mobile.url);
+        }
+    }
+}, [isEdit, bannerData]);
+
+
+    const handleSwitchChange = (name, value) => {
+        setIsSingle(prev => !prev);
+    };
 
     // File input handlers
-    const onFileChange = (e) => {
+    const onDesktopFileChange = (e) => {
         setError("");
         const f = e.target.files?.[0] ?? null;
         if (!f) {
-            setFile(null);
+            setImageDesktop(null);
             return;
         }
         if (!f.type.startsWith("image/")) {
@@ -84,7 +87,25 @@ const AddBudgetBanner = () => {
             setError("Image must be smaller than 5 MB.");
             return;
         }
-        setFile(f);
+        setImageDesktop(f);
+    };
+
+    const onMobileFileChange = (e) => {
+        setError("");
+        const f = e.target.files?.[0] ?? null;
+        if (!f) {
+            setImageMobile(null);
+            return;
+        }
+        if (!f.type.startsWith("image/")) {
+            setError("Only image files are allowed (jpg, png, webp).");
+            return;
+        }
+        if (f.size > 5 * 1024 * 1024) {
+            setError("Image must be smaller than 5 MB.");
+            return;
+        }
+        setImageMobile(f);
     };
 
     const handleSubmit = async (e) => {
@@ -93,50 +114,50 @@ const AddBudgetBanner = () => {
         setSuccess("");
 
         // validation
-        if (!title.trim()) {
-            setError("Please enter a title.");
+        if (!categoryKey.trim()) {
+            setError("Please enter a category key.");
             return;
         }
-        // if (!subtitle.trim()) {
-        //     setError("Please enter a subtitle.");
-        //     return;
-        // }
-        if (!minGrandTotal) {
-            setError("Please enter the minimum value.");
+        if (!desktopLink.trim()) {
+            setError("Please enter desktop link.");
             return;
         }
-        if (!maxGrandTotal) {
-            setError("Please enter the maximum value.");
-            return;
-        }
-        // For Add: image required. For Edit: optional
-        if (!isEdit && !file) {
-            setError("Please choose an image for the banner.");
+        if (!mobileLink.trim()) {
+            setError("Please enter mobile link.");
             return;
         }
 
-        // build payload (FormData if file present)
+        // For Add: images required. For Edit: optional
+        if (!isEdit) {
+            if (!imageDesktop) {
+                setError("Please choose a desktop image for the banner.");
+                return;
+            }
+            if (!imageMobile) {
+                setError("Please choose a mobile image for the banner.");
+                return;
+            }
+        }
+
+        // build payload (FormData)
         const payload = new FormData();
-        if (isEdit) {
+        payload.append("category_key", categoryKey);
+        payload.append("desktop_link", desktopLink);
+        payload.append("mobile_link", mobileLink);
+        payload.append("desktop_ratio", desktopRatio);
+        payload.append("mobile_ratio", mobileRatio);
+        payload.append("is_single", isSingle);
 
-            console.log(editId, title, subtitle, itemname, 'formdata')
-            payload.append("id", editId);
-            // only append image if user selected a new one
-            if (file instanceof File) payload.append("image", file);
-            payload.append("title", title);
-            payload.append("subtitle", subtitle);
-            payload.append("min_price", minGrandTotal);
-            payload.append("max_price", maxGrandTotal);
-            // payload.append("itemname", itemname);
-            // omit gender as requested
+        // For edit: use imageKey as identifier
+        if (isEdit) {
+            payload.append("id",bannerData.id);
+            // only append images if user selected new ones
+            if (imageDesktop instanceof File) payload.append("image_desktop", imageDesktop);
+            if (imageMobile instanceof File) payload.append("image_mobile", imageMobile);
         } else {
-            // Add
-            payload.append("image", file);
-            payload.append("title", title);
-            payload.append("subtitle", subtitle);
-            payload.append("min_price", minGrandTotal);
-            payload.append("max_price", maxGrandTotal);
-            // payload.append("itemname", itemname);
+            // Add - images are required
+            if (imageDesktop instanceof File) payload.append("image_desktop", imageDesktop);
+            if (imageMobile instanceof File) payload.append("image_mobile", imageMobile);
         }
 
         // call correct mutation
@@ -145,7 +166,7 @@ const AddBudgetBanner = () => {
                 onSuccess: () => {
                     setSuccess("Banner updated successfully.");
                     setTimeout(() => {
-                        navigate("/budgetbanner/manage"); // go back to list (change if needed)
+                        navigate("/budgetbanner/manage");
                     }, 700);
                 },
                 onError: (err) => {
@@ -154,17 +175,20 @@ const AddBudgetBanner = () => {
                 },
             });
         } else {
+            console.log("uploading...", payload)
             uploadMutation.mutate(payload, {
                 onSuccess: () => {
                     setSuccess("Banner uploaded successfully.");
                     // clear form
-                    setTitle("");
-                    setSubtitle("");
-                    // setItemname("");
-                    setFile(null);
-                    setExistingImagePath(null);
+                    setCategoryKey("");
+                    setDesktopLink("");
+                    setMobileLink("");
+                    setImageDesktop(null);
+                    setImageMobile(null);
+                    setExistingDesktopImage(null);
+                    setExistingMobileImage(null);
                     setTimeout(() => {
-                        navigate("/budgetbanner/manage"); // go back to list
+                        navigate("/budgetbanner/manage");
                     }, 700);
                 },
                 onError: (err) => {
@@ -173,6 +197,18 @@ const AddBudgetBanner = () => {
                 },
             });
         }
+    };
+
+    const handleClear = () => {
+        setCategoryKey("");
+        setDesktopLink("");
+        setMobileLink("");
+        setImageDesktop(null);
+        setImageMobile(null);
+        setExistingDesktopImage(null);
+        setExistingMobileImage(null);
+        setError("");
+        setSuccess("");
     };
 
     return (
@@ -201,97 +237,95 @@ const AddBudgetBanner = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-2">
-                    {/* Title */}
+                    {/* Category Key */}
                     <div>
-                        <label className="block text-xs font-medium  mb-1">
-                            Banner Title <span className="text-red-500">*</span>
+                        <label className="block text-xs font-medium mb-1">
+                            Category Key <span className="text-red-500">*</span>
                         </label>
                         <input
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
+                            value={categoryKey}
+                            onChange={(e) => setCategoryKey(e.target.value)}
                             className="w-full border px-2 py-1.5 text-xs"
-                            placeholder="Enter banner title"
+                            placeholder="Enter category key"
                             disabled={isUploading || isUpdating}
                         />
                     </div>
 
-                    {/* Subtitle */}
-                    {/* <div>
-                        <label className="block text-xs font-medium mb-1">
-                            Banner Subtitle <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            value={subtitle}
-                            onChange={(e) => setSubtitle(e.target.value)}
-                            className="w-full border px-2 py-1.5 text-xs"
-                            placeholder="Enter banner subtitle"
-                            disabled={isUploading || isUpdating}
-                        />
-                    </div> */}
+                    {/* Desktop Link */}
                     <div>
                         <label className="block text-xs font-medium mb-1">
-                            Minimum Price <span className="text-red-500">*</span>
+                            Desktop Link <span className="text-red-500">*</span>
                         </label>
                         <input
-                            value={minGrandTotal}
-                            onChange={(e) => setMinGrandTotal(e.target.value)}
+                            value={desktopLink}
+                            onChange={(e) => setDesktopLink(e.target.value)}
                             className="w-full border px-2 py-1.5 text-xs"
-                            placeholder="Enter banner subtitle"
-                            disabled={isUploading || isUpdating}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium mb-1">
-                            Maximum Price<span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            value={maxGrandTotal}
-                            onChange={(e) => setMaxGrandTotal(e.target.value)}
-                            className="w-full border px-2 py-1.5 text-xs"
-                            placeholder="Enter banner subtitle"
+                            placeholder="Enter desktop link"
                             disabled={isUploading || isUpdating}
                         />
                     </div>
 
-                    {/* Item Category */}
-                    {/* <div>
-                        <label className="block text-xs font-medium  mb-1">
-                            Item Category <span className="text-red-500">*</span>
+                    {/* Mobile Link */}
+                    <div>
+                        <label className="block text-xs font-medium mb-1">
+                            Mobile Link <span className="text-red-500">*</span>
                         </label>
-                        <select
-                            value={itemname}
-                            onChange={(e) => setItemname(e.target.value)}
+                        <input
+                            value={mobileLink}
+                            onChange={(e) => setMobileLink(e.target.value)}
                             className="w-full border px-2 py-1.5 text-xs"
+                            placeholder="Enter mobile link"
                             disabled={isUploading || isUpdating}
-                        >
-                            <option value="">Select item category</option>
-                            {itemNames.map((it) => (
-                                <option key={it.ITEMCTRID} value={it.ITEMCTRNAME}>
-                                    {it.ITEMCTRNAME}
-                                </option>
-                            ))}
-                        </select>
-                    </div> */}
+                        />
+                    </div>
 
-                    {/* Image */}
+                    {/* Desktop Link */}
+                    <div>
+                        <label className="block text-xs font-medium mb-1">
+                            Desktop Ratio <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            value={desktopRatio}
+                            onChange={(e) => setDesktopRatio(e.target.value)}
+                            className="w-full border px-2 py-1.5 text-xs"
+                            placeholder="Enter desktop link"
+                            disabled={isUploading || isUpdating}
+                        />
+                    </div>
+
+                    {/* Mobile Link */}
+                    <div>
+                        <label className="block text-xs font-medium mb-1">
+                            Mobile Ratio <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            value={mobileRatio}
+                            onChange={(e) => setMobileRatio(e.target.value)}
+                            className="w-full border px-2 py-1.5 text-xs"
+                            placeholder="Enter mobile link"
+                            disabled={isUploading || isUpdating}
+                        />
+                    </div>
+
+                    <Switch checked={isSingle} onChange={(val) => handleSwitchChange('isSingle', val)} label="is Single" />
+
+                    {/* Desktop Image */}
                     <div>
                         <label className="block text-xs font-medium text-slate-700 dark:text-slate-200 mb-1">
-                            Banner Image {isEdit ? "(optional - leave to keep current)" : "*"}
+                            Desktop Banner Image {isEdit ? "(optional - leave to keep current)" : "*"}
                         </label>
-
                         <div className="flex items-center gap-2">
-                            {/* Preview */}
                             <div className="w-30 h-20 bg-slate-50 dark:bg-slate-700 rounded overflow-hidden border">
-                                {file ? (
+                                {imageDesktop ? (
                                     <img
-                                        src={URL.createObjectURL(file)}
-                                        alt="preview"
+                                        src={URL.createObjectURL(imageDesktop)}
+                                        alt="desktop preview"
                                         className="w-full h-full object-cover"
                                     />
-                                ) : existingImagePath ? (
+                                ) : existingDesktopImage ? (
                                     <img
-                                        src={`${existingImagePath.startsWith("http") ? "" : "https://app.bmgjewellers.com"}${existingImagePath}`}
-                                        alt="current"
+                                        src={`https://app.bmgjewellers.com${existingDesktopImage}`}
+                                        alt="current desktop"
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
@@ -300,13 +334,53 @@ const AddBudgetBanner = () => {
                                     </div>
                                 )}
                             </div>
-
                             <div className="flex-1">
                                 <input
-                                    id="banner-file"
+                                    id="desktop-banner-file"
                                     type="file"
                                     accept="image/*"
-                                    onChange={onFileChange}
+                                    onChange={onDesktopFileChange}
+                                    disabled={isUploading || isUpdating}
+                                    className="text-xs"
+                                />
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Accepts JPG, PNG or WEBP. Max 5MB.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile Image */}
+                    <div>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-200 mb-1">
+                            Mobile Banner Image {isEdit ? "(optional - leave to keep current)" : "*"}
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <div className="w-30 h-20 bg-slate-50 dark:bg-slate-700 rounded overflow-hidden border">
+                                {imageMobile ? (
+                                    <img
+                                        src={URL.createObjectURL(imageMobile)}
+                                        alt="mobile preview"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : existingMobileImage ? (
+                                    <img
+                                        src={`https://app.bmgjewellers.com${existingMobileImage}`}
+                                        alt="current mobile"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-sm text-slate-400">
+                                        No image
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex-1">
+                                <input
+                                    id="mobile-banner-file"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={onMobileFileChange}
                                     disabled={isUploading || isUpdating}
                                     className="text-xs"
                                 />
@@ -322,14 +396,7 @@ const AddBudgetBanner = () => {
                         <div className="flex gap-2">
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setTitle("");
-                                    setSubtitle("");
-                                    setItemname("");
-                                    setFile(null);
-                                    setError("");
-                                    setSuccess("");
-                                }}
+                                onClick={handleClear}
                                 className="px-2 py-1.5 rounded-md border text-xs bg-white dark:bg-slate-700"
                                 disabled={isUploading || isUpdating}
                             >
@@ -358,7 +425,7 @@ const AddBudgetBanner = () => {
                                     {isUploading ? "Uploading..." : "Updating..."}
                                 </span>
                             ) : (
-                                <span className="text-xs" >{isEdit ? "Update Banner" : "Upload Banner"}</span>
+                                <span className="text-xs">{isEdit ? "Update Banner" : "Upload Banner"}</span>
                             )}
                         </button>
                     </div>
