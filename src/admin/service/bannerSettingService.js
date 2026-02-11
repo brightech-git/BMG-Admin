@@ -14,12 +14,15 @@ export const createBannerSetting = async(formData) => {
 }
 
 // GET BANNER SETTINGS
-export const getBannerSettings = async () => {
-    try{
-        const response = await axiosInstance.get(`${baseUrl}/list`);
+export const getBannerSettings = async (image_key) => {
+    try {
+        // Build params object conditionally
+        const params = {};
+        if (image_key) params.image_key = image_key;
+
+        const response = await axiosInstance.get(`${baseUrl}/list`, { params });
         return response.data;
-        
-    }catch(err){
+    } catch (err) {
         throw new Error("Failed to fetch banner settings");
     }
 };

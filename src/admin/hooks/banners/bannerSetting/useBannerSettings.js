@@ -9,14 +9,15 @@ import {
 } from '../../../service/bannerSettingService';
 
 // ─── GET ALL BANNER SETTINGS ─────────────────────────────
-export const useGetBannerSettings = () => {
+export const useGetBannerSettings = (imageKey) => {
     return useQuery({
-        queryKey: ['bannerSettings'],
-        queryFn: getBannerSettings,
+        queryKey: ['bannerSettings', imageKey], // include imageKey to refetch when it changes
+        queryFn: () => getBannerSettings(imageKey), // wrap in arrow function!
         staleTime: 5 * 60 * 1000, // 5 minutes
         onError: (err) => console.error("Failed to fetch banner settings:", err.message),
     });
 };
+
 
 // ─── GET BANNER SETTINGS BY KEY ──────────────────────────
 export const useGetBannerSettingsByKey = (key) => {

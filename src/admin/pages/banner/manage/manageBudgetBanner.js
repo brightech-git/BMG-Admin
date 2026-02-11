@@ -6,18 +6,16 @@ import { useDeleteBudgetBannerMutation } from '../../../hooks/banners/budgetBann
 import './ManageBudgetBanner.css';
 import 'animate.css';
 import BannerTable from '../../../components/banner/manageBannerTable';
-import { getProductImages } from '../../../../utils/mediaUtils/mediaUtils';
-import { useGetBannerSettings } from '../../../hooks/banners/bannerSetting/useBannerSettings';
+
+import HeroBanner from '../../../components/banner/HeroBanner';
+import GridBanner from '../../../components/banner/StackBanner';
 
 const BASE_IMAGE_URL = 'https://app.bmgjewellers.com';
 
 const ManageBudgetBanner = () => {
     const navigate = useNavigate();
     const { data: bannersData, isLoading, error, refetch } = useBannersQuery();
-    const { data: bannerSettingData, isSettingLoading, isSettingError, refetch:isSettingRefetch} = useGetBannerSettings();
-
-    console.log(bannerSettingData,'bannersData');
-
+   
     
     const { mutate: deleteBudgetBanner } = useDeleteBudgetBannerMutation();
 
@@ -84,6 +82,7 @@ const ManageBudgetBanner = () => {
             backgroundColor: banner.backgroundColor,
             fullWidth: banner.full ? 'Yes' : 'No',
             hasGap: banner.gap ? 'Yes' : 'No',
+            rowSpan:banner.rowSpan?? '',
             // Store full banner object for actions
             _bannerData: banner
         }));
@@ -146,7 +145,7 @@ const ManageBudgetBanner = () => {
                 <BannerTable
                     title="Manage Budget Banners"
                     description={`${banners.length} banner${banners.length !== 1 ? 's' : ''} available`}
-                    button={banners.length < 4 ? "Add Banner" : null}
+                    button='Add Banner'
                     onClick={handleAdd}
                     onRefresh={handleRefresh}
                     searchQuery={searchQuery}
@@ -176,9 +175,6 @@ const ManageBudgetBanner = () => {
                                         className="w-16 h-10 object-cover rounded border cursor-pointer"
                                      
                                     />
-                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                        <span className="text-white text-xs">👁️ View</span>
-                                    </div>
                                 </div>
                             ) : (
                                 <span className="text-gray-400 text-sm">No image</span>
@@ -195,9 +191,6 @@ const ManageBudgetBanner = () => {
                                         className="w-10 h-16 object-cover rounded border cursor-pointer"
                                       
                                     />
-                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all rounded flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                        <span className="text-white text-xs">👁️ View</span>
-                                    </div>
                                 </div>
                             ) : (
                                 <span className="text-gray-400 text-sm">No image</span>

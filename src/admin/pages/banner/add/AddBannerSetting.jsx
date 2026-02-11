@@ -7,7 +7,7 @@ import {
 import Snackbar from '../../../components/snackBar/Snackbar';
 import ImageKeyInput from '../../../components/ui/Input';
 import { Switch } from '../../../components/ui/Switch';
-
+import {parseLayoutString} from '../../../../utils/banner/ParseLayout';
 
 const BannerSetting = () => {
     const location = useLocation();
@@ -17,7 +17,9 @@ const BannerSetting = () => {
     const initialData = stateData.data || null;
 
     console.log(initialData, 'initialData')
-
+    const [desktopColumnsText, setDesktopColumnsText] = useState("");
+    const [mobileColumnsText, setMobileColumnsText] = useState("");
+    
     const [form, setForm] = useState({
         imageKey: "",
         title: "",
@@ -33,6 +35,16 @@ const BannerSetting = () => {
         mobileRowsMobile: "",
         desktopColumns: "auto",
         isVisible:true,
+        isGrid:false,
+        desktopLayout: {
+            columns: [],
+            rows: "",
+        },
+
+        mobileLayout: {
+            columns: [],
+            rows: "",
+        },
     });
 
     const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "info", title: "" });
@@ -41,8 +53,9 @@ const BannerSetting = () => {
     const updateMutation = useUpdateBannerSetting();
 
     useEffect(() => {
-        if (mode === 'edit' && initialData) {
-            setForm({
+        if (mode === "edit" && initialData) {
+            setForm((prev) => ({
+                ...prev,
                 imageKey: initialData.imageKey || "",
                 title: initialData.title || "",
                 description: initialData.description || "",
@@ -51,19 +64,26 @@ const BannerSetting = () => {
                 centered: initialData.centered ?? true,
                 full: initialData.full ?? false,
                 backgroundColor: initialData.backgroundColor || "#ffffff",
-                defaultRatio: initialData.defaultRatio || "16/9",
+                defaultRatio: initialData.desktopRatio || "16/9",
                 mobileRatio: initialData.mobileRatio || "4/3",
-                desktopColumns: initialData.desktopColumns || "auto",
-                mobileRowsDesktop: Array.isArray(initialData.mobileRows)
-                    ? String(initialData.mobileRows[0] || 2)
-                    : "2",
-                mobileRowsMobile: Array.isArray(initialData.mobileRows)
-                    ? String(initialData.mobileRows[1] || 1)
-                    : "1",
-                isVisible:initialData.isVisible ?? true,
-            });
+                isVisible: initialData.isVisible ?? true,
+                isGrid: initialData.isGrid ?? false,
+
+                desktopLayout: parseLayoutString(initialData.desktopLayout),
+                mobileLayout: parseLayoutString(initialData.mobileLayout),
+            }));
+
+            // Optional: if you want text input view
+            setDesktopColumnsText(
+                parseLayoutString(initialData.desktopLayout).columns.join(",")
+            );
+
+            setMobileColumnsText(
+                parseLayoutString(initialData.mobileLayout).columns.join(",")
+            );
         }
-    }, [initialData, mode]);
+    }, [mode, initialData]);
+
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -72,7 +92,59 @@ const BannerSetting = () => {
             [name]: type === "checkbox" ? checked : value
         }));
     };
+    const handleDesktopColumnsInput = (value) => {
+        setDesktopColumnsText(value);
 
+        const columnsArray = value
+            .split(",")
+            .map((v) => Number(v.trim()))
+            .filter((v) => !isNaN(v));
+
+        setForm((prev) => ({
+            ...prev,
+            desktopLayout: {
+                ...prev.desktopLayout,
+                columns: columnsArray,
+            },
+        }));
+    };
+
+    const handleMobileColumnsInput = (value) => {
+        setMobileColumnsText(value);
+
+        const columnsArray = value
+            .split(",")
+            .map((v) => Number(v.trim()))
+            .filter((v) => !isNaN(v));
+
+        setForm((prev) => ({
+            ...prev,
+            mobileLayout: {
+                ...prev.mobileLayout,
+                columns: columnsArray,
+            },
+        }));
+    };
+
+
+    const handleLayoutChange = (type, key, value) => {
+        setForm((prev) => ({
+            ...prev,
+            [type]: {
+                ...prev[type],
+                [key]: value,
+            },
+        }));
+    };
+
+    const handleColumnsChange = (type, value) => {
+        const columnsArray = value
+            .split(",")
+            .map((v) => Number(v.trim()))
+            .filter(Boolean);
+
+        handleLayoutChange(type, "columns", columnsArray);
+    };
     const handleSwitchChange = (name, value) => {
         setForm(prev => ({
             ...prev,
@@ -107,6 +179,9 @@ const BannerSetting = () => {
             mobileRows: [Number(form.mobileRowsDesktop), Number(form.mobileRowsMobile)],
             desktopColumns: form.desktopColumns,
             isVisible:form.isVisible,
+            isGrid:form.isGrid,
+            desktopLayout:form.desktopLayout,
+            mobileLayout:form.mobileLayout,
         };
 
         if (mode === "add") {
@@ -166,6 +241,9 @@ const BannerSetting = () => {
             mobileRowsDesktop: "",
             mobileRowsMobile: "",
             desktopColumns: "auto",
+            isGrid:false,
+            desktopLayout:"",
+            mobileLayout:"",
         });
     };
 
@@ -241,6 +319,13 @@ const BannerSetting = () => {
                         />
                     </div>
                 </div>
+                <div>
+                    <label className="block text-xs font-semibold mb-1">Background Color</label>
+                    <div className="flex items-center gap-2">
+                        <input type="color" name="backgroundColor" value={form.backgroundColor} onChange={handleChange} className="w-8 h-8 rounded cursor-pointer" disabled={isSubmitting} />
+                        <input type="text" name="backgroundColor" value={form.backgroundColor} onChange={handleChange} className="flex-1 px-3 py-2 border rounded text-sm" placeholder="#ffffff" disabled={isSubmitting} />
+                    </div>
+                </div>
 
                 <div className="space-y-3">
                     <p className="text-xs font-semibold">Layout Options</p>
@@ -250,76 +335,153 @@ const BannerSetting = () => {
                         <Switch checked={form.centered} onChange={(val) => handleSwitchChange('centered', val)} label="Center content" />
                         <Switch checked={form.full} onChange={(val) => handleSwitchChange('full', val)} label="Full width" />
                         <Switch checked={form.isVisible} onChange={(val) => handleSwitchChange('isVisible', val)} label="is Visible" />
+                        <Switch checked={form.isGrid} onChange={(val) => handleSwitchChange('isGrid', val)} label="is Grid" />
                     </div>
                 </div>
 
-                <div className="space-y-3">
-                    <p className="text-xs font-semibold">Aspect Ratios & Colors</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-semibold mb-1">Background Color</label>
-                            <div className="flex items-center gap-2">
-                                <input type="color" name="backgroundColor" value={form.backgroundColor} onChange={handleChange} className="w-8 h-8 rounded cursor-pointer" disabled={isSubmitting} />
-                                <input type="text" name="backgroundColor" value={form.backgroundColor} onChange={handleChange} className="flex-1 px-3 py-2 border rounded text-sm" placeholder="#ffffff" disabled={isSubmitting} />
+                {form.isGrid ? (
+                    <>
+                        <div className="space-y-3">
+                            <p className="text-xs font-semibold">Layout Settings</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {/* Desktop Layout */}
+                                <div>
+                                    <label className="block text-xs font-semibold mb-1">
+                                        Desktop Columns (comma separated)
+                                    </label>
+                                    <input
+                                        placeholder="15,11"
+                                        value={desktopColumnsText}
+                                        onChange={(e) => handleDesktopColumnsInput(e.target.value)}
+                                        className="w-full px-3 py-2 border rounded text-sm"
+                                        disabled={isSubmitting}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold mb-1">
+                                        Desktop Rows
+                                    </label>
+                                    <input
+                                      
+                                        value={form.desktopLayout.rows}
+                                        onChange={(e) =>
+                                            handleLayoutChange(
+                                                "desktopLayout",
+                                                "rows",
+                                                Number(e.target.value)
+                                            )
+                                        }
+                                        className="w-full px-3 py-2 border rounded text-sm"
+                                        disabled={isSubmitting}
+                                    />
+                                </div>
+
+                                {/* Mobile Layout */}
+                                <div>
+                                    <label className="block text-xs font-semibold mb-1">
+                                        Mobile Columns (comma separated)
+                                    </label>
+                                    <input
+                                        placeholder="2, 1, 1"
+                                        value={mobileColumnsText}
+                                        onChange={(e) => handleMobileColumnsInput(e.target.value)}
+                                        className="w-full px-3 py-2 border rounded text-sm"
+                                        disabled={isSubmitting}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold mb-1">
+                                        Mobile Rows
+                                    </label>
+                                    <input
+                                      
+                                        value={form.mobileLayout.rows}
+                                        onChange={(e) =>
+                                            handleLayoutChange(
+                                                "mobileLayout",
+                                                "rows",
+                                                Number(e.target.value)
+                                            )
+                                        }
+                                        className="w-full px-3 py-2 border rounded text-sm"
+                                        disabled={isSubmitting}
+                                    />
+                                </div>
+                            </div>
+
+                            <p className="text-xs text-gray-500">
+                                Example Output:
+                                <br />
+                                desktopLayout = {JSON.stringify(form.desktopLayout)}
+                                <br />
+                                mobileLayout = {JSON.stringify(form.mobileLayout)}
+                            </p>
+                        </div>
+                    </>
+                ) : (<>
+                    <div className="space-y-3">
+                        <p className="text-xs font-semibold">Aspect Ratios & Colors</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                            <div>
+                                <label className="block text-xs font-semibold mb-1">Desktop Ratio</label>
+                                <input name="defaultRatio" value={form.defaultRatio} onChange={handleChange} className="w-full px-3 py-2 border rounded text-sm" placeholder="16/9" disabled={isSubmitting} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold mb-1">Mobile Ratio</label>
+                                <input name="mobileRatio" value={form.mobileRatio} onChange={handleChange} className="w-full px-3 py-2 border rounded text-sm" placeholder="4/3" disabled={isSubmitting} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold mb-1">Desktop Columns</label>
+                                <select name="desktopColumns" value={form.desktopColumns} onChange={handleChange} className="w-full px-3 py-2 border rounded text-sm" disabled={isSubmitting}>
+                                    <option value="auto">Auto</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                </select>
                             </div>
                         </div>
-                        <div>
-                            <label className="block text-xs font-semibold mb-1">Desktop Ratio</label>
-                            <input name="defaultRatio" value={form.defaultRatio} onChange={handleChange} className="w-full px-3 py-2 border rounded text-sm" placeholder="16/9" disabled={isSubmitting} />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold mb-1">Mobile Ratio</label>
-                            <input name="mobileRatio" value={form.mobileRatio} onChange={handleChange} className="w-full px-3 py-2 border rounded text-sm" placeholder="4/3" disabled={isSubmitting} />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold mb-1">Desktop Columns</label>
-                            <select name="desktopColumns" value={form.desktopColumns} onChange={handleChange} className="w-full px-3 py-2 border rounded text-sm" disabled={isSubmitting}>
-                                <option value="auto">Auto</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                            </select>
-                        </div>
                     </div>
-                </div>
 
-                <div className="space-y-3">
-                    <p className="text-xs font-semibold">Mobile Rows Configuration</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-semibold mb-1">Desktop View Rows</label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="6"
-                                name="mobileRowsDesktop"
-                                value={form.mobileRowsDesktop}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded text-sm"
-                                disabled={isSubmitting}
-                            />
+                    <div className="space-y-3">
+                        <p className="text-xs font-semibold">Mobile Rows Configuration</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-semibold mb-1">Desktop View Rows</label>
+                                <input
+                                    type="number"
+                                   
+                                    name="mobileRowsDesktop"
+                                    value={form.mobileRowsDesktop}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border rounded text-sm"
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold mb-1">Mobile View Rows</label>
+                                <input
+                                    type="number"
+                                    name="mobileRowsMobile"
+                                    value={form.mobileRowsMobile}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border rounded text-sm"
+                                    disabled={isSubmitting}
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-xs font-semibold mb-1">Mobile View Rows</label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="6"
-                                name="mobileRowsMobile"
-                                value={form.mobileRowsMobile}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded text-sm"
-                                disabled={isSubmitting}
-                            />
-                        </div>
+                        <p className="text-xs text-gray-500">
+                            Example: [Desktop: {form.mobileRowsDesktop}, Mobile: {form.mobileRowsMobile}] = {form.mobileRowsDesktop} images on first row, {form.mobileRowsMobile} on second
+                        </p>
+                        :
                     </div>
-                    <p className="text-xs text-gray-500">
-                        Example: [Desktop: {form.mobileRowsDesktop}, Mobile: {form.mobileRowsMobile}] = {form.mobileRowsDesktop} images on first row, {form.mobileRowsMobile} on second
-                    </p>
-                </div>
+ </>)}
 
                 <div className="pt-3 border-t flex gap-3">
                     <button
