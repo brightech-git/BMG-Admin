@@ -54,6 +54,9 @@ const BannerSetting = () => {
 
     useEffect(() => {
         if (mode === "edit" && initialData) {
+            const parsedMobileRows = initialData?.mobileRows
+                ? JSON.parse(initialData.mobileRows)
+                : [];
             setForm((prev) => ({
                 ...prev,
                 imageKey: initialData.imageKey || "",
@@ -68,9 +71,11 @@ const BannerSetting = () => {
                 mobileRatio: initialData.mobileRatio || "4/3",
                 isVisible: initialData.isVisible ?? true,
                 isGrid: initialData.isGrid ?? false,
-
+                desktopColumns: initialData?.desktopColumns ?? "auto",
                 desktopLayout: parseLayoutString(initialData.desktopLayout),
                 mobileLayout: parseLayoutString(initialData.mobileLayout),
+                mobileRowsDesktop: parsedMobileRows[0] || "",
+                mobileRowsMobile: parsedMobileRows[1] || "",
             }));
 
             // Optional: if you want text input view

@@ -370,7 +370,7 @@ const ManageProduct = () => {
     }, [filters.pageSize]);
 
     const activeFilters = useMemo(() => getActiveFilters({ ...filters, pageSize }), [filters, pageSize]);
-    const { data, isFetching, isError } = useFilterItemsQuery(activeFilters);
+    const { data, isFetching, isError ,refetch } = useFilterItemsQuery(activeFilters);
 
     const prevFiltersRef = React.useRef(activeFilters);
 

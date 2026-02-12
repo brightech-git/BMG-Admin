@@ -52,7 +52,7 @@ const OrderTable = () => {
     const [searchScope, setSearchScope] = useState("PAGE"); // PAGE | ALL
     const [appliedFilter, setAppliedFilter] = useState(null);
 
-    const [showNotification, setShowNotification] = useState(false);
+
     const [notificationPayload, setNotificationPayload] = useState(null);
     
     const [editForm, setEditForm] = useState({
@@ -81,7 +81,7 @@ const OrderTable = () => {
     const hasMorePage = data?.hasMore ?? false;
     const totalOrdersByStatus = data?.totalByStatus ?? 1;
 
-
+    console.log(data,'datadata')
 
     const notificationStatus = {
         placed: {
@@ -511,6 +511,7 @@ const handleDownloadLabel = () => {
             dateStyle: "medium",
             timeStyle: "short",
         });
+        console.log(selectedOrder,'selectedOrder')
         
         const status = selectedOrder.status?.toLowerCase()?.trim();
         const currentStatus = notificationStatus[status]?.current || status;

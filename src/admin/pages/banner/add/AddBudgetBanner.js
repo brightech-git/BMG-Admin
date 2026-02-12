@@ -4,9 +4,11 @@ import { useUpdateBudgetBannerMutation, useBudgetBanner } from '../../../hooks/b
 import { useGetBannerSettings } from '../../../hooks/banners/bannerSetting/useBannerSettings';
 import ImageKeyComboBox from '../../../components/ui/ImageKeyComboBox';
 import { Switch } from '../../../components/ui/Switch';
+import 'animate.css';
+import FileUploadArea from '../../../components/banner/FileUploadArea';
 
 const AddBudgetBanner = () => {
-    
+
     const navigate = useNavigate();
     const location = useLocation();
     const { state = {} } = location;
@@ -31,19 +33,20 @@ const AddBudgetBanner = () => {
     const [existingMobileImage, setExistingMobileImage] = useState(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [fileErrors, setFileErrors] = useState({ desktop: "", mobile: "" });
 
     const isLoading = uploadMutation.isPending || updateMutation.isPending;
 
     useEffect(() => {
         if (!isEdit || !bannerData?.images?.[0]) return;
-        console.log(bannerData,'bannerData')
+        console.log(bannerData, 'bannerData')
         const firstImage = bannerData.images[0];
 
         console.log(firstImage, 'firstImage')
         setCategoryKey(bannerData.categoryKey || "");
         setDesktopLink(bannerData.desktopLink || "");
         setMobileLink(bannerData.mobileLink || "");
-        setIsSingle(!!bannerData.isSingle);
+        setIsSingle(bannerData.isSingle);
         setRowSpan(bannerData.rowSpan || "")
         setDesktopRatio(firstImage.desktop?.ratio || "");
         setMobileRatio(firstImage.mobile?.ratio || "");
@@ -58,7 +61,6 @@ const AddBudgetBanner = () => {
         console.log(setting, 'setting')
         if (!setting) return;
 
-        setIsSingle(!!setting.isSingle);
         setIsGrid(!!setting.isGrid);
 
         setImageDesktop(null);
@@ -67,17 +69,26 @@ const AddBudgetBanner = () => {
 
     const validateFile = (file) => {
         if (!file?.type?.startsWith("image/")) return "Only image files allowed (jpg, png, webp)";
-        if (file.size > 5 * 1024 * 1024) return "Image must be smaller than 5MB";
+        if (file.size > 50 * 1024) {
+            const sizeInKB = (file.size / 1024).toFixed(1);
+            return `File too large: ${sizeInKB}KB / 50KB maximum`;
+        }
         return null;
     };
 
-    const handleFileChange = (setter, e) => {
+    const handleFileChange = (setter, type, e) => {
         setError("");
+        setFileErrors(prev => ({ ...prev, [type]: "" }));
+
         const file = e.target.files?.[0];
         if (!file) return setter(null);
 
         const validationError = validateFile(file);
-        if (validationError) return setError(validationError);
+        if (validationError) {
+            setFileErrors(prev => ({ ...prev, [type]: validationError }));
+            e.target.value = '';
+            return;
+        }
         setter(file);
     };
 
@@ -86,12 +97,26 @@ const AddBudgetBanner = () => {
         setError("");
         setSuccess("");
 
-        if (!categoryKey.trim() || !desktopLink.trim() || !mobileLink.trim()) {
-            return setError("Please fill all required fields");
+        if (!categoryKey.trim()) {
+            return setError("Category key is required");
         }
 
-        if (!isEdit && (!imageDesktop || !imageMobile)) {
-            return setError("Please select both desktop and mobile images");
+        if (!desktopLink.trim()) {
+            return setError("Desktop link is required");
+        }
+
+        if (!isSingle && !mobileLink.trim()) {
+            return setError("Mobile link is required for dual banner");
+        }
+
+        if (!isEdit) {
+            if (!imageDesktop) {
+                return setError("Desktop image is required");
+            }
+
+            if (!isSingle && !imageMobile) {
+                return setError("Mobile image is required for dual banner");
+            }
         }
 
         const payload = new FormData();
@@ -101,15 +126,24 @@ const AddBudgetBanner = () => {
         payload.append("desktop_ratio", desktopRatio);
         payload.append("mobile_ratio", mobileRatio);
         payload.append("is_single", isSingle);
-        payload.append("rowSpan" ,rowSpan);
+        payload.append("rowSpan", rowSpan);
 
         if (isEdit) {
             payload.append("id", bannerData.id);
-            if (imageDesktop instanceof File) payload.append("image_desktop", imageDesktop);
-            if (imageMobile instanceof File) payload.append("image_mobile", imageMobile);
+
+            if (imageDesktop instanceof File) {
+                payload.append("image_desktop", imageDesktop);
+            }
+
+            if (!isSingle && imageMobile instanceof File) {
+                payload.append("image_mobile", imageMobile);
+            }
         } else {
             payload.append("image_desktop", imageDesktop);
-            payload.append("image_mobile", imageMobile);
+
+            if (!isSingle && imageMobile) {
+                payload.append("image_mobile", imageMobile);
+            }
         }
 
         const mutation = isEdit ? updateMutation : uploadMutation;
@@ -135,175 +169,297 @@ const AddBudgetBanner = () => {
         setError("");
         setSuccess("");
         setRowSpan("");
+        setFileErrors({ desktop: "", mobile: "" });
     };
 
-    const ImagePreview = ({ image, existing, alt }) => (
-        <div className="w-30 h-20 bg-slate-50 dark:bg-slate-700 rounded overflow-hidden border">
-            {image ? (
-                <img src={URL.createObjectURL(image)} alt={alt} className="w-full h-full object-cover" />
-            ) : existing ? (
-                <img src={`https://app.bmgjewellers.com${existing}`} alt={`current ${alt}`} className="w-full h-full object-cover" />
-            ) : (
-                <div className="flex items-center justify-center h-full text-sm text-slate-400">No image</div>
-            )}
-        </div>
-    );
 
     return (
-        <div className="max-w-7xl mx-auto mt-8 p-2 border">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold">{isEdit ? "Edit Budget Banner" : "Add Budget Banner"}</h2>
+        <div className="max-w-7xl mx-auto bg-white mt-8 p-6">
+            {/* Header */}
+            <div className="flex items-center  justify-between mb-3 animate__animated animate__fadeInDown">
+                <div>
+                    <h2 className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        {isEdit ? "✏️ Edit Budget Banner" : "➕ Add Budget Banner"}
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-1">
+                        {isEdit ? 'Update your existing banner configuration' : 'Create a new banner for your budget section'}
+                    </p>
+                </div>
                 <button
                     onClick={() => navigate(-1)}
                     disabled={isLoading}
-                    className="px-2 py-1.5 rounded-md border text-xs bg-white dark:bg-slate-700"
+                    className="px-4 py-2 rounded-lg border-2 border-gray-200 text-xs font-medium
+                             hover:bg-gray-50 hover:border-gray-300 transition-all duration-200
+                             disabled:opacity-50 disabled:cursor-not-allowed
+                             flex items-center gap-2"
                 >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
                     Back
                 </button>
             </div>
 
+            {/* Alerts */}
             {(error || success) && (
-                <div className={`mb-4 text-xs p-3 rounded ${error ? 'text-red-700 bg-red-50' : 'text-green-700 bg-green-50'}`}>
-                    {error || success}
+                <div className={`p-3 m-2 rounded-xl animate__animated animate__fadeIn
+                    ${error
+                        ? 'bg-gradient-to-r from-red-50 to-red-100'
+                        : 'bg-gradient-to-r from-green-50 to-green-100'
+                    }
+                `}>
+                    <div className="flex items-center gap-2">
+                
+                        <span>
+                        {error ? (
+                            <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        ) : (
+                                    <svg className="w-4 h-4  text-green-600 animate__animated animate__bounceIn" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-5m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        )}
+                        </span>
+                       
+                            <span className={`text-sm font-medium ${error ? 'text-red-800' : 'text-green-800'}`}>
+                            {error || success}
+                     
+                        </span>
+                    </div>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <ImageKeyComboBox
-                    data={bannerSettingData?.data || []}
-                    categoryKey={categoryKey}
-                    setCategoryKey={setCategoryKey}
-                    disabled={isLoading}
-                />
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Category Key */}
+                <div className="animate__animated animate__fadeInUp animate__delay-1s">
+                    <ImageKeyComboBox
+                        data={bannerSettingData?.data || []}
+                        categoryKey={categoryKey}
+                        setCategoryKey={setCategoryKey}
+                        disabled={isLoading}
+                    />
+                </div>
 
-                {/* Row: Desktop Link + Mobile Link */}
-                <div className="flex gap-4">
-                    <div className="flex-1 flex flex-col">
-                        <label className="text-xs font-medium mb-1">Desktop Link <span className="text-red-500">*</span></label>
-                        <input
-                            value={desktopLink}
-                            onChange={(e) => setDesktopLink(e.target.value)}
-                            disabled={isLoading}
-                            className="w-full border px-2 py-1.5 text-xs"
-                            placeholder="Enter desktop link"
-                        />
-                    </div>
-                    {!isSingle && (
-                        <div className="flex-1 flex flex-col">
-                            <label className="text-xs font-medium mb-1">Mobile Link <span className="text-red-500">*</span></label>
+                {/* Links */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate__animated animate__fadeInUp animate__delay-2s">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                            Desktop Link
+                            <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative group">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg className="w-4 h-4 text-gray-400 group-focus-within:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 015.656 0l4 4a4 4 0 01-5.656 5.656l-1.102-1.101" />
+                                </svg>
+                            </div>
                             <input
-                                value={mobileLink}
-                                onChange={(e) => setMobileLink(e.target.value)}
+                                value={desktopLink}
+                                onChange={(e) => setDesktopLink(e.target.value)}
                                 disabled={isLoading}
-                                className="w-full border px-2 py-1.5 text-xs"
-                                placeholder="Enter mobile link"
+                                className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
+                                         focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 
+                                         transition-all duration-200 outline-none
+                                         disabled:bg-gray-50 disabled:text-gray-500"
+                                placeholder="https://example.com/desktop-banner"
                             />
+                        </div>
+                    </div>
+
+                    {!isSingle && (
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                                Mobile Link
+                                <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg className="w-4 h-4 text-gray-400 group-focus-within:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <input
+                                    value={mobileLink}
+                                    onChange={(e) => setMobileLink(e.target.value)}
+                                    disabled={isLoading}
+                                    className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
+                                             focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 
+                                             transition-all duration-200 outline-none
+                                             disabled:bg-gray-50 disabled:text-gray-500"
+                                    placeholder="https://example.com/mobile-banner"
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
 
-                {/* Row: Desktop Ratio + Mobile Ratio */}
-                {!isGrid && (
-                    <div className="flex gap-4">
-                        <div className="flex-1 flex flex-col">
-                            <label className="text-xs font-medium mb-1">Desktop Ratio <span className="text-red-500">*</span></label>
+                {/* Ratios or Row Span */}
+                {!isGrid ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate__animated animate__fadeInUp animate__delay-3s">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-gray-700">Desktop Ratio</label>
                             <input
                                 value={desktopRatio}
                                 onChange={(e) => setDesktopRatio(e.target.value)}
                                 disabled={isLoading}
-                                className="w-full border px-2 py-1.5 text-xs"
-                                placeholder="Enter desktop ratio"
+                                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
+                                         focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 
+                                         transition-all duration-200 outline-none"
+                                placeholder="e.g., 16:9"
                             />
                         </div>
                         {!isSingle && (
-                            <div className="flex-1 flex flex-col">
-                                <label className="text-xs font-medium mb-1">Mobile Ratio <span className="text-red-500">*</span></label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-gray-700">Mobile Ratio</label>
                                 <input
                                     value={mobileRatio}
                                     onChange={(e) => setMobileRatio(e.target.value)}
                                     disabled={isLoading}
-                                    className="w-full border px-2 py-1.5 text-xs"
-                                    placeholder="Enter mobile ratio"
+                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
+                                             focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 
+                                             transition-all duration-200 outline-none"
+                                    placeholder="e.g., 4:5"
                                 />
                             </div>
                         )}
                     </div>
-                )}
-
-                {/* Grid Row Span */}
-                {isGrid && (
-                    <div className="flex gap-4">
-                        <div className="flex-1 flex flex-col">
-                            <label className="text-xs font-medium mb-1">Row Span <span className="text-red-500">*</span></label>
-                            <input
-                                value={rowSpan}
-                                onChange={(e) => setRowSpan(e.target.value)}
-                                disabled={isLoading}
-                                className="w-full border px-2 py-1.5 text-xs"
-                                placeholder="Enter row span"
-                            />
-                        </div>
+                ) : (
+                    <div className="space-y-1.5 animate__animated animate__fadeInUp animate__delay-3s">
+                        <label className="text-xs font-semibold text-gray-700">Row Span</label>
+                        <input
+                            value={rowSpan}
+                            onChange={(e) => setRowSpan(e.target.value)}
+                            disabled={isLoading}
+                            className="w-full md:w-64 px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
+                                     focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 
+                                     transition-all duration-200 outline-none"
+                            placeholder="Enter row span (e.g., 2)"
+                        />
                     </div>
                 )}
 
-                {/* isSingle Switch */}
-                <Switch checked={isSingle} onChange={(val) => setIsSingle(val)} label="is Single" disabled={isLoading} />
+                {/* Single Switch */}
+                <div className="animate__animated animate__fadeInUp animate__delay-4s">
+                    <Switch
+                        checked={isSingle}
+                        onChange={(val) => setIsSingle(val)}
+                        label="Single Banner Mode"
+                        disabled={isLoading}
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1 ml-1">
+                        {isSingle
+                            ? '✓ Single mode: Only desktop banner will be used'
+                            : '↔️ Dual mode: Both desktop and mobile banners required'
+                        }
+                    </p>
+                </div>
 
-                {/* Desktop & Mobile Images */}
-                <div className="flex gap-4">
-                    <div className="flex-1 flex flex-col">
-                        <label className="text-xs font-medium mb-1">Desktop Banner Image {isEdit && "(optional)"}</label>
-                        <div className="flex items-center gap-2">
-                            <ImagePreview image={imageDesktop} existing={existingDesktopImage} alt="desktop preview" />
-                            <div className="flex-1">
-                                <input type="file" accept="image/*" onChange={(e) => handleFileChange(setImageDesktop, e)} disabled={isLoading} className="text-xs" />
-                                <p className="text-xs text-slate-500 mt-1">Accepts JPG, PNG or WEBP. Max 5MB.</p>
-                            </div>
-                        </div>
-                    </div>
-
+                {/* Image Uploads */}
+                <div className="flex flex-col sm:flex-row gap-2 animate__animated animate__fadeInUp animate__delay-5s">
+                    <FileUploadArea
+                        type="desktop"
+                        value={imageDesktop}
+                        onChange={setImageDesktop}
+                        existingUrl={existingDesktopImage}
+                        label="Desktop Banner"
+                        required={!isEdit || !existingDesktopImage}
+                        isMobile={false}
+                        isLoading={isLoading}
+                        error={fileErrors.desktop}
+                        onFileSelect={(file) => console.log('Selected:', file)}
+                        onFileRemove={() => console.log('Removed')}
+                        onValidationError={(error, file) => console.log('Validation:', error)}
+                        maxSizeKB={50}
+                    />
                     {!isSingle && (
-                        <div className="flex-1 flex flex-col">
-                            <label className="text-xs font-medium mb-1">Mobile Banner Image {isEdit && "(optional)"}</label>
-                            <div className="flex items-center gap-2">
-                                <ImagePreview image={imageMobile} existing={existingMobileImage} alt="mobile preview" />
-                                <div className="flex-1">
-                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(setImageMobile, e)} disabled={isLoading} className="text-xs" />
-                                    <p className="text-xs text-slate-500 mt-1">Accepts JPG, PNG or WEBP. Max 5MB.</p>
-                                </div>
-                            </div>
-                        </div>
+                        <FileUploadArea
+                            type="mobile"
+                            value={imageMobile}
+                            onChange={setImageMobile}
+                            existingUrl={existingMobileImage}
+                            label="Mobile Banner"
+                            required={!isEdit || !existingMobileImage}
+                            isMobile={true}
+                            isLoading={isLoading}
+                            error={fileErrors.mobile}
+                            showProgressBar={true}
+                            showSizeBadge={true}
+                            showTooltip={true}
+                            hint="JPG, PNG, WEBP • Max 50KB"
+                        />
                     )}
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100 animate__animated animate__fadeInUp animate__delay-6s">
                     <div className="flex gap-2">
-                        <button type="button" onClick={handleClear} disabled={isLoading} className="px-2 py-1.5 rounded-md border text-xs bg-white dark:bg-slate-700">
+                        <button
+                            type="button"
+                            onClick={handleClear}
+                            disabled={isLoading}
+                            className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-xs font-medium
+                                     hover:bg-gray-50 hover:border-gray-300 transition-all duration-200
+                                     disabled:opacity-50 disabled:cursor-not-allowed
+                                     flex items-center gap-2 group"
+                        >
+                            <svg className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
                             Clear
                         </button>
-                        <button type="button" onClick={() => navigate(-1)} disabled={isLoading} className="px-2 py-1.5 rounded-md border text-xs bg-white dark:bg-slate-700">
+                        <button
+                            type="button"
+                            onClick={() => navigate(-1)}
+                            disabled={isLoading}
+                            className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-xs font-medium
+                                     hover:bg-gray-50 hover:border-gray-300 transition-all duration-200
+                                     disabled:opacity-50 disabled:cursor-not-allowed
+                                     flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                             Cancel
                         </button>
                     </div>
-                    <button type="submit" disabled={isLoading} className={`px-4 py-2 rounded-md text-white text-sm ${isLoading ? 'bg-indigo-300' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
+
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className={`
+                            px-6 py-2.5 rounded-xl text-white text-sm font-medium
+                            transition-all duration-300 transform
+                            flex items-center gap-2
+                            ${isLoading
+                                ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl hover:scale-105'
+                            }
+                            animate__animated animate__pulse animate__infinite
+                        `}
+                    >
                         {isLoading ? (
-                            <span className="flex items-center gap-2">
-                                <svg className="w-2 h-2 animate-spin" viewBox="0 0 24 24">
+                            <>
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                 </svg>
-                                {isEdit ? "Updating..." : "Uploading..."}
-                            </span>
+                                {isEdit ? 'Updating...' : 'Uploading...'}
+                            </>
                         ) : (
-                            <span className="text-xs">{isEdit ? "Update Banner" : "Upload Banner"}</span>
+                            <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                {isEdit ? 'Update Banner' : 'Upload Banner'}
+                            </>
                         )}
                     </button>
                 </div>
             </form>
         </div>
     );
-
 };
 
 export default AddBudgetBanner;

@@ -5,6 +5,6 @@ export const useFilterItemsQuery = (filters = {}) => {
   
     return useQuery({
         queryKey: ['filter-items', filters],
-        queryFn: () => getProducts(filters)
+        queryFn: () => getProducts(filters),
     });
 }

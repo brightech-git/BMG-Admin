@@ -18,6 +18,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FilterProvider } from './admin/context/product/FilterContext';
 import { NewOrderProvider } from './admin/context/snackbar/NewOrderContext';
+import Snackbar from './admin/components/snackBar/Snackbar';
 
 function App() {
   const queryClient = new QueryClient(); // Initializes React Query client
@@ -39,7 +40,8 @@ function App() {
                 {/* Public user authentication context */}
            
                   <FilterProvider>
-                    <NewOrderProvider>               
+                    <NewOrderProvider>    
+                        <Snackbar />           
                         <AppRoutes />
                     </NewOrderProvider>
 

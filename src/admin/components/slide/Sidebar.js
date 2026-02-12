@@ -23,6 +23,7 @@ import RoleBasedSection from '../common/RoleBasedSection';
 import { useUserProfile } from '../../hooks/profile/useUserProfile';
 import { useAuth } from '../../context/auth/authContext';
 import { debounce } from 'lodash';
+import { Settings } from 'lucide-react';
 
 const menuItems = [
     {
@@ -86,7 +87,7 @@ const menuItems = [
     },
     {
         title: 'Settings',
-        icon: <FaVideo className="staradmin-menu-icon" />,
+        icon: <Settings className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Add BannerSettings', path: '/admin/bannersetting/add' },
             { title: 'Manage BannerSettings', path: '/admin/bannersetting/manage' },
@@ -116,14 +117,14 @@ const menuItems = [
     },
 ];
 
-const employeeMenu = {
-    title: 'Employee',
-    icon: <FaBox className="staradmin-menu-icon" />,
-    submenu: [
-        { title: 'Add Employee', path: '/admin/employee/add' },
-        { title: 'Manage Employees', path: '/admin/employee/manage' },
-    ],
-};
+// const employeeMenu = {
+//     title: 'Employee',
+//     icon: <FaBox className="staradmin-menu-icon" />,
+//     submenu: [
+//         { title: 'Add Employee', path: '/admin/employee/add' },
+//         { title: 'Manage Employees', path: '/admin/employee/manage' },
+//     ],
+// };
 
 const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, currentPath }) => {
     const location = useLocation();
@@ -328,11 +329,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 );
             }
         });
-        if (employeeMenu.submenu) {
-            initialExpanded['employee'] = employeeMenu.submenu.some(
-                (subItem) => subItem.path === location.pathname
-            );
-        }
+        // if (employeeMenu.submenu) {
+        //     initialExpanded['employee'] = employeeMenu.submenu.some(
+        //         (subItem) => subItem.path === location.pathname
+        //     );
+        // }
         setExpanded(initialExpanded);
     }, [location.pathname, location.search]); // Add location.search as dependency
 
@@ -459,7 +460,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                 ))}
                             </div>
 
-                            <RoleBasedSection allowedRoles={['ROLE_ADMIN']}>
+                            {/* <RoleBasedSection allowedRoles={['ROLE_ADMIN']}>
                                 <div className="staradmin-menu-section">
                                     <AnimatePresence>
                                         {isOpen && (
@@ -483,7 +484,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                         currentPath={location.pathname}
                                     />
                                 </div>
-                            </RoleBasedSection>
+                            </RoleBasedSection> */}
                         </div>
                     </div>
 

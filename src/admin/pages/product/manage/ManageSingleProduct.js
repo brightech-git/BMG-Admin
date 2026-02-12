@@ -53,7 +53,7 @@ function ManageSingleProduct() {
         }
     }, [tagKey, getProductDetails]);
 
-    const product = productDetails?.[0];
+    const product = productDetails;
 
     // Parse images and videos from product data
     const images = parseImagePath(product?.ImagePath || []);

@@ -66,6 +66,7 @@ const ManageBudgetBanner = () => {
             }
         });
     };
+    console.log(bannersData,'bannersData')
 
     // Prepare table data from API response
     const tableData = useMemo(() => {
@@ -83,6 +84,7 @@ const ManageBudgetBanner = () => {
             fullWidth: banner.full ? 'Yes' : 'No',
             hasGap: banner.gap ? 'Yes' : 'No',
             rowSpan:banner.rowSpan?? '',
+            isSingle: banner.isSingle ?? false,
             // Store full banner object for actions
             _bannerData: banner
         }));
