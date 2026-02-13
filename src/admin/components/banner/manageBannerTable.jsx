@@ -39,7 +39,8 @@ const BannerTable = ({
                 actionColumn="actions"
                 emptyMessage={emptyMessage} 
                 isLoading={loading}  
-                isError={error}          
+                isError={error}    
+                 
             />
         </div>
     );

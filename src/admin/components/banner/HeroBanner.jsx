@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getImage } from '../../utils/getProductImages';
+import { getImage } from '../../../utils/mediaUtils/mediaUtils'
 
 const HeroBanner = ({
     title,

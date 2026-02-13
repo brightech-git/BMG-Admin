@@ -5,6 +5,7 @@ import { useFilterItemsQuery } from '../../../hooks/products/useFilterItemsQuery
 import { useFilters } from '../../../context/product/FilterContext';
 import { MyContext } from '../../../context/themeContext/themeContext';
 import FilterSection from '../../../components/product/FilterSection';
+import AdvancedTable from '../../../components/table/ResponsiveTable';
 
 // Helper to remove empty filters
 const getActiveFilters = (filters) =>
@@ -32,52 +33,10 @@ const constructVideoUrls = (videoPath, baseUrl = 'https://app.bmgjewellers.com')
     }
 };
 
-// Skeleton Card Component
-const SkeletonCard = ({ themeMode, isMobileView }) => (
-    isMobileView ? (
-        <tr className={`${themeMode === 'dark' ? 'bg-gray-800' : 'bg-white'} animate-pulse`}>
-            <td className="px-1 py-1 border border-gray-300">
-                <div className="h-6 bg-gray-300 rounded w-8 mx-auto"></div>
-            </td>
-            <td className="px-1 py-1 border border-gray-300">
-                <div className="h-6 bg-gray-300 rounded w-3/4"></div>
-            </td>
-            <td className="px-1 py-1 border border-gray-300">
-                <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-            </td>
-            <td className="px-1 py-1 border border-gray-300">
-                <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-            </td>
-            <td className="px-1 py-1 border border-gray-300">
-                <div className="h-6 bg-gray-300 rounded w-6 mx-auto"></div>
-            </td>
-        </tr>
-    ) : (
-        <tr className={`${themeMode === 'dark' ? 'bg-gray-800' : 'bg-white'} animate-pulse`}>
-            <td className="px-1 py-1 border border-gray-300">
-                <div className="h-6 bg-gray-300 rounded w-8 mx-auto"></div>
-            </td>
-            <td className="px-3 py-1 border border-gray-300">
-                <div className="h-6 bg-gray-300 rounded w-3/4"></div>
-            </td>
-            <td className="px-2 py-1 border border-gray-300">
-                <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-            </td>
-            <td className="px-1 py-1 border border-gray-300">
-                <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-            </td>
-            <td className="px-2 py-1 border border-gray-300">
-                <div className="h-6 bg-gray-300 rounded w-6 mx-auto"></div>
-            </td>
-        </tr>
-    )
-);
-
-// Media Display Component
-const MediaDisplay = ({ product, navigate }) => {
+// Media Display Component for table cells
+const MediaDisplay = ({ product, navigate, themeMode }) => {
     const images = constructImageUrls(product.ImagePath);
     const videos = constructVideoUrls(product.VideoPath);
-    console.log (product ,'vidoes')
 
     const hasImages = images.length > 0;
     const hasVideos = videos.length > 0;
@@ -169,184 +128,59 @@ const MediaDisplay = ({ product, navigate }) => {
     );
 };
 
-// Mobile Media Display Component
-const MobileMediaDisplay = ({ product, navigate }) => {
-    const images = constructImageUrls(product.ImagePath);
-    const videos = constructVideoUrls(product.VideoPath);
-    const hasImages = images.length > 0;
-    const hasVideos = videos.length > 0;
+// Custom cell renderer for the table
+const renderTableCell = (key, row, themeMode, showNextArrow, navigate) => {
+    switch (key) {
+        case 'sno':
+            return <span>{row._index + 1}</span>;
 
-    if (!hasImages && !hasVideos) {
-        return (
-            <button
-                onClick={() =>
-                    navigate(`/admin/product/add`, {
-                        state: { tagkey: product.TAGKEY, itemName: product.ITEMNAME, subItemName: product.SUBITEMNAME },
-                    })
-                }
-                className="text-red-500 border border-red-400 border-solid text-xs px-1 py-0.5 rounded hover:bg-red-50 transition"
-            >
-                Need to Add
-            </button>
-        );
-    }
-
-    return (
-        <div className="flex gap-1 items-center">
-            {hasImages && (
-                <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {images.length}
+        case 'product':
+            return (
+                <span className="truncate" title={`${row.ITEMNAME} - ${row.SUBITEMNAME}`}>
+                    {row.ITEMNAME} - {row.SUBITEMNAME}
                 </span>
-            )}
-            {hasVideos && (
-                <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                    </svg>
-                    {videos.length}
-                </span>
-            )}
-        </div>
-    );
-};
+            );
 
-// ProductList Component
-const ProductList = ({ products, isMobileView, themeMode, themeColor, isFetching, isInitialFetch }) => {
-    const navigate = useNavigate();
+        case 'itemId':
+            return <span>{row.ITEMID}</span>;
 
-    // Show skeletons during initial fetch
-    if (isFetching && isInitialFetch) {
-        return (
-            <div className="overflow-x-auto mt-4">
-                <table className={`min-w-full border border-gray-300 table-auto text-sm`}>
-                    <thead className={`bg-gray-100 ${themeMode === 'dark' ? 'bg-gray-700 text-white' : ''}`}>
-                        <tr>
-                            <th className="px-1 py-1 border border-gray-300 text-center">S.No</th>
-                            <th className="px-3 py-1 border border-gray-300 text-center">Product</th>
-                            <th className="px-2 py-1 border border-gray-300">Product Key</th>
-                            <th className="px-2 py-1 border border-gray-300">Media</th>
-                            <th className="px-2 py-1 border border-gray-300 text-center">Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Array.from({ length: 6 }).map((_, i) => (
-                            <SkeletonCard key={i} themeMode={themeMode} isMobileView={isMobileView} />
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        );
+        case 'tagNo':
+            return <span>{row.TAGNO}</span>;
+
+        case 'tagKey':
+            return <span className="truncate" title={row.TAGKEY}>{row.TAGKEY}</span>;
+
+        case 'media':
+            return <MediaDisplay product={row} navigate={navigate} themeMode={themeMode} />;
+
+        case 'actions':
+            return (
+                <ArrowForward
+                    className="text-black-300 cursor-pointer mx-auto"
+                    style={{ fontSize: 16 }}
+                    onClick={() =>
+                        navigate(`/admin/product/manage/single`, { state: { tagKey: row.TAGKEY } })
+                    }
+                />
+            );
+
+        default:
+            return row[key] || '-';
     }
-
-    // Handle empty product list
-    if (!products.length) {
-        return (
-            <div className="text-center mt-8">
-                <p className="text-lg font-bold">No Products Found</p>
-                <p className="text-sm text-gray-500">No products match the current filters.</p>
-            </div>
-        );
-    }
-
-    // Desktop Table
-    if (!isMobileView) {
-        return (
-            <div className="overflow-x-auto mt-4">
-                <table className={`min-w-full border border-gray-300 table-auto text-sm`}>
-                    <thead className={`bg-gray-100 ${themeMode === 'dark' ? 'bg-gray-700 text-white' : ''}`}>
-                        <tr>
-                            <th className="px-1 py-1 border border-gray-300 text-center">S.No</th>
-                            <th className="px-2 py-1 border border-gray-300 ">Product</th>
-                            <th className="px-2 py-1 border border-gray-300 ">ItemId</th>
-                            <th className="px-2 py-1 border border-gray-300 ">TagNo</th>
-                            <th className="px-2 py-1 border border-gray-300">Product Key</th>
-                            <th className="px-2 py-1 border border-gray-300">Media</th>
-                            <th className="px-2 py-1 border border-gray-300 text-center">Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products.map((p, index) => (
-                            <tr key={p.TAGKEY} className={`${themeMode === 'dark' ? 'bg-gray-800 text-white' : 'bg-white'}`}>
-                                <td className="px-1 py-1 border border-gray-300 text-center w-12">{index + 1}</td>
-                                <td className="px-2 py-1 border border-gray-300 truncate text-xs w-auto">{p.ITEMNAME} - {p.SUBITEMNAME}</td>
-                                <td className="px-2 py-1 border border-gray-300  w-1">{p.ITEMID}</td>
-                                <td className="px-2 py-1 border border-gray-300  w-auto">{p.TAGNO}</td>
-                                <td className="px-2 py-1 border border-gray-300 truncate w-30">{p.TAGKEY}</td>
-                                <td className="px-2 py-1 border border-gray-300 w-30">
-                                    <MediaDisplay product={p} navigate={navigate} />
-                                </td>
-                                <td className="px-2 py-1 border border-gray-300 text-center">
-                                    <ArrowForward
-                                        className="text-black-300 cursor-pointer mx-auto"
-                                        style={{ fontSize: 16 }}
-                                        onClick={() =>
-                                            navigate(`/admin/product/manage/single`, { state: { tagKey: p.TAGKEY } })
-                                        }
-                                    />
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        );
-    }
-
-    // Mobile Table
-    return (
-        <div className="overflow-x-auto mt-4">
-            <table className="min-w-full border border-gray-300 divide-y divide-gray-300 table-auto text-xs">
-                <thead className={`bg-gray-100 ${themeMode === 'dark' ? 'bg-gray-700 text-white' : ''}`}>
-                    <tr>
-                        <th className="px-1 py-1 border border-gray-300 text-center">S.No</th>
-                        <th className="px-1 py-1 border border-gray-300">Product Key</th>
-                        <th className="px-1 py-1 border border-gray-300 ">Product</th>
-                        <th className="px-1 py-1 border border-gray-300">Media</th>
-                        <th className="px-1 py-1 border border-gray-300 text-center">Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {products.map((p, index) => (
-                        <tr key={p.TAGKEY} className={`${themeMode === 'dark' ? 'bg-gray-800 text-white' : 'bg-white'} hover:bg-gray-50`}>
-                            <td className="px-1 py-1 border border-gray-300 text-center">{index + 1}</td>
-                            <td className="px-1 py-1 border border-gray-300 truncate">{p.TAGKEY}</td>
-                            <td className="px-1 py-1 border border-gray-300 truncate" style={{ textTransform: 'lowercase' }}>
-                                {p.ITEMNAME} - {p.SUBITEMNAME}
-                            </td>
-                            <td className="px-1 py-1 border border-gray-300">
-                                <MobileMediaDisplay product={p} navigate={navigate} />
-                            </td>
-                            <td className="px-1 py-1 border border-gray-300 text-center">
-                                <ArrowForward
-                                    className="text-black cursor-pointer mx-auto"
-                                    style={{ fontSize: 10 }}
-                                    onClick={() =>
-                                        navigate(`/admin/product/manage/single`, { state: { tagKey: p.TAGKEY } })
-                                    }
-                                />
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
 };
 
 // Main ManageProduct Component
 const ManageProduct = () => {
     const { filters, updateFilter } = useFilters();
-    const { themeMode, themeColor } = useContext(MyContext);
+    const { themeMode } = useContext(MyContext);
     const navigate = useNavigate();
 
     const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+    const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(filters.pageSize || 20);
-    const [visibleCount, setVisibleCount] = useState(pageSize);
-    const [allProducts, setAllProducts] = useState([]); // Store all loaded products
-    const [isInitialFetch, setIsInitialFetch] = useState(true); // Track initial fetch
+    const [allProducts, setAllProducts] = useState([]);
+    const [isInitialFetch, setIsInitialFetch] = useState(true);
+    const [totalCount, setTotalCount] = useState(0);
 
     // Handle window resize for mobile view
     useEffect(() => {
@@ -355,75 +189,91 @@ const ManageProduct = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Handle navigation events (e.g., back/forward navigation)
+    // Handle navigation events
     useEffect(() => {
         const handlePopstate = () => {
-            // Reset state to trigger a fresh fetch when navigating back
             setAllProducts([]);
             setIsInitialFetch(true);
+            setPage(0);
             setPageSize(filters.pageSize || 20);
-            setVisibleCount(filters.pageSize || 20);
         };
 
         window.addEventListener('popstate', handlePopstate);
         return () => window.removeEventListener('popstate', handlePopstate);
     }, [filters.pageSize]);
 
-    const activeFilters = useMemo(() => getActiveFilters({ ...filters, pageSize }), [filters, pageSize]);
-    const { data, isFetching, isError ,refetch } = useFilterItemsQuery(activeFilters);
+    const activeFilters = useMemo(() =>
+        getActiveFilters({ ...filters, page, pageSize }),
+        [filters, page, pageSize]
+    );
 
-    const prevFiltersRef = React.useRef(activeFilters);
+    const { data, isFetching, isError, refetch, error } = useFilterItemsQuery(activeFilters);
 
     // Update products when new data is fetched
     useEffect(() => {
         if (!data?.data) return;
 
-        const filtersChanged =
-            JSON.stringify(prevFiltersRef.current) !== JSON.stringify(activeFilters);
-
-        if (filtersChanged || isInitialFetch) {
-            // FULL RESET on filter change
-            setAllProducts(data.data);
-        } else {
-            // 🔥 MERGE & UPDATE EXISTING PRODUCTS
-            setAllProducts((prev) => {
-                const map = new Map(prev.map((p) => [p.TAGKEY, p]));
-
-                data.data.forEach((item) => {
-                    map.set(item.TAGKEY, item); // overwrite if exists
-                });
-
-                return Array.from(map.values());
-            });
-        }
-
-        prevFiltersRef.current = activeFilters;
+        // Always replace products with new data (no appending)
+        setAllProducts(data.data.map((item, index) => ({ ...item, _index: index })));
+        setTotalCount(data.totalProducts || data.data.length);
         setIsInitialFetch(false);
-    }, [data, activeFilters, isInitialFetch]);
 
+    }, [data]);
 
-    const totalCount = data?.totalProducts || allProducts.length;
-    const hasMore = data?.hasMore || allProducts.length < totalCount;
-
-    const handleLoadMore = () => {
-        const newSize = pageSize + 10;
-        setPageSize(newSize);
-        setVisibleCount(newSize);
-        updateFilter('pageSize', newSize);
+    // Handle page change with next/previous buttons
+    const handleNextPage = () => {
+        if ((page + 1) * pageSize < totalCount) {
+            setPage(prev => prev + 1);
+            setAllProducts([]); // Clear current products
+            setIsInitialFetch(true);
+        }
     };
 
+    const handlePrevPage = () => {
+        if (page > 0) {
+            setPage(prev => prev - 1);
+            setAllProducts([]); // Clear current products
+            setIsInitialFetch(true);
+        }
+    };
+
+    // Handle page size change
     const handlePageSizeChange = (event) => {
         const newSize = Number(event.target.value);
         setPageSize(newSize);
-        setVisibleCount(newSize);
+        setPage(0); // Reset to first page
         updateFilter('pageSize', newSize);
-        setAllProducts([]); // Reset products when changing page size
-        setIsInitialFetch(true); // Treat as initial fetch
+        setAllProducts([]);
+        setIsInitialFetch(true);
     };
+
+    // Calculate pagination info
+    const startItem = page * pageSize + 1;
+    const endItem = Math.min((page + 1) * pageSize, totalCount);
+
+    // Table headers configuration
+    const tableHeaders = [
+        { key: 'sno', label: 'S.No', align: 'center' },
+        { key: 'product', label: 'Product', align: 'left' },
+        { key: 'itemId', label: 'Item ID', align: 'left' },
+        { key: 'tagNo', label: 'Tag No', align: 'left' },
+        { key: 'tagKey', label: 'Tag Key', align: 'left' },
+        { key: 'media', label: 'Media', align: 'left' },
+        { key: 'actions', label: 'Details', align: 'center' },
+    ];
+
+    // Mobile view headers (fewer columns)
+    const mobileHeaders = [
+        { key: 'sno', label: 'S.No', align: 'center' },
+        { key: 'tagKey', label: 'Tag Key', align: 'left' },
+        { key: 'product', label: 'Product', align: 'left' },
+        { key: 'media', label: 'Media', align: 'left' },
+        { key: 'actions', label: 'Details', align: 'center' },
+    ];
 
     return (
         <div className="p-3 mt-4">
-            <div className="p-2 border ">
+            <div className="p-2 border">
                 {/* Breadcrumb */}
                 <nav aria-label="breadcrumb" className="p-1">
                     <ol className="breadcrumb flex gap-2 text-xs">
@@ -439,43 +289,77 @@ const ManageProduct = () => {
                 {/* Filters */}
                 <FilterSection />
 
-                {/* Product List */}
-                <ProductList
-                    products={allProducts.slice(0, visibleCount)}
-                    isMobileView={isMobileView}
-                    themeMode={themeMode}
-                    themeColor={themeColor}
-                    isFetching={isFetching}
-                    isInitialFetch={isInitialFetch}
-                />
+                {/* Advanced Table - Just for display with fixed height */}
+                <div className="mt-4">
+                    <AdvancedTable
+                        headers={isMobileView ? mobileHeaders : tableHeaders}
+                        data={allProducts}
+                        isLoading={isInitialFetch && isFetching}
+                        isLoadingMore={false} // Disable loading more
+                        isError={isError}
+                        error={error}
+                        onRetry={refetch}
+                        renderCell={(key, row, themeMode, showNextArrow) =>
+                            renderTableCell(key, row, themeMode, showNextArrow, navigate)
+                        }
+                        themeMode={themeMode}
+                        maxHeight="600px" // Fixed height for scrolling
+                        // Removed hasMore and onScrollEnd props to disable scroll loading
+                        emptyMessage="No products found matching your filters"
 
-                {/* Pagination / Load More */}
-                <div className="flex flex-wrap justify-between items-center mt-2 gap-2 text-sm">
+                        // Styling props
+                        headerBg={themeMode === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}
+                        headerText={themeMode === 'dark' ? 'text-white' : 'text-gray-800'}
+                        rowBg={themeMode === 'dark' ? 'bg-gray-800' : 'bg-white'}
+                        rowText={themeMode === 'dark' ? 'text-white' : 'text-gray-900'}
+                        rowHoverBg={themeMode === 'dark' ? 'hover:bg-gray-600' : 'hover:bg-gray-50'}
+                        fontSizeHeader="text-xs"
+                        fontSizeRow="text-xs"
+                    />
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex flex-wrap justify-between items-center mt-4 gap-2">
                     {/* Showing text */}
-                    <p className="order-1 sm:order-1 text-xs sm:text-xs mt-3">
-                        Showing {Math.min(visibleCount, allProducts.length)} of {totalCount} products
+                    <p className="text-xs">
+                        Showing {allProducts.length > 0 ? startItem : 0} to {endItem} of {totalCount} products
                     </p>
 
-                    {/* Load More Button */}
-                    {hasMore && (
-                        <div className="w-full flex justify-center">
-                            <button
-                                className="bg-blue-500 text-white px-2 sm:px-4 sm:py-1.5 rounded-full hover:bg-blue-600 transition text-xs sm:text-sm"
-                                onClick={handleLoadMore}
-                            >
-                                <span className="sm:hidden text-xs">Load More</span>
-                                <span className="hidden sm:inline text-xs">Load More Products</span>
-                            </button>
-                        </div>
-                    )}
+                    {/* Pagination buttons */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handlePrevPage}
+                            disabled={page === 0 || isFetching}
+                            className={`px-3 py-1 text-xs rounded ${page === 0 || isFetching
+                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                                }`}
+                        >
+                            Previous
+                        </button>
+                        <span className="text-xs">
+                            Page {page + 1} of {Math.ceil(totalCount / pageSize) || 1}
+                        </span>
+                        <button
+                            onClick={handleNextPage}
+                            disabled={(page + 1) * pageSize >= totalCount || isFetching}
+                            className={`px-3 py-1 text-xs rounded ${(page + 1) * pageSize >= totalCount || isFetching
+                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                                }`}
+                        >
+                            Next
+                        </button>
+                    </div>
 
                     {/* Rows per page */}
-                    <div className="flex items-center gap-1 sm:gap-2 order-3 sm:order-3 ml-auto">
-                        <span className="text-xs sm:text-sm whitespace-nowrap ">Rows per page:</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs">Rows per page:</span>
                         <select
                             value={pageSize}
                             onChange={handlePageSizeChange}
-                            className="border border-gray-300 rounded px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs sm:text-sm text-black"
+                            className="border border-gray-300 rounded px-2 py-1 text-xs text-black"
+                            disabled={isFetching}
                         >
                             {[10, 20, 30, 50, 100].map((size) => (
                                 <option key={size} value={size}>{size}</option>
@@ -484,7 +368,11 @@ const ManageProduct = () => {
                     </div>
                 </div>
 
-                {isError && <p className="mt-4 text-red-500">Failed to load products. Please try again.</p>}
+                {isError && !isFetching && (
+                    <p className="mt-4 text-red-500 text-center">
+                        Failed to load products. Please try again.
+                    </p>
+                )}
             </div>
         </div>
     );

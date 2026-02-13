@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect ,useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUpdateBudgetBannerMutation, useBudgetBanner } from '../../../hooks/banners/budgetBanner/useBudgetBanner';
 import { useGetBannerSettings } from '../../../hooks/banners/bannerSetting/useBannerSettings';
@@ -6,6 +6,7 @@ import ImageKeyComboBox from '../../../components/ui/ImageKeyComboBox';
 import { Switch } from '../../../components/ui/Switch';
 import 'animate.css';
 import FileUploadArea from '../../../components/banner/FileUploadArea';
+import ComboBox from '../../../components/ui/ComboBox';
 
 const AddBudgetBanner = () => {
 
@@ -36,6 +37,11 @@ const AddBudgetBanner = () => {
     const [fileErrors, setFileErrors] = useState({ desktop: "", mobile: "" });
 
     const isLoading = uploadMutation.isPending || updateMutation.isPending;
+
+
+     const selectedOption = useMemo(() => {
+         return bannerSettingData?.data.find(item => item.imageKey === categoryKey) || null;
+     }, [bannerSettingData, categoryKey]);
 
     useEffect(() => {
         if (!isEdit || !bannerData?.images?.[0]) return;
@@ -232,17 +238,37 @@ const AddBudgetBanner = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Category Key */}
-                <div className="animate__animated animate__fadeInUp animate__delay-1s">
-                    <ImageKeyComboBox
+                <div >
+                    {/* <ImageKeyComboBox
                         data={bannerSettingData?.data || []}
                         categoryKey={categoryKey}
                         setCategoryKey={setCategoryKey}
                         disabled={isLoading}
-                    />
+                    /> */}
+                    <ComboBox
+                        options={bannerSettingData?.data || []}
+                        value={selectedOption}
+                                            onChange={(option) => {
+                                                const value = option?.imageKey || '';
+                                                setCategoryKey(value);
+                                            }}
+                        getOptionLabel={(opt) => opt?.imageKey || ''}
+                        getOptionValue={(opt) => opt?.imageKey || ''}
+                                            placeholder="Select or type to search..."
+                                            disabled={isLoading}
+                                            searchable={true}
+                                            clearable={true}
+                                            size="md"
+                                            variant="outlined"
+                                            noOptionsText="No categories available"
+                                            autoHighlight={true}
+                                            className="w-full"
+                                            inputClassName="text-sm"
+                                        />
                 </div>
 
                 {/* Links */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate__animated animate__fadeInUp animate__delay-2s">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate__animated animate__fadeInUp animate__delay-1s">
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                             Desktop Link
@@ -297,7 +323,7 @@ const AddBudgetBanner = () => {
 
                 {/* Ratios or Row Span */}
                 {!isGrid ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate__animated animate__fadeInUp animate__delay-3s">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate__animated animate__fadeInUp animate__delay-2s">
                         <div className="space-y-1.5">
                             <label className="text-xs font-semibold text-gray-700">Desktop Ratio</label>
                             <input
@@ -326,7 +352,7 @@ const AddBudgetBanner = () => {
                         )}
                     </div>
                 ) : (
-                    <div className="space-y-1.5 animate__animated animate__fadeInUp animate__delay-3s">
+                    <div className="space-y-1.5 animate__animated animate__fadeInUp animate__delay-2s">
                         <label className="text-xs font-semibold text-gray-700">Row Span</label>
                         <input
                             value={rowSpan}
@@ -341,7 +367,7 @@ const AddBudgetBanner = () => {
                 )}
 
                 {/* Single Switch */}
-                <div className="animate__animated animate__fadeInUp animate__delay-4s">
+                <div className="animate__animated animate__fadeInUp animate__delay-3s">
                     <Switch
                         checked={isSingle}
                         onChange={(val) => setIsSingle(val)}
@@ -357,7 +383,7 @@ const AddBudgetBanner = () => {
                 </div>
 
                 {/* Image Uploads */}
-                <div className="flex flex-col sm:flex-row gap-2 animate__animated animate__fadeInUp animate__delay-5s">
+                <div className="flex flex-col sm:flex-row gap-2 animate__animated animate__fadeInUp animate__delay-4s">
                     <FileUploadArea
                         type="desktop"
                         value={imageDesktop}
@@ -393,7 +419,7 @@ const AddBudgetBanner = () => {
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100 animate__animated animate__fadeInUp animate__delay-6s">
+                <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100 animate__animated animate__fadeInUp animate__delay-5s">
                     <div className="flex gap-2">
                         <button
                             type="button"
