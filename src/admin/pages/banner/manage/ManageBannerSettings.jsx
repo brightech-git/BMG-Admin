@@ -1,15 +1,26 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetBannerSettings, useDeleteBannerSetting } from '../../../hooks/banners/bannerSetting/useBannerSettings';
 import BannerTable from "../../../components/banner/manageBannerTable";
-import { FaEdit, FaTrash, FaCheck, FaTimes, FaDesktop, FaTabletAlt, FaMobileAlt, FaClock, FaInfinity, FaArrowsAltH, FaEllipsisH } from "react-icons/fa";
+import { useBannersByKey } from '../../../hooks/banners/budgetBanner/useBudgetBannerQuery';
+import * as Lucide from "lucide-react";
 import 'animate.css';
+import HeroBanner from "../../../components/banner/HeroBanner";
+import GridBanner from "../../../components/banner/StackBanner";
 
 const ManageBannerSettings = () => {
     const navigate = useNavigate();
 
     const { data: bannersData, isLoading, isError, refetch } = useGetBannerSettings();
     const { mutate: deleteBanner } = useDeleteBannerSetting();
+
+    const [openPreview, setOpenPreview] = useState(null);
+    const [previewDevice, setPreviewDevice] = useState('desktop'); // 'desktop', 'tablet', 'mobile'
+
+    // Fetch banners for preview
+    const { data: previewBanners, isLoading: previewLoading } = useBannersByKey(openPreview?.imageKey);
+
+    console.log(previewBanners,'previewBanners')
 
     // Use memo to avoid unnecessary recalculations
     const banners = useMemo(() => {
@@ -96,7 +107,7 @@ const ManageBannerSettings = () => {
             visibleCount: visibleCountObj,
             visibleCountDesktop: visibleCountObj?.desktop || '',
             visibleCountTablet: visibleCountObj?.tablet || '',
-            visibleCountMobile: visibleCountObj?.mobile || '' ,
+            visibleCountMobile: visibleCountObj?.mobile || '',
             scrollInterval: item.scrollInterval || '',
             displayOrder: item.displayOrder || '',
             createdAt: item.createdAt,
@@ -117,40 +128,49 @@ const ManageBannerSettings = () => {
         });
     };
 
-    // Helper function to render boolean values with icons
+    const handleView = (row) => {
+        setOpenPreview(row);
+    };
+
+    const closePreview = () => {
+        setOpenPreview(null);
+        setPreviewDevice('desktop');
+    };
+
+    // Helper function to render boolean values with Lucide icons
     const renderBooleanWithIcon = (value, trueColor = "text-green-600", falseColor = "text-red-600") => {
         if (value === true || value === "true" || value === 1 || value === "1") {
             return (
                 <div className="flex items-center justify-center animate__animated animate__fadeIn">
-                    <FaCheck className={trueColor} size={14} />
+                    <Lucide.Check className={trueColor} size={14} />
                 </div>
             );
         } else if (value === false || value === "false" || value === 0 || value === "0") {
             return (
                 <div className="flex items-center justify-center animate__animated animate__fadeIn">
-                    <FaTimes className={falseColor} size={14} />
+                    <Lucide.X className={falseColor} size={14} />
                 </div>
             );
         }
         return <span className="text-gray-400">—</span>;
     };
 
-    // Helper function to render visible count with device icons
+    // Helper function to render visible count with device icons using Lucide
     const renderVisibleCount = (row) => {
         if (!row.visibleCount) return <span className="text-gray-400">—</span>;
 
         return (
             <div className="flex items-center gap-2 animate__animated animate__fadeIn">
                 <div className="flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded-full">
-                    <FaDesktop className="text-blue-600" size={10} />
+                    <Lucide.Monitor className="text-blue-600" size={10} />
                     <span className="text-xs font-medium text-blue-700">{row.visibleCountDesktop}</span>
                 </div>
                 <div className="flex items-center gap-1 bg-purple-50 px-1.5 py-0.5 rounded-full">
-                    <FaTabletAlt className="text-purple-600" size={10} />
+                    <Lucide.Tablet className="text-purple-600" size={10} />
                     <span className="text-xs font-medium text-purple-700">{row.visibleCountTablet}</span>
                 </div>
                 <div className="flex items-center gap-1 bg-green-50 px-1.5 py-0.5 rounded-full">
-                    <FaMobileAlt className="text-green-600" size={10} />
+                    <Lucide.Smartphone className="text-green-600" size={10} />
                     <span className="text-xs font-medium text-green-700">{row.visibleCountMobile}</span>
                 </div>
             </div>
@@ -163,7 +183,7 @@ const ManageBannerSettings = () => {
         const seconds = Math.round(ms / 1000);
         return (
             <div className="flex items-center gap-1 animate__animated animate__fadeIn">
-                <FaClock className="text-orange-500" size={12} />
+                <Lucide.Clock className="text-orange-500" size={12} />
                 <span className="text-xs font-medium text-gray-700">{seconds}s</span>
             </div>
         );
@@ -246,18 +266,25 @@ const ManageBannerSettings = () => {
                         return (
                             <div className="flex gap-2 justify-center animate__animated animate__fadeIn">
                                 <button
+                                    onClick={() => handleView(row)}
+                                    className="text-blue-600 hover:text-blue-800 transition-all duration-300 hover:scale-110 hover:rotate-12"
+                                    title="Preview"
+                                >
+                                    <Lucide.Eye size={16} />
+                                </button>
+                                <button
                                     onClick={() => handleEdit(row)}
                                     className="text-blue-600 hover:text-blue-800 transition-all duration-300 hover:scale-110 hover:rotate-12"
                                     title="Edit"
                                 >
-                                    <FaEdit size={16} />
+                                    <Lucide.Edit2 size={16} />
                                 </button>
                                 <button
                                     onClick={() => handleDelete(row.id)}
                                     className="text-red-600 hover:text-red-800 transition-all duration-300 hover:scale-110 hover:-rotate-12"
                                     title="Delete"
                                 >
-                                    <FaTrash size={16} />
+                                    <Lucide.Trash2 size={16} />
                                 </button>
                             </div>
                         );
@@ -340,7 +367,7 @@ const ManageBannerSettings = () => {
                     if (key === "imageKey") {
                         return (
                             <div className="flex items-center gap-1">
-                                <i className="fas fa-image text-blue-500 text-xs"></i>
+                                <Lucide.Image className="text-blue-500" size={12} />
                                 <span className="text-xs font-medium">{row.imageKey}</span>
                             </div>
                         );
@@ -380,6 +407,266 @@ const ManageBannerSettings = () => {
                 fontSizeHeader="text-[11px]"
                 fontSizeRow="text-[11px]"
             />
+
+            {/* Banner Preview Modal */}
+            {openPreview && (
+                <div className="fixed inset-0 z-50 mt-[50px] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center animate__animated animate__fadeIn">
+                    <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                        {/* Modal Header */}
+                        <div className="p-2 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-orange-50 to-orange-100">
+                            <div className="flex items-center gap-2">
+                                <div>
+                                    <h2 className="text-lg font-semibold text-gray-800 m-0">
+                                        Banner Preview: {openPreview.title || openPreview.imageKey}
+                                    </h2>
+                                    <p className="text-sm text-gray-600 m-0">
+                                        Image Key: {openPreview.imageKey}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={closePreview}
+                                className="text-gray-500 hover:text-gray-700 transition-colors"
+                            >
+                                <Lucide.X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Device Preview Controls */}
+                        <div className="px-4 py-1 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium">Preview Device:</span>
+                                <div className="flex gap-1 bg-white rounded-lg border border-gray-200 p-1">
+                                    <button
+                                        onClick={() => setPreviewDevice('desktop')}
+                                        className={`p-1 rounded-md text-sm flex items-center gap-2 transition-colors ${previewDevice === 'desktop'
+                                            ? 'bg-orange-500 text-white'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        <Lucide.Monitor size={14} />
+                                        Desktop
+                                    </button>
+                                    <button
+                                        onClick={() => setPreviewDevice('tablet')}
+                                        className={`p-1 rounded-md text-sm flex items-center gap-2 transition-colors ${previewDevice === 'tablet'
+                                            ? 'bg-orange-500 text-white'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        <Lucide.Tablet size={16} />
+                                        Tablet
+                                    </button>
+                                    <button
+                                        onClick={() => setPreviewDevice('mobile')}
+                                        className={`p-1 rounded-md text-sm flex items-center gap-2 transition-colors ${previewDevice === 'mobile'
+                                            ? 'bg-orange-500 text-white'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        <Lucide.Smartphone size={16} />
+                                        Mobile
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Banner Type Badge */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-600">Banner Type:</span>
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${openPreview.isGrid
+                                    ? 'bg-purple-100 text-purple-700'
+                                    : 'bg-blue-100 text-blue-700'
+                                    }`}>
+                                    {openPreview.isGrid ? (
+                                        <div className="flex items-center gap-1">
+                                            <Lucide.Grid size={12} />
+                                            Grid Banner
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-1">
+                                            <Lucide.Sliders size={12} />
+                                            Carousel Banner
+                                        </div>
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Banner Preview Content */}
+                        <div className="flex-1 overflow-y-auto p-2 bg-gray-100">
+                            {previewLoading ? (
+                                <div className="flex items-center justify-center h-64">
+                                    <div className="text-center">
+                                        <Lucide.Loader className="animate-spin text-orange-500 mx-auto mb-4" size={40} />
+                                        <p className="text-gray-600">Loading banners...</p>
+                                    </div>
+                                </div>
+                            ) : previewBanners?.data?.[openPreview.imageKey] ? (
+                                <div className="bg-white rounded-lg shadow-lg p-6">
+                                    {/* Device Frame */}
+                                    <div className={`mx-auto transition-all duration-300 ${previewDevice === 'desktop' ? 'max-w-4xl' :
+                                            previewDevice === 'tablet' ? 'max-w-2xl' :
+                                                'max-w-sm'
+                                        }`}>
+                                        {/* Device Mockup Header (for mobile/tablet) */}
+                                        {(previewDevice === 'tablet' || previewDevice === 'mobile') && (
+                                            <div className="bg-gray-200 rounded-t-lg p-2 flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                                                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                                </div>
+                                                {previewDevice === 'tablet' ? (
+                                                    <Lucide.Tablet className="text-gray-600" size={16} />
+                                                ) : (
+                                                    <Lucide.Smartphone className="text-gray-600" size={16} />
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Get the banner data from the correct structure */}
+                                        {(() => {
+                                            const bannerData = previewBanners.data[openPreview.imageKey];
+
+                                            // Parse mobileRows if it's a string
+                                            const parsedMobileRows = typeof bannerData.mobileRows === 'string'
+                                                ? JSON.parse(bannerData.mobileRows || "[0, 0]")
+                                                : bannerData.mobileRows || [0, 0];
+
+                                            // Transform the banner data into the expected format
+                                            const transformedBanner = {
+                                                imageKey: bannerData.imageKey,
+                                                title: bannerData.title,
+                                                description: bannerData.description,
+                                                gap: bannerData.gap,
+                                                mobileGap: bannerData.mobileGap,
+                                                centered: bannerData.centered,
+                                                full: bannerData.full,
+                                                backgroundColor: bannerData.backgroundColor,
+                                                isVisible: bannerData.isVisible,
+                                                dots: bannerData.dots,
+                                                isGrid: bannerData.isGrid,
+                                                desktopColumns: bannerData.desktopColumns,
+                                                mobileRows: parsedMobileRows,
+                                                displayOrder: bannerData.displayOrder,
+                                                autoscroll: bannerData.autoscroll,
+                                                scrollable: bannerData.scrollable,
+                                                infinite: bannerData.infinite,
+                                                visibleCount: bannerData.visibleCount || {
+                                                    desktop: 1,
+                                                    tablet: 1,
+                                                    mobile: 1
+                                                },
+                                                scrollInterval: bannerData.scrollInterval || 3000,
+                                                desktopLayout: bannerData.desktopLayout,
+                                                mobileLayout: bannerData.mobileLayout,
+                                                desktopRatio: bannerData.desktopRatio || "16/9",
+                                                mobileRatio: bannerData.mobileRatio || "5/4",
+                                                images: bannerData.images.map(img => ({
+                                                    isSingle: img.isSingle || false,
+                                                    url: img.url || '',
+                                                    link: img.link || '',
+                                                    ratio: img.ratio || '16/9'
+                                                }))
+                                            };
+
+                                            return transformedBanner.isGrid ? (
+                                                <GridBanner
+                                                    key={transformedBanner.imageKey}
+                                                    title={transformedBanner.title}
+                                                    description={transformedBanner.description}
+                                                    images={transformedBanner.images || []}
+                                                    desktopLayout={transformedBanner.desktopLayout || { columns: [1, 1], rows: 1 }}
+                                                    mobileLayout={transformedBanner.mobileLayout || { columns: [1, 1, 1], rows: 1 }}
+                                                    gap={transformedBanner.gap}
+                                                    centered={transformedBanner.centered}
+                                                    full={transformedBanner.full}
+                                                    backgroundColor={transformedBanner.backgroundColor}
+                                                />
+                                            ) : (
+                                                <HeroBanner
+                                                    key={transformedBanner.imageKey}
+                                                    title={transformedBanner.title}
+                                                    description={transformedBanner.description}
+                                                    images={transformedBanner.images || []}
+                                                    defaultRatio={transformedBanner.desktopRatio}
+                                                    mobileRatio={transformedBanner.mobileRatio}
+                                                    gap={transformedBanner.gap}
+                                                    mobileGap={transformedBanner.mobileGap}
+                                                    centered={transformedBanner.centered}
+                                                    full={transformedBanner.full}
+                                                    backgroundColor={transformedBanner.backgroundColor}
+                                                    mobileRows={transformedBanner.mobileRows || [1]}
+                                                    desktopColumns={transformedBanner.desktopColumns || 'auto'}
+                                                    onImageClick={() => { }}
+                                                    autoScroll={transformedBanner.autoscroll || false}
+                                                    scrollable={transformedBanner.scrollable || false}
+                                                    visibleCount={transformedBanner.visibleCount}
+                                                    scrollInterval={transformedBanner.scrollInterval || 3000}
+                                                    infinite={transformedBanner.infinite || false}
+                                                    dots={transformedBanner.dots || false}
+                                                />
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+                                    <Lucide.ImageOff className="text-gray-400 mx-auto mb-4" size={48} />
+                                    <h3 className="text-lg font-medium text-gray-700 mb-2">No Banners Found</h3>
+                                    <p className="text-gray-500">
+                                        No banners available for the image key: <span className="font-mono bg-gray-100 px-2 py-1 rounded">{openPreview.imageKey}</span>
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Banner Settings Summary */}
+                        <div className="p-2 border-t border-gray-200 bg-gray-50">
+                            <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                                <Lucide.Settings size={16} />
+                                Current Settings
+                            </h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-1 text-xs">
+                                <div className="bg-white p-2 rounded border border-gray-200">
+                                    <span className="text-gray-500 block">Desktop Ratio</span>
+                                    <span className="font-medium">{openPreview.desktopRatio}</span>
+                                </div>
+                                <div className="bg-white p-2 rounded border border-gray-200">
+                                    <span className="text-gray-500 block">Mobile Ratio</span>
+                                    <span className="font-medium">{openPreview.mobileRatio}</span>
+                                </div>
+                                <div className="bg-white p-2 rounded border border-gray-200">
+                                    <span className="text-gray-500 block">Desktop Columns</span>
+                                    <span className="font-medium">{openPreview.desktopColumns}</span>
+                                </div>
+                                <div className="bg-white p-2 rounded border border-gray-200">
+                                    <span className="text-gray-500 block">Mobile Rows</span>
+                                    <span className="font-medium">{openPreview.mobileRows?.join(', ') || 'N/A'}</span>
+                                </div>
+                                {!openPreview.isGrid && (
+                                    <>
+                                        <div className="bg-white p-2 rounded border border-gray-200">
+                                            <span className="text-gray-500 block">Visible Count (D/T/M)</span>
+                                            <span className="font-medium">
+                                                {openPreview.visibleCountDesktop}/{openPreview.visibleCountTablet}/{openPreview.visibleCountMobile}
+                                            </span>
+                                        </div>
+                                        <div className="bg-white p-2 rounded border border-gray-200">
+                                            <span className="text-gray-500 block">Auto Scroll</span>
+                                            <span className="font-medium">{openPreview.autoscroll ? 'Yes' : 'No'}</span>
+                                        </div>
+                                        <div className="bg-white p-2 rounded border border-gray-200">
+                                            <span className="text-gray-500 block">Scroll Interval</span>
+                                            <span className="font-medium">{openPreview.scrollInterval ? `${openPreview.scrollInterval / 1000}s` : 'N/A'}</span>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

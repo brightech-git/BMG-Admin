@@ -122,6 +122,18 @@ export const BudgetBannersService = {
         const response = await axiosInstance.get("/budget-categories/all");
         return response.data;
     },
+    getBannersByKey: async (category_key) =>{
+        try{
+            const response = await axiosInstance.get(`/budget-categories/getAll` , {
+                params: {category_key}
+            });
+            return response.data;
+        }
+        catch(error){
+            console.error("Error fetching banners:", error);
+            throw error;
+        }
+    },
     createBudgetBanner: async(formData) => {
         const response = await axiosInstance.post("/budget-categories/upload", formData);
         return response.data;
