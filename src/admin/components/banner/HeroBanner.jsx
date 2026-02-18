@@ -19,10 +19,13 @@ const HeroBanner = ({
 
     autoScroll = false,
     scrollable = false,
-    visibleCount = { desktop: 3, tablet: 2, mobile: 2 },
+    visibleCount = { desktop: 1, tablet: 1, mobile: 1 },
     scrollInterval = 3000,
     infinite = false,
-    dots = false
+    dots = false,
+
+    isMobilePreview,
+    isTabletPreview,
 
 }) => {
     const [isMobile, setIsMobile] = useState(false);
@@ -48,27 +51,51 @@ const HeroBanner = ({
         }
     }, [mobileRows]);
 
-    // Check screen size
+
+
+    // Get current visible count based on screen size
+    const getCurrentVisibleCount = () => {
+        // If visibleCount is a number (from deviceProps), use it directly
+        if (typeof visibleCount === 'number') {
+            return visibleCount;
+        }
+
+        // If it's an object (original format), use based on screen size
+        if (isMobile) return visibleCount.mobile || 1;
+        if (isTablet) return visibleCount.tablet || visibleCount.desktop || 2;
+        return visibleCount.desktop || 3;
+    };
+  
+    // In HeroBanner component, update the useEffect and related functions:
+
+    // Check screen size or use preview device
     useEffect(() => {
         const checkScreenSize = () => {
+            // If preview device props are provided, use them instead of actual screen size
+            if (isMobilePreview !== undefined) {
+                setIsMobile(isMobilePreview);
+                setIsTablet(isTabletPreview);
+                return;
+            }
+
+            // Otherwise use actual screen size
             const width = window.innerWidth;
             setIsMobile(width < 768);
             setIsTablet(width >= 768 && width < 1024);
         };
 
         checkScreenSize();
-        window.addEventListener('resize', checkScreenSize);
-        return () => window.removeEventListener('resize', checkScreenSize);
-    }, []);
-
-    // Get current visible count based on screen size
-    const getCurrentVisibleCount = () => {
-        if (isMobile) return visibleCount.mobile || 1;
-        if (isTablet) return visibleCount.tablet || visibleCount.desktop || 2;
-        return visibleCount.desktop || 3;
-    };
+        if (isMobilePreview === undefined && isTabletPreview === undefined) {
+            window.addEventListener('resize', checkScreenSize);
+            return () => window.removeEventListener('resize', checkScreenSize);
+        }
+    }, [isMobilePreview, isTabletPreview]);
 
     const currentVisibleCount = getCurrentVisibleCount();
+    console.log('HeroBanner - visibleCount prop:', visibleCount);
+    console.log('HeroBanner - currentVisibleCount:', currentVisibleCount);
+    console.log('HeroBanner - isMobile:', isMobile);
+    console.log('HeroBanner - isTablet:', isTablet);
     const totalSlides = images.length;
     const maxIndex = infinite
         ? totalSlides - 1 // For infinite, we can go to any index
@@ -469,14 +496,9 @@ const HeroBanner = ({
                                                     paddingBottom: `${parseRatio(imageData.ratio)}%`,
                                                     animationDelay: `${600 + globalIndex * 100}ms`,
                                                 }}
-                                                onClick={() => handleImageClick(image, globalIndex)}
                                                 role={imageData.link ? "button" : "presentation"}
                                                 tabIndex={imageData.link ? 0 : -1}
-                                                onKeyPress={(e) => {
-                                                    if (imageData.link && e.key === 'Enter') {
-                                                        handleImageClick(image, globalIndex);
-                                                    }
-                                                }}
+                                               
                                             >
                                                 <div className="absolute inset-0">
                                                     <picture>

@@ -408,7 +408,7 @@ const ManageBannerSettings = () => {
                 fontSizeRow="text-[11px]"
             />
 
-            {/* Banner Preview Modal */}
+           
             {openPreview && (
                 <div className="fixed inset-0 z-50 mt-[50px] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center animate__animated animate__fadeIn">
                     <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -525,89 +525,198 @@ const ManageBannerSettings = () => {
                                         )}
 
                                         {/* Get the banner data from the correct structure */}
-                                        {(() => {
-                                            const bannerData = previewBanners.data[openPreview.imageKey];
+                                            {(() => {
+                                                const bannerData = previewBanners.data[openPreview.imageKey];
 
-                                            // Parse mobileRows if it's a string
-                                            const parsedMobileRows = typeof bannerData.mobileRows === 'string'
-                                                ? JSON.parse(bannerData.mobileRows || "[0, 0]")
-                                                : bannerData.mobileRows || [0, 0];
+                                                // Parse mobileRows if it's a string
+                                                const parsedMobileRows = typeof bannerData.mobileRows === 'string'
+                                                    ? JSON.parse(bannerData.mobileRows || "[0, 0]")
+                                                    : bannerData.mobileRows || [0, 0];
 
-                                            // Transform the banner data into the expected format
-                                            const transformedBanner = {
-                                                imageKey: bannerData.imageKey,
-                                                title: bannerData.title,
-                                                description: bannerData.description,
-                                                gap: bannerData.gap,
-                                                mobileGap: bannerData.mobileGap,
-                                                centered: bannerData.centered,
-                                                full: bannerData.full,
-                                                backgroundColor: bannerData.backgroundColor,
-                                                isVisible: bannerData.isVisible,
-                                                dots: bannerData.dots,
-                                                isGrid: bannerData.isGrid,
-                                                desktopColumns: bannerData.desktopColumns,
-                                                mobileRows: parsedMobileRows,
-                                                displayOrder: bannerData.displayOrder,
-                                                autoscroll: bannerData.autoscroll,
-                                                scrollable: bannerData.scrollable,
-                                                infinite: bannerData.infinite,
-                                                visibleCount: bannerData.visibleCount || {
+                                                // Ensure visibleCount is properly extracted
+                                                const visibleCount = bannerData.visibleCount || {
                                                     desktop: 1,
                                                     tablet: 1,
                                                     mobile: 1
-                                                },
-                                                scrollInterval: bannerData.scrollInterval || 3000,
-                                                desktopLayout: bannerData.desktopLayout,
-                                                mobileLayout: bannerData.mobileLayout,
-                                                desktopRatio: bannerData.desktopRatio || "16/9",
-                                                mobileRatio: bannerData.mobileRatio || "5/4",
-                                                images: bannerData.images.map(img => ({
-                                                    isSingle: img.isSingle || false,
-                                                    url: img.url || '',
-                                                    link: img.link || '',
-                                                    ratio: img.ratio || '16/9'
-                                                }))
-                                            };
+                                                };
 
-                                            return transformedBanner.isGrid ? (
-                                                <GridBanner
-                                                    key={transformedBanner.imageKey}
-                                                    title={transformedBanner.title}
-                                                    description={transformedBanner.description}
-                                                    images={transformedBanner.images || []}
-                                                    desktopLayout={transformedBanner.desktopLayout || { columns: [1, 1], rows: 1 }}
-                                                    mobileLayout={transformedBanner.mobileLayout || { columns: [1, 1, 1], rows: 1 }}
-                                                    gap={transformedBanner.gap}
-                                                    centered={transformedBanner.centered}
-                                                    full={transformedBanner.full}
-                                                    backgroundColor={transformedBanner.backgroundColor}
-                                                />
-                                            ) : (
-                                                <HeroBanner
-                                                    key={transformedBanner.imageKey}
-                                                    title={transformedBanner.title}
-                                                    description={transformedBanner.description}
-                                                    images={transformedBanner.images || []}
-                                                    defaultRatio={transformedBanner.desktopRatio}
-                                                    mobileRatio={transformedBanner.mobileRatio}
-                                                    gap={transformedBanner.gap}
-                                                    mobileGap={transformedBanner.mobileGap}
-                                                    centered={transformedBanner.centered}
-                                                    full={transformedBanner.full}
-                                                    backgroundColor={transformedBanner.backgroundColor}
-                                                    mobileRows={transformedBanner.mobileRows || [1]}
-                                                    desktopColumns={transformedBanner.desktopColumns || 'auto'}
-                                                    onImageClick={() => { }}
-                                                    autoScroll={transformedBanner.autoscroll || false}
-                                                    scrollable={transformedBanner.scrollable || false}
-                                                    visibleCount={transformedBanner.visibleCount}
-                                                    scrollInterval={transformedBanner.scrollInterval || 3000}
-                                                    infinite={transformedBanner.infinite || false}
-                                                    dots={transformedBanner.dots || false}
-                                                />
-                                            );
-                                        })()}
+                                                // Create proper layout objects for GridBanner
+                                                const createLayoutFromColumns = (columns, isMobile = false) => {
+                                                    if (!columns) return null;
+
+                                                    // Handle different column formats
+                                                    let columnArray;
+                                                    if (typeof columns === 'string') {
+                                                        // Handle formats like "1" or "2,1,1"
+                                                        columnArray = columns.split(',').map(c => parseInt(c.trim()) || 1);
+                                                    } else if (Array.isArray(columns)) {
+                                                        columnArray = columns;
+                                                    } else {
+                                                        columnArray = [1]; // Default to 1 column
+                                                    }
+
+                                                    return {
+                                                        columns: columnArray,
+                                                        rows: 1 // Default rows
+                                                    };
+                                                };
+
+                                                // Transform the banner data into the expected format
+                                                const transformedBanner = {
+                                                    imageKey: bannerData.imageKey,
+                                                    title: bannerData.title,
+                                                    description: bannerData.description,
+                                                    gap: bannerData.gap,
+                                                    mobileGap: bannerData.mobileGap,
+                                                    centered: bannerData.centered,
+                                                    full: bannerData.full,
+                                                    backgroundColor: bannerData.backgroundColor,
+                                                    isVisible: bannerData.isVisible,
+                                                    dots: bannerData.dots,
+                                                    isGrid: bannerData.isGrid,
+                                                    desktopColumns: bannerData.desktopColumns,
+                                                    mobileColumns: bannerData.mobileColumns,
+                                                    mobileRows: parsedMobileRows,
+                                                    displayOrder: bannerData.displayOrder,
+                                                    autoscroll: bannerData.autoscroll,
+                                                    scrollable: bannerData.scrollable,
+                                                    infinite: bannerData.infinite,
+                                                    visibleCount: visibleCount,
+                                                    scrollInterval: bannerData.scrollInterval || 3000,
+                                                    desktopLayout: bannerData.desktopLayout,
+                                                    mobileLayout: bannerData.mobileLayout,
+                                                    desktopRatio: bannerData.desktopRatio || "16/9",
+                                                    mobileRatio: bannerData.mobileRatio || "5/4",
+                                                    images: bannerData.images.map(img => ({
+                                                        isSingle: img.isSingle || false,
+                                                        url: img.url || '',
+                                                        link: img.link || '',
+                                                        ratio: img.ratio || '16/9'
+                                                    }))
+                                                };
+
+                                                // Create layout objects for GridBanner
+                                                const desktopLayoutObj = createLayoutFromColumns(
+                                                    transformedBanner.desktopColumns || "1",
+                                                    false
+                                                );
+
+                                                const mobileLayoutObj = createLayoutFromColumns(
+                                                    transformedBanner.mobileColumns || "1",
+                                                    true
+                                                );
+
+                                                // Log to debug
+                                                console.log('Visible Count:', transformedBanner.visibleCount);
+                                                console.log('Preview Device:', previewDevice);
+                                                console.log('Desktop Layout:', desktopLayoutObj);
+                                                console.log('Mobile Layout:', mobileLayoutObj);
+
+                                                // Determine which props to use based on preview device
+                                                const getDeviceSpecificProps = () => {
+                                                    // Get the correct visible count based on device
+                                                    let visibleCountValue;
+                                                    switch (previewDevice) {
+                                                        case 'mobile':
+                                                            visibleCountValue = transformedBanner.visibleCount?.mobile ?? 1;
+                                                            break;
+                                                        case 'tablet':
+                                                            visibleCountValue = transformedBanner.visibleCount?.tablet ?? 1;
+                                                            break;
+                                                        case 'desktop':
+                                                        default:
+                                                            visibleCountValue = transformedBanner.visibleCount?.desktop ?? 1;
+                                                            break;
+                                                    }
+
+                                                    console.log(`${previewDevice} visible count:`, visibleCountValue);
+
+                                                    switch (previewDevice) {
+                                                        case 'mobile':
+                                                            return {
+                                                                defaultRatio: transformedBanner.mobileRatio,
+                                                                gap: transformedBanner.mobileGap ?? transformedBanner.gap,
+                                                                mobileRows: transformedBanner.mobileRows,
+                                                                visibleCount: visibleCountValue,
+                                                                layout: mobileLayoutObj, // Use mobile layout for mobile preview
+                                                                isMobilePreview: true,
+                                                                isTabletPreview: false,
+                                                                isDesktopPreview: false
+                                                            };
+                                                        case 'tablet':
+                                                            return {
+                                                                defaultRatio: transformedBanner.desktopRatio,
+                                                                gap: transformedBanner.gap,
+                                                                mobileRows: null,
+                                                                visibleCount: visibleCountValue,
+                                                                layout: desktopLayoutObj, // Use desktop layout for tablet (or create tablet-specific)
+                                                                isMobilePreview: false,
+                                                                isTabletPreview: true,
+                                                                isDesktopPreview: false
+                                                            };
+                                                        case 'desktop':
+                                                        default:
+                                                            return {
+                                                                defaultRatio: transformedBanner.desktopRatio,
+                                                                gap: transformedBanner.gap,
+                                                                mobileRows: null,
+                                                                visibleCount: visibleCountValue,
+                                                                layout: desktopLayoutObj,
+                                                                isMobilePreview: false,
+                                                                isTabletPreview: false,
+                                                                isDesktopPreview: true
+                                                            };
+                                                    }
+                                                };
+
+                                                const deviceProps = getDeviceSpecificProps();
+
+                                                return transformedBanner.isGrid ? (
+                                                    <GridBanner
+                                                        key={transformedBanner.imageKey}
+                                                        title={transformedBanner.title}
+                                                        description={transformedBanner.description}
+                                                        images={transformedBanner.images || []}
+                                                        // Pass the appropriate layout based on preview device
+                                                        desktopLayout={deviceProps.layout}
+                                                        mobileLayout={mobileLayoutObj}
+                                                        gap={deviceProps.gap}
+                                                        centered={transformedBanner.centered}
+                                                        full={transformedBanner.full}
+                                                        backgroundColor={transformedBanner.backgroundColor}
+                                                        previewDevice={previewDevice}
+                                                        isMobilePreview={deviceProps.isMobilePreview}
+                                                        isTabletPreview={deviceProps.isTabletPreview}
+                                                        isDesktopPreview={deviceProps.isDesktopPreview}
+                                                    />
+                                                ) : (
+                                                    <HeroBanner
+                                                        key={transformedBanner.imageKey}
+                                                        title={transformedBanner.title}
+                                                        description={transformedBanner.description}
+                                                        images={transformedBanner.images || []}
+                                                        defaultRatio={deviceProps.defaultRatio}
+                                                        mobileRatio={transformedBanner.mobileRatio}
+                                                        gap={deviceProps.gap}
+                                                        mobileGap={transformedBanner.mobileGap}
+                                                        centered={transformedBanner.centered}
+                                                        full={transformedBanner.full}
+                                                        backgroundColor={transformedBanner.backgroundColor}
+                                                        mobileRows={previewDevice === 'mobile' ? transformedBanner.mobileRows : null}
+                                                        desktopColumns={transformedBanner.desktopColumns || 'auto'}
+                                                        autoScroll={transformedBanner.autoscroll || false}
+                                                        scrollable={transformedBanner.scrollable || false}
+                                                        visibleCount={deviceProps.visibleCount}
+                                                        scrollInterval={transformedBanner.scrollInterval || 3000}
+                                                        infinite={transformedBanner.infinite || false}
+                                                        dots={transformedBanner.dots || false}
+                                                        previewDevice={previewDevice}
+                                                        isMobilePreview={deviceProps.isMobilePreview}
+                                                        isTabletPreview={deviceProps.isTabletPreview}
+                                                        isDesktopPreview={deviceProps.isDesktopPreview}
+                                                    />
+                                                );
+                                            })()}
                                     </div>
                                 </div>
                             ) : (
