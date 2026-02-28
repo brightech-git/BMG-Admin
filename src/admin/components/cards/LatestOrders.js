@@ -17,169 +17,20 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { styled } from '@mui/system';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate } from 'react-router-dom';
+import AdvancedTable from '../table/ResponsiveTable';
+import StatusChip from '../statusChip/StatusChip';
+import { Truck } from 'lucide-react';
 
-// Styled Components
-const StyledCard = styled(Card)(({ themeMode }) => ({
-    borderRadius: 'var(--border-radius-sm)',
-    background: themeMode === 'dark'
-        ? 'linear-gradient(135deg, var(--background-color) )'
-        : 'linear-gradient(135deg, var(--background-color) )',
-    boxShadow: '0 4px 20px rgba(30, 30, 44, 0.08)',
-    border: '1px solid var(--border-color)',
-    transition: 'all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1)',
-    margin:'0',
-    '&:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 8px 32px rgba(30, 30, 44, 0.12)',
-    },
-    '@media (max-width: 600px)': {
-        margin: 'var(--spacing-sm)',
-    },
-}));
 
-const StatusChip = styled(Chip)(({ status, themeMode }) => {
-    const getStatusStyles = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'confirmed':
-                return {
-                    background: 'linear-gradient(135deg, var(--success-color) 0%, #2a9891 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 2px 8px rgba(52, 177, 170, 0.3)',
-                };
-            case 'pending':
-                return {
-                    background: 'linear-gradient(135deg, var(--warning-color) 0%, #c9a00d 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 2px 8px rgba(224, 181, 15, 0.3)',
-                };
-            case 'cancelled':
-                return {
-                    background: 'linear-gradient(135deg, var(--error-color) 0%, #e04545 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 2px 8px rgba(243, 104, 104, 0.3)',
-                };
-            case 'delivered':
-                return {
-                    background: 'linear-gradient(135deg, var(--success-color) 0%, #45a049 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)',
-                };
-            case 'shipped':
-                return {
-                    background: 'linear-gradient(135deg, var(--primary-color) 0%, #1976d2 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 2px 8px rgba(33, 150, 243, 0.3)',
-                };
-            default:
-                return {
-                    background: 'linear-gradient(135deg, var(--info-color) 0%, #2a7bd9 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 2px 8px rgba(59, 143, 243, 0.3)',
-                };
-        }
-    };
 
-    return {
-        fontFamily: 'var(--font-primary)',
-        fontWeight: 700,
-        textTransform: 'uppercase',
-        fontSize: 'var(--font-size-xs)',
-        minWidth: '80px',
-        height: '24px',
-        borderRadius: 'var(--border-radius-sm)',
-        transition: 'all var(--transition-speed) ease',
-        ...getStatusStyles(status),
-        '&:hover': {
-            transform: 'scale(1.05)',
-        },
-        '@media (max-width: 600px)': {
-            fontSize: '0.65rem',
-            minWidth: '60px',
-            height: '20px',
-        },
-    };
-});
 
-const CompactTable = styled(TableContainer)(({ themeMode }) => ({
-    borderRadius: 'var(--border-radius-lg)',
-    overflow: 'auto',
-    background: themeMode === 'dark' ? 'var(--background-color)' : '#ffffff',
-    boxShadow: '0 2px 8px rgba(30, 30, 44, 0.08)',
-    border: '1px solid var(--border-color)',
-    '& .MuiTableHead-root': {
-        background: themeMode === 'dark'
-            ? 'linear-gradient(135deg, var(--background-color) 0%, #2a2a2a 100%)'
-            : 'linear-gradient(135deg, var(--primary-color) 0%, #fef6f1 100%)',
-        '& .MuiTableCell-head': {
-            color: themeMode === 'dark' ? 'var(--primary-text-color)' : '#ffffff',
-            fontFamily: 'var(--font-primary)',
-            fontWeight: 700,
-            fontSize: 'var(--font-size-xs)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            borderBottom: 'none',
-            padding: 'var(--spacing-sm) var(--spacing-md)',
-            whiteSpace: 'nowrap',
-            '@media (max-width: 600px)': {
-                padding: 'var(--spacing-xs) var(--spacing-sm)',
-                fontSize: '0.65rem',
-            },
-        },
-    },
-    '& .MuiTableRow-root': {
-        transition: 'all var(--transition-speed) ease',
-        '&:hover': {
-            backgroundColor: 'var(--active-bg)',
-        },
-    },
-    '& .MuiTableCell-root': {
-        borderBottom: '1px solid var(--border-color)',
-        padding: 'var(--spacing-sm) var(--spacing-md)',
-        fontSize: 'var(--font-size-sm)',
-        fontFamily: 'var(--font-primary)',
-        color: themeMode === 'dark' ? 'var(--primary-text-color)' : 'var(--primary-color)',
-        whiteSpace: 'nowrap',
-        '@media (max-width: 600px)': {
-            padding: 'var(--spacing-xs) var(--spacing-sm)',
-            fontSize: '0.75rem',
-        },
-    },
-}));
 
-const StyledModal = styled(Dialog)(({ themeMode }) => ({
-    '& .MuiDialog-paper': {
-        background: themeMode === 'dark' ? 'var(--card-background-color)' : '#ffffff',
-        borderRadius: 'var(--border-radius-lg)',
-        border: '1px solid var(--border-color)',
-        maxWidth: '600px',
-        width: '90%',
-        margin: 'var(--spacing-md)',
-        '@media (max-width: 600px)': {
-            margin: 'var(--spacing-sm)',
-        },
-    },
-    '& .MuiDialogTitle-root': {
-        background: themeMode === 'dark' ? '#2a2a2a' : '#fef6f1',
-        color: themeMode === 'dark' ? 'var(--primary-text-color)' : 'var(--primary-color)',
-        fontFamily: 'var(--font-primary)',
-        fontWeight: 600,
-        fontSize: 'var(--font-size-md)',
-        padding: 'var(--spacing-md) var(--spacing-lg)',
-        '@media (max-width: 600px)': {
-            fontSize: 'var(--font-size-sm)',
-            padding: 'var(--spacing-sm) var(--spacing-md)',
-        },
-    },
-    '& .MuiDialogContent-root': {
-        padding: 'var(--spacing-md) var(--spacing-lg)',
-        '@media (max-width: 600px)': {
-            padding: 'var(--spacing-sm) var(--spacing-md)',
-        },
-    },
-}));
 
 const LatestOrders = () => {
+
+
+
     const { themeMode } = useContext(MyContext);
     const [startDate, setStartDate] = useState(subDays(new Date(), 7));
     const [endDate, setEndDate] = useState(new Date());
@@ -201,6 +52,8 @@ const LatestOrders = () => {
     const totalOrders = Array.isArray(orders) ? orders.length : 0;
     const totalRevenue = latestOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
     const uniqueCustomers = new Set(latestOrders.map(order => order.customerName)).size;
+
+    const navigate = useNavigate();
 
     const handleDateRangeChange = useCallback((event) => {
         const value = event.target.value;
@@ -226,21 +79,88 @@ const LatestOrders = () => {
         setTimeout(() => setShowToast(false), 3000);
     }, []);
 
-    const handleOpenTrackingModal = useCallback((orderId) => {
-        setSelectedOrderId(orderId);
-    }, []);
+   
 
-    const handleCloseTrackingModal = useCallback(() => {
-        setSelectedOrderId(null);
-    }, []);
+    const handleTrackOrder = useCallback((order)=>{
+        navigate(`/admin/track/order/${order.orderId}`)
+    })
 
-    const getOrderDisplayName = (order) => order?.customerName || 'Unknown Customer';
-    const getOrderAmount = (order) => order?.totalAmount || 0;
-    const getOrderStatus = (order) => order?.status || 'Unknown';
+    const orderHeaders = [
+        { key: "order_id", label: "Order ID", align: "left" },
+        { key: "customer", label: "Customer", align: "left" },
+        { key: "amount", label: "Amount", align: "right" },
+        { key: "status", label: "Status", align: "center" },
+        { key: "order_date", label: "Order Date", align: "left" },
+        { key: "payment_mode", label: "Payment Mode", align: "center" },
+        { key: "actions", label: "Actions", align: "center" },
+    ];
+    console.log(latestOrders,'latestOrders')
+
+    const formattedOrders = latestOrders.map(order => ({
+            order_id: (
+                <span className="text-xs font-semibold text-primaryText">
+                {order.orderId}
+                </span>
+            ),
+            customer: (
+                <div className="min-w-[120px]">
+                    <div className="text-xs font-semibold text-primaryText">{order.customerName}</div>
+                    <div className="text-xs text-secondaryText">{order.contact}</div>
+                </div>
+            ),
+            amount: (
+                <span className="text-xs font-semibold text-primaryText">
+                    ₹{order.totalAmount.toFixed(2)}
+                </span>
+            ),
+            status: (
+                <StatusChip
+                    status={order?.status}
+                    size="small"
+                />
+            ),
+            order_date: (
+                <div className="min-w-[100px]">
+                    <div className="text-xs font-medium text-primaryText">
+                        {new Date(order.orderTime).toLocaleDateString()}
+                    </div>
+                    <div className="text-xs text-secondaryText">
+                        {new Date(order.orderTime).toLocaleTimeString()}
+                    </div>
+                </div>
+            ),
+            payment_mode: (
+                <span className="text-xs px-2 py-1 rounded align_center text-black font-semibold">
+    
+                    <StatusChip status={order.paymentMode} size='small' />
+                </span>
+            ),
+            actions: (
+                <div className="flex items-center justify-center gap-1">
+                  
+    
+                  
+                    {/* TRACK ORDER */}
+                    <div className="relative group inline-flex">
+                        <button
+                            onClick={() => handleTrackOrder(order)}
+                            className="btn-icon-warning p-1 rounded-md transition-colors"
+                        >
+                            <Truck className="w-4 h-4" />
+                        </button>
+                        <span className="tooltip">Track Order</span>
+                    </div>
+    
+                    
+                </div>
+            )
+    
+        }));
+
 
     if (isError) {
         return (
-            <StyledCard themeMode={themeMode}>
+    
                 <CardContent>
                     <Alert
                         severity="error"
@@ -277,13 +197,13 @@ const LatestOrders = () => {
                         Retry
                     </Button>
                 </CardContent>
-            </StyledCard>
+          
         );
     }
 
     return (
-        <StyledCard themeMode={themeMode}>
-            <CardContent sx={{ p: isMobile ? 'var(--spacing-sm)' : 'var(--spacing-md)' }}>
+    
+            <CardContent sx={{ p: isMobile ? '2px' : 'var(--spacing-md)' }}>
                 <Box
                     display="flex"
                     flexDirection={isMobile ? 'column' : 'row'}
@@ -514,155 +434,22 @@ const LatestOrders = () => {
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <Box sx={{ width: '100%', overflowX: 'auto' }}>
-                                <CompactTable themeMode={themeMode}>
-                                    <Table size="small" sx={{ minWidth: isMobile ? '650px' : '100%' }}>
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>Order ID</TableCell>
-                                                <TableCell>Customer</TableCell>
-                                                {!isMobile && !isTablet && <TableCell>Date</TableCell>}
-                                                {!isMobile && <TableCell align="right">Amount</TableCell>}
-                                                <TableCell align="center">Status</TableCell>
-                                                <TableCell align="center">Tracking</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {latestOrders.map((order) => (
-                                                <TableRow key={order.orderId}>
-                                                    <TableCell>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                fontWeight: 600,
-                                                                color: 'var(--primary-color)',
-                                                                fontFamily: 'var(--font-primary)',
-                                                                fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
-                                                            }}
-                                                        >
-                                                            #{order.orderId}
-                                                        </Typography>
-                                                        {isMobile && (
-                                                            <Typography
-                                                                variant="caption"
-                                                                sx={{
-                                                                    color: 'var(--secondary-text-color)',
-                                                                    fontFamily: 'var(--font-primary)',
-                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
-                                                                }}
-                                                            >
-                                                                {format(parseISO(order.orderTime), 'dd/MM/yyyy hh:mm a')}
-                                                            </Typography>
-                                                        )}
-                                                        {isMobile && (
-                                                            <Typography
-                                                                variant="caption"
-                                                                sx={{
-                                                                    fontWeight: 700,
-                                                                    color: 'var(--warning-color)',
-                                                                    fontFamily: 'var(--font-primary)',
-                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
-                                                                }}
-                                                            >
-                                                                ₹{getOrderAmount(order).toFixed(2)}
-                                                            </Typography>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Box>
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{
-                                                                    fontWeight: 600,
-                                                                    color: 'var(--primary-text-color)',
-                                                                    fontFamily: 'var(--font-primary)',
-                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
-                                                                    whiteSpace: isMobile ? 'normal' : 'nowrap',
-                                                                    overflow: 'hidden',
-                                                                    textOverflow: 'ellipsis',
-                                                                    maxWidth: isMobile ? '150px' : '200px',
-                                                                }}
-                                                            >
-                                                                {getOrderDisplayName(order)}
-                                                            </Typography>
-                                                            <Typography
-                                                                variant="caption"
-                                                                sx={{
-                                                                    color: 'var(--secondary-text-color)',
-                                                                    fontFamily: 'var(--font-primary)',
-                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
-                                                                    whiteSpace: isMobile ? 'normal' : 'nowrap',
-                                                                    overflow: 'hidden',
-                                                                    textOverflow: 'ellipsis',
-                                                                    maxWidth: isMobile ? '150px' : '200px',
-                                                                }}
-                                                            >
-                                                                {order.email || 'No email'}
-                                                            </Typography>
-                                                        </Box>
-                                                    </TableCell>
-                                                    {!isMobile && !isTablet && (
-                                                        <TableCell>
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{
-                                                                    fontWeight: 500,
-                                                                    fontFamily: 'var(--font-primary)',
-                                                                    color: 'var(--primary-text-color)',
-                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
-                                                                }}
-                                                            >
-                                                                {format(parseISO(order.orderTime), 'dd/MM/yyyy')}
-                                                            </Typography>
-                                                            <Typography
-                                                                variant="caption"
-                                                                sx={{
-                                                                    color: 'var(--secondary-text-color)',
-                                                                    fontFamily: 'var(--font-primary)',
-                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
-                                                                }}
-                                                            >
-                                                                {format(parseISO(order.orderTime), 'hh:mm a')}
-                                                            </Typography>
-                                                        </TableCell>
-                                                    )}
-                                                    {!isMobile && (
-                                                        <TableCell align="right">
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{
-                                                                    fontWeight: 700,
-                                                                    color: 'var(--warning-color)',
-                                                                    fontFamily: 'var(--font-primary)',
-                                                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-xs)',
-                                                                }}
-                                                            >
-                                                                ₹{getOrderAmount(order).toFixed(2)}
-                                                            </Typography>
-                                                        </TableCell>
-                                                    )}
-                                                    <TableCell align="center">
-                                                        <StatusChip
-                                                            label={getOrderStatus(order).toUpperCase()}
-                                                            status={getOrderStatus(order)}
-                                                            size="small"
-                                                            themeMode={themeMode}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell align="center">
-                                                        <IconButton
-                                                            onClick={() => handleOpenTrackingModal(order.orderId)}
-                                                            sx={{ color: 'var(--primary-color)' }}
-                                                        >
-                                                            <Visibility fontSize={isMobile ? 'small' : 'medium'} />
-                                                        </IconButton>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </CompactTable>
-                            </Box>
+                            <AdvancedTable
+                                headers={orderHeaders}
+                                fontSizeHeader='text-sm'
+                                fontSizeRow="text-xs"
+                                data={formattedOrders}
+                                alignments={{
+                                    amount: "right",
+                                    status: "center",
+                                    actions: "center",
+                                    payment_mode: "left",
+                                }}
+                                actionColumn="actions" // This will show actions column
+                                headerBg='bg-[var(--primary-text-color)]'
+                                headerText='text-[var(--white-color)]'
+
+                            />
                         </motion.div>
                     </AnimatePresence>
                 )}
@@ -696,115 +483,8 @@ const LatestOrders = () => {
                     </Box>
                 )}
 
-                <StyledModal
-                    open={!!selectedOrderId}
-                    onClose={handleCloseTrackingModal}
-                    themeMode={themeMode}
-                >
-                    <DialogTitle>Tracking Details for Order #{selectedOrderId}</DialogTitle>
-                    <DialogContent>
-                        {isTrackingLoading ? (
-                            <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" p="var(--spacing-md)">
-                                <CircularProgress
-                                    size={isMobile ? 24 : 32}
-                                    sx={{ color: 'var(--primary-color)', mb: 'var(--spacing-sm)' }}
-                                />
-                                <Typography
-                                    variant="body2"
-                                    sx={{
-                                        color: 'var(--secondary-text-color)',
-                                        fontFamily: 'var(--font-primary)',
-                                        fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-sm)',
-                                    }}
-                                >
-                                    Loading tracking details...
-                                </Typography>
-                            </Box>
-                        ) : trackingData?.history?.length > 0 ? (
-                            trackingData.history.map((track, index) => {
-                                const trackStatus = track.status;
-                                const cancelledStatuses = ['CANCELLED', 'RTO_IN_PROGRESS', 'RTO_DELIVERED', 'REFUND'];
-                                const failedStatuses = ['DELIVERY_FAILED'];
-                                const isCancelledTrack = cancelledStatuses.includes(trackStatus);
-                                const isFailedTrack = failedStatuses.includes(trackStatus);
-
-                                return (
-                                    <Box
-                                        key={index}
-                                        sx={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            py: 'var(--spacing-sm)',
-                                            borderBottom: index === trackingData.history.length - 1 ? 'none' : '1px dashed var(--border-color)',
-                                            flexDirection: isMobile ? 'column' : 'row',
-                                            gap: isMobile ? 'var(--spacing-xs)' : 0,
-                                        }}
-                                    >
-                                        <Typography
-                                            variant="body2"
-                                            sx={{
-                                                color: 'var(--secondary-text-color)',
-                                                fontWeight: 500,
-                                                minWidth: '140px',
-                                                fontFamily: 'var(--font-primary)',
-                                                fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-sm)',
-                                            }}
-                                        >
-                                            {format(parseISO(track.updated_at), 'MMM d, yyyy h:mm a')}
-                                        </Typography>
-                                        <Typography
-                                            variant="body2"
-                                            sx={{
-                                                color: 'var(--primary-text-color)',
-                                                fontWeight: 500,
-                                                textAlign: isMobile ? 'center' : 'center',
-                                                flex: 1,
-                                                mx: 2,
-                                                fontFamily: 'var(--font-primary)',
-                                                fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-sm)',
-                                            }}
-                                        >
-                                            {track.remarks || 'Status updated'}
-                                        </Typography>
-                                        <Box
-                                            sx={{
-                                                backgroundColor: isCancelledTrack ? 'var(--error-color)' : isFailedTrack ? 'var(--warning-color)' : 'var(--success-color)',
-                                                color: '#ffffff',
-                                                px: 2,
-                                                py: 0.5,
-                                                borderRadius: 'var(--border-radius-sm)',
-                                                fontSize: isMobile ? '0.65rem' : 'var(--font-size-xs)',
-                                                fontWeight: 600,
-                                                textTransform: 'capitalize',
-                                                minWidth: '100px',
-                                                textAlign: 'center',
-                                                fontFamily: 'var(--font-primary)',
-                                            }}
-                                        >
-                                            {track.status.replace(/_/g, ' ').toLowerCase()}
-                                        </Box>
-                                    </Box>
-                                );
-                            })
-                        ) : (
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    color: 'var(--secondary-text-color)',
-                                    textAlign: 'center',
-                                    py: 'var(--spacing-sm)',
-                                    fontFamily: 'var(--font-primary)',
-                                    fontSize: isMobile ? 'var(--font-size-xs)' : 'var(--font-size-sm)',
-                                }}
-                            >
-                                No tracking details available
-                            </Typography>
-                        )}
-                    </DialogContent>
-                </StyledModal>
             </CardContent>
-        </StyledCard>
+     
     );
 };
 

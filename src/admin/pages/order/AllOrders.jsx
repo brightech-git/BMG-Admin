@@ -1,75 +1,59 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-import { MyContext } from '../../context/themeContext/themeContext';
-import { useOrdersByDateRange } from '../../hooks/order/useAllOrder';
+import { useAllOrders } from '../../hooks/order/useAllOrder';
 import { format, subDays, parseISO, isWithinInterval } from 'date-fns';
 import { useMediaQuery } from 'react-responsive';
 import ResponsiveTable from '../../components/table/ResponsiveTable';
-import { getStatusRoute } from '../../components/routes/getStatusRoute';
 import StatusChip from '../../components/statusChip/StatusChip';
 import SkeletonTable from '../../components/table/SkeletonTable';
-import { Truck } from 'lucide-react';
+import { Truck,ChevronRight, ChevronLeft } from 'lucide-react';
 // Icons (still using MUI icons, but styled via CSS)
 import { Search as SearchIcon, RemoveRedEye, ArrowForward } from '@mui/icons-material';
 
-const OrdersByRange = () => {
-    const { themeMode } = useContext(MyContext);
-    const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(new Date());
-    const [searchQuery, setSearchQuery] = useState('');
-
+const AllOrders = () => {
+  
 
     const navigate = useNavigate();
     const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
     const isTablet = useMediaQuery({ query: '(max-width: 1024px)' });
 
-    const [activeDays, setActiveDays] = useState(0);
 
-    const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : '';
-    const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : '';
+       const [page, setPage] = useState(0);
+        const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    const { data: orders = [], isLoading, isError, refetch } = useOrdersByDateRange(
-        formattedStartDate,
-        formattedEndDate
-    );
+    const { data: orders = [], isLoading, isError, refetch } = useAllOrders(page,rowsPerPage);
 
-    useEffect(() => {
-        refetch();
-    }, [formattedStartDate, formattedEndDate, refetch]);
+    console.log(orders,'orders');
 
-   
-
-    const handleQuickDateSelect = (days) => {
-        const newStartDate = subDays(new Date(), days);
-        setStartDate(newStartDate);
-        setEndDate(new Date());
-        setActiveDays(days);
-    };
 
     const handleTrackOrder = (orderId) => {
         navigate(`/track/order/${orderId}`);
     };
 
- 
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+    };
 
-    const parseDate = (value) => (value ? new Date(value) : null);
+    const handleChangePage = (dir) => {
+        setPage((prev) => {
+            // if (dir === "next" && hasMorePage) 
+                if (dir === "next") {
+                return prev + 1;
+            }
+            if (dir === "prev" && prev > 0) {
+                return prev - 1;
+            }
+            return prev;
+        });
+    };
+    const totalOrders = orders?.totalOrders;
+    const totalPages = orders?.totalPages || orders?.totalOrders;
+    const hasMorePage = orders?.hasMore || true ;
+    const currentPage = page + 1;  
 
-    const filteredOrders = Array.isArray(orders)
-        ? orders.filter((order) => {
-            const start = startDate ? new Date(startDate.setHours(0, 0, 0, 0)) : null;
-            const end = endDate ? new Date(endDate.setHours(23, 59, 59, 999)) : null;
-            const matchesDate = start && end
-                ? isWithinInterval(parseISO(order.orderTime), { start, end })
-                : true;
-            const searchTerm = searchQuery.trim().toLowerCase();
-            const matchesSearch = searchTerm
-                ? order.orderId.toString().toLowerCase().includes(searchTerm) ||
-                order.contact.toLowerCase().includes(searchTerm)
-                : true;
-            return matchesDate && matchesSearch;
-        })
-        : [];
+    const filteredOrders = Array.isArray(orders?.orders) ? orders?.orders : [] ;
+
+
 
     const handleNextAction = (row) => {
         const path = `/admin/order/status/${row.status}`;
@@ -88,7 +72,7 @@ const OrdersByRange = () => {
         { key: 'tracking', label: 'Tracking', align: 'center' }
     ];
 
-    const renderCell = (key, row, themeMode, showNextArrow) => {
+    const renderCell = (key, row,  showNextArrow) => {
         switch (key) {
             case 'orderId':
                 return (
@@ -139,7 +123,7 @@ const OrdersByRange = () => {
                 );
 
             case 'status':
-                return <StatusChip status={row?.status} size="small" themeMode={themeMode} />;
+                return <StatusChip status={row?.status} size="small" />;
 
             case 'tracking':
                 return (
@@ -194,16 +178,16 @@ const OrdersByRange = () => {
     }
 
     return (
-        <div className="border mt-8 md:py-10 px-2 md:px-10 ml-0 md:ml-4" style={{ backgroundColor: 'var(--background-color)' }}>
+        <div className="border mt-8 md:py-4 px-2 md:px-10 ml-0 md:ml-4" style={{ backgroundColor: 'var(--background-color)' }}>
             <div className=""
                 >
-                <div className="p-2  md:p-3">
+           
 
 
                     {/* Header */}
                     <div className={`
             flex ${isMobile ? 'flex-col' : isTablet ? 'flex-col lg:flex-row lg:items-center lg:justify-between' : 'flex-row items-center justify-between'}
-            ${isMobile ? 'space-y-4' : isTablet ? 'space-y-4 lg:space-y-0' : 'space-y-0'} mb-6
+            ${isMobile ? 'space-y-2' : isTablet ? 'space-y-4 lg:space-y-0' : 'space-y-0'} mb-2 p-2
           `}>
                         <div className="flex items-center space-x-2">
                             <h2 className={`${isTablet ? 'text-responsive-lg' : 'text-responsive-xl'} font-bold`}
@@ -216,73 +200,18 @@ const OrdersByRange = () => {
                             </span>
                         </div>
 
-                        <div className={`
-              flex ${isMobile ? 'flex-col' : isTablet ? 'flex-col lg:flex-row' : 'flex-row items-center'}
-              ${isMobile ? 'space-y-3' : isTablet ? 'space-y-3 lg:space-y-0 lg:space-x-3' : 'space-x-3'}
-              ${isMobile ? 'w-full' : isTablet ? 'w-full lg:w-auto' : 'w-auto'}
-            `}>
-                            <div className={`
-                flex ${isMobile ? 'flex-col' : isTablet ? 'flex-col lg:flex-row' : 'flex-row items-center'}
-                ${isMobile ? 'space-y-2' : isTablet ? 'space-y-2 lg:space-y-0 lg:space-x-2' : 'space-x-2'}
-              `}>
-                                <input
-                                    type="date"
-                                    value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
-                                    onChange={(e) => setStartDate(parseDate(e.target.value))}
-                                    className="px-3 py-2 text-responsive-sm border rounded-[var(--border-radius-sm)]"
-                                    style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--card-background-color)' }}
-                                />
-                                <input
-                                    type="date"
-                                    value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
-                                    onChange={(e) => setEndDate(parseDate(e.target.value))}
-                                    className="px-3 py-2 text-responsive-sm border rounded-[var(--border-radius-sm)]"
-                                    style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--card-background-color)' }}
-                                />
-                            </div>
-
-                            <div className="flex space-x-1 flex-wrap">
-                                {[0, 7, 30].map((days) => (
-                                    <button
-                                        key={days}
-                                        onClick={() => handleQuickDateSelect(days)}
-                                        className={`px-3 py-1 text-responsive-xs font-medium rounded-[var(--border-radius-sm)] transition-smooth ${activeDays === days ? 'text-white' : ''
-                                            }`}
-                                        style={{
-                                            backgroundColor: activeDays === days ? 'var(--primary-color)' : 'transparent',
-                                            color: activeDays === days ? '#fff' : 'var(--primary-text-color)',
-                                            border: activeDays === days ? 'none' : '1px solid var(--border-color)'
-                                        }}
-                                    >
-                                        {days === 0 ? 'Today' : days === 7 ? '7 Days' : '30 Days'}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="relative flex-1 min-w-[190px]">
-                                <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-responsive-xs"
-                                    style={{ color: 'var(--secondary-text-color)' }} />
-                                <input
-                                    type="text"
-                                    placeholder="Search by Order ID or Mobile"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-3 py-2 text-responsive-sm border rounded-[var(--border-radius-sm)]"
-                                    style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--card-background-color)' }}
-                                />
-                            </div>
-                        </div>
+                      
                     </div>
 
-                    <div className="rounded-[var(--border-radius-md)] overflow-hidden border" style={{ borderColor: 'var(--border-color)' }}>
+                    <div className="rounded-[var(--border-radius-md)] p-1 overflow-hidden " >
                         {isLoading ? (
                             <SkeletonTable rows={5} cols={7} />
                         ) : (
+                            <>
                             <ResponsiveTable
                                 headers={tableHeaders}
                                 data={filteredOrders}
                                 renderCell={renderCell}
-                                themeMode={themeMode}
                                 showNextArrow={true}
                                 fontSizeRow='text-xs'
                                 alignments={{
@@ -293,13 +222,67 @@ const OrdersByRange = () => {
                               
                                 fontSizeHeader="text-sm"
                             />
+                            {/* Footer */}
+                                    {totalOrders > 0 && (
+                            <div className="mt-3  flex flex-row sm:flex-row sm:items-center sm:justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="bg-info  px-2 py-1 rounded text-xs font-bold">
+                                                    Total Orders {totalOrders} 
+                                    </span>
+                                </div>
+                                <div className='flex items-center gap-2'>
+
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-secondaryText font-secondary">
+                                            Rows per page:
+                                        </span>
+                                        <select
+                                            value={rowsPerPage}
+                                            onChange={handleChangeRowsPerPage}
+                                            className="bg-background border border-border rounded text-xs px-1 py-1"
+                                        >
+                                            <option value={5}>5</option>
+                                            <option value={10}>10</option>
+                                            <option value={25}>25</option>
+                                            <option value={50}>50</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <button
+                                            disabled={page === 0}
+                                            onClick={() => handleChangePage("prev")}
+                                            className="p-1 rounded bg-[var(--primary-color)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-bg-[var(--primary-color)]"
+                                            aria-label="Previous page"
+                                        >
+                                            <ChevronLeft size={16} />
+                                        </button>
+
+                                        <span className="text-gray-600 font-medium">
+                                            {currentPage} / {totalPages}
+                                        </span>
+
+                                        <button
+                                            disabled={!hasMorePage}
+                                            onClick={() => handleChangePage("next")}
+                                            className="p-1 rounded bg-[var(--primary-color)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-bg-[var(--primary-color)]"
+                                            aria-label="Next page"
+                                        >
+                                            <ChevronRight size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         )}
+                                </>
+                        )}
+                              
                     </div>
-                </div>
+                
             </div>
 
         </div>
     );
 };
 
-export default OrdersByRange;
+export default AllOrders;

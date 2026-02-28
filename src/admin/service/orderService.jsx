@@ -1,80 +1,62 @@
 import axiosInstance from "../api/axiosInstance";
 
-export const orderService = {
-      // 🔹 1. Get All Orders (Paginated)
-      getAllOrders: (page, size) =>
-            axiosInstance.get("/order/all-ordersCount", {
+export const getAllOrders = (page, size) =>{
+      try{
+            console.log("Fetching all orders...", page, size);
+            const res = axiosInstance.get("/order/all-ordersCount", {
                   params: { page, size },
-            }),
+            });
+            console.log(res ,'orders');
+            return res;
+      }
+      catch(err){
+            console.error("Error fetching all orders:", err);
+            throw err;
+      }
+}
+
+      
 
       // 🔹 2. Update Order Status
-      updateStatus: (payload) =>
-            axiosInstance.post("/order/update-status", payload),
+export const updateStatus = (payload) =>{
+      try{
+            const res = axiosInstance.post("/order/update-status", payload);
+            return res;
+      }
+      catch(err){
+            console.error("Error updating order status:", err);
+            throw err;
+      }
+}
+          
 
-      // 🔹 3. Track Order by ID
-      trackOrder: (orderId) =>
-            axiosInstance.get("/order/track-order", {
-                  params: { orderId },
-            }),
 
-      // 🔹 4. Verify Payment
-      verifyPayment: (orderId) =>
-            axiosInstance.get("/payment/verify-payment", {
-                  params: { orderId },
-            }),
+            export const getOrdersByStatus =  (status, page, size, searchTerm) =>{
+                  try{
+                        const res = axiosInstance.get("/order/orders-by-status", {
+                              params: { status, page, size, search: searchTerm },
+                        });
+                        return res;
+                  }
+                  catch(err){
+                        console.error("Error fetching orders by status:", err);
+                        throw err;
+                  }
+            }
 
-      // 🔹 5. Get Paginated Pending Orders
-      getPaginatedPendingOrders: (page, size) =>
-            axiosInstance.get("/order/pending-orders", {
-                  params: { page, size },
-            }),
-
-      // 🔹 6. Get Paginated Delivered Orders
-      getPaginatedDeliveredOrders: (page, size) =>
-            axiosInstance.get("/order/delivered-orders", {
-                  params: { page, size },
-            }),
-
-      // 🔹 7. Get Paginated Cancelled Orders
-      getPaginatedCancelledOrders: (page, size) =>
-            axiosInstance.get("/order/cancelled-orders", {
-                  params: { page, size },
-            }),
-
-      // 🔹 8. Get Paginated Shipped Orders
-      getPaginatedShippedOrders: (page, size) =>
-            axiosInstance.get("/order/shipped-orders", {
-                  params: { page, size },
-            }),
-
-      // 🔹 9. Get Total Revenue
-      getTotalRevenue: () =>
-            axiosInstance.get("/order/total-revenue"),
-
-      // 🔹 10. Get Today's Revenue
-      getTodayRevenue: () =>
-            axiosInstance.get("/order/today-revenue"),
-
-      // 🔹 11. Get Monthly Sales Report
-      getMonthlySalesReport: () =>
-            axiosInstance.get("/order/monthly-sales"),
-
-      // 🔹 12. Get Orders by Date Range
-      getOrdersByDateRange: (startDate, endDate) =>
-            
-            axiosInstance.get("/order/orders-by-date", {
+export const getOrdersByDateRange = async (startDate, endDate )=> {
+      try{
+            const res =axiosInstance.get("/order/orders-by-date", {
                   params: { startDate, endDate },
-            }),
-      getOrdersByStatus: (status, page, size, searchTerm) =>
-
-           
-            axiosInstance.get("/order/orders-by-status", {
-
-                  params: { status, page, size, search:searchTerm },
-            }),
-            
-};
-
+            });
+            return res;
+      }
+      catch(err){
+            console.error("Error fetching orders by date range:", err);
+            throw err;
+      }
+}
+                 
 export const getOrderStatus = async (orderId, trackingId) => {
       if (!orderId || !trackingId) {
             throw new Error("Order ID and Tracking ID are required");

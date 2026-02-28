@@ -51,6 +51,17 @@ const menuItems = [
         ],
     },
     {
+        title: 'Refund Orders',
+        icon: <FaClipboardList className="staradmin-menu-icon" />,
+        submenu: [
+            // { title: 'Today Orders', path: '/admin/order/today' },
+            { title: 'Requested', path: '/admin/order/refund/status/REQUESTED' },
+            { title: 'Approved', path: '/admin/order/refund/status/APPROVED' },
+            { title: 'Rejected', path: '/admin/order/refund/status/REJECTED' },
+            { title: 'Received', path: '/admin/order/refund/status/RECEIVED' },
+        ],
+    },
+    {
         title: 'Images',
         icon: <FaBox className="staradmin-menu-icon" />,
         submenu: [

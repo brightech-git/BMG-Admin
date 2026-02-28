@@ -1,45 +1,79 @@
 import axiosInstance from "../api/axiosInstance";
 
-// Fetch all refund orders
-export const fectRefundOrders = async () => {
+export const getRefundOrdersByStatus = async (status, page, size, searchTerm) => {
     try {
-        const response = await axiosInstance.get('/refunds');
+        const response = await axiosInstance.get("/refunds/return-requests", {
+            params: { status, page, size, search: searchTerm },
+        });
+        return response;
+    }
+    catch (error) {
+        console.error("Error fetching refund orders:", error);
+        throw error;
+    }
+
+}
+
+//Approve the Refund Order 
+
+export const approveRefundOrder = async (requestId) => {
+    try {
+        const response = await axiosInstance.put(`/refunds/approve/${requestId}`);
         return response.data;
-    } catch (err) {
-        console.warn("Error fetching refund orders:", err);
-        throw err;
+    } catch (error) {
+        console.error("Error approving refund order:", error);
+        throw error;
     }
 };
 
-// Fetch refund order by ID
-export const fetchrefundOrdersById = async (id) => {
+
+//Book Approved Orders 
+
+export const bookApprovedOrders = async (requestId) => {
     try {
-        const response = await axiosInstance.get(`/refunds/${id}`);
+        const response = await axiosInstance.put(`/refunds/book-pickup/${requestId}`);
         return response.data;
-    } catch (err) {
-        console.warn(`Error fetching refund order ${id}:`, err);
-        throw err;
+    } catch (error) {
+        console.error("Error approving refund order:", error);
+        throw error;
     }
 };
 
-// Update refund order by ID
-export const updateRefundOrdersById = async (id, updateData) => {
+
+//Received Booked Orders 
+
+export const receivedRefundOrders = async (requestId) => {
     try {
-        const response = await axiosInstance.put(`/refunds/${id}`, updateData);
+        const response = await axiosInstance.put(`/refunds/mark-received/${requestId}`);
         return response.data;
-    } catch (err) {
-        console.warn(`Error updating refund order ${id}:`, err);
-        throw err;
+    } catch (error) {
+        console.error("Error approving refund order:", error);
+        throw error;
     }
 };
 
-// Delete refund order by ID
-export const deleteRefundOrdersById = async (id) => {
+//Rejected Refund Orders 
+
+export const rejectedRefundOrders = async (requestId, reason) => {
     try {
-        const response = await axiosInstance.delete(`/refunds/${id}`);
+        const response = await axiosInstance.put(`/refunds/reject/${requestId}`,{
+            params:{reason:reason}
+        });
         return response.data;
-    } catch (err) {
-        console.warn(`Error deleting refund order ${id}:`, err);
-        throw err;
+    } catch (error) {
+        console.error("Error approving refund order:", error);
+        throw error;
     }
 };
+//Completed Refund Orders 
+
+export const completedRefundOrders = async (returnOrderId) => {
+    try {
+        const response = await axiosInstance.put(`/refund/${returnOrderId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error approving refund order:", error);
+        throw error;
+    }
+};
+

@@ -1,50 +1,24 @@
 import React, { useContext } from 'react';
 import DashboardCards from '../cards/DashboardCards';
 import LatestOrders from '../cards/LatestOrders';
-import { MyContext } from '../../context/themeContext/themeContext'; // adjust path if needed
-import './MainContent.css';
-import GlobalSnackbar from '../snackBar/GlobalSnackbar';
+import { MyContext } from '../../context/themeContext/themeContext'; 
 import { usePollNewOrders } from '../snackBar/usePollNewOrders';
-import { orderService } from '../../service/orderService';
-import { useNewOrderNotifier } from '../../context/snackbar/NewOrderContext';
-import { useNavigate } from 'react-router-dom';
+import { getAllOrders } from '../../service/orderService';
+
 
 const MainContent = () => {
     const { themeMode } = useContext(MyContext);
-    const { showNewOrder } = useNewOrderNotifier();
-    const navigate = useNavigate();
-    usePollNewOrders( orderService.getAllOrders);
+    // const { showNewOrder } = useNewOrderNotifier();
+    // const navigate = useNavigate();
+    usePollNewOrders( getAllOrders);
     return (
-        <main className={`main-dash-content ${themeMode === 'dark' ? 'dark' : ''}`}>
+        <main className='p-1 sm:p-3'>
            
-            <div className="dashboard-cards-section">
+            <div className="w-full lg:max-w-8xl p-0 sm:p-2 mt-4 ml-1 sm:ml-3">
                 <DashboardCards />
             </div>
-            
-            {/* <button
-                onClick={() => {
-    
-                    showNewOrder({
-                        message: "Test order received!",
-                        type: "info",
-                        action: {
-                            label: "View Order",
-                            navigateTo: "/order/status",
-                            state: {
-                                key: "PLACED",
-                                values: ["IN-PROCESSING", "CANCELLED"],
-                            },
-                        },
-                        duration: 5000,
-                    });
-                }}
-            >
-                Trigger Test Snackbar
-            </button> */}
-
-
             {/* Latest Orders Section */}
-            <div className="latest-orders-section">
+            <div className="w-full lg:max-w-8xl ml-2">
                 <LatestOrders />
             </div>
         </main>

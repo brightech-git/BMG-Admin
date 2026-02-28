@@ -1,23 +1,27 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link, useLocation ,useParams} from 'react-router-dom';
-import { useUpdateOrderStatus, useOrdersByStatus } from '../../hooks/order/useAllOrder.js';
+
 import BackdropProgress from '../../components/backDrop/BackdropProgress.jsx';
 import Snackbar from '../../components/snackBar/Snackbar.jsx';
 import EditStatusModalTailwind from '../../components/modal/EditStatusModalTailwind.jsx';
 import AdvancedTable from '../../components/table/ResponsiveTable.jsx';
 import StatusChip from '../../components/statusChip/StatusChip.jsx';
-import { useCreateConsignment } from '../../hooks/shipping/useCreateConsignment.js';
-import { useAddressQuery } from '../../hooks/address/useAddressQuery.js'
-import { getProductImages } from '../../../utils/mediaUtils/mediaUtils.js';
-import { useLabelQuery } from '../../hooks/shipping/useLabelQuery';
-import OrderStatusNotification from '../../components/notifications/OrderStatusNotification.jsx';
 import NotificationTemplate from '../../components/notifications/NotificationTemplate.jsx';
-import { Bell, TrainTrackIcon } from "lucide-react";
-import { FaRoute } from "react-icons/fa";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import OrderStatusNotification from '../../components/notifications/OrderStatusNotification.jsx';
+
+import { useUpdateOrderStatus, useOrdersByStatus ,useTrackOrder} from '../../hooks/order/useAllOrder.js';
+import { useCreateConsignment } from '../../hooks/shipping/useCreateConsignment.js';
+import { useAddressQuery } from '../../hooks/address/useAddressQuery.js';
+import { useLabelQuery } from '../../hooks/shipping/useLabelQuery.js';
+
+
+
+
+import { Bell, TrainTrackIcon, Truck, ChevronLeft, ChevronRight } from "lucide-react";
+
 import { motion, AnimatePresence } from "framer-motion";
 
-const OrderTable = () => {
+const AllOrdersByStatus = () => {
     
     const { orderStatus }= useParams();
     const navigate = useNavigate();
@@ -43,6 +47,7 @@ const OrderTable = () => {
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    
     const [inputSearch, setInputSearch] = useState("");
     const [appliedSearch, setAppliedSearch] = useState("");
 
@@ -81,7 +86,6 @@ const OrderTable = () => {
     const hasMorePage = data?.hasMore ?? false;
     const totalOrdersByStatus = data?.totalByStatus ?? 1;
 
-    console.log(data,'datadata')
 
     const notificationStatus = {
         placed: {
@@ -126,6 +130,7 @@ const OrderTable = () => {
             next: "in_processing", // or whatever makes sense in your flow
         },
     }; 
+
     // Find default origin address safely
     const defaultOriginAddress = useMemo(() => {
         if (!addresses.length) return null;
@@ -609,7 +614,7 @@ const handleDownloadLabel = () => {
         { key: "actions", label: "Actions", align: "center" },
     ];
 
-    const NON_EDITABLE_STATUSES = ["shipped", "cancelled", "delivered" , "pending"];
+    const NON_EDITABLE_STATUSES = ["shipped", "cancelled", "delivered" , "pending" ,"returned" ,"refunded"];
 
     const sendNotificationIcon = [ "pending" ]
     
@@ -655,16 +660,7 @@ const handleDownloadLabel = () => {
         ),
         actions: (
             <div className="flex items-center justify-center gap-1">
-                {/* VIEW ORDER */}
-                {/* <div className="relative group inline-flex">
-                    <button
-                        onClick={() => handleViewOrder(order)}
-                        className="btn-icon-primary p-1 rounded-md transition-colors"
-                    >
-                        <ViewIcon className="w-4 h-4" />
-                    </button>
-                    <span className="tooltip">View Order</span>
-                </div> */}
+              
 
                 {/* EDIT ORDER */}
                 {!NON_EDITABLE_STATUSES.includes(order.status.toLowerCase()) && (
@@ -685,7 +681,7 @@ const handleDownloadLabel = () => {
                         onClick={() => handleTrackOrder(order)}
                         className="btn-icon-warning p-1 rounded-md transition-colors"
                     >
-                        <FaRoute className="w-4 h-4" />
+                        <Truck className="w-4 h-4" />
                     </button>
                     <span className="tooltip">Track Order</span>
                 </div>
@@ -960,8 +956,7 @@ const handleDownloadLabel = () => {
 
             {/* Modals */}
             {selectedOrder && (
-                <>
-                
+                <>               
                     <EditStatusModalTailwind
                         open={openEditModal}
                         onClose={handleCloseEditModal}
@@ -1006,13 +1001,6 @@ const handleDownloadLabel = () => {
     );
 };
 
-// Simple icon components (replace with your actual icon components)
-const ViewIcon = ({ className }) => (
-    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
-        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-    </svg>
-);
 
 const EditIcon = ({ className }) => (
     <svg className={className} fill="currentColor" viewBox="0 0 20 20">
@@ -1026,4 +1014,4 @@ const SearchIcon = ({ className }) => (
     </svg>
 );
 
-export default OrderTable;
+export default AllOrdersByStatus;

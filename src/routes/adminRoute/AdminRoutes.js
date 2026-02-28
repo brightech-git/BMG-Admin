@@ -7,7 +7,6 @@ import LoginPage from '../../admin/pages/login/loginPage';
 import Sidebar from '../../admin/components/slide/Sidebar';
 import MainContent from '../../admin/components/mainContent/mainContent';
 import EmployeeProfile from '../../admin/pages/employeeprofile/EmployeeProfilePage';
-import AddProduct from '../../admin/pages/product/add/addProduct';
 import ManageProduct from '../../admin/pages/product/manage/manageProducts';
 import AddBanner from '../../admin/pages/banner/add/addBanner';
 import ManageBanner from '../../admin/pages/banner/manage/manageBanners';
@@ -17,19 +16,9 @@ import AddRates from '../../admin/pages/rate/add/addRates';
 import ManageRates from '../../admin/pages/rate/manage/manageRates';
 import AddEmployee from '../../admin/pages/employee/add/AddEmployee';
 import ManageEmployees from '../../admin/pages/employee/manage/ManageEmployees';
-import Unauthorized from '../../admin/pages/unauthorized/Unauthorized';
 import UserDetails from '../../admin/pages/dashboard/userDetails';
 import NewAdminHeader from '../../admin/components/head/header';
-import OrderStatusManagement from '../../admin/pages/order/orderStatus';
-import PendingOrders from '../../admin/pages/order/pendingOrders';
-import CancelledOrder from '../../admin/pages/order/CancelledOrder';
-import PrepareOrder from '../../admin/pages/order/prepareOrder';
-import ShippedStatus from '../../admin/pages/order/Shipped';
-import QualityChecking from '../../admin/pages/order/QCStatus';
-import PackedStatus from '../../admin/pages/order/PackedStatus';
-import { PendingOrdersPage, ShippedOrdersPage, DeliveredOrdersPage, CancelledOrdersPage, TotalRevenuePage, TodayRevenuePage, MonthlySalesPage } from '../../admin/pages/order/OrderPages';
-import EstimationProductsPage from '../../admin/pages/product/manage/EstimationProductsPage';
-import OrderHistoryPage from '../../admin/pages/order/todayOrders';
+
 import AddCategoryPage from '../../admin/pages/category/add/AddCategoryPage';
 import ManageCategoriesPage from '../../admin/pages/category/manage/ManageCategoriesPage';
 import AddOccasionBanner from '../../admin/pages/banner/add/AddOccasionBanner';
@@ -44,19 +33,11 @@ import ManageFestivalBanner from '../../admin/pages/banner/manage/manageFestival
 import ManageBudgetBanner from '../../admin/pages/banner/manage/manageBudgetBanner';
 import ManageCategoryBanner from '../../admin/pages/banner/manage/manageCategoryBanner';
 import ManageBreadCrumbBanner from '../../admin/pages/banner/manage/manageBreadCrumbBanner';
-import NotificationForm from '../../admin/pages/notification/PushNotification';
 import ManageAddress from '../../admin/pages/address/manageAddress';
 import './AdminRoutes.css';
-import ShippedOrders from '../../admin/pages/order/shippedOrders';
-import DeliveredOrders from '../../admin/pages/order/DeliveredOrders';
-import TransitOrders from '../../admin/pages/order/TransitOrders';
-import RefundedOrders from '../../admin/pages/order/RefundedOrders';
-import ReturnedOrders from '../../admin/pages/order/ReturnedOrders';
 import ManageSingleProduct from '../../admin/pages/product/manage/ManageSingleProduct';
 
-import PackingOrders from '../../admin/pages/order/PackingOrders';
 import GlobalSnackbar from '../../admin/components/snackBar/GlobalSnackbar';
-import EcomMarketingAttributesTable from '../../admin/pages/market-option/EcomMarketingAttributesTable';
 import ItemCategory from '../../admin/pages/category/add/AdditemCategory';
 import ManageItemCategory from '../../admin/pages/category/manage/manageItemCategory';
 import UploadBestDesign from '../../admin/pages/banner/add/UploadBestDesign';
@@ -69,14 +50,20 @@ import AddGenderBanner from '../../admin/pages/banner/add/AddGenderBanner';
 import ManageGenderBanner from '../../admin/pages/banner/manage/ManageGenderBanner';
 import AddImage from '../../admin/pages/product/add/addImageProduct';
 
-import OrderTable from '../../admin/pages/order/AllOrders';
-import RefundOrdersTable from '../../admin/pages/refund/refundOrders';
+
 import NotificationTemplatePage from '../../admin/pages/notification/NotificationTemplatePage';
 import FooterCategory from '../../admin/pages/category/manage/ManageFooterCategory';
 import AddFooterEntryPage from '../../admin/pages/category/add/AddFooterCategory';
-import TrackOrder from '../../admin/pages/order/TrackOrder';
+
 import ManageBannerSettings from '../../admin/pages/banner/manage/ManageBannerSettings';
 import BannerSetting from '../../admin/pages/banner/add/AddBannerSetting';
+
+
+import RefundOrdersManagement from '../../admin/pages/order/RefundOrders';
+import AllOrders from '../../admin/pages/order/AllOrders';
+import TrackOrder from '../../admin/pages/order/TrackOrder';
+import AllOrdersByStatus from '../../admin/pages/order/AllOrdersByStatus';
+import OrdersByRange from '../../admin/pages/order/todayOrders';
 
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
@@ -192,39 +179,12 @@ const AdminRoutes = () => {
                         {/*---------------------------USER DETAILS------------------------*/}
                         <Route path="userDetails" element={<UserDetails />} />
 
-                        {/*---------------------------TODAY ORDER------------------------*/}
-                        <Route path="order/today" element={<OrderHistoryPage />} />
+                        {/*---------------------------ORDERS TABLE------------------------*/}
 
-                        {/*---------------------------SINGLE ORDER PAGE TO MAINTAIN ALLORDERS------------------------*/}
-                        <Route path='order/status/:orderStatus' element={<OrderTable />} />
-
-                        <Route path="AllOrderPage" element={<OrderStatusManagement />} />
-
-                         {/* <Route path="order/status" element={<OrderStatusManagement />} /> 
-                         <Route path="order/status/prepare" element={<PrepareOrder />} />
-                         <Route path='order/status/packing' element={<PackingOrders />} />
-                        <Route path="order/status/in-transit" element={<TransitOrders />} />
-                        <Route path="order/status/refunded" element={<RefundedOrders />} />
-                        <Route path="order/status/returned" element={<ReturnedOrders />} />
-                        <Route path="order/status/delivered" element={<DeliveredOrders />} />
-                        <Route path="order/status/shipping" element={<ShippedOrders />} />
-                        <Route path="order/status/cancelled" element={<CancelledOrder />} />
-                        <Route path="order/status/pending" element={<PendingOrders />} />
-                        <Route path="order/status/qc" element={<QualityChecking />} />
-                        <Route path="order/status/packed" element={<PackedStatus />} />
-                        <Route path="order/status/shipped" element={<ShippedStatus />} />
-                     
-                        <Route path="pendingOrders" element={<PendingOrdersPage />} />
-                        <Route path="deliveredOrders" element={<DeliveredOrdersPage />} />
-                        <Route path="shippedOrders" element={<ShippedOrdersPage />} />
-                        <Route path="cancelledOrders" element={<CancelledOrdersPage />} /> 
-                        <Route path="totalRevenue" element={<TotalRevenuePage />} />
-                        <Route path="todayRevenue" element={<TodayRevenuePage />} />
-                        <Route path="monthlySales" element={<MonthlySalesPage />} />
-                        <Route path="unauthorized" element={<Unauthorized />} />
-                        <Route path='order/refund' element={<RefundOrdersTable />} /> 
-                        <Route path='productSpec' element={<EcomMarketingAttributesTable />} />  */}
-
+                        <Route path="order/today" element={<OrdersByRange />} />
+                        <Route path="AllOrderPage" element={<AllOrders />} />
+                        <Route path='order/status/:orderStatus' element={<AllOrdersByStatus />} />
+                        <Route path='order/refund/status/:orderStatus' element={<RefundOrdersManagement />} />
                         <Route path='track/order/:orderId' element={<TrackOrder />} />
 
                         <Route path="*" element={<Navigate to="/admin" replace />} />
