@@ -1,49 +1,110 @@
 import React from "react";
 
-const transactions = [
-    { date: "25 Nov 2025", member: "Ravi Kumar", scheme: "Gold Saver", amount: "₹5,000", status: "Paid" },
-    { date: "26 Nov 2025", member: "Priya Singh", scheme: "Silver Growth", amount: "₹3,000", status: "Pending" },
-    { date: "27 Nov 2025", member: "Anil Sharma", scheme: "Platinum Plan", amount: "₹7,500", status: "Processing" },
-    { date: "28 Nov 2025", member: "Sathya Priya", scheme: "Diamond Saver", amount: "₹10,000", status: "Cancelled" },
-];
-
 const statusColors = {
-    Paid: "bg-success text-white",
-    Pending: "bg-status-pending text-black",
-    Processing: "bg-status-processing text-white",
-    Cancelled: "bg-status-cancelled text-white",
+    Paid: "bg-green-500 text-white",
+    Pending: "bg-yellow-400 text-black",
+    Processing: "bg-blue-500 text-white",
+    Cancelled: "bg-red-500 text-white",
 };
 
-const TransactionsTable = () => {
+const TransactionsTable = ({ dashData }) => {
+
+    const transactions = dashData?.recentTransactions || [];
+
+    // Format date to DD-MM-YYYY
+    const formatDate = (date) => {
+        if (!date) return "-";
+
+        const d = new Date(date);
+
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const year = d.getFullYear();
+
+        return `${day}-${month}-${year}`;
+    };
+
+    const formatAmount = (amount) => {
+        if (!amount) return "₹0";
+        return `₹${Number(amount).toLocaleString("en-IN")}`;
+    };
+
     return (
-        <div className="bg-card p-4 rounded-lg shadow-md overflow-x-auto">
-            <h2 className="text-lg font-secondary text-primary-text-color mb-4">Recent Transactions</h2>
-            <table className="min-w-full border-collapse">
-                <thead>
-                    <tr className="bg-background-color text-left">
-                        <th className="px-4 py-2 font-primary text-sm border-b">Date</th>
-                        <th className="px-4 py-2 font-primary text-sm border-b">Member</th>
-                        <th className="px-4 py-2 font-primary text-sm border-b">Scheme</th>
-                        <th className="px-4 py-2 font-primary text-sm border-b">Amount</th>
-                        <th className="px-4 py-2 font-primary text-sm border-b">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {transactions.map((tx, idx) => (
-                        <tr key={idx} className="hover:bg-gray-100 transition">
-                            <td className="px-4 py-2">{tx.date}</td>
-                            <td className="px-4 py-2">{tx.member}</td>
-                            <td className="px-4 py-2">{tx.scheme}</td>
-                            <td className="px-4 py-2">{tx.amount}</td>
-                            <td className="px-4 py-2">
-                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColors[tx.status]}`}>
-                                    {tx.status}
-                                </span>
-                            </td>
+        <div className="bg-white rounded-lg shadow-md p-4">
+
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">
+                Recent Transactions
+            </h2>
+
+            <div className="border border-gray-200 rounded-md overflow-hidden">
+
+                {/* Header */}
+                <table className="min-w-full">
+                    <thead className="bg-gray-100">
+                        <tr className="text-sm text-gray-600 text-left">
+                            <th className="px-4 py-2 border-b">Date</th>
+                            <th className="px-4 py-2 border-b">Member</th>
+                            <th className="px-4 py-2 border-b">Scheme</th>
+                            <th className="px-4 py-2 border-b text-right">Amount</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                </table>
+
+                {/* Scrollable body (5 rows visible) */}
+                <div className="max-h-[250px] overflow-y-auto">
+
+                    <table className="min-w-full">
+
+                        <tbody>
+
+                            {transactions.length > 0 ? (
+                                transactions.map((tx, index) => (
+
+                                    <tr
+                                        key={index}
+                                        className="hover:bg-gray-50 transition-colors"
+                                    >
+
+                                        <td className="px-4 py-2 border-b text-sm">
+                                            {formatDate(tx.rdate)}
+                                        </td>
+
+                                        <td className="px-4 py-2 border-b text-sm font-medium">
+                                            {tx.pname}
+                                        </td>
+
+                                        <td className="px-4 py-2 border-b text-sm">
+                                            {tx.schemeName}
+                                        </td>
+
+                                        <td className="px-4 py-2 border-b text-sm text-right font-semibold">
+                                            {formatAmount(tx.amount)}
+                                        </td>
+
+                                    </tr>
+
+                                ))
+                            ) : (
+
+                                <tr>
+                                    <td
+                                        colSpan="4"
+                                        className="text-center py-6 text-sm text-gray-500"
+                                    >
+                                        No recent transactions found
+                                    </td>
+                                </tr>
+
+                            )}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
         </div>
     );
 };
