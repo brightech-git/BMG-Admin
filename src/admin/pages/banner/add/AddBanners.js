@@ -8,7 +8,7 @@ import 'animate.css';
 import FileUploadArea from '../../../components/banner/FileUploadArea';
 import ComboBox from '../../../components/ui/ComboBox';
 
-const AddBudgetBanner = () => {
+const AddBanner = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -180,12 +180,12 @@ const AddBudgetBanner = () => {
 
 
     return (
-        <div className="max-w-7xl mx-auto bg-white mt-8 p-6">
+        <div className="max-w-7xl mx-auto m-2 bg-[var(--primary-card-color)] p-2">
             {/* Header */}
             <div className="flex items-center  justify-between mb-3 animate__animated animate__fadeInDown">
                 <div>
                     <h2 className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                        {isEdit ? "✏️ Edit Budget Banner" : "➕ Add Budget Banner"}
+                        {isEdit ? "✏️ Edit Banner" : "➕ Add Banner"}
                     </h2>
                     <p className="text-xs text-gray-500 mt-1">
                         {isEdit ? 'Update your existing banner configuration' : 'Create a new banner for your budget section'}
@@ -236,7 +236,7 @@ const AddBudgetBanner = () => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-3">
                 {/* Category Key */}
                 <div >
                     {/* <ImageKeyComboBox
@@ -488,4 +488,4 @@ const AddBudgetBanner = () => {
     );
 };
 
-export default AddBudgetBanner;
+export default AddBanner;

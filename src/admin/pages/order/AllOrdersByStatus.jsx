@@ -17,7 +17,7 @@ import { useLabelQuery } from '../../hooks/shipping/useLabelQuery.js';
 
 
 
-import { Bell, TrainTrackIcon, Truck, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bell, TrainTrackIcon, Truck, ChevronLeft, ChevronRight  , Download} from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -217,6 +217,8 @@ const AllOrdersByStatus = () => {
         enabled: status?.toLowerCase() === "ready_to_ship" && !!selectedOrder?.courierTrackingId,
     });
 
+    console.log(labelData,'labelData')
+
    
     useEffect(()=>{
         if (status.toLowerCase() === 'ready_to_ship') {
@@ -257,6 +259,10 @@ const AllOrdersByStatus = () => {
 
 
 const handleDownloadLabel = () => {
+
+
+    console.log('triggers');
+
     if (!labelData) return;
     window.open(labelData, "_blank");
     const link = document.createElement("a");
@@ -674,6 +680,18 @@ const handleDownloadLabel = () => {
                         <span className="tooltip">Edit Order</span>
                     </div>
                 )}
+                {/* DOWNLOAD LABEL
+                {downloadLabel && <div className="relative group inline-flex">
+                    <button
+                       onClick={()=>handleDownloadLabel(selectedOrder)}
+                        className="btn-icon-warning p-1 rounded-md transition-colors"
+                    >
+                        <Download className="w-4 h-4" />
+                    </button>
+                    <span className="tooltip">DownLoad Label</span>
+                </div> } */}
+              
+
 
                 {/* TRACK ORDER */}
                 <div className="relative group inline-flex">
@@ -773,7 +791,7 @@ const handleDownloadLabel = () => {
                             whileHover={{ scale: 1.02 }}
                             transition={{ type: "spring", stiffness: 300 }}
                         >
-                            <h2 className="text-base sm:text-xl font-bold text-primaryText font-primary">
+                            <h2 className="text-base sm:text-lg font-bold text-primaryText font-primary">
                                 Order Management
                             </h2>
                             <motion.span
@@ -876,8 +894,8 @@ const handleDownloadLabel = () => {
                                 actions: "center",
                                 payment_mode: "left",
                             }}
-                           actionColumn="actions" // This will show actions column
-                           actionOptions ={getStatusOptions()}
+                            actionColumn="actions" // This will show actions column
+                            actionOptions ={getStatusOptions()}
                             headerBg='bg-[var(--primary-text-color)]'
                             headerText='text-[var(--white-color)]'
 

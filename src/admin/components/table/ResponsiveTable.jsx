@@ -132,8 +132,8 @@ const AdvancedTable = ({
                     onScroll={handleScroll}
                 >
                     <table className="w-full min-w-full border-collapse">
-                        <thead className="sticky top-0 ">
-                            <tr className={`${headerBg} ${headerAnimationClass}`}>
+                        <thead className="sticky top-0 z-[10]">
+                            <tr className={`${headerBg} ${headerAnimationClass} hover:${headerBg}`}>
                                 {filteredHeaders.map((h, index) => (
                                     <th
                                         key={h.key}

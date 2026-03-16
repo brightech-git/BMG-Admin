@@ -13,7 +13,8 @@ export const useSendAppNotificationByTemplate = () => {
     return useMutation({
         mutationFn: (id) => sendAppNotification(id),
         onSuccess: (data) => {
-            toast.success(`${data.message}`)
+            console.log(data, 'data for noti');
+            toast.success(`${data.status}`)
         },
         onError: (error) => {
             console.error("Error fetching notification template:", error);

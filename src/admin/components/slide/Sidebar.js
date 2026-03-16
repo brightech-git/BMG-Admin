@@ -73,7 +73,7 @@ const menuItems = [
         title: 'Banner',
         icon: <FaImage className="staradmin-menu-icon" />,
         submenu: [
-            { title: 'Manage Banners', path: '/admin/budgetbanner/manage' },
+            { title: 'Manage Banners', path: '/admin/banner/manage' },
             { title: 'Manage BreadCrumb', path: '/admin/breadcrumbbanner/manage' },
             
             // { title: 'Manage OccasionBanners', path: '/admin/occasionbanner/manage' },
@@ -102,6 +102,7 @@ const menuItems = [
         icon: <Settings className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Add BannerSettings', path: '/admin/bannersetting/add' },
+            { title: 'Add FilterSettings', path: '/admin/filter/add' },
             { title: 'Manage BannerSettings', path: '/admin/bannersetting/manage' },
         ],
     },
@@ -213,7 +214,7 @@ const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, curren
                         <AnimatePresence>
                             {isOpen && (
                                 <motion.span
-                                    className="staradmin-menu-text"
+                                    className="flex-1 text-sm white-space-nowrap font-semibold"
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -10 }}
@@ -249,7 +250,7 @@ const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, curren
                         <AnimatePresence>
                             {isOpen && (
                                 <motion.span
-                                    className="staradmin-menu-text"
+                                    className="flex-1 text-sm white-space-nowrap font-semibold"
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -10 }}
@@ -266,7 +267,7 @@ const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, curren
             <AnimatePresence>
                 {hasSubmenu && isExpanded && isOpen && (
                     <motion.div
-                        className="staradmin-submenu"
+                        className="overflow-hidden p-2 border-l-2 ml-6 mb-2"
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
@@ -288,7 +289,7 @@ const StarAdminMenuItem = ({ item, isExpanded, onToggle, onClick, isOpen, curren
                                 onClick={onClick}
                             >
                                 <div className="staradmin-submenu-indicator"></div>
-                                <span className="staradmin-submenu-text">{subItem.title}</span>
+                                <span className="flex-1 font-semibold ">{subItem.title}</span>
                             </NavLink>
                         ))}
                     </motion.div>
@@ -426,7 +427,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 onMouseLeave={handleMouseLeave}
             >
                 <div className="staradmin-sidebar-content">
-                    {/* <div className="staradmin-sidebar-header">
+                    <div className="staradmin-sidebar-header">
                         <AnimatePresence>
                             {isOpen && (
                                 <motion.div
@@ -436,17 +437,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                     exit={{ opacity: 0, y: -10 }}
                                     transition={{ duration: 0.2 }}
                                 >
-                                    <div className="staradmin-page-title">{currentPageTitle}</div>
-                                    <div className="staradmin-page-subtitle">Management Panel</div>
+                                    <div className="text-sm font-semibold font-[var(--font-primary)] text-[var(--primary-color)] line-1.2 ">{currentPageTitle}</div>
+                                    <div className="text-sm font-semibold font-[var(--font-primary)] text-[var(--primary-color)] line-1.2 ">Management Panel</div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
-                    </div> */}
+                    </div>
 
                     <div className="staradmin-sidebar-nav">
                         <div className="staradmin-menu-scroll">
                             <div className="staradmin-menu-section">
-                                {/* <AnimatePresence>
+                                <AnimatePresence>
                                     {isOpen && (
                                         <motion.div
                                             className="staradmin-section-label"
@@ -457,7 +458,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                             MAIN MENU
                                         </motion.div>
                                     )}
-                                </AnimatePresence> */}
+                                </AnimatePresence>
 
                                 {menuItems.map((item) => (
                                     <StarAdminMenuItem
@@ -500,9 +501,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         </div>
                     </div>
 
-                    <div className="staradmin-sidebar-footer">
+                    <div className="staradmin-sidebar-footer" >
                         <RoleBasedSection allowedRoles={['ROLE_ADMIN', 'ROLE_EMPLOYEE']}>
-                            <div className="staradmin-user-profile">
+                            <div className="staradmin-user-profile" onClick={()=>navigate('/admin/manage/employee')}>
                                 <div className="staradmin-user-avatar">
                                     <FaUserCircle />
                                 </div>

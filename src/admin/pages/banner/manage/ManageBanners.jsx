@@ -12,7 +12,7 @@ import GridBanner from '../../../components/banner/StackBanner';
 
 const BASE_IMAGE_URL = 'https://app.bmgjewellers.com';
 
-const ManageBudgetBanner = () => {
+const ManageBanners = () => {
     const navigate = useNavigate();
     const { data: bannersData, isLoading, error, refetch } = useBannersQuery();
    
@@ -29,7 +29,7 @@ const ManageBudgetBanner = () => {
         return bannersData.categories;
     }, [bannersData]);
 
-    console.log(banners, 'ManageBudgetBanner')
+    console.log(banners, 'ManageBanner')
 
     const handleRefresh = () => {
         refetch();
@@ -54,19 +54,18 @@ const ManageBudgetBanner = () => {
 
    
     const handleAdd = () => {
-        navigate('/admin/budgetbanner/add');
+        navigate('/admin/banner/add');
     };
 
     const handleEdit = (banner) => {
         // Send full banner details including images array when editing
-        navigate('/admin/budgetbanner/add', {
+        navigate('/admin/banner/add', {
             state: {
                 mode: 'edit',
                 bannerData: banner // Send entire banner object
             }
         });
     };
-    console.log(bannersData,'bannersData')
 
     // Prepare table data from API response
     const tableData = useMemo(() => {
@@ -123,7 +122,7 @@ const ManageBudgetBanner = () => {
     }
 
     return (
-        <div className="min-h-screen p-4 md:p-6 mt-3">
+        <div className="p-2">
             {/* Success Message */}
             {successMessage && (
                 <motion.div
@@ -145,7 +144,7 @@ const ManageBudgetBanner = () => {
                 transition={{ duration: 0.5 }}
             >
                 <BannerTable
-                    title="Manage Budget Banners"
+                    title="Manage Banners"
                     description={`${banners.length} banner${banners.length !== 1 ? 's' : ''} available`}
                     button='Add Banner'
                     onClick={handleAdd}
@@ -161,7 +160,7 @@ const ManageBudgetBanner = () => {
                         // Image Key column
                         if (key === 'imageKey') {
                             return (
-                                <span className="font-mono text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                                <span className="font-mono text-sm bg-gray-100  px-2 py-1 rounded">
                                     {row[key]}
                                 </span>
                             );
@@ -170,11 +169,11 @@ const ManageBudgetBanner = () => {
                         // Desktop Image column
                         if (key === 'desktopImage') {
                             return row[key] ? (
-                                <div className="relative group">
+                                <div className="relative group flex item-center w-[120px] h-10">
                                     <img
                                         src={`${BASE_IMAGE_URL}${row[key]}`}
                                         alt="Desktop"
-                                        className="w-16 h-10 object-cover rounded border cursor-pointer"
+                                        className="w-full h-10 object-cover rounded border cursor-pointer"
                                      
                                     />
                                 </div>
@@ -186,11 +185,11 @@ const ManageBudgetBanner = () => {
                         // Mobile Image column
                         if (key === 'mobileImage') {
                             return row[key] ? (
-                                <div className="relative group">
+                                <div className="relative group w-10 h-12">
                                     <img
                                         src={`${BASE_IMAGE_URL}${row[key]}`}
                                         alt="Mobile"
-                                        className="w-10 h-16 object-cover rounded border cursor-pointer"
+                                        className="w-full h-full object-cover rounded border cursor-pointer"
                                       
                                     />
                                 </div>
@@ -202,9 +201,9 @@ const ManageBudgetBanner = () => {
                         // Ratio columns
                         if (key === 'desktopRatio' || key === 'mobileRatio') {
                             return (
-                                <span className={`px-2 py-1 text-xs rounded ${row[key] === '21/9' || row[key] === '4/3'
-                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                                <span className={`px-2 py-1 text-xs rounded ${row[key] === '21/9' || row[key] === '6/3'
+                                        ? 'bg-blue-100 text-blue-800 '
+                                        : 'bg-gray-100 text-gray-800 '
                                     }`}>
                                     {row[key]}
                                 </span>
@@ -217,14 +216,14 @@ const ManageBudgetBanner = () => {
                                 <div className="flex gap-2 justify-center animate__animated animate__fadeIn">
                                     <button
                                         onClick={() => handleEdit(row._bannerData)}
-                                        className="text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm flex items-center gap-1 animate__animated animate__pulse animate__infinite"
+                                        className="text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm flex items-center gap-1 animate__animated animate__pulse animate__infinite"
                                         title="Edit Banner"
                                     >
                                         <span>✏️</span> 
                                     </button>
                                     <button
                                         onClick={() => handleDelete(row.id)}
-                                        className="text-red-50 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors text-sm flex items-center gap-1"
+                                        className="text-red-50 text-red-600  rounded-lg hover:bg-red-100 transition-colors text-sm flex items-center gap-1"
                                         title="Delete Banner"
                                     >
                                         <span>🗑️</span> 
@@ -234,7 +233,7 @@ const ManageBudgetBanner = () => {
                         }
 
                         // Default rendering
-                        return <span className="text-gray-800 dark:text-gray-200">{row[key]}</span>;
+                        return <span className="text-gray-800 ">{row[key]}</span>;
                     }}
                 />
             </motion.div>
@@ -244,4 +243,4 @@ const ManageBudgetBanner = () => {
     );
 };
 
-export default ManageBudgetBanner;
+export default ManageBanners;

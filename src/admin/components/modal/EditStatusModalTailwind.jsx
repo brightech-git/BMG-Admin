@@ -82,14 +82,7 @@ const EditStatusModalTailwind = ({
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {downloadLabel && (
-                            <button
-                                onClick={onDownload}
-                                className="px-2 py-1 text-xs border text-[var(--primary-color)] rounded hover:bg-[var(--active-bg)]"
-                            >
-                                Download Label
-                            </button>
-                        )}
+                        
                         <button
                             onClick={onClose}
                             className="p-1 rounded hover:bg-[var(--active-bg)]"
@@ -125,8 +118,20 @@ const EditStatusModalTailwind = ({
                             />
                         )}
                     </section>
+                    <section className="flex items-center justify-end ">
+                        {downloadLabel && (
+                            <button
+                                onClick={onDownload}
+                                className="px-2 py-1 text-xs bg-[var(--primary-color)] text-white"
+                            >
+                                Download Label
+                            </button>
+                        )}
+                    </section>
 
                     {/* STATUS SECTION */}
+                   
+                    {!downloadLabel && (
                     <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-[var(--secondary-text-color)] mb-1">
@@ -161,8 +166,10 @@ const EditStatusModalTailwind = ({
                             </div>
                         )}
                     </section>
+)}
 
                     {/* REMARKS */}
+                    {!downloadLabel && (
                     <section>
                         <label className="block text-[var(--secondary-text-color)] mb-1">
                             Remarks / Notes
@@ -176,8 +183,10 @@ const EditStatusModalTailwind = ({
                             className="w-full p-2 border rounded focus:ring-1 focus:ring-[var(--primary-color)]"
                         />
                     </section>
+                    )}
 
                     {/* STATUS PREVIEW */}
+                    {!downloadLabel && (
                     <section className="flex items-center gap-2 flex-wrap">
                         <span className="text-[var(--secondary-text-color)]">Preview:</span>
                         <StatusChip status={orderData?.status} size="small" />
@@ -195,16 +204,18 @@ const EditStatusModalTailwind = ({
                             </span>
                         )}
                     </section>
+                    )}
 
                     {/* ERROR */}
                     {errorMessage && (
                         <div className="text-[var(--error-color)]">
                             {errorMessage}
                         </div>
-                    )}
+                    )} 
                 </div>
 
                 {/* FOOTER ACTIONS */}
+                {!downloadLabel && (
                 <div className="flex justify-end gap-2 border-t border-[var(--border-color)] p-3 m-0">
                     <button
                         onClick={onClose}
@@ -231,7 +242,10 @@ const EditStatusModalTailwind = ({
                                 : "Update Status"}
                     </button>
                 </div>
+
+                        )}
             </div>
+                        
         </div>
     );
 };

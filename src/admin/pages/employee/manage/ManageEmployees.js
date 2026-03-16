@@ -5,20 +5,13 @@ import { useEmployees } from '../../../hooks/employee/useEmployees';
 import * as XLSX from 'sheetjs-style';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import {
-    Box, Typography, Button, TextField, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, CircularProgress, Alert, IconButton, Chip, Tooltip,
-    Dialog, DialogTitle, DialogContent, DialogActions, Stack, Card, CardContent,
-    Avatar, InputAdornment, Menu, MenuItem
-} from '@mui/material';
-import {
-    Add as AddIcon, Search as SearchIcon, Refresh as RefreshIcon, Delete as DeleteIcon,
-    Person as PersonIcon, Email as EmailIcon, Phone as PhoneIcon, Security as SecurityIcon,
-    Group, MoreVert as MoreVertIcon
-} from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MyContext } from '../../../context/themeContext/themeContext';
-import './ManageEmployees.css';
+import {
+    FiPlus, FiSearch, FiRefreshCw, FiTrash2, FiUser, FiMail, FiPhone,
+    FiShield, FiUsers, FiMoreVertical, FiDownload, FiPrinter
+} from 'react-icons/fi';
+import AdvancedTable from '../../../components/table/ResponsiveTable';
 
 const ManageEmployees = () => {
     const { themeMode } = useContext(MyContext);
@@ -35,19 +28,63 @@ const ManageEmployees = () => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [showError, setShowError] = useState(false);
     const [message, setMessage] = useState('');
-    const [anchorEl, setAnchorEl] = useState(null);
+    const [showExportMenu, setShowExportMenu] = useState(false);
+    const [sortConfig, setSortConfig] = useState({ key: 'username', direction: 'asc' });
 
+    const exportMenuRef = useRef(null);
     const tableContainerRef = useRef(null);
 
+    // Animation variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                type: "spring",
+                stiffness: 100
+            }
+        }
+    };
+
     const filteredEmployees = useMemo(() => {
-        return employees
+        let filtered = employees
             .filter(emp => emp.roles?.some(role => ['ROLE_EMPLOYEE', 'ROLE_ADMIN'].includes(role)))
             .filter(emp =>
                 emp.username?.toLowerCase().includes(searchText.toLowerCase()) ||
                 emp.email?.toLowerCase().includes(searchText.toLowerCase()) ||
                 emp.contactNumber?.includes(searchText)
             );
-    }, [searchText, employees]);
+
+        // Sorting
+        if (sortConfig.key) {
+            filtered.sort((a, b) => {
+                let aVal = a[sortConfig.key];
+                let bVal = b[sortConfig.key];
+
+                if (sortConfig.key === 'roles') {
+                    aVal = a.roles?.join(',');
+                    bVal = b.roles?.join(',');
+                }
+
+                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        return filtered;
+    }, [searchText, employees, sortConfig]);
 
     const displayedEmployees = filteredEmployees.slice(0, visibleItems);
 
@@ -72,6 +109,17 @@ const ManageEmployees = () => {
         }
     }, [filteredEmployees.length]);
 
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+                setShowExportMenu(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     const handleDelete = (employee) => {
         setDeleteId(employee.id);
         setDeleteTarget(employee);
@@ -94,6 +142,13 @@ const ManageEmployees = () => {
                 setTimeout(() => setShowError(false), 4000);
             }
         });
+    };
+
+    const handleSort = (key) => {
+        setSortConfig(current => ({
+            key,
+            direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
+        }));
     };
 
     const exportToExcel = () => {
@@ -128,6 +183,7 @@ const ManageEmployees = () => {
         setMessage('Excel exported successfully!');
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 4000);
+        setShowExportMenu(false);
     };
 
     const exportToPDF = () => {
@@ -144,7 +200,7 @@ const ManageEmployees = () => {
         ]);
 
         doc.setFontSize(18);
-        doc.setTextColor(59, 143, 243); // Use --primary-color if possible in future enhancements
+        doc.setTextColor(59, 143, 243);
         doc.text('Employee Management Report', 14, 15);
 
         autoTable(doc, {
@@ -153,7 +209,7 @@ const ManageEmployees = () => {
             startY: 25,
             theme: 'grid',
             headStyles: {
-                fillColor: [205, 134, 92], // --primary-color RGB
+                fillColor: [205, 134, 92],
                 textColor: 255,
                 fontStyle: 'bold'
             },
@@ -166,6 +222,7 @@ const ManageEmployees = () => {
         setMessage('PDF exported successfully!');
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 4000);
+        setShowExportMenu(false);
     };
 
     const handlePrint = () => {
@@ -176,16 +233,16 @@ const ManageEmployees = () => {
                     <title>Employee List</title>
                     <style>
                         body {
-                            font-family: var(--font-primary, 'Inter', 'Roboto', sans-serif);
+                            font-family: 'Inter', 'Roboto', sans-serif;
                             margin: 40px;
-                            color: var(--primary-text-color, #041f60);
+                            color: #041f60;
                         }
                         h1 {
-                            color: var(--primary-color, #cd865c);
+                            color: #cd865c;
                             margin-bottom: 5px;
                         }
                         p {
-                            color: var(--secondary-text-color, #6B7280);
+                            color: #6B7280;
                             font-size: 14px;
                             margin-top: 0;
                             margin-bottom: 20px;
@@ -197,23 +254,23 @@ const ManageEmployees = () => {
                             font-size: 14px;
                         }
                         th {
-                            background-color: var(--primary-color, #cd865c);
+                            background-color: #cd865c;
                             color: #ffffff;
                             padding: 10px;
                             text-align: left;
-                            border-bottom: 2px solid var(--border-color, #e0e0e0);
+                            border-bottom: 2px solid #e0e0e0;
                         }
                         td {
                             padding: 10px;
-                            border-bottom: 1px solid var(--border-color, #e0e0e0);
+                            border-bottom: 1px solid #e0e0e0;
                         }
                         tr:nth-child(even) {
-                            background-color: var(--active-bg, #fafafa);
+                            background-color: #fafafa;
                         }
                         .print-footer {
                             font-size: 12px;
-                            color: var(--secondary-text-color, #777);
-                            border-top: 1px solid var(--border-color, #ccc);
+                            color: #777;
+                            border-top: 1px solid #ccc;
                             padding-top: 10px;
                             text-align: right;
                         }
@@ -263,355 +320,372 @@ const ManageEmployees = () => {
         printWindow.document.close();
         printWindow.focus();
         printWindow.print();
+        setShowExportMenu(false);
     };
+
+    const SortIcon = ({ direction }) => (
+        <span className="ml-1 inline-block">
+            {direction === 'asc' ? '↑' : '↓'}
+        </span>
+    );
+
+  
+      const   headers=[
+            { key: 'username', label: 'Username', sortable: true },
+            { key: 'email', label: 'Email', sortable: true },
+            { key: 'contactNumber', label: 'Contact', sortable: true },
+            { key: 'roles', label: 'Roles', sortable: true },
+            { key: 'actions', label: 'Actions', sortable: false }
+        ]
+     
 
     if (isError) {
         return (
-            <div className={`manage-employees-container ${themeMode}`}>
-                <Card className="error-card">
-                    <CardContent>
-                        <Alert severity="error" className="alert error">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className={`p-4 md:p-6 lg:p-8 mt-5 ${themeMode === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}
+            >
+                <div className={`rounded-xl shadow-sm border ${themeMode === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className="p-6">
+                        <div className="flex items-center space-x-2 text-red-600 mb-4">
+                            <FiUsers className="text-2xl" />
+                            <h3 className="text-lg font-semibold">Error Loading Employees</h3>
+                        </div>
+                        <p className={`mb-4 ${themeMode === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                             Failed to load employees. Please try again.
-                        </Alert>
-                        <Button
-                            variant="contained"
+                        </p>
+                        <button
                             onClick={() => refetch()}
-                            className="btn primary"
+                            className="px-4 py-2 bg-[#cd865c] text-white rounded-lg hover:bg-[#b6744d] transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#cd865c] focus:ring-offset-2"
                         >
                             Retry
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
+                        </button>
+                    </div>
+                </div>
+            </motion.div>
         );
     }
 
     return (
-        <div className={`manage-employees-container ${themeMode}`}>
-            {showSuccess && (
-                <Alert
-                    severity="success"
-                    onClose={() => setShowSuccess(false)}
-                    className="alert success"
-                >
-                    {message}
-                </Alert>
-            )}
+        <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className={` p-4 md:p-6 lg:p-8 mt-3 ${themeMode === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}
+        >
+            {/* Alert Messages */}
+            <AnimatePresence>
+                {showSuccess && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="fixed top-4 right-4 z-50"
+                    >
+                        <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg shadow-lg">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-green-700">{message}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
-            {showError && (
-                <Alert
-                    severity="error"
-                    onClose={() => setShowError(false)}
-                    className="alert error"
-                >
-                    {message}
-                </Alert>
-            )}
+                {showError && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="fixed top-4 right-4 z-50"
+                    >
+                        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow-lg">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-red-700">{message}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            <Card className="main-card">
-                <CardContent>
-                    <Box className="header-section" mb={3}>
-                        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-                            
-                            <Box>
-                                
-                                <Typography variant={isSmallScreen ? 'h6' : 'h4'} className="header-title">
-                                    Manage Employees
-                                </Typography>
-                                <Typography variant="body2" className="header-subtitle">
-                                    Manage your team members and their roles
-                                </Typography>
-                            </Box>
-                            <Box mt={2} display="flex" alignItems="center" gap={2}>
-                                <Chip
-                                    label={`${totalEmployees} employees`}
-                                    size="small"
-                                    className="chip"
-                                />
-                                <Button
-                                    variant="contained"
-                                    startIcon={<AddIcon />}
-                                    onClick={() => navigate('/admin/employee/add')}
-                                    className="btn primary"
-                                >
-                                    Add Employee
-                                </Button>
-                            </Box>
-                        </Stack>
-                        
-                    </Box>
+            {/* Main Content */}
+            <motion.div
+                variants={itemVariants}
+                className={`rounded-xl shadow-sm border `}
+            >
+                <div className="p-2">
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                        <div>
+                            <h1 className={`text-lg font-bold `}>
+                                Manage Employees
+                            </h1>
+                            <p className={`text-sm `}>
+                                Manage your team members and their roles
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold`}>
+                                {totalEmployees} employees
+                            </span>
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => navigate('/admin/employee/add')}
+                                className="px-2 py-1.5 bg-[#cd865c] text-white rounded-lg text-xs hover:bg-[#b6744d] transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#cd865c] focus:ring-offset-2"
+                            >
+                                <FiPlus className="text-sm" />
+                                Add Employee
+                            </motion.button>
+                        </div>
+                    </div>
 
-                    <Box className="summary-section" mb={3}>
-                        <Stack direction={isMobile ? 'column' : 'row'} spacing={2}>
-                            <Box className="summary-item">
-                                <Group className="summary-icon" />
-                                <Typography variant="body2" className="summary-text">
-                                    Total: <strong>{totalEmployees}</strong>
-                                </Typography>
-                            </Box>
-                            <Box className="summary-item">
-                                <SecurityIcon className="summary-icon" />
-                                <Typography variant="body2" className="summary-text">
-                                    Admins: <strong>{adminCount}</strong>
-                                </Typography>
-                            </Box>
-                            <Box className="summary-item">
-                                <PersonIcon className="summary-icon" />
-                                <Typography variant="body2" className="summary-text">
-                                    Employees: <strong>{employeeCount}</strong>
-                                </Typography>
-                            </Box>
-                        </Stack>
-                    </Box>
+                    {/* Summary Cards */}
+                    <motion.div
+                        variants={itemVariants}
+                        className={`grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2 p-3 rounded-lg border ${themeMode === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <FiUsers className={`text-xl ${themeMode === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                            <span className={`text-sm ${themeMode === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                                Total: <strong className={themeMode === 'dark' ? 'text-white' : 'text-gray-900'}>{totalEmployees}</strong>
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <FiShield className={`text-xl ${themeMode === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                            <span className={`text-sm ${themeMode === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                                Admins: <strong className="text-[#cd865c]">{adminCount}</strong>
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <FiUser className={`text-xl ${themeMode === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                            <span className={`text-sm ${themeMode === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                                Employees: <strong className="text-[#cd865c]">{employeeCount}</strong>
+                            </span>
+                        </div>
+                    </motion.div>
 
-                    <Box className="search-actions" mb={3}>
-                        <TextField
-                            placeholder="Search by username, email, or contact..."
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            className="form-input search"
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchIcon className="input-icon" />
-                                    </InputAdornment>
-                                )
-                            }}
-                        />
-                        <Box className="action-button">
-                            <Button
-                                variant="outlined"
-                                startIcon={<RefreshIcon />}
+                    {/* Search and Actions */}
+                    <motion.div
+                        variants={itemVariants}
+                        className="flex flex-col sm:flex-row gap-3 mb-3"
+                    >
+                        <div className="flex-1 relative">
+                            <FiSearch className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${themeMode === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+                            <input
+                                type="text"
+                                placeholder="Search by username, email, or contact..."
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                                className={`w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#cd865c] transition-all ${themeMode === 'dark'
+                                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+                                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                                    }`}
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={refetch}
                                 disabled={isLoading}
-                                className="btn secondary"
+                                className={`px-4 py-2 rounded-lg border flex items-center gap-2 transition-all ${themeMode === 'dark'
+                                        ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
+                                <FiRefreshCw className={`text-lg ${isLoading ? 'animate-spin' : ''}`} />
                                 {isLoading ? 'Refreshing...' : 'Refresh'}
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                endIcon={<MoreVertIcon />}
-                                onClick={(e) => setAnchorEl(e.currentTarget)}
-                                className="btn secondary"
-                            >
-                                Export
-                            </Button>
-                            <Menu
-                                anchorEl={anchorEl}
-                                open={Boolean(anchorEl)}
-                                onClose={() => setAnchorEl(null)}
-                                PaperProps={{ className: 'export-menu' }}
-                            >
-                                <MenuItem onClick={() => { exportToExcel(); setAnchorEl(null); }}>Excel</MenuItem>
-                                <MenuItem onClick={() => { exportToPDF(); setAnchorEl(null); }}>PDF</MenuItem>
-                                <MenuItem onClick={() => { handlePrint(); setAnchorEl(null); }}>Print</MenuItem>
-                            </Menu>
-                        </Box>
-                    </Box>
+                            </motion.button>
 
-                    {isLoading && (
-                        <Box className="loading-state">
-                            <CircularProgress size={40} />
-                            <Typography variant="body2" className="loading-text">
-                                Loading employees...
-                            </Typography>
-                        </Box>
-                    )}
+                            {/* Export Dropdown */}
+                            <div className="relative" ref={exportMenuRef}>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setShowExportMenu(!showExportMenu)}
+                                    className={`px-4 py-2 rounded-lg border flex items-center gap-2 transition-all ${themeMode === 'dark'
+                                            ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                                            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    <FiDownload className="text-lg" />
+                                    Export
+                                    <FiMoreVertical className="text-lg" />
+                                </motion.button>
 
-                    {!isLoading && !isMobile && (
-                        <AnimatePresence>
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <TableContainer ref={tableContainerRef} className="table-container">
-                                    <Table size="small">
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>Employee</TableCell>
-                                                <TableCell>Email</TableCell>
-                                                <TableCell>Contact</TableCell>
-                                                <TableCell align="center">Role</TableCell>
-                                                <TableCell align="center">Actions</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {displayedEmployees.map((emp) => (
-                                                <TableRow key={emp.id}>
-                                                    <TableCell>
-                                                        <Box className="employee-cell">
-                                                            <Avatar className="avatar">
-                                                                {emp.username?.charAt(0)?.toUpperCase()}
-                                                            </Avatar>
-                                                            <Typography variant="body2" className="employee-name">
-                                                                {emp.username}
-                                                            </Typography>
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Box className="employee-cell">
-                                                            <EmailIcon className="icon" />
-                                                            <Typography variant="body2" className="employee-text">
-                                                                {emp.email}
-                                                            </Typography>
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Box className="employee-cell">
-                                                            <PhoneIcon className="icon" />
-                                                            <Typography variant="body2" className="employee-text">
-                                                                {emp.contactNumber}
-                                                            </Typography>
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell align="center">
-                                                        <Box className="employee-cell">
-                                                            {emp.roles
-                                                                .filter(role => ['ROLE_EMPLOYEE', 'ROLE_ADMIN'].includes(role))
-                                                                .map(role => (
-                                                                    <Chip
-                                                                        key={role}
-                                                                        label={role.replace('ROLE_', '')}
-                                                                        size="small"
-                                                                        className={`chip ${role.replace('ROLE_', '').toLowerCase()}`}
-                                                                    />
-                                                                ))}
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell align="center">
-                                                        <Tooltip title="Delete Employee">
-                                                            <IconButton
-                                                                onClick={() => handleDelete(emp)}
-                                                                className="icon-btn delete"
-                                                                disabled={isDeleting}
-                                                            >
-                                                                <DeleteIcon />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </motion.div>
-                        </AnimatePresence>
-                    )}
-
-                    {!isLoading && isMobile && (
-                        <Stack spacing={2}>
-                            {displayedEmployees.map(emp => (
-                                <Card key={emp.id} className="employee-card">
-                                    <CardContent>
-                                        <Box className="employee-header">
-                                            <Box className="employee-cell">
-                                                <Avatar className="avatar">
-                                                    {emp.username?.charAt(0)?.toUpperCase()}
-                                                </Avatar>
-                                                <Typography variant="h6" className="employee-name">
-                                                    {emp.username}
-                                                </Typography>
-                                            </Box>
-                                            <Button
-                                                variant="outlined"
-                                                onClick={() => handleDelete(emp)}
-                                                startIcon={<DeleteIcon />}
-                                                className="btn secondary delete"
-                                                disabled={isDeleting}
+                                <AnimatePresence>
+                                    {showExportMenu && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border overflow-hidden z-10 ${themeMode === 'dark'
+                                                    ? 'bg-gray-800 border-gray-700'
+                                                    : 'bg-white border-gray-200'
+                                                }`}
+                                        >
+                                            <button
+                                                onClick={exportToExcel}
+                                                className={`w-full px-4 py-2 text-left flex items-center gap-2 transition-colors ${themeMode === 'dark'
+                                                        ? 'text-gray-300 hover:bg-gray-700'
+                                                        : 'text-gray-700 hover:bg-gray-50'
+                                                    }`}
                                             >
-                                                Delete
-                                            </Button>
-                                        </Box>
-                                        <Stack spacing={1}>
-                                            <Box className="employee-cell">
-                                                <EmailIcon className="icon" />
-                                                <Typography variant="body2" className="employee-text">
-                                                    {emp.email}
-                                                </Typography>
-                                            </Box>
-                                            <Box className="employee-cell">
-                                                <PhoneIcon className="icon" />
-                                                <Typography variant="body2" className="employee-text">
-                                                    {emp.contactNumber}
-                                                </Typography>
-                                            </Box>
-                                            <Box className="employee-cell">
-                                                <SecurityIcon className="icon" />
-                                                <Box className="chip-container">
-                                                    {emp.roles
-                                                        .filter(role => ['ROLE_EMPLOYEE', 'ROLE_ADMIN'].includes(role))
-                                                        .map(role => (
-                                                            <Chip
-                                                                key={role}
-                                                                label={role.replace('ROLE_', '')}
-                                                                size="small"
-                                                                className={`chip ${role.replace('ROLE_', '').toLowerCase()}`}
-                                                            />
-                                                        ))}
-                                                </Box>
-                                            </Box>
-                                        </Stack>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </Stack>
+                                                Excel
+                                            </button>
+                                            <button
+                                                onClick={exportToPDF}
+                                                className={`w-full px-4 py-2 text-left flex items-center gap-2 transition-colors ${themeMode === 'dark'
+                                                        ? 'text-gray-300 hover:bg-gray-700'
+                                                        : 'text-gray-700 hover:bg-gray-50'
+                                                    }`}
+                                            >
+                                                PDF
+                                            </button>
+                                            <button
+                                                onClick={handlePrint}
+                                                className={`w-full px-4 py-2 text-left flex items-center gap-2 transition-colors ${themeMode === 'dark'
+                                                        ? 'text-gray-300 hover:bg-gray-700'
+                                                        : 'text-gray-700 hover:bg-gray-50'
+                                                    }`}
+                                            >
+                                                <FiPrinter className="text-lg" />
+                                                Print
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Loading State */}
+                    {isLoading && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex flex-col items-center justify-center py-12"
+                        >
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#cd865c]"></div>
+                            <p className={`mt-4 ${themeMode === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                Loading employees...
+                            </p>
+                        </motion.div>
                     )}
 
+                    {/* Table */}
+                    {!isLoading && 
+                    <AdvancedTable 
+                    headers={headers}
+                    data={displayedEmployees}
+                    isLoading={isLoading}
+                    onRetry={refetch}
+                    rowText='text-sm'
+                 
+
+                    />}
+
+                    {/* Empty State */}
                     {!isLoading && displayedEmployees.length === 0 && (
-                        <Card className="empty-state">
-                            <CardContent>
-                                <Group className="empty-icon" />
-                                <Typography variant="h6" className="empty-title">
-                                    No employees found
-                                </Typography>
-                                <Typography variant="body2" className="empty-text">
-                                    {searchText ? 'Try adjusting your search criteria.' : 'Add your first employee to get started.'}
-                                </Typography>
-                            </CardContent>
-                        </Card>
+                        <motion.div
+                            variants={itemVariants}
+                            className="text-center py-12"
+                        >
+                            <FiUsers className={`mx-auto text-5xl mb-4 ${themeMode === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} />
+                            <h3 className={`text-lg font-semibold mb-2 ${themeMode === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                No employees found
+                            </h3>
+                            <p className={`text-sm ${themeMode === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {searchText ? 'Try adjusting your search criteria.' : 'Add your first employee to get started.'}
+                            </p>
+                        </motion.div>
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </motion.div>
 
-            <Dialog
-                open={showDeleteModal}
-                onClose={() => setShowDeleteModal(false)}
-                PaperProps={{ className: 'dialog-paper' }}
-            >
-                <DialogTitle className="dialog-title">
-                    Confirm Deletion
-                </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1" className="dialog-text">
-                        Are you sure you want to delete the employee &quot;{deleteTarget?.username}&quot;?
-                    </Typography>
-                    <Typography variant="body2" className="dialog-subtext">
-                        This action cannot be undone.
-                    </Typography>
-                </DialogContent>
-                <DialogActions className="dialog-actions">
-                    <Button
-                        variant="outlined"
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {showDeleteModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
                         onClick={() => setShowDeleteModal(false)}
-                        disabled={isDeleting}
-                        className="btn secondary"
                     >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={confirmDelete}
-                        disabled={isDeleting}
-                        startIcon={isDeleting ? <CircularProgress size={16} /> : <DeleteIcon />}
-                        className="btn error"
-                    >
-                        {isDeleting ? 'Deleting...' : 'Delete'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </div>
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className={`max-w-md w-full rounded-lg shadow-xl overflow-hidden ${themeMode === 'dark' ? 'bg-gray-800' : 'bg-white'
+                                }`}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className={`p-6 border-b ${themeMode === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                                <h3 className={`text-lg font-semibold ${themeMode === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                    Confirm Deletion
+                                </h3>
+                            </div>
+                            <div className="p-6">
+                                <p className={`mb-2 ${themeMode === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Are you sure you want to delete the employee "{deleteTarget?.username}"?
+                                </p>
+                                <p className={`text-sm ${themeMode === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                    This action cannot be undone.
+                                </p>
+                            </div>
+                            <div className={`p-6 border-t flex justify-end gap-3 ${themeMode === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setShowDeleteModal(false)}
+                                    disabled={isDeleting}
+                                    className={`px-4 py-2 rounded-lg border transition-all ${themeMode === 'dark'
+                                            ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                                            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                >
+                                    Cancel
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={confirmDelete}
+                                    disabled={isDeleting}
+                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FiTrash2 />
+                                            Delete
+                                        </>
+                                    )}
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
     );
 };
 

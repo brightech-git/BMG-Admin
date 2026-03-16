@@ -381,6 +381,7 @@
     border-radius: 12px;
     background: var(--card-background-color);
     border: 1px solid var(--border-color);
+    cursor: pointer;
 }
 
 .staradmin-sidebar.dark .staradmin-user-profile {

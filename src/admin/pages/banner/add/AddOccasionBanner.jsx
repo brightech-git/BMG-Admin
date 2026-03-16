@@ -165,7 +165,7 @@ const AnimatedSimpleForm = () => {
     const [isAnimating, setIsAnimating] = useState(false);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4">
+        <div className=" bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4">
             <div className="max-w-md mx-auto">
                 <div className={`text-center mb-8 ${isAnimating ? 'animate__animated animate__fadeInDown' : ''}`}>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">Add Occasion Banner</h1>

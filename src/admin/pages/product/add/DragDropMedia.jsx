@@ -35,8 +35,8 @@ const DragDropMedia = memo(({
         if (!files?.length) return;
 
         // Define size limits
-        const MAX_IMAGE_SIZE = 50 * 1024; // 50KB
-        const MAX_VIDEO_SIZE = 5 * 1024 * 1024; // 5MB
+        const MAX_IMAGE_SIZE = 200 * 1024; // 200KB
+        const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 5MB
 
         const newItems = Array.from(files)
             .filter(file => {
@@ -65,7 +65,7 @@ const DragDropMedia = memo(({
             }));
 
         if (!newItems.length) {
-            alert(`Files too large. Max ${type === 'image' ? '50KB' : '5MB'} per file.`);
+            alert(`Files too large. Max ${type === 'image' ? '200KB' : '10MB'} per file.`);
             return;
         }
 
@@ -184,7 +184,7 @@ const DragDropMedia = memo(({
 
                     {/* Add this line for file size info */}
                     <p className="text-xs text-gray-500">
-                        Max {type === 'image' ? '50KB' : '5MB'} per file
+                        Max {type === 'image' ? '200KB' : '10MB'} per file
                     </p>
 
                     <p className="text-xs text-secondaryText bg-gray-100 px-3 py-1 rounded-full">

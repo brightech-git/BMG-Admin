@@ -174,7 +174,7 @@ const OrdersByRange = () => {
 
     if (isError) {
         return (
-            <div className="min-h-screen p-4 md:p-8" style={{ backgroundColor: 'var(--background-color)' }}>
+            <div className="p-4 md:p-8" style={{ backgroundColor: 'var(--background-color)' }}>
                 <div className="p-6 rounded-[var(--border-radius-md)] shadow-professional"
                     style={{ backgroundColor: 'var(--card-background-color)' }}>
                     <div className="p-4 mb-4 rounded-[var(--border-radius-md)] text-white"

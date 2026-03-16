@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useRef, useContext, useEffect, memo } from 'react';
 import { useProductContext } from '../../../context/product/productContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MyContext } from '../../../context/themeContext/themeContext';
 import { getProductImages, getProductVideos } from '../../../../utils/mediaUtils/mediaUtils.js';
 import * as LucideIcons from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -18,8 +17,8 @@ const {
 const CONFIG = {
     imageTypes: ['image/jpeg', 'image/png', 'image/webp'],
     videoTypes: ['video/mp4', 'video/mov', 'video/avi', 'video/webm'],
-    maxImageSize: 50 * 1024,
-    maxVideoSize: 5* 1024 * 1024,
+    maxImageSize: 200 * 1024,
+    maxVideoSize: 10 * 1024 * 1024,
     maxImages: 10, maxVideos: 5, minImages: 3,
     minTagLength: 3, minDescriptionLength: 10,
 };

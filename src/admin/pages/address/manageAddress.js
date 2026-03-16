@@ -173,7 +173,7 @@ const ManageAddress = () => {
     const PersonPinIcon = () => <FaUserAlt/>;
 
     return (
-        <div className={`manage-address-container ${themeMode} min-h-screen bg-background p-4 md:p-6`}>
+        <div className={`manage-address-container ${themeMode}  bg-background p-4 md:p-6`}>
             {/* Header Card */}
             <div className=" mb-2 p-2">
                 <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-2 md:space-y-0">

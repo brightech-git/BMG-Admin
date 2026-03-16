@@ -14,15 +14,15 @@ const BannerTable = ({
     error
 }) => {
     return (
-        <div className="w-full">
+        <div className="w-full p-1">
             {(title || subtitle) && (
-                <div className="flex justify-between items-center mb-1">
+                <div className="flex justify-between items-center mb-2">
                     <div>
-                        {title && <h2 className="text-sm font-semibold">{title}</h2>}
+                        {title && <h2 className="text-sm sm:text-base font-semibold text-[var(--primary-color)]">{title}</h2>}
                         {subtitle && <p className="text-xs opacity-75">{subtitle}</p>}
                     </div>
                     {button?.trim() && <div>
-                        <button onClick={onClick} className="bg-white border p-1 text-xs primaryText">
+                        <button onClick={onClick} className="bg-white border border-[var(--primary-text-color)] px-3 py-1.5 font-semibold text-xs sm:text-sm text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-[var(--primary-text-color)] rounded transition-all duration-300">
                             {button}
                         </button>
                     </div>}

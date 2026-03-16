@@ -128,7 +128,7 @@ const AnimatedCard = ({ children, delay = 0, className = "" }) => (
 );
 
 // Main Component
-const BannerSetting = () => {
+const AddBannerSetting = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const stateData = location.state || {};
@@ -959,4 +959,4 @@ const BannerSetting = () => {
     );
 };
 
-export default BannerSetting;
+export default AddBannerSetting;

@@ -2,7 +2,6 @@ import { useTemplateNotifications ,useSendAppNotificationByTemplate ,useAppTempD
 import React, { useState } from "react";
 import AdvancedTable from "../../../components/table/ResponsiveTable";
 
-
 // import { usePushNotification } from "../../hooks/notification/useNotificationQuery";
 
 import { Pencil, Trash2, Send, Plus } from "lucide-react";
@@ -17,7 +16,7 @@ const NotificationTemplatePage = () => {
 
     console.log(templates, 'templates')
      //const deleteMutation = useDeleteTemplate();
-     const pushMutation = useSendAppNotificationByTemplate();
+     const {mutate:pushMutation ,isPending:sendNotiPending , isSuccess:sendNotiSuccess } = useSendAppNotificationByTemplate();
     const BASE_URL = "https://app.bmgjewellers.com"; // your base URL
     const [showForm, setShowForm] = useState(false);
     const [editTemplate, setEditTemplate] = useState(null);
@@ -79,15 +78,7 @@ const NotificationTemplatePage = () => {
                             title="Send to All"
                             onClick={() =>{
                                 console.log(row.id);
-                                pushMutation.mutate(row.id, {
-
-                                    onSuccess: () => {
-                                        alert("Notification sent successfully!");
-                                    },
-                                    onError: () => {
-                                        alert("Failed to send notification");
-                                    },
-                                })
+                                pushMutation(row.id)
                             }
                                 
                             }
@@ -138,7 +129,13 @@ const NotificationTemplatePage = () => {
 
         return row[key];
     };
+    
+    if (sendNotiPending) return (
+        <div>
+            <h2>Sending Notification...</h2>
 
+        </div>
+    )
 
 
     return (

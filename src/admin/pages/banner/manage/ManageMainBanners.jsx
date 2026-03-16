@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useBannersQuery } from "../../../hooks/banners/mainBanner/useBannersQuery";
-import { useDeleteBannerMutation } from "../../../hooks/banners/mainBanner/useUploadBannerMutation";
-import BannerTable from "../../../components/banner/manageBannerTable";
+import { useBannersQuery } from "../../../hooks/banners/mainBanner/useBannersQuery.js";
+import { useDeleteBannerMutation } from "../../../hooks/banners/mainBanner/useUploadBannerMutation.js";
+import BannerTable from "../../../components/banner/manageBannerTable.jsx";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { getProductImages } from "../../../../utils/mediaUtils/mediaUtils.js";
 
-const ManageBanner = () => {
+const ManageBanners = () => {
     const navigate = useNavigate();
 
     const { data: bannersData, isLoading, refetch } = useBannersQuery();
@@ -14,22 +14,22 @@ const ManageBanner = () => {
 
     // Use memo to avoid unnecessary recalculations
     const banners = useMemo(() => {
-            if (!bannersData) return [];
-    
-            // Handle different possible response structures
-            if (Array.isArray(bannersData)) {
-                return bannersData;
-            } else if (Array.isArray(bannersData?.data)) {
-                return bannersData.data;
-            } else if (Array.isArray(bannersData?.banners)) {
-                return bannersData.banners;
-            } else if (Array.isArray(bannersData?.results)) {
-                return bannersData.results;
-            }
-    
-            console.warn('Unexpected banners data structure:', bannersData);
-            return [];
-        }, [bannersData]);
+        if (!bannersData) return [];
+
+        // Handle different possible response structures
+        if (Array.isArray(bannersData)) {
+            return bannersData;
+        } else if (Array.isArray(bannersData?.data)) {
+            return bannersData.data;
+        } else if (Array.isArray(bannersData?.banners)) {
+            return bannersData.banners;
+        } else if (Array.isArray(bannersData?.results)) {
+            return bannersData.results;
+        }
+
+        console.warn('Unexpected banners data structure:', bannersData);
+        return [];
+    }, [bannersData]);
 
     const handleDelete = (id) => {
         if (window.confirm("Delete this banner?")) {
@@ -47,7 +47,7 @@ const ManageBanner = () => {
         // subtitle: item.subtitle || "—",
         itemname: item.itemname || "—",
     }));
-    const handleOnClick = () =>{
+    const handleOnClick = () => {
         navigate('/banner/add')
     }
 
@@ -56,7 +56,7 @@ const ManageBanner = () => {
             <BannerTable
                 title="Manage Main Banners"
                 button={banners.length <= 5 ? ("Add Banner") : ('')}
-                onClick = {handleOnClick}
+                onClick={handleOnClick}
                 headers={[
                     { key: "sno", label: "S.No" },
                     { key: "image_path", label: "Image" },
@@ -107,4 +107,4 @@ const ManageBanner = () => {
     );
 };
 
-export default ManageBanner;
+export default ManageBanners;
