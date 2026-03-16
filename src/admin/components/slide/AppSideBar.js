@@ -137,6 +137,7 @@ const menuItems = [
         icon: <User className="staradmin-menu-icon" />, // 🎁 Gift icon, clear for rewards
         submenu: [
             { title: 'Users Centre', path: '/app/admin/scheme/users' },
+            { title: 'Users(Filter)', path: '/app/admin/scheme/users/filter' },
         ],
     }
     // {

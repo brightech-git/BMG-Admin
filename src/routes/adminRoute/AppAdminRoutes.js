@@ -18,7 +18,7 @@ import AddSchemeDetails from '../../admin/appAdmin/pages/schemeBanner/AddScheme'
 import Redemption from '../../admin/appAdmin/pages/redemption/RedemptionPage';
 import ManageUsers from '../../admin/appAdmin/pages/users/manageUsers';
 import EntrolledUsers from '../../admin/appAdmin/pages/scheme/EntrolledUsers';
-
+import FilterUsers from '../../admin/appAdmin/pages/users/filterUsers';
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
     const { authToken } = useAuth();
@@ -67,6 +67,7 @@ const AdminRoutes = () => {
                         <Route path='scheme/add' element={<AddSchemeDetails />} />
                         <Route path='redemption/centre' element={<Redemption />} />
                         <Route path='scheme/users' element={<ManageUsers />} />
+                        <Route path='scheme/users/filter' element={<FilterUsers />} />
                         <Route path='enrolledUsers/manage' element={<EntrolledUsers />} />
 
                     </Routes>
