@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     getAllFilterSettings,
-    getActiveFilterSettings,
     createFilterSetting,
     updateFilterSetting,
     deleteFilterSetting
@@ -13,15 +12,6 @@ export const useGetAllFilterSettings = () => {
     return useQuery({
         queryKey: ["filterSettings"],
         queryFn: getAllFilterSettings
-    });
-};
-
-
-/* GET ACTIVE */
-export const useGetActiveFilterSettings = () => {
-    return useQuery({
-        queryKey: ["activeFilterSettings"],
-        queryFn: getActiveFilterSettings
     });
 };
 
@@ -45,7 +35,7 @@ export const useUpdateFilterSetting = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: updateFilterSetting,
+        mutationFn: ({id , data}) =>updateFilterSetting({id,data}),
         onSuccess: () => {
             queryClient.invalidateQueries(["filterSettings"]);
             queryClient.invalidateQueries(["activeFilterSettings"]);

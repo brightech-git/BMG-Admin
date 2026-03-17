@@ -9,16 +9,26 @@ import AdvancedTable from "../../../components/table/ResponsiveTable";
 /*--------------- Utils ---------------*/
 import { numberFormatting } from "../../../../utils/formating/numberFormat";
 import { format } from "date-fns";
+import { formatDateTime,formatDate, toFormDate } from "../../../../utils/date&time/dateTime";
+
 
 const ManageUsers = () => {
   const [filters, setFilters] = useState({
-    createdFrom: "",
-    createdTo: "",
-    joinFrom: "",
-    joinTo: "",
+    createdFrom: toFormDate(new Date()),
+    createdTo: toFormDate(new Date()),
+    joinFrom: toFormDate(new Date()),
+    joinTo: toFormDate(new Date()),
     schemeStatus: "",
     mobile: "",
   });
+
+  // const apiFilters = {
+  //   ...filters,
+  //   createdFrom: filters.createdFrom ? toFormDate(filters.createdFrom) : "",
+  //   createdTo: filters.createdTo ? toFormDate(filters.createdTo) : "",
+  //   joinFrom: filters.joinFrom ? toFormDate(filters.joinFrom) : "",
+  //   joinTo: filters.joinTo ? toFormDate(filters.joinTo) : "",
+  // };
 
   const {
     data: users,
@@ -84,7 +94,7 @@ const ManageUsers = () => {
 
         return (
           <span className="font-semibold">
-            {format(new Date(value), "dd-MM-yyyy hh:mm a")}
+            {formatDateTime(new Date(value), "dd-MM-yyyy hh:mm a")}
           </span>
         );
 

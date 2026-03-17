@@ -116,11 +116,11 @@ const ManageBannerSettings = () => {
     });
 
     const handleOnClick = () => {
-        navigate('/admin/bannersetting/add');
+        navigate('/admin/banner/setting/add');
     };
 
     const handleEdit = (row) => {
-        navigate('/admin/bannersetting/add', {
+        navigate('/admin/banner/setting/add', {
             state: {
                 data: row._bannerData || row,
                 mode: 'edit'

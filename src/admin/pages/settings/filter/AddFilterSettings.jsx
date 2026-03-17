@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
+    useGetAllFilterSettings,
     useCreateFilterSetting,
     useUpdateFilterSetting
 } from '../../../hooks/filter/useFilterSetting';
 import Snackbar from '../../../components/snackBar/Snackbar';
 import { Switch } from '../../../components/ui/Switch';
 import 'animate.css';
+import { useMemo } from 'react';
 
 // Animated Card Component (reused from your code)
 const AnimatedCard = ({ children, delay = 0, className = "" }) => (
@@ -31,14 +33,32 @@ const AddFilterSetting = () => {
     const navigate = useNavigate();
     const stateData = location.state || {};
     const mode = stateData.mode || 'add';
-    const initialData = stateData.data || null;
+    const initialData = stateData.filterData || null;
+    console.log(stateData,'stateData')
 
     const [form, setForm] = useState({
-        key: "",
-        active: true,
+        filterKey: "",
+        filterLabel:"",
+        isActive: true,
+        isUsed: false,
     });
 
     const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "info", title: "" });
+
+
+    const {data: filterSettings, isLoading ,refetch:filterSettingRefetch } =useGetAllFilterSettings();
+    console.log(filterSettings,'filterSettings');
+
+    const filterSettingsList =  useMemo(()=>{
+    
+        return Array.isArray(filterSettings?.data) ? filterSettings?.data : [];
+    },[filterSettings?.data]);
+    console.log(filterSettingsList,'filterSettingsList');
+
+    const isDuplicate = filterSettingsList.some(item =>
+        item.filterKey.toLowerCase() === form.filterKey.trim().toLowerCase() &&
+        item.id !== initialData?.id
+    );
 
     const createMutation = useCreateFilterSetting();
     const updateMutation = useUpdateFilterSetting();
@@ -46,8 +66,10 @@ const AddFilterSetting = () => {
     useEffect(() => {
         if (mode === "edit" && initialData) {
             setForm({
-                key: initialData.key || "",
-                active: initialData.active ?? true,
+                filterLabel: initialData.filterLabel || "",
+                filterKey: initialData.filterKey || "",
+                isActive: initialData.isActive ?? true,
+                isUsed: initialData.isUsed ?? false,
             });
         }
     }, [mode, initialData]);
@@ -67,24 +89,39 @@ const AddFilterSetting = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    const validateForm = useCallback(() => {
 
-        if (!form.key.trim()) {
+        if (!form.filterKey?.trim()) {
             setSnackbar({
                 open: true,
                 message: "Filter key is required",
                 type: "error",
                 title: "Error"
             });
-            return;
+            return false; // <--- must return false
         }
 
-        const payload = {
-            key: form.key.trim(),
-            active: form.active,
-        };
+        if (isDuplicate) {
+            setSnackbar({
+                open: true,
+                message: "Filter key already exists",
+                type: "error",
+                title: "Error"
+            });
+            return false; // <--- must return false
+        }
 
+        return true; // <--- validation passed
+    }, [form, isDuplicate]); // <--- include all dependencies
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        if (!validateForm()) return;
+        
+        const payload = {...form};
+      console.log(payload,'fitlerpayload')
+    
         if (mode === "add") {
             createMutation.mutate(payload, {
                 onSuccess: () => {
@@ -109,7 +146,7 @@ const AddFilterSetting = () => {
                 }
             });
         } else if (mode === "edit" && initialData) {
-            updateMutation.mutate({ id: initialData.id, formData: payload }, {
+            updateMutation.mutate({ id: initialData.id, data: payload }, {
                 onSuccess: () => {
                     setSnackbar({
                         open: true,
@@ -135,8 +172,10 @@ const AddFilterSetting = () => {
 
     const resetForm = () => {
         setForm({
-            key: "",
-            active: true,
+            filterLabel: "",
+            filterKey: "",
+           isActive: true,
+            isUsed: false,
         });
     };
 
@@ -197,7 +236,22 @@ const AddFilterSetting = () => {
                         <div className="space-y-4">
                             {/* Key Field */}
                             <div className="animate__animated animate__fadeInLeft">
+                                <div className="flex items-center " style={{ animationDelay: '0.1s' }}>
+                                    <label className="block text-sm font-semibold text-[#7C2D12]  flex items-center gap-1 min-w-[120px]">
+                                        <i className="fas fa-key text-[#F97316]"></i>
+                                        Filter Label <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        name="filterLabel"
+                                        value={form.filterLabel}
+                                        onChange={handleChange}
+                                        className="w-full px-2 py-2 text-sm border-2 border-[#FED7AA] rounded-xl bg-white focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none transition-all h-10"
+                                        placeholder="Enter filter key (e.g., category, price, brand)"
+                                        required
+                                        disabled={isSubmitting}
+                                    />
 
+                                </div>
                            
                             <div className="flex items-center " style={{ animationDelay: '0.1s' }}>
                                 <label className="block text-sm font-semibold text-[#7C2D12]  flex items-center gap-1 min-w-[120px]">
@@ -205,8 +259,8 @@ const AddFilterSetting = () => {
                                     Filter Key <span className="text-red-500">*</span>
                                 </label>
                                 <input
-                                    name="key"
-                                    value={form.key}
+                                    name="filterKey"
+                                    value={form.filterKey}
                                     onChange={handleChange}
                                     className="w-full px-2 py-2 text-sm border-2 border-[#FED7AA] rounded-xl bg-white focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none transition-all h-10"
                                     placeholder="Enter filter key (e.g., category, price, brand)"
@@ -223,8 +277,8 @@ const AddFilterSetting = () => {
                             {/* Active Switch */}
                             <div className="animate__animated animate__fadeInRight" style={{ animationDelay: '0.2s' }}>
                                 <Switch
-                                    checked={form.active}
-                                    onChange={(val) => handleSwitchChange('active', val)}
+                                    checked={form.isActive}
+                                    onChange={(val) => handleSwitchChange('isActive', val)}
                                     label={
                                         <span className="flex text-sm items-center gap-2">
                                             <i className="fas fa-power-off text-[#F97316]"></i>
@@ -235,9 +289,29 @@ const AddFilterSetting = () => {
                                 />
                                 <p className="text-xs text-[#9A3412] mt-1 flex items-center gap-2">
                                     <i className="fas fa-toggle-on text-[#F97316]"></i>
-                                    {form.active ? 'Filter is active and visible' : 'Filter is inactive and hidden'}
+                                    {form.isActive ? 'Filter is active and visible' : 'Filter is inactive and hidden'}
                                 </p>
                             </div>
+
+                            {/* Input Switch */}
+                            <div className="animate__animated animate__fadeInRight" style={{ animationDelay: '0.2s' }}>
+                                <Switch
+                                    checked={form.isUsed}
+                                    onChange={(val) => handleSwitchChange('isUsed', val)}
+                                    label={
+                                        <span className="flex text-sm items-center gap-2">
+                                            <i className="fas fa-power-off text-[#F97316]"></i>
+                                            Input Status
+                                        </span>
+                                    }
+                                    disabled={isSubmitting}
+                                />
+                                {/* <p className="text-xs text-[#9A3412] mt-1 flex items-center gap-2">
+                                    <i className="fas fa-toggle-on text-[#F97316]"></i>
+                                    {form.input ? 'Filter is active and visible' : ''}
+                                </p> */}
+                            </div>
+                            
                         </div>
                     </div>
                 </AnimatedCard>

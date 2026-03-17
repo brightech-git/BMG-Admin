@@ -137,7 +137,7 @@ const menuItems = [
         icon: <User className="staradmin-menu-icon" />, // 🎁 Gift icon, clear for rewards
         submenu: [
             { title: 'Users Centre', path: '/app/admin/scheme/users' },
-            { title: 'Users(Filter)', path: '/app/admin/scheme/users/filter' },
+            { title: 'Users(Filter)', path: '/app/admin/scheme/filter' },
         ],
     }
     // {
@@ -446,7 +446,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
                 onMouseLeave={handleMouseLeave}
             >
                 <div className="staradmin-sidebar-content">
-                    {/* <div className="staradmin-sidebar-header">
+                    <div className="staradmin-sidebar-header">
                         <AnimatePresence>
                             {isOpen && (
                                 <motion.div
@@ -461,12 +461,12 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
                                 </motion.div>
                             )}
                         </AnimatePresence>
-                    </div> */}
+                    </div>
 
                     <div className="staradmin-sidebar-nav">
                         <div className="staradmin-menu-scroll">
                             <div className="staradmin-menu-section">
-                                {/* <AnimatePresence>
+                                <AnimatePresence>
                                     {isOpen && (
                                         <motion.div
                                             className="staradmin-section-label"
@@ -477,7 +477,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
                                             MAIN MENU
                                         </motion.div>
                                     )}
-                                </AnimatePresence> */}
+                                </AnimatePresence>
 
                                 {menuItems.map((item) => (
                                     <StarAdminMenuItem
@@ -492,31 +492,7 @@ const AppSidebar = ({ isOpen, toggleSidebar }) => {
                                 ))}
                             </div>
 
-                            {/* <RoleBasedSection allowedRoles={['ROLE_ADMIN']}>
-                                <div className="staradmin-menu-section">
-                                    <AnimatePresence>
-                                        {isOpen && (
-                                            <motion.div
-                                                className="staradmin-section-label"
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                            >
-                                                ADMINISTRATION
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-
-                                    <StarAdminMenuItem
-                                        item={employeeMenu}
-                                        isExpanded={expanded['employee']}
-                                        onToggle={toggleSection}
-                                        onClick={handleLinkClick}
-                                        isOpen={isOpen}
-                                        currentPath={location.pathname}
-                                    />
-                                </div>
-                            </RoleBasedSection> */}
+                          
                         </div>
                     </div>
 

@@ -41,18 +41,18 @@ const AdminRoutes = () => {
   
 
     return (
-        <div className={`app-layout ${themeMode}`}>
+        <div>
    
             <NewAdminHeader
                 toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
                 isSidebarOpen={isSidebarOpen}
             />
-            <div className="layout-body">
+            <div >
                 <AppSidebar
                     isOpen={isSidebarOpen}
                     toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
                 />
-                <main className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+                <main className={`mt-[50px]  ml-[60px] `}>
                     <Routes>
                         <Route path='*' element={<DashboardPage />} />
                         <Route path='dashboard' element={<DashboardPage />} />
@@ -67,7 +67,7 @@ const AdminRoutes = () => {
                         <Route path='scheme/add' element={<AddSchemeDetails />} />
                         <Route path='redemption/centre' element={<Redemption />} />
                         <Route path='scheme/users' element={<ManageUsers />} />
-                        <Route path='scheme/users/filter' element={<FilterUsers />} />
+                        <Route path='scheme/filter' element={<FilterUsers />} />
                         <Route path='enrolledUsers/manage' element={<EntrolledUsers />} />
 
                     </Routes>

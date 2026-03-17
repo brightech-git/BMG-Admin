@@ -73,6 +73,10 @@ import ManageBannerSettings from '../../admin/pages/settings/banner/ManageBanner
 
 
 import './AdminRoutes.css';
+import ManageFilters from '../../admin/pages/settings/filter/ManageFilterSettings';
+import ManageFilterSettings from '../../admin/pages/settings/filter/ManageFilterSettings';
+
+import AddFilterContent from '../../admin/pages/filter/AddFilter';
 
 
 const AdminRoutes = () => {
@@ -161,8 +165,6 @@ const AdminRoutes = () => {
                             {/*---------------------------BANNER MANAGEMENT------------------------*/}
 
 
-                           
-
                             <Route path="genderbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageGenderBanner /></ProtectedRoute>} />
                             <Route path="manage/featurebanner" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFeaturedBanner /></ProtectedRoute>} />
                             <Route path="latestbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}> <ManageLatestBanner /> </ProtectedRoute>} />
@@ -223,13 +225,19 @@ const AdminRoutes = () => {
 
                             {/*---------------------------SETTINGS------------------------*/}
 
-                            <Route path="bannersetting/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddBannerSetting /></ProtectedRoute>} />
-                            <Route path="/filter/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddFilterSetting /></ProtectedRoute>} />
+                            <Route path="banner/setting/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddBannerSetting /></ProtectedRoute>} />
+                            <Route path="filter/setting/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddFilterSetting /></ProtectedRoute>} />
 
 
                             {/*---------------------------MANAGE SETTINGS------------------------*/}
 
-                            <Route path="bannersetting/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBannerSettings /></ProtectedRoute>} />
+                            <Route path="banner/setting/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBannerSettings /></ProtectedRoute>} />
+                            <Route path="filter/setting/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFilterSettings /></ProtectedRoute>} />
+
+
+                            {/*---------------------------FILTERS------------------------*/}
+                            <Route path="filter/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddFilterContent /></ProtectedRoute>} />
+                            <Route path="filter/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><AddFilterSetting /></ProtectedRoute>} />
 
                             <Route path="*" element={<Navigate to="/admin" replace />} />
 

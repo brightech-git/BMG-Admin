@@ -30,6 +30,19 @@ export const toLocalISO = (date) => {
     return `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`;
 };
 
+export const toFormDate = (date) => {
+    console.log(date ,'datefromutil');
+    
+    if (!date) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+
+    const yyyy = date.getFullYear();
+    const mm = pad(date.getMonth() + 1);
+    const dd = pad(date.getDate());
+
+
+    return `${yyyy}-${mm}-${dd}`;
+};
 
 export const formatDate = (iso) => {
     if (!iso) return "";

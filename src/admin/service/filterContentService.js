@@ -9,10 +9,10 @@ export const getProducts = async (filters = {}) => {
   return response.data;
 };
 
-const BASE_URL = "/ecom/filter-keys";
+const BASE_URL = "/ecom/filters";
 
 /* GET ALL FILTER SETTINGS */
-export const getAllFilterSettings = async ({filter}) => {
+export const getAllFilterContent = async ({filter}) => {
   try {
     const response = await axiosInstance.get(`${BASE_URL}`,{
       params:filter
@@ -27,7 +27,7 @@ export const getAllFilterSettings = async ({filter}) => {
 
 
 /* CREATE */
-export const createFilterSetting = async (data) => {
+export const createFilterContent = async (data) => {
   try {
     const response = await axiosInstance.post(`${BASE_URL}`, data);
     return response.data;
@@ -39,7 +39,7 @@ export const createFilterSetting = async (data) => {
 
 
 /* UPDATE */
-export const updateFilterSetting = async ({ id, data }) => {
+export const updateFilterContent = async ({ id, data }) => {
   try {
     console.log(data,'payloadData')
     const response = await axiosInstance.put(`${BASE_URL}/${id}`, data);
@@ -52,7 +52,7 @@ export const updateFilterSetting = async ({ id, data }) => {
 
 
 /* DELETE */
-export const deleteFilterSetting = async (id) => {
+export const deleteFilterContent = async (id) => {
   try {
     console.log(id,'deleteId')
     const response = await axiosInstance.delete(`${BASE_URL}/${id}`);

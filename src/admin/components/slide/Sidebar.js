@@ -23,7 +23,7 @@ import RoleBasedSection from '../common/RoleBasedSection';
 import { useUserProfile } from '../../hooks/profile/useUserProfile';
 import { useAuth } from '../../context/auth/authContext';
 import { debounce } from 'lodash';
-import { Settings } from 'lucide-react';
+import { Settings ,FilterIcon} from 'lucide-react';
 
 const menuItems = [
     {
@@ -101,9 +101,10 @@ const menuItems = [
         title: 'Settings',
         icon: <Settings className="staradmin-menu-icon" />,
         submenu: [
-            { title: 'Add BannerSettings', path: '/admin/bannersetting/add' },
-            { title: 'Add FilterSettings', path: '/admin/filter/add' },
-            { title: 'Manage BannerSettings', path: '/admin/bannersetting/manage' },
+            { title: 'Add BannerSetting', path: '/admin/banner/setting/add' },
+            { title: 'Add FilterSetting', path: '/admin/filter/setting/add' },
+            { title: 'Manage BannerSettings', path: '/admin/banner/setting/manage' },
+            { title: 'Manage FitlerSettings', path: '/admin/filter/setting/manage' },
         ],
     },
     // {
@@ -126,6 +127,14 @@ const menuItems = [
         icon: <FaMapMarkerAlt className="staradmin-menu-icon" />,
         submenu: [
             { title: 'Manage Address', path: '/admin/address/manage' },
+        ],
+    },
+    {
+        title: 'Filter',
+        icon: <FilterIcon className="staradmin-menu-icon" />,
+        submenu: [
+            { title: 'Manage Filter', path: '/admin/filter/manage' },
+            { title: 'Add Filter', path: '/admin/filter/add' },
         ],
     },
 ];
