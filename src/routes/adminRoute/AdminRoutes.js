@@ -77,6 +77,7 @@ import ManageFilters from '../../admin/pages/settings/filter/ManageFilterSetting
 import ManageFilterSettings from '../../admin/pages/settings/filter/ManageFilterSettings';
 
 import AddFilterContent from '../../admin/pages/filter/AddFilter';
+import ManageFilterContent from '../../admin/pages/filter/ManageFilter';
 
 
 const AdminRoutes = () => {
@@ -113,7 +114,7 @@ const AdminRoutes = () => {
     }
 
     return (
-        <div className='min-h-screen'>
+        <div className=''>
             <GlobalSnackbar /> {/* only once in layout */}
             <NewAdminHeader
                 toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
@@ -126,7 +127,7 @@ const AdminRoutes = () => {
                 />
                 <main className={`${isMobile ? '': 'ml-[65px]'} mt-[50px] p-2`} >
                     {/* <main className={`${isSidebarOpen ? 'ml-[60px]' : 'ml-[60px]'} mt-[45px] p-2`}> */}
-                    <div className=''>
+               
 
                         <Routes>
                             <Route path="/" element={<ProtectedRoute allowedRoles={allowedRoles}><MainContent /></ProtectedRoute>} />
@@ -237,14 +238,14 @@ const AdminRoutes = () => {
 
                             {/*---------------------------FILTERS------------------------*/}
                             <Route path="filter/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddFilterContent /></ProtectedRoute>} />
-                            <Route path="filter/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><AddFilterSetting /></ProtectedRoute>} />
+                            <Route path="filter/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFilterContent /></ProtectedRoute>} />
 
                             <Route path="*" element={<Navigate to="/admin" replace />} />
 
 
 
                         </Routes>
-                    </div>
+                 
                 </main>
             </div>
         </div>

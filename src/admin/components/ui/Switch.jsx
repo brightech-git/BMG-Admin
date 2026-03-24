@@ -1,5 +1,5 @@
 export const Switch = ({ checked, onChange, label }) => (
-    <div className="flex items-center justify-between my-2">
+    <div className="flex items-center justify-between my-2 gap-4">
         <span className="text-xs font-medium">{label}</span>
         <button
             type="button"

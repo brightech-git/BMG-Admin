@@ -65,7 +65,11 @@ const MediaDisplay = ({ product, navigate, themeMode }) => {
                     src={images[0]}
                     alt="product"
                     className="w-8 h-8 rounded object-cover"
-                    onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/40?text=No+Img')}
+                    onError={(e) => {
+                        e.currentTarget.onerror = null; // prevent infinite loop
+                        // e.currentTarget.src = "https://via.placeholder.com/40?text=No+Img";
+                    }}
+                    loading='lazy'
                 />
             )}
 
@@ -152,6 +156,8 @@ const renderTableCell = (key, row, themeMode, showNextArrow, navigate) => {
 
         case 'media':
             return <MediaDisplay product={row} navigate={navigate} themeMode={themeMode} />;
+
+    
 
         case 'actions':
             return (
@@ -259,7 +265,7 @@ const ManageProduct = () => {
         { key: 'tagNo', label: 'Tag No', align: 'left' },
         { key: 'tagKey', label: 'Tag Key', align: 'left' },
         { key: 'media', label: 'Media', align: 'left' },
-        { key: 'actions', label: 'Details', align: 'center' },
+        { key: 'actions', label: 'Full Details', align: 'center' },
     ];
 
     // Mobile view headers (fewer columns)
@@ -268,21 +274,22 @@ const ManageProduct = () => {
         { key: 'tagKey', label: 'Tag Key', align: 'left' },
         { key: 'product', label: 'Product', align: 'left' },
         { key: 'media', label: 'Media', align: 'left' },
+        { key: 'details', label: 'Full Details', align: 'center' },
         { key: 'actions', label: 'Details', align: 'center' },
     ];
 
     return (
-        <div className="p-3 mt-4">
+        <div className="p-2 mt-2">
             <div className="p-2 border">
                 {/* Breadcrumb */}
-                <nav aria-label="breadcrumb" className="p-1">
+                <nav aria-label="breadcrumb" className="p-1 m-0">
                     <ol className="breadcrumb flex gap-2 text-xs">
                         <li>
-                            <Link to="/" className="text-blue-500 text-xs">
+                            <Link to="/" className="text-blue-500 text-xs m-0">
                                 Dashboard
                             </Link>
                         </li>
-                        <li className='text-xs'>/ Manage Products</li>
+                        <li className='text-xs m-0'>/ Manage Products</li>
                     </ol>
                 </nav>
 
@@ -315,6 +322,7 @@ const ManageProduct = () => {
                         rowHoverBg={themeMode === 'dark' ? 'hover:bg-gray-600' : 'hover:bg-gray-50'}
                         fontSizeHeader="text-xs"
                         fontSizeRow="text-xs"
+                        actionColumn
                     />
                 </div>
 

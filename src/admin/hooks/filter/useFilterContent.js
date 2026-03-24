@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     getAllFilterContent,
+    getProductsFiltersContent,
     createFilterContent,
     updateFilterContent,
     deleteFilterContent
@@ -12,6 +13,13 @@ export const useGetAllFilterContents = () => {
     return useQuery({
         queryKey: ["filterContents"],
         queryFn: getAllFilterContent
+    });
+};
+
+export const useGetActiveFilterContents = () => {
+    return useQuery({
+        queryKey: ["activeFilterContents"],
+        queryFn: getProductsFiltersContent
     });
 };
 

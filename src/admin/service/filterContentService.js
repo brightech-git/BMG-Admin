@@ -24,6 +24,21 @@ export const getAllFilterContent = async ({filter}) => {
   }
 };
 
+export const getProductsFiltersContent = async() =>{
+  try{
+    const response = await axiosInstance.get(`${BASE_URL}/grouped`,{
+      params:{
+        isActive:true,
+        isUsed:true
+      }
+    } )
+    return response.data;
+  }
+  catch(error){
+    console.error("Error fetching active filter settings:", error);
+    throw error;
+  }
+}
 
 
 /* CREATE */

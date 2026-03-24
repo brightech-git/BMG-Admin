@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useContext, useEffect, memo } from 'react';
+import React, { useState, useCallback, useRef, useContext, useEffect, memo ,useMemo } from 'react';
 import { useProductContext } from '../../../context/product/productContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getProductImages, getProductVideos } from '../../../../utils/mediaUtils/mediaUtils.js';
@@ -6,6 +6,8 @@ import * as LucideIcons from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getProducts } from '../../../service/filterService.js';
 import DragDropMedia from './DragDropMedia.jsx';
+import { useGetActiveFilterContents } from '../../../hooks/filter/useFilterContent.js';
+import Checkbox from '../../../components/ui/CheckBox.jsx';
 
 const {
     Upload, X, RefreshCw, CheckCircle, AlertCircle, Info,
@@ -36,10 +38,16 @@ const AddImage = () => {
     const queryClient = useQueryClient();
     const { tagkey: initialTagkey, isUpdate = false } = location.state || {};
 
+    console.log(location.state ,'editing')
+
     const {
-        uploadImages, updateAllFields, getMedia, getProductDetails,
-        deleteMedia, createFormData, loading: contextLoading, setError
+        uploadImages, updateAllFields, getProductDetails,
+        deleteMedia, createFormData, setError
     } = useProductContext();
+
+
+    const { data: filters } = useGetActiveFilterContents();
+    console.log(filters,'filters')
 
     const [formData, setFormData] = useState({
         tagKey: initialTagkey || '',
@@ -51,6 +59,9 @@ const AddImage = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [feedback, setFeedbackState] = useState({ error: '', success: '', info: '' });
     const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [selectedFilters, setSelectedFilters] = useState({});
+
+
 
     // Optimized feedback setters
     const setFeedback = useCallback((type, message, autoClear = true) => {
@@ -62,45 +73,83 @@ const AddImage = () => {
         }
     }, [setError]);
 
+
+    const transformFilters = (data) => {
+        const result = {};
+
+        Object.entries(data).forEach(([key, items]) => {
+            result[key] = items.map((item) => ({
+                label: item.filterValue,
+                value: item.id, // ✅ use ID (best practice)
+            }));
+        });
+
+        return result;
+    };
+
+    const handleFilterChange = useCallback((key, values) => {
+        setSelectedFilters((prev) => ({
+            ...prev,
+            [key]: values,
+        }));
+    }, []);
+
+    const checkboxData = useMemo(() => {
+        if (!filters) return {};
+        return transformFilters(filters);
+    }, [filters]);
+
+
     // Fetch existing data
     useEffect(() => {
         if (!isUpdate || !initialTagkey) return;
 
         const fetchData = async () => {
             try {
-                const [mediaRes, detailsRes] = await Promise.all([
-                    getMedia(initialTagkey),
-                    getProductDetails(initialTagkey)
-                ]);
+                const detailsRes = await getProductDetails(initialTagkey);
+                console.log(detailsRes, 'detailsRes');
 
-                const mapToItems = (paths, type) => paths.map((path, index) => ({
-                    id: `existing-${type}-${index}-${path}`,
-                    src: type === 'image' ? getProductImages(path) : getProductVideos(path),
-                    alt: `Existing ${type} ${index + 1}`,
-                    type,
-                    isExisting: true,
-                    serverPath: path,
-                }));
+                const mapToItems = (pathsStr, type) => {
+                    let pathsArray = [];
+                    try {
+                        pathsArray = pathsStr ? JSON.parse(pathsStr) : [];
+                    } catch (err) {
+                        console.warn('Failed to parse paths:', pathsStr, err);
+                        pathsArray = [];
+                    }
+
+                    return pathsArray.map((path, index) => ({
+                        id: `existing-${type}-${index}-${path}`,
+                        src: type === 'image' ? getProductImages(path) : getProductVideos(path),
+                        alt: `Existing ${type} ${index + 1}`,
+                        type,
+                        isExisting: true,
+                        serverPath: path,
+                    }));
+                };
 
                 setCombinedMedia({
-                    images: mapToItems(mediaRes.images || [], 'image'),
-                    videos: mapToItems(mediaRes.videos || [], 'video'),
+                    images: mapToItems(detailsRes?.ImagePath , 'image'),
+                    videos: mapToItems(detailsRes?.VideoPath, 'video'),
                 });
+
 
                 setFormData(prev => ({
                     ...prev,
-                    description: detailsRes.Description || detailsRes?.[0]?.Description || '',
-                    tagKey: initialTagkey
+                    tagKey: initialTagkey,
+                    description: detailsRes.Description ?? '',
                 }));
+
             } catch (err) {
-                console.error('Fetch error:', err);
+                console.error('Failed to load product details:', err);
                 setFeedback('error', 'Failed to load existing data');
             }
         };
 
         fetchData();
-    }, [isUpdate, initialTagkey, getMedia, getProductDetails, setFeedback]);
+    }, [isUpdate, initialTagkey, getProductDetails, setFeedback]);
 
+    console.log(combinedMedia, 'combinedMedia')
     // Cleanup object URLs
     useEffect(() => {
         return () => {
@@ -174,16 +223,17 @@ const AddImage = () => {
             const imagesData = prepareMediaForUpload(combinedMedia.images);
             const videosData = prepareMediaForUpload(combinedMedia.videos);
 
+            console.log(selectedFilters,'selectedFiltersinPage')
+
             const fd = createFormData(
                 isUpdate,
                 formData.tagKey.trim(),
                 imagesData.newFiles,
                 videosData.newFiles,
                 formData.description.trim(),
-                {}, // trendingOptions
-                {}, // productAttributes
                 imagesData.pathsArray,
-                videosData.pathsArray
+                videosData.pathsArray,
+                selectedFilters
             );
 
             const onProgress = (percent) => setUploadProgress(percent);
@@ -192,18 +242,22 @@ const AddImage = () => {
                 ? await updateAllFields(fd, onProgress)
                 : await uploadImages(fd, onProgress);
 
-            await getProducts();
-            queryClient.invalidateQueries(['filter-items']);
+          
+                await getProducts();
+                queryClient.invalidateQueries(['filter-items', result?.filters]);
 
-            setUploadProgress(100);
-            setSnackbarOpen(true);
-            setFeedback('success', isUpdate ? 'Product updated!' : 'Product uploaded!', false);
+                setUploadProgress(100);
+                setSnackbarOpen(true);
+                setFeedback('success', isUpdate ? 'Product updated!' : 'Product uploaded!', false);
 
-            localStorage.setItem('productTagkey', formData.tagKey);
+                localStorage.setItem('productTagkey', formData.tagKey);
 
-            setTimeout(() => {
-                navigate('/admin/product/manage/single', { state: { tagkey: formData.tagKey } });
-            }, 1500);
+                setTimeout(() => {
+                    navigate('/admin/product/manage/single', { state: { tagkey: formData.tagKey } });
+                }, 1500);
+            
+
+            
         } catch (err) {
             console.error('Upload error:', err);
             setFeedback('error', err.message || 'Operation failed');
@@ -211,7 +265,7 @@ const AddImage = () => {
             setIsUploading(false);
         }
     }, [formData, isUpdate, combinedMedia, validateForm, prepareMediaForUpload, createFormData,
-        updateAllFields, uploadImages, queryClient, navigate, setFeedback]);
+        updateAllFields, uploadImages, queryClient, navigate, setFeedback ,selectedFilters]);
 
     // Optimized completion status
     const completionStatus = useCallback(() => {
@@ -238,7 +292,7 @@ const AddImage = () => {
     const status = completionStatus();
 
     return (
-        <div className="max-w-8xl mt-8 px-3">
+        <div className="max-w-8xl mt-2 p-2">
             {/* Progress Overlay */}
             {isUploading && (
                 <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2">
@@ -261,10 +315,10 @@ const AddImage = () => {
                         {/* Header */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 pb-2 mb-2">
                             <div>
-                                <h1 className="text-base font-bold text-gray-900">
+                                <h1 className="text-lg font-bold text-[var(--primary-text-color)] m-0">
                                     {isUpdate ? 'Update Product Media' : 'Add Product Media'}
                                 </h1>
-                                <p className="text-xs text-gray-600">
+                                <p className="text-xs text-gray-600 m-0">
                                     {isUpdate ? `Editing: ${formData.tagKey || 'Product'}` : 'Upload and arrange images and videos'}
                                 </p>
                             </div>
@@ -275,7 +329,7 @@ const AddImage = () => {
                         <FeedbackMessages feedback={feedback} setFeedback={setFeedbackState} />
 
                         {/* Main Form Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-1">
+                        <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] gap-1 mb-2">
                             {/* Left Column - Basic Info */}
                             <div className="space-y-2">
                                 <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
@@ -292,14 +346,16 @@ const AddImage = () => {
                                             placeholder="e.g., PROD-001-2024"
                                             disabled={isUpdate}
                                             hint="Unique identifier for this product"
+                                            minWidthLabel="150px"
+                                            
                                         />
 
                                         <TextAreaField
-                                            label="Product Description"
+                                            label="Product Description :"
                                             value={formData.description}
                                             onChange={(v) => setFormData(prev => ({ ...prev, description: v }))}
                                             placeholder="Describe your product in detail..."
-                                            rows={5}
+                                            rows={3}
                                             hint="Optional but recommended"
                                         />
                                     </div>
@@ -307,7 +363,7 @@ const AddImage = () => {
                             </div>
 
                             {/* Right Column - Media Upload */}
-                            <div className="space-y-2">
+                            <div className="flex flex-col flex-row gap-2">
                                 <MediaSection
                                     title="Product Images *"
                                     type="image"
@@ -326,8 +382,25 @@ const AddImage = () => {
                                     config={CONFIG}
                                 />
                             </div>
+                            
                         </div>
+                        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 mt-4'>
+                            {Object.entries(checkboxData).map(([key, options]) => (
+                                <Checkbox
+                                    key={key}
+                                    label={key}
+                                    options={options}
+                                    selectedValues={selectedFilters[key] || []}
+                                    onChange={(values) => handleFilterChange(key, values)}
+                                    multiple={true}
+                                    disabled={false}
+                                    layout='vertical'
+                                />
 
+                            ))}
+
+                        </div>
+                       
                         {/* Action Buttons */}
                         <ActionButtons
                             isUploading={isUploading}
@@ -427,9 +500,10 @@ const FeedbackMessages = ({ feedback, setFeedback }) => {
     );
 };
 
-const InputField = ({ label, value, onChange, placeholder, disabled, hint }) => (
-    <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+const InputField = ({ label, value, onChange, placeholder, disabled, hint ,layout="horizontal",minWidthLabel }) => (
+    <>
+    <div className={`${layout === "horizontal" ? "flex items-center justify-between gap-2" :""} `}>
+            <label className={`block text-sm font-medium text-gray-700 mb-2 ${minWidthLabel ? `min-w-[${minWidthLabel}]` : "min-w-[90px]"} sm:${minWidthLabel ? `min-w-[${minWidthLabel}]` : "min-w-[110px]"}`}>{label}</label>
         <input
             type="text"
             value={value}
@@ -438,8 +512,10 @@ const InputField = ({ label, value, onChange, placeholder, disabled, hint }) => 
             disabled={disabled}
             className="w-full px-2 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 text-sm focus:ring-primary focus:border-transparent transition-all"
         />
-        {hint && <p className="text-xs text-gray-500 mt-2">{hint}</p>}
+        
     </div>
+    { hint && <p className="text-xs text-gray-500 mt-2">{hint}</p> }
+    </>
 );
 
 const TextAreaField = ({ label, value, onChange, placeholder, rows, hint }) => (
@@ -461,11 +537,11 @@ const MediaSection = ({ title, type, media, onChange, onDelete, config }) => {
     const existingCount = media.filter(m => m.isExisting).length;
 
     return (
-        <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
+        <div className="bg-gray-50 rounded-xl p-2 border border-gray-200 w-full">
             <div className="flex items-center gap-1 mb-1">
                 {type === 'image' ? <Image className="w-4 h-4 text-primary" /> : <Video className="w-4 h-4 text-primary" />}
-                <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
-                <span className="ml-auto text-xs font-medium px-2 py-1 bg-blue-500/10 text-blue-500 rounded-full">
+                <h2 className="text-sm font-semibold text-gray-900 m-0 ">{title}</h2>
+                <span className="ml-auto text-xs font-medium px-2 py-1 bg-blue-500/10 text-blue-500 rounded-full ">
                     {newCount} new • {existingCount} existing
                 </span>
             </div>
@@ -499,19 +575,19 @@ const MediaSection = ({ title, type, media, onChange, onDelete, config }) => {
 };
 
 const ActionButtons = ({ isUploading, isUpdate, status, onReset, onCancel, onSubmit }) => (
-    <div className="mt-3 pt-2 border-t border-gray-200">
+    <div className="mt-2 pt-2 border-t border-gray-200">
         <div className="flex flex-col sm:flex-row gap-2 justify-between">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-2">
                 <button
                     onClick={onReset}
                     disabled={isUploading}
-                    className="px-2 py-1 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm flex items-center justify-center gap-1"
+                    className="px-2 py-1 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-xs flex items-center justify-center gap-1"
                 >
                     <RefreshCw className="w-4 h-4" /> Reset Form
                 </button>
                 <button
                     onClick={onCancel}
-                    className="px-2 py-1 border-2 border-gray-300 text-gray-700 rounded-sm font-semibold hover:bg-gray-50 transition-all duration-200 flex items-center text-sm justify-center gap-1"
+                    className="px-2 py-1 text-gray-100 bg-red-500 rounded-sm font-semibold transition-all duration-200 flex items-center text-sm justify-center gap-1"
                 >
                     <X className="w-4 h-4" /> Cancel
                 </button>
@@ -521,10 +597,10 @@ const ActionButtons = ({ isUploading, isUpdate, status, onReset, onCancel, onSub
                 onClick={onSubmit}
                 disabled={isUploading || status !== 'complete'}
                 className={`
-                    px-3 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-3 text-sm
+                    px-2 py-1.5 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-1 text-sm
                     ${isUploading || status !== 'complete'
-                        ? 'bg-gray-400 text-gray-300 cursor-not-allowed'
-                        : 'bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl'}
+                    ? 'bg-gray-400 text-gray-300 cursor-not-allowed'
+                    : 'bg-orange-600 hover:bg-orange/100 text-white shadow-lg hover:shadow-xl'}
                 `}
             >
                 {isUploading ? (
@@ -552,22 +628,22 @@ const ValidationSummary = ({ tagKey, description, images, videos, config }) => {
     ];
 
     return (
-        <div className="mt-3">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Validation Summary</h3>
+        <div className="mt-2">
+            <h3 className="text-sm font-semibold text-gray-900 ">Validation Summary</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                 {items.map(({ label, valid, required, desc }, i) => (
                     <div key={i} className={`
-                        rounded-lg border-2 p-2 transition-all
+                        rounded-lg border-2 p-2 transition-all m-0
                         ${valid ? (required ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200') : 'bg-red-50 border-red-200'}
                     `}>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between m-0">
                             <span className="text-sm text-gray-900">{label}</span>
                             {valid ?
                                 <CheckCircle className={`w-4 h-4 ${required ? 'text-green-600' : 'text-blue-600'}`} /> :
                                 <AlertCircle className="w-4 h-4 text-red-600" />
                             }
                         </div>
-                        <p className="text-xs text-gray-600">{desc}</p>
+                        <p className="text-xs text-gray-600 m-0">{desc}</p>
                     </div>
                 ))}
             </div>

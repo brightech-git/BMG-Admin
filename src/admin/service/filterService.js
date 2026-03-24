@@ -12,8 +12,9 @@ export const getProducts = async (filters = {}) => {
 const BASE_URL = "/ecom/filter-keys";
 
 /* GET ALL FILTER SETTINGS */
-export const getAllFilterSettings = async ({filter}) => {
+export const getAllFilterSettings = async (filter) => {
   try {
+    console.log(filter,'filtersetting')
     const response = await axiosInstance.get(`${BASE_URL}`,{
       params:filter
     });

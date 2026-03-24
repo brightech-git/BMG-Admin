@@ -108,8 +108,9 @@ const productService = {
 
     getProductDetails: async (tagkey) => {
         try {
+            
             const response = await axiosInstance.get(`/product/getTagkeyFilter/${tagkey}`);
-            console.log("response.data from getProductDetails:", response.data);
+
             return response.data;
         } catch (error) {
             console.error('Get product details error:', error);
@@ -198,7 +199,8 @@ const productService = {
             console.error('Error fetching filtered items:', error);
             throw error;
         }
-    }
+    },
+   
 };
 
 export default productService;

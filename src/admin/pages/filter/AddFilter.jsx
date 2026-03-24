@@ -29,91 +29,145 @@ const AnimatedCard = ({ children, delay = 0, className = "" }) => (
 );
 
 const AddFilterContent = () => {
+
+
     const location = useLocation();
     const navigate = useNavigate();
     const stateData = location.state || {};
     const mode = stateData.mode || 'add';
     const initialData = stateData.filterData || null;
 
+    console.log(initialData,'initialData')
+
     const [form, setForm] = useState({
+
         filterTitle: "",
         filterValue: "",
         filterKeyId: null,
         isActive: true,
-        isUsed: false,
         min: null,
         max: null,
         step: null,
         displayOrder: 1,
     });
 
-    const [selectedKey, setSelectedKey] = useState(null);
+   
+    const [selectedKeyOption, setSelectedKeyOption] = useState(null); // Store the selected option object
     const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "info", title: "" });
 
     // Fetch filter settings for ComboBox
+    // const filter={
+    //     isActive:true
+    // }
+    
     const { data: filterSettings } = useGetAllFilterSettings();
     const filterSettingsList = useMemo(() => Array.isArray(filterSettings?.data) ? filterSettings.data : [], [filterSettings?.data]);
 
+    // Prepare options for ComboBox
     const filterOptions = useMemo(() => {
         return filterSettingsList.map(item => ({
-            label: item.filterKey,
+            label: item.filterKey || item.filterLabel || `Key ${item.id}`,
             value: item.id,
+            isRange:item.isRange,
+            // ...item
         }));
     }, [filterSettingsList]);
 
-    console.log(filterSettingsList, 'filterSettingsList');
-    
+    console.log(form,'formform')
+  
+
+
     // Fetch existing filter contents
     const { data: filterContent } = useGetAllFilterContents();
     const filterContentList = useMemo(() => Array.isArray(filterContent?.data) ? filterContent.data : [], [filterContent?.data]);
 
+    // Check for duplicate (same filterKeyId)
     const isDuplicate = filterContentList.some(item =>
-        item.filterKeyId === form.filterKeyId && item.id !== initialData?.id
+        item.filterKeyId === form.filterKeyId &&
+        item.id !== initialData?.id
     );
 
     const createMutation = useCreateFilterContent();
     const updateMutation = useUpdateFilterContent();
 
+
+
+    // Initialize form for edit mode
     useEffect(() => {
         if (mode === "edit" && initialData) {
+            const filterKeyId = initialData.filterId ?? null;
+
             setForm({
                 filterTitle: initialData.filterTitle || "",
                 filterValue: initialData.filterValue || "",
-                filterKeyId: initialData.filterKeyId || null,
+                filterKeyId: filterKeyId,
                 isActive: initialData.isActive ?? true,
-                isUsed: initialData.isUsed ?? false,
                 min: initialData.min || null,
                 max: initialData.max || null,
                 step: initialData.step || null,
                 displayOrder: initialData.displayOrder || 1,
             });
 
-            // set selectedKey from settings
-            const keyObj = filterSettingsList.find(k => k.filterKeyId === initialData.filterKeyId);
-            setSelectedKey(keyObj || null);
+            const option = filterOptions.find(
+                opt => Number(opt.value) === Number(filterKeyId)
+            );
+
+            console.log("Setting selected key option:", option);
+            setSelectedKeyOption(option || null);
         }
-    }, [mode, initialData, filterSettingsList]);
+    }, [mode, initialData, filterOptions]);
+
+    // Determine if the selected key is a range type
+    const isRangeType = useMemo(() => {
+        if (!selectedKeyOption) return false;
+
+        return selectedKeyOption.isRange || false;
+    }, [selectedKeyOption]);
+    console.log(isRangeType,'isRangeType')
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        setForm(prev => ({
+            ...prev,
+            [name]: type === 'number' ? (value === '' ? null : Number(value)) : value
+        }));
+    };
+
+    const handleNumberChange = (name, value) => {
+        setForm(prev => ({
+            ...prev,
+            [name]: value === '' ? null : Number(value)
+        }));
     };
 
     const handleSwitchChange = (name, value) => {
         setForm(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleFilterKeySelect = (key) => {
-        setSelectedKey(key);
-        setForm(prev => ({
-            ...prev,
-            filterKeyId: key.filterKeyId,
-            filterTitle: key.filterTitle || "",
-            min: key.min || null,
-            max: key.max || null,
-            step: key.step || null,
-            filterValue: "", // reset for non-range keys
-        }));
+    const handleFilterKeySelect = (option) => {
+        console.log('Selected option:', option);
+        setSelectedKeyOption(option);
+
+        if (option) {
+            setForm(prev => ({
+                ...prev,
+                filterKeyId: option.value,
+                // Reset range-specific fields
+                min: option.min || null,
+                max: option.max || null,
+                step: option.step || null,
+                filterValue: "", // Reset value field
+            }));
+        } else {
+            setForm(prev => ({
+                ...prev,
+                filterKeyId: null,
+                min: null,
+                max: null,
+                step: null,
+                filterValue: "",
+            }));
+        }
     };
 
     const validateForm = useCallback(() => {
@@ -125,18 +179,56 @@ const AddFilterContent = () => {
             setSnackbar({ open: true, message: "Filter title is required", type: "error", title: "Error" });
             return false;
         }
+
+        // Validate based on type
+        if (isRangeType) {
+            if (form.min === null || form.max === null) {
+                setSnackbar({ open: true, message: "Min and Max values are required for range type", type: "error", title: "Error" });
+                return false;
+            }
+            if (form.min >= form.max) {
+                setSnackbar({ open: true, message: "Min must be less than Max", type: "error", title: "Error" });
+                return false;
+            }
+        } else {
+            if (!form.filterValue?.trim()) {
+                setSnackbar({ open: true, message: "Filter value is required", type: "error", title: "Error" });
+                return false;
+            }
+        }
+
         if (isDuplicate) {
             setSnackbar({ open: true, message: "Duplicate filter content for this key", type: "error", title: "Error" });
             return false;
         }
         return true;
-    }, [form, isDuplicate]);
+    }, [form, isDuplicate, isRangeType]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!validateForm()) return;
 
-        const payload = { ...form };
+        // Prepare payload based on type
+        const payload = {
+            filterTitle: form.filterTitle,
+            filterKeyId: form.filterKeyId,
+            isActive: form.isActive,
+            displayOrder: form.displayOrder || 1,
+        };
+
+        if (isRangeType) {
+            payload.min = form.min;
+            payload.max = form.max;
+            payload.step = form.step || 1;
+
+            // Optionally create a string representation
+            payload.filterValue = `${form.min}-${form.max}`;
+        } else {
+            payload.filterValue = form.filterValue;
+        }
+
+        console.log('Submitting payload:', payload);
+
         if (mode === "add") {
             createMutation.mutate(payload, {
                 onSuccess: () => {
@@ -163,13 +255,12 @@ const AddFilterContent = () => {
             filterValue: "",
             filterKeyId: null,
             isActive: true,
-            isUsed: false,
             min: null,
             max: null,
             step: null,
             displayOrder: 1,
         });
-        setSelectedKey(null);
+        setSelectedKeyOption(null);
     };
 
     const handleCancel = () => mode === 'edit' ? navigate(-1) : resetForm();
@@ -203,60 +294,181 @@ const AddFilterContent = () => {
 
                 {/* Form */}
                 <AnimatedCard delay={0.2}>
-                    <div className="space-y-4">
+                    <div className="space-y-4 p-2">
 
                         {/* ComboBox for Filter Key */}
                         <div className="flex items-center gap-2">
-                            <label className="min-w-[120px] font-semibold text-sm text-[#7C2D12]">Filter Key</label>
-                            <ComboBox
-                                value={form.filterKeyId}
-                                options={filterOptions}
-                                onChange={handleFilterKeySelect}
+                            <label className="min-w-[120px] font-semibold text-sm text-[#7C2D12]">
+                                Filter Key <span className="text-red-500">*</span>
+                            </label>
+                            <div className="flex-1">
+                                <ComboBox
+                                    value={selectedKeyOption}
+                                    options={filterOptions}
+                                    onChange={handleFilterKeySelect}
+                                    // disabled={isSubmitting || mode === 'edit'} // Disable in edit mode
+                                    placeholder="Select filter key"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Filter Title - Always visible */}
+                        <div className="flex items-center gap-2">
+                            <label className="min-w-[120px] font-semibold text-sm text-[#7C2D12]">
+                                Filter Title <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="filterTitle"
+                                value={form.filterTitle}
+                                onChange={handleChange}
+                                className="flex-1 border-2 border-[#FED7AA] rounded-xl px-3 py-2 text-sm focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none"
+                                placeholder="Enter filter title"
                                 disabled={isSubmitting}
-                                placeholder="Select filter key"
                             />
                         </div>
 
-                        {/* Dynamic fields based on range */}
-                        {selectedKey?.min || selectedKey?.max || selectedKey?.step ? (
-                            <div className="space-y-2">
-                                <label className="font-semibold text-sm text-[#7C2D12]">Filter Title</label>
-                                <input type="text" name="filterTitle" value={form.filterTitle} onChange={handleChange} className="w-full border-2 border-[#FED7AA] rounded-xl px-2 py-2" disabled={isSubmitting} />
-                                <div className="flex gap-2 mt-2">
-                                    <input type="number" placeholder="Min" value={form.min || ""} onChange={e => setForm(prev => ({ ...prev, min: e.target.value }))} className="flex-1 border-2 border-[#FED7AA] rounded-xl px-2 py-2" />
-                                    <input type="number" placeholder="Max" value={form.max || ""} onChange={e => setForm(prev => ({ ...prev, max: e.target.value }))} className="flex-1 border-2 border-[#FED7AA] rounded-xl px-2 py-2" />
-                                    <input type="number" placeholder="Step" value={form.step || ""} onChange={e => setForm(prev => ({ ...prev, step: e.target.value }))} className="flex-1 border-2 border-[#FED7AA] rounded-xl px-2 py-2" />
+                        {/* Dynamic fields based on range type */}
+                        {isRangeType ? (
+                            <>
+                                {/* Range Fields */}
+                                <div className="flex items-center gap-2">
+                                    <label className="min-w-[120px] font-semibold text-sm text-[#7C2D12]">
+                                        Min Value <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        placeholder="Min"
+                                        value={form.min ?? ''}
+                                        onChange={e => handleNumberChange('min', e.target.value)}
+                                        className="flex-1 border-2 border-[#FED7AA] rounded-xl px-3 py-2 text-sm focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none"
+                                        min={0.00}
+                                        step="any"
+                                        disabled={isSubmitting}
+                                    />
                                 </div>
-                            </div>
+
+                                <div className="flex items-center gap-2">
+                                    <label className="min-w-[120px] font-semibold text-sm text-[#7C2D12]">
+                                        Max Value <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        placeholder="Max"
+                                        value={form.max ?? ''}
+                                        onChange={e => handleNumberChange('max', e.target.value)}
+                                        className="flex-1 border-2 border-[#FED7AA] rounded-xl px-3 py-2 text-sm focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none"
+                                        step="any"
+                                        disabled={isSubmitting}
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <label className="min-w-[120px] font-semibold text-sm text-[#7C2D12]">
+                                        Step
+                                    </label>
+                                    <input
+                                        type="number"
+                                        placeholder="Step (default: 1)"
+                                        value={form.step ?? ''}
+                                        onChange={e => handleNumberChange('step', e.target.value)}
+                                        className="flex-1 border-2 border-[#FED7AA] rounded-xl px-3 py-2 text-sm focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none"
+                                        min={0.00}
+                                        step="any"
+                                        disabled={isSubmitting}
+                                    />
+                                </div>
+                            </>
                         ) : (
-                            <div className="space-y-2">
-                                <label className="font-semibold text-sm text-[#7C2D12]">Filter Title</label>
-                                <input type="text" name="filterTitle" value={form.filterTitle} onChange={handleChange} className="w-full border-2 border-[#FED7AA] rounded-xl px-2 py-2" disabled={isSubmitting} />
-                                <label className="font-semibold text-sm text-[#7C2D12]">Filter Value</label>
-                                <input type="text" name="filterValue" value={form.filterValue} onChange={handleChange} className="w-full border-2 border-[#FED7AA] rounded-xl px-2 py-2" disabled={isSubmitting} />
+                            /* Single Value Field */
+                            <div className="flex items-center gap-2">
+                                <label className="min-w-[120px] font-semibold text-sm text-[#7C2D12]">
+                                    Filter Value <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="filterValue"
+                                    value={form.filterValue}
+                                    onChange={handleChange}
+                                    className="flex-1 border-2 border-[#FED7AA] rounded-xl px-3 py-2 text-sm focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none"
+                                    placeholder="Enter filter value"
+                                    disabled={isSubmitting}
+                                />
                             </div>
                         )}
 
+                        {/* Display Order */}
+                        <div className="flex items-center gap-2">
+                            <label className="min-w-[120px] font-semibold text-sm text-[#7C2D12]">
+                                Display Order
+                            </label>
+                            <input
+                                type="number"
+                                name="displayOrder"
+                                value={form.displayOrder}
+                                onChange={handleChange}
+                                className="flex-1 border-2 border-[#FED7AA] rounded-xl px-3 py-2 text-sm focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none"
+                                min="1"
+                                step="1"
+                                disabled={isSubmitting}
+                            />
+                        </div>
+
                         {/* Active & Input Switch */}
                         <div className="flex gap-4 mt-2">
-                            <Switch checked={form.isActive} onChange={val => handleSwitchChange('isActive', val)} label="Active" disabled={isSubmitting} />
-                            <Switch checked={form.isUsed} onChange={val => handleSwitchChange('isUsed', val)} label="Input Used" disabled={isSubmitting} />
+                            <Switch
+                                checked={form.isActive}
+                                onChange={val => handleSwitchChange('isActive', val)}
+                                label={
+                                    <span className="flex items-center gap-2 text-sm">
+                                        <i className="fas fa-power-off text-[#F97316]"></i>
+                                        Active
+                                    </span>
+                                }
+                                disabled={isSubmitting}
+                            />
+                      
                         </div>
                     </div>
                 </AnimatedCard>
 
                 {/* Action Buttons */}
                 <AnimatedCard delay={0.3}>
-                    <div className="flex gap-2">
-                        <button type="button" onClick={handleCancel} className="flex-1 p-2 border-2 border-[#FED7AA] text-[#7C2D12] rounded-xl">Cancel</button>
-                        <button type="submit" className="flex-1 p-2 bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white rounded-xl" disabled={isSubmitting}>
-                            {isSubmitting ? 'Saving...' : (mode === 'edit' ? 'Update' : 'Create')}
+                    <div className="flex gap-3 p-2">
+                        <button
+                            type="button"
+                            onClick={handleCancel}
+                            className="flex-1 p-3 border-2 border-[#FED7AA] text-[#7C2D12] text-sm font-medium rounded-xl hover:bg-[#FFF7ED] hover:border-[#FDBA74] transition-all duration-300"
+                            disabled={isSubmitting}
+                        >
+                            {mode === 'edit' ? 'Back' : 'Clear All'}
+                        </button>
+                        <button
+                            type="submit"
+                            className="flex-1 p-3 bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white text-sm font-medium rounded-xl hover:shadow-lg hover:shadow-[#F97316]/30 transition-all duration-300 disabled:opacity-50"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <i className="fas fa-spinner fa-spin"></i>
+                                    Saving...
+                                </span>
+                            ) : (
+                                mode === 'edit' ? 'Update Content' : 'Create Content'
+                            )}
                         </button>
                     </div>
                 </AnimatedCard>
             </form>
 
-            <Snackbar open={snackbar.open} message={snackbar.message} type={snackbar.type} title={snackbar.title} duration={3000} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} />
+            <Snackbar
+                open={snackbar.open}
+                message={snackbar.message}
+                type={snackbar.type}
+                title={snackbar.title}
+                duration={3000}
+                onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+            />
         </div>
     );
 };

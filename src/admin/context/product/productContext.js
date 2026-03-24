@@ -5,38 +5,11 @@ import productService from '../../service/productService';
 const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
-    const [images, setImages] = useState([]);           // current image URLs
-    const [videos, setVideos] = useState([]);           // current video URLs
-    const [description, setDescription] = useState('');
-    const [productDetails, setProductDetails] = useState(null);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [filteredProducts, setFilteredProducts] = useState([]);
 
-    // === GET MEDIA (images + videos) ===
-    const getMedia = useCallback(async (tagkey) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await productService.getImages(tagkey); // uses GET /record-images
-            if (result.error) throw new Error(result.error);
-
-            const imgs = result.images || [];
-            const vids = result.videos || [];
-
-            setImages(imgs);
-            setVideos(vids);
-
-            return { images: imgs, videos: vids };
-        } catch (err) {
-            const msg = err.error || err.message || 'Failed to fetch media';
-            setError(msg);
-            throw new Error(msg);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
+  
     // === GET FULL PRODUCT DETAILS (attributes, flags, etc.) ===
     const getProductDetails = useCallback(async (tagkey) => {
         setLoading(true);
@@ -44,10 +17,6 @@ export const ProductProvider = ({ children }) => {
         try {
             const response = await productService.getProductDetails(tagkey);
             if (response.error) throw new Error(response.error);
-
-            setProductDetails(response);
-            setDescription(response.description || '');
-
             return response;
         } catch (err) {
             const msg = err.error || err.message || 'Failed to fetch product details';
@@ -65,13 +34,6 @@ export const ProductProvider = ({ children }) => {
         try {
             const result = await productService.deleteMedia(tagkey, mediaPath, type);
             if (result.error) throw new Error(result.error);
-
-            if (type === 'image') {
-                setImages(prev => prev.filter(p => p !== mediaPath));
-            } else {
-                setVideos(prev => prev.filter(p => p !== mediaPath));
-            }
-
             return result;
         } catch (err) {
             const msg = err.error || err.message || `Failed to delete ${type}`;
@@ -82,16 +44,13 @@ export const ProductProvider = ({ children }) => {
         }
     }, []);
 
+
     // === UPDATE ALL FIELDS (PUT /update-all-fields) ===
    const updateAllFields = useCallback(async (formData, onProgress) => {
     setLoading(true);
     setError(null);
     try {
         const result = await productService.updateAllFields(formData, onProgress);
-        if (result.images || result.videos) {
-            setImages(result.images || []);
-            setVideos(result.videos || []);
-        }
         return result;
     } catch (err) {
         const msg = err.error || err.message || 'Update failed';
@@ -102,64 +61,66 @@ export const ProductProvider = ({ children }) => {
     }
 }, []);
 
-    // === VALIDATE BEFORE SUBMIT ===
-    const validateProductData = useCallback((tagkey, images, description) => {
-        const errors = [];
-
-        if (!tagkey?.trim()) errors.push('Tag key is required');
-        if (!description?.trim()) errors.push('Description is required');
-        if (!images || images.length < 3) errors.push('At least 3 images required');
-
-        return { isValid: errors.length === 0, errors };
-    }, []);
+ 
 
     // === CREATE FormData for update-all-fields ===
     const createFormData = useCallback((
+
         isUpdateMode,
         tagkey,
         images = [],        // New image files
         videos = [],        // New video files
         description = '',
-        trendingOptions = {},
-        productAttributes = {},
         orderedImagePaths = [],  // Array: ['path1', null, 'path2'] - null for new files
-        orderedVideoPaths = []   // Array: ['path1', null, 'path2'] - null for new files
+        orderedVideoPaths = [],   // Array: ['path1', null, 'path2'] - null for new files,
+        selectedFilters // <-- pass your grouped object here
     ) => {
         const formData = new FormData();
 
         formData.append('tagkey', tagkey?.trim() || '');
+
         if (description?.trim()) formData.append('description', description.trim());
 
-        // Marketing flags
-        // formData.append('top_trending', trendingOptions.topTrending ?? false);
-        // formData.append('featured_products', trendingOptions.featuredProducts ?? false);
-        // formData.append('best_design', trendingOptions.bestDesign ?? false);
+        console.log(selectedFilters,'selectedFiltersinContext')
 
-        // Product attributes
-        // const attrMap = {
-        //     gender: 'gender',
-        //     occasion: 'occasion',
-        //     collectionType: 'collection_type',
-        //     materialFinish: 'material_finish',
-        //     colorAccents: 'color_accents',
-        // };
+        // --- NEW: Append filterIds ---
+        // if (selectedFilters && Object.keys(selectedFilters).length > 0) {
+        //     console.log("Selected Filters (grouped):", selectedFilters);
 
-        // Object.entries(attrMap).forEach(([uiKey, backendKey]) => {
-        //     const value = productAttributes[uiKey];
-        //     if (value) formData.append(backendKey, value);
-        // });
+        //     // Flatten all IDs into one array
+        //     const filterIds = Object.values(selectedFilters)
+        //         .flat()           // merge arrays like [28,27,26,32,31,...]
+        //         .map(id => String(id)); // ensure string (optional)
 
+
+        //     console.log(filterIds,'filterIds')
+        //     // Append as JSON string or individual entries
+        //     formData.append("filterIds", JSON.stringify(filterIds)); // Backend receives: ["28","27","26",...]
+        // }
+        if (selectedFilters && Object.keys(selectedFilters).length > 0) {
+            console.log("Selected Filters (grouped):", selectedFilters);
+
+            // Flatten all IDs into one array
+            const filterIds = Object.values(selectedFilters).flat();
+
+            console.log(filterIds, 'filterIds');
+
+            // Append each ID separately for Spring to parse as List<Integer>
+            filterIds.forEach(id => {
+                formData.append("filterIds", Number(id)); // send as integer
+            });
+        }
         // THE FIX: Use the correct parameter names!
         if (isUpdateMode) {
             // ✅ Append new files
            images.forEach((item) => {
-    if (item instanceof File) {
-        formData.append("newImages", item);
-    }
-    if (item?.file instanceof File) {
-        formData.append("newImages", item.file);
-    }
-});
+        if (item instanceof File) {
+            formData.append("newImages", item);
+        }
+        if (item?.file instanceof File) {
+            formData.append("newImages", item.file);
+        }
+        });
 
 
             videos.forEach((file, index) => {
@@ -181,15 +142,7 @@ export const ProductProvider = ({ children }) => {
                 const cleanVideoOrder = orderedVideoPaths.filter((p) => p !== null && p !== undefined && p !== "");
                 formData.append("videoOrder", JSON.stringify(cleanVideoOrder));
             }
-
-            console.log('📤 Sending to backend:', {
-                tagkey: tagkey,
-                description: description.trim(),
-                newImages: images.map(f => f?.name || 'N/A'),
-                newVideos: videos.map(f => f?.name || 'N/A'),
-                orderedImagePaths: orderedImagePaths,
-                orderedVideoPaths: orderedVideoPaths
-            });
+  
 
         } else {
             // Create mode - just send files
@@ -205,7 +158,8 @@ export const ProductProvider = ({ children }) => {
                 }
             });
         }
-
+      
+      
         return formData;
     }, []);
 
@@ -228,25 +182,15 @@ export const ProductProvider = ({ children }) => {
     return (
         <ProductContext.Provider
             value={{
-                // State
-                images,
-                videos,
-                description,
-                productDetails,
-                loading,
-                error,
-                filteredProducts,
-                setFilteredProducts,
 
                 // Actions
-                getMedia,
                 getProductDetails,
                 deleteMedia,
                 updateAllFields,
                 uploadImages,
-                validateProductData,
                 createFormData,
                 setError,
+        
             }}
         >
             {children}

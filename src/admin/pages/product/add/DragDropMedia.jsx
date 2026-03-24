@@ -36,7 +36,7 @@ const DragDropMedia = memo(({
 
         // Define size limits
         const MAX_IMAGE_SIZE = 200 * 1024; // 200KB
-        const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 5MB
+        const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
 
         const newItems = Array.from(files)
             .filter(file => {
@@ -150,7 +150,7 @@ const DragDropMedia = memo(({
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
                 className={`
-                    relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all duration-200
+                    relative border-2 border-dashed rounded-lg p-2 text-center cursor-pointer transition-all duration-200
                     ${isDragActive
                         ? 'border-primary bg-primary/10'
                         : 'border-border-color bg-background-color hover:border-primary hover:bg-primary/10'
@@ -166,7 +166,7 @@ const DragDropMedia = memo(({
                     className="hidden"
                 />
 
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-1">
                     {type === 'image' ? (
                         <FileImage className={`w-10 h-10 ${isDragActive ? 'text-primary' : 'text-secondaryText'}`} />
                     ) : (
@@ -174,20 +174,18 @@ const DragDropMedia = memo(({
                     )}
 
                     <div>
-                        <p className="font-semibold text-sm text-primaryText">
-                            {isDragActive ? `Drop ${type}s here` : `Drag & drop ${type}s here`}
+                        <p className="font-semibold text-[var(--primary-text-color)] text-sm m-0">
+                            {isDragActive ? `Drop ${type}s here` : `Drag & drop ${type}s here`} or click to browse
                         </p>
-                        <p className="text-xs text-secondaryText mt-1">
-                            or click to browse
-                        </p>
+                      
                     </div>
 
                     {/* Add this line for file size info */}
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 m-0">
                         Max {type === 'image' ? '200KB' : '10MB'} per file
                     </p>
 
-                    <p className="text-xs text-secondaryText bg-gray-100 px-3 py-1 rounded-full">
+                    <p className="text-xs text-secondaryText bg-gray-200 px-3 py-1 rounded-full">
                         {items.length}/{maxItems} • {canAddMore
                             ? `${maxItems - items.length} slot${maxItems - items.length !== 1 ? 's' : ''} left`
                             : 'Maximum reached'
@@ -198,9 +196,9 @@ const DragDropMedia = memo(({
 
             {/* Media Grid */}
             {items.length > 0 && (
-                <div className="mt-6">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-semibold text-primaryText">
+                <div className="mt-2">
+                    <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-xs font-semibold text-primaryText m-0">
                             {typeName}s ({items.length})
                         </h3>
 
@@ -214,7 +212,7 @@ const DragDropMedia = memo(({
                         )}
                     </div>
 
-                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                    <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 m-0">
                         {items.map((item, index) => (
                             <MediaItem
                                 key={item.id}

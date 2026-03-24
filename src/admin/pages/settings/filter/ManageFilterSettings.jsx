@@ -11,7 +11,9 @@ import BannerTable from '../../../components/banner/manageBannerTable';
 
 
 const ManageFilterSettings = () => {
+
     const navigate = useNavigate();
+
     const { data: filtersData, isLoading, error, refetch } = useGetAllFilterSettings();
 
 
@@ -75,6 +77,8 @@ const ManageFilterSettings = () => {
             filterKey: filter.filterKey,
             active:filter.isActive,
             used:filter.isUsed,
+            displayOrder:filter.displayOrder,
+            range:filter.isRange,
 
             // Store full banner object for actions
             _filterData: filter
@@ -85,12 +89,12 @@ const ManageFilterSettings = () => {
 
     const headers = [
         { key: 'sno', label: 'S.No', width: '80px' },
-
         { key: 'filterLabel', label: 'Filter Name',align:'center' },
         { key: 'filterKey', label: 'Filter Key' ,align:'center' },
         { key: 'active', label: 'IsActive' ,align:'center'},
         { key: 'used', label: 'IsUsed'  ,align:'center' },
-
+        { key: 'range', label: 'Is Range', align: 'center' },
+        { key: 'displayOrder', label: 'displayOrder', align: 'start' },
         { key: 'actions', label: 'Actions', align: 'center', width: '100px' },
     ];
 
@@ -152,7 +156,7 @@ const ManageFilterSettings = () => {
                     renderCell={(key, row) => {
                         // Image Key column
                         if(key === "active"){
-                            console.log(row, 'row[key]')
+                      
                             if( row[key] === true){
                                 return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span>
                             }else{
@@ -160,13 +164,22 @@ const ManageFilterSettings = () => {
                             }
                         }
                         if (key === "used") {
-                            console.log(row, 'row[key]')
+                         
                             if (row[key] === true) {
                                 return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span>
                             } else {
                                 return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Inactive</span>
                             }
                         }
+                        if (key === "range") {
+                    
+                            if (row[key] === true) {
+                                return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span>
+                            } else {
+                                return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Inactive</span>
+                            }
+                        }
+
                        
                         // Actions column
                         if (key === 'actions') {

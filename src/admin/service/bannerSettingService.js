@@ -1,14 +1,18 @@
+
 import axiosInstance from "../api/axiosInstance";
 
 const baseUrl = 'image-collector';
 
 export const createBannerSetting = async(formData) => {
     try{
-        const response = await axiosInstance.post(`/${baseUrl}/create`, formData);
+
+        console.log(formData ,'formData')
+        const response = await axiosInstance.post(`${baseUrl}/create`, formData);
         return response.data;
     
     }
     catch(err){
+        console.error("Error creating banner setting:", err);
         throw new Error("Failed to create banner setting");
     }
 }
@@ -20,7 +24,7 @@ export const getBannerSettings = async (image_key) => {
         const params = {};
         if (image_key) params.image_key = image_key;
 
-        const response = await axiosInstance.get(`${baseUrl}/list`, { params });
+        const response = await axiosInstance.get(`/${baseUrl}/list`, { params });
         return response.data;
     } catch (err) {
         throw new Error("Failed to fetch banner settings");

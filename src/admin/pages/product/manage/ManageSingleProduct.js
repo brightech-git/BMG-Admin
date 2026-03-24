@@ -38,7 +38,8 @@ function ManageSingleProduct() {
     const location = useLocation();
     const navigate = useNavigate();
     const { themeMode } = useContext(MyContext);
-    const { productDetails, getProductDetails, loading, error } = useProductContext();
+    const { getProductDetails, loading, error } = useProductContext();
+    const [product ,setProduct] = useState();
 
     const tagKey = location.state?.tagKey || location.state?.tagkey || location.state?.TAGKEY || localStorage.getItem("productTagkey");
     console.log("tagKey", tagKey);
@@ -48,13 +49,21 @@ function ManageSingleProduct() {
     const [imageError, setImageError] = useState(false);
 
     useEffect(() => {
-        if (tagKey) {
-            getProductDetails(tagKey);
-        }
+        if (!tagKey) return;
+
+        const fetchProduct = async () => {
+            try {
+                const productData = await getProductDetails(tagKey); // ✅ await the Promise
+                setProduct(productData);
+            } catch (err) {
+                console.error("Failed to fetch product details:", err);
+            }
+        };
+
+        fetchProduct();
     }, [tagKey, getProductDetails]);
 
-    const product = productDetails;
-
+   
     // Parse images and videos from product data
     const images = parseImagePath(product?.ImagePath || []);
     const videos = parseVideoPath(product?.VideoPath || []); // Assuming VideoPath field exists

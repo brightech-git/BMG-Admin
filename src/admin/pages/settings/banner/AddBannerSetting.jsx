@@ -316,6 +316,7 @@ const AddBannerSetting = () => {
         //     setSnackbar({ open: true, message: "Title is required", type: "error", title: "Error" });
         //     return;
         // }
+    
 
         // Prepare payload with JSON string for visibleCount
         const payload = {
@@ -329,11 +330,12 @@ const AddBannerSetting = () => {
             backgroundColor: form.backgroundColor,
             defaultRatio: form.defaultRatio,
             mobileRatio: form.mobileRatio,
-            mobileRows: [Number(form.mobileRowsDesktop), Number(form.mobileRowsMobile)],
+            mobileRows: String ([Number(form.mobileRowsDesktop), Number(form.mobileRowsMobile)]),
             desktopColumns: form.desktopColumns,
             isVisible: form.isVisible,
             isGrid: form.isGrid,
-            // Enhanced fields
+
+            // // Enhanced fields
             autoscroll: form.autoscroll,
             scrollable: form.scrollable,
             infinite: form.infinite,
@@ -344,6 +346,8 @@ const AddBannerSetting = () => {
             desktopLayout: form.desktopLayout,
             mobileLayout: form.mobileLayout,
         };
+
+        console.log(payload,'payload')
 
         if (mode === "add") {
             createMutation.mutate(payload, {
@@ -745,7 +749,7 @@ const AddBannerSetting = () => {
                                                 </label>
                                                 <input
                                                     value={form.desktopLayout.rows}
-                                                    onChange={(e) => handleLayoutChange("desktopLayout", "rows", Number(e.target.value))}
+                                                    onChange={(e) => handleLayoutChange("desktopLayout", "rows", (e.target.value))}
                                                     className="w-full px-3 py-2.5 text-sm border-2 border-[#FED7AA] rounded-xl bg-white focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none transition-all"
                                                     placeholder="Enter number of rows"
                                                     disabled={isSubmitting}
@@ -771,7 +775,7 @@ const AddBannerSetting = () => {
                                                 </label>
                                                 <input
                                                     value={form.mobileLayout.rows}
-                                                    onChange={(e) => handleLayoutChange("mobileLayout", "rows", Number(e.target.value))}
+                                                    onChange={(e) => handleLayoutChange("mobileLayout", "rows", e.target.value)}
                                                     className="w-full px-3 py-2.5 text-sm border-2 border-[#FED7AA] rounded-xl bg-white focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none transition-all"
                                                     placeholder="Enter number of rows"
                                                     disabled={isSubmitting}

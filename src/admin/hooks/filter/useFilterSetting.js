@@ -8,10 +8,12 @@ import {
 
 
 /* GET ALL */
-export const useGetAllFilterSettings = () => {
+export const useGetAllFilterSettings = (filter) => {
+
+    console.log(filter,'filterinhook')
     return useQuery({
-        queryKey: ["filterSettings"],
-        queryFn: getAllFilterSettings
+        queryKey: ["filterSettings",filter],
+        queryFn: ()=>getAllFilterSettings(filter)
     });
 };
 

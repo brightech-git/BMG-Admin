@@ -552,9 +552,9 @@ const ComboBox = React.memo(({
                                     placeholder={!multiple && currentValue ? '' : placeholder}
                                     disabled={disabled}
                                     className={`
-                w-full bg-transparent outline-none
-                ${disabled ? 'cursor-not-allowed' : ''}
-                ${inputClassName}
+                                                w-full bg-transparent outline-none
+                                                ${disabled ? 'cursor-not-allowed' : ''}
+                                                ${inputClassName}
             `}
                                     aria-label={ariaLabel || label || 'combobox'}
                                     aria-describedby={ariaDescribedBy}

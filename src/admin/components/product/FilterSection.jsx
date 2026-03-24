@@ -179,11 +179,7 @@ export default function FilterSection() {
                 <div className="flex justify-between items-center p-1 ">
                 <button
                     onClick={() => setShowModal(true)}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                    style={{
-                        fontSize: 'var(--font-size-sm, 14px)',
-                        borderRadius: 'var(--border-radius-md, 8px)'
-                    }}
+                    className="px-3 py-2 bg-blue-600 text-sm text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                 >
                     <Filter size={18} />
                     Add Filters
