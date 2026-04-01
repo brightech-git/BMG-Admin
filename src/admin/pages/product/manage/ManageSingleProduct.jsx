@@ -35,33 +35,62 @@ const InfoRow = ({ icon, label, value, colorClass = "text-gray-900 dark:text-gra
 );
 
 function ManageSingleProduct() {
+
     const location = useLocation();
     const navigate = useNavigate();
     const { themeMode } = useContext(MyContext);
-    const { getProductDetails, loading, error } = useProductContext();
+    const { getProductDetails} = useProductContext();
+
+
     const [product ,setProduct] = useState();
 
     const tagKey = location.state?.tagKey || location.state?.tagkey || location.state?.TAGKEY || localStorage.getItem("productTagkey");
-    console.log("tagKey", tagKey);
+
 
     const [mainMedia, setMainMedia] = useState("");
     const [mediaType, setMediaType] = useState("image"); // 'image' or 'video'
     const [imageError, setImageError] = useState(false);
 
+    const [isFetching ,setIsFetching] = useState(false);
+    const [error, setError] = useState(null);
+
     useEffect(() => {
         if (!tagKey) return;
 
+        let isMounted = true; // Prevent state updates if component unmounts
+
         const fetchProduct = async () => {
+            setIsFetching(true);
+            setError(null); // Clear previous errors
+
             try {
-                const productData = await getProductDetails(tagKey); // ✅ await the Promise
-                setProduct(productData);
+                const productData = await getProductDetails(tagKey);
+
+                // Only update state if component is still mounted
+                if (isMounted) {
+                    setProduct(productData);
+                }
             } catch (err) {
                 console.error("Failed to fetch product details:", err);
+
+                if (isMounted) {
+                    setError(err instanceof Error ? err.message : "Failed to fetch product details");
+                    setProduct(null); // Clear product data on error
+                }
+            } finally {
+                if (isMounted) {
+                    setIsFetching(false);
+                }
             }
         };
 
         fetchProduct();
-    }, [tagKey, getProductDetails]);
+
+        // Cleanup function to prevent state updates on unmounted component
+        return () => {
+            isMounted = false;
+        };
+    }, [tagKey]); 
 
    
     // Parse images and videos from product data
@@ -96,7 +125,7 @@ function ManageSingleProduct() {
         setImageError(true);
     };
 
-    if (loading) {
+    if (isFetching) {
         return (
             <div className="p-4 md:p-6 max-w-7xl mx-auto font-primary">
                 <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
@@ -197,19 +226,21 @@ function ManageSingleProduct() {
                     )}
 
                     {/* Main Media Display */}
+                    {/* Main Media Display */}
                     <div className="flex justify-center mb-4">
                         <div className="relative">
-                            {mediaType === 'image' ? (
-                                <img
-                                    src={mainMedia}
-                                    alt={product.SUBITEMNAME}
-                                    onError={handleImageError}
-                                    className="w-64 h-64 md:w-80 md:h-80 object-contain rounded-lg border border-gray-200 dark:border-gray-700"
-                                />
-                            ) : (
-                                <div className="w-64 h-64 md:w-80 md:h-80 bg-black rounded-lg flex items-center justify-center">
+                            {mainMedia ? ( // ✅ Only render if mainMedia exists and is not empty
+                                mediaType === 'image' ? (
+                                    <img
+                                        src={mainMedia}
+                                        alt={product.SUBITEMNAME}
+                                        onError={handleImageError}
+                                        className="w-64 h-64 md:w-80 md:h-80 object-contain rounded-lg border border-gray-200 dark:border-gray-700"
+                                    />
+                                ) : (
+                                    <div className="w-64 h-64 md:w-80 md:h-80 bg-black rounded-lg flex items-center justify-center">
                                         <video
-                                            key={mainMedia}          // 🔥 Forces React to remount on media change
+                                            key={mainMedia}
                                             className="w-full h-full object-contain rounded-lg"
                                             controls
                                             playsInline
@@ -218,10 +249,15 @@ function ManageSingleProduct() {
                                             <source src={mainMedia} type="video/mp4" />
                                             Your browser does not support the video tag.
                                         </video>
-
-                                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-                                        VIDEO
+                                        <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
+                                            VIDEO
+                                        </div>
                                     </div>
+                                )
+                            ) : (
+                                // ✅ Show placeholder when no media
+                                <div className="w-64 h-64 md:w-80 md:h-80 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                                    <span className="text-gray-400">No media available</span>
                                 </div>
                             )}
                         </div>

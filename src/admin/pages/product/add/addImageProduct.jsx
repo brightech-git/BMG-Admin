@@ -29,6 +29,128 @@ const API_BASE = 'https://app.bmgjewellers.com';
 const FEEDBACK_DURATION = 3000;
 
 
+// Loading Skeleton Component
+const LoadingSkeleton = () => {
+    return (
+        <div className="max-w-8xl mt-2 p-2 animate-pulse">
+            <div className="mx-auto max-w-8xl">
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div className="p-2 sm:p-3">
+                        {/* Header Skeleton */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 pb-2 mb-2">
+                            <div className="space-y-2">
+                                <div className="h-7 bg-gray-200 rounded-lg w-48"></div>
+                                <div className="h-4 bg-gray-200 rounded-lg w-64"></div>
+                            </div>
+                            <div className="h-8 bg-gray-200 rounded-full w-32 mt-2 sm:mt-0"></div>
+                        </div>
+
+                        {/* Main Form Grid Skeleton */}
+                        <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] gap-1 mb-2">
+                            {/* Left Column Skeleton */}
+                            <div className="space-y-2">
+                                <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
+                                    <div className="flex items-center gap-1 mb-4">
+                                        <div className="h-4 w-4 bg-gray-300 rounded"></div>
+                                        <div className="h-5 bg-gray-300 rounded w-32"></div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {/* Tag Key Field Skeleton */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <div className="h-4 bg-gray-300 rounded w-32"></div>
+                                                <div className="h-3 bg-gray-300 rounded w-40"></div>
+                                            </div>
+                                            <div className="h-10 bg-gray-200 rounded-lg w-full"></div>
+                                        </div>
+
+                                        {/* Description Field Skeleton */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1">
+                                                <div className="h-4 bg-gray-300 rounded w-40"></div>
+                                                <div className="h-3 bg-gray-300 rounded w-32"></div>
+                                            </div>
+                                            <div className="h-24 bg-gray-200 rounded-lg w-full"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Column Skeleton */}
+                            <div className="flex flex-col gap-2">
+                                {/* Images Section Skeleton */}
+                                <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="flex items-center gap-1">
+                                            <div className="h-4 w-4 bg-gray-300 rounded"></div>
+                                            <div className="h-5 bg-gray-300 rounded w-32"></div>
+                                            <div className="h-5 bg-gray-300 rounded w-16"></div>
+                                        </div>
+                                        <div className="h-8 bg-gray-200 rounded-lg w-28"></div>
+                                    </div>
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                        {[1, 2, 3].map((i) => (
+                                            <div key={i} className="aspect-square bg-gray-200 rounded-lg"></div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Videos Section Skeleton */}
+                                <div className="bg-gray-50 rounded-xl p-2 border border-gray-200">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="flex items-center gap-1">
+                                            <div className="h-4 w-4 bg-gray-300 rounded"></div>
+                                            <div className="h-5 bg-gray-300 rounded w-32"></div>
+                                            <div className="h-5 bg-gray-300 rounded w-16"></div>
+                                        </div>
+                                        <div className="h-8 bg-gray-200 rounded-lg w-28"></div>
+                                    </div>
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                        {[1, 2].map((i) => (
+                                            <div key={i} className="aspect-square bg-gray-200 rounded-lg"></div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Checkboxes Grid Skeleton */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 mt-4">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <div key={i} className="space-y-2">
+                                    <div className="h-5 bg-gray-200 rounded w-24"></div>
+                                    <div className="space-y-2">
+                                        <div className="h-4 bg-gray-200 rounded w-32"></div>
+                                        <div className="h-4 bg-gray-200 rounded w-28"></div>
+                                        <div className="h-4 bg-gray-200 rounded w-36"></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Action Buttons Skeleton */}
+                        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                            <div className="h-10 bg-gray-200 rounded-lg w-24"></div>
+                            <div className="h-10 bg-gray-200 rounded-lg w-24"></div>
+                            <div className="h-10 bg-gray-200 rounded-lg w-32"></div>
+                        </div>
+
+                        {/* Validation Summary Skeleton */}
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="h-5 bg-gray-200 rounded w-40 mb-2"></div>
+                            <div className="space-y-1">
+                                <div className="h-4 bg-gray-200 rounded w-64"></div>
+                                <div className="h-4 bg-gray-200 rounded w-56"></div>
+                                <div className="h-4 bg-gray-200 rounded w-72"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 // -------------------------------------------------------------------------
 // Main Component - Optimized
 // -------------------------------------------------------------------------
@@ -36,13 +158,13 @@ const AddImage = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+
     const { tagkey: initialTagkey, isUpdate = false } = location.state || {};
 
-    console.log(location.state ,'editing')
 
     const {
         uploadImages, updateAllFields, getProductDetails,
-        deleteMedia, createFormData, setError
+        deleteMedia, createFormData, setError ,loading,error
     } = useProductContext();
 
 
@@ -99,9 +221,17 @@ const AddImage = () => {
         return transformFilters(filters);
     }, [filters]);
 
+    const safeParse = (val) => {
+        try {
+            return val ? JSON.parse(val) : [];
+        } catch {
+            return [];
+        }
+    };
 
     // Fetch existing data
     useEffect(() => {
+        console.log('Fetching existing data...' ,isUpdate ,initialTagkey);
         if (!isUpdate || !initialTagkey) return;
 
         const fetchData = async () => {
@@ -110,17 +240,12 @@ const AddImage = () => {
                 console.log(detailsRes, 'detailsRes');
 
                 const mapToItems = (pathsStr, type) => {
-                    let pathsArray = [];
-                    try {
-                        pathsArray = pathsStr ? JSON.parse(pathsStr) : [];
-                    } catch (err) {
-                        console.warn('Failed to parse paths:', pathsStr, err);
-                        pathsArray = [];
-                    }
-
+                    const pathsArray = safeParse(pathsStr);
                     return pathsArray.map((path, index) => ({
                         id: `existing-${type}-${index}-${path}`,
-                        src: type === 'image' ? getProductImages(path) : getProductVideos(path),
+                        src: type === 'image'
+                            ? getProductImages(path)
+                            : getProductVideos(path),
                         alt: `Existing ${type} ${index + 1}`,
                         type,
                         isExisting: true,
@@ -147,7 +272,7 @@ const AddImage = () => {
         };
 
         fetchData();
-    }, [isUpdate, initialTagkey, getProductDetails, setFeedback]);
+    }, [isUpdate, initialTagkey]);
 
     console.log(combinedMedia, 'combinedMedia')
     // Cleanup object URLs
@@ -291,6 +416,27 @@ const AddImage = () => {
 
     const status = completionStatus();
 
+    
+    if (loading) {
+        return <LoadingSkeleton />;
+    }
+
+    // Show loading skeleton specifically for update operations
+    if (isUpdate && !formData.tagKey && initialTagkey) {
+        return (
+            <div className="max-w-8xl mt-2 p-2">
+                <div className="mx-auto max-w-8xl">
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div className="p-8 text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading Product Details</h3>
+                            <p className="text-sm text-gray-600">Please wait while we fetch your product information...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="max-w-8xl mt-2 p-2">
             {/* Progress Overlay */}

@@ -182,7 +182,9 @@ export const ProductProvider = ({ children }) => {
     return (
         <ProductContext.Provider
             value={{
-
+                //State
+                loading,
+                error,
                 // Actions
                 getProductDetails,
                 deleteMedia,
