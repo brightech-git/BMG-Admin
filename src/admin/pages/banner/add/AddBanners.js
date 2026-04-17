@@ -7,6 +7,8 @@ import { Switch } from '../../../components/ui/Switch';
 import 'animate.css';
 import FileUploadArea from '../../../components/banner/FileUploadArea';
 import ComboBox from '../../../components/ui/ComboBox';
+import { useGetAllFilterContents } from '../../../hooks/filter/useFilterContent';
+
 
 const AddBanner = () => {
 
@@ -16,13 +18,16 @@ const AddBanner = () => {
     const isEdit = state?.mode === "edit" && state?.bannerData;
     const bannerData = state?.bannerData || null;
 
+    console.log(bannerData,'bannerData');
+
     const { data: bannerSettingData } = useGetBannerSettings();
+
+
     const uploadMutation = useBudgetBanner();
     const updateMutation = useUpdateBudgetBannerMutation();
 
     const [categoryKey, setCategoryKey] = useState("");
-    const [desktopLink, setDesktopLink] = useState("");
-    const [mobileLink, setMobileLink] = useState("");
+    const [link, setLink] = useState("");
     const [imageDesktop, setImageDesktop] = useState(null);
     const [imageMobile, setImageMobile] = useState(null);
     const [mobileRatio, setMobileRatio] = useState("");
@@ -30,11 +35,18 @@ const AddBanner = () => {
     const [isSingle, setIsSingle] = useState(false);
     const [isGrid, setIsGrid] = useState(false);
     const [rowSpan, setRowSpan] = useState("");
+    const [filterId ,setFilterId] = useState("");
+    const [filterKeyId , setFilterKeyId] = useState("");
+
+
+
     const [existingDesktopImage, setExistingDesktopImage] = useState(null);
     const [existingMobileImage, setExistingMobileImage] = useState(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [fileErrors, setFileErrors] = useState({ desktop: "", mobile: "" });
+
+    const [isFilter , setIsFilter] = useState();
 
     const isLoading = uploadMutation.isPending || updateMutation.isPending;
 
@@ -43,6 +55,20 @@ const AddBanner = () => {
          return bannerSettingData?.data.find(item => item.imageKey === categoryKey) || null;
      }, [bannerSettingData, categoryKey]);
 
+    const { data: filterData } = useGetAllFilterContents(
+        {filterKeyId:filterKeyId}
+    );
+
+    const filterContent = useMemo(() => {
+        if (!filterData || !filterData.filters) return [];
+
+        return filterData.filters.map(item => ({
+            label: item.filterValue,
+            value: item.id,
+        }));
+    },[filterData]);
+    console.log(filterContent,'filterContent');
+
     useEffect(() => {
         if (!isEdit || !bannerData?.images?.[0]) return;
         console.log(bannerData, 'bannerData')
@@ -50,12 +76,14 @@ const AddBanner = () => {
 
         console.log(firstImage, 'firstImage')
         setCategoryKey(bannerData.categoryKey || "");
-        setDesktopLink(bannerData.desktopLink || "");
-        setMobileLink(bannerData.mobileLink || "");
+        setLink(bannerData.link || "");
+        setLink(bannerData.link || "");
         setIsSingle(bannerData.isSingle);
         setRowSpan(bannerData.rowSpan || "")
-        setDesktopRatio(firstImage.desktop?.ratio || "");
-        setMobileRatio(firstImage.mobile?.ratio || "");
+        setDesktopRatio(bannerData.desktopRatio || "");
+        setMobileRatio(bannerData.mobileRatio || "");
+        setFilterKeyId(bannerData.bannerFilterId || "");
+        setFilterId(bannerData.filterId || "");
         setExistingDesktopImage(firstImage.desktop?.url || null);
         setExistingMobileImage(firstImage.mobile?.url || null);
     }, [isEdit, bannerData]);
@@ -107,11 +135,11 @@ const AddBanner = () => {
             return setError("Category key is required");
         }
 
-        if (!desktopLink.trim()) {
+        if (!link.trim()) {
             return setError("Desktop link is required");
         }
 
-        if (!isSingle && !mobileLink.trim()) {
+        if (!isSingle && !link.trim()) {
             return setError("Mobile link is required for dual banner");
         }
 
@@ -126,9 +154,10 @@ const AddBanner = () => {
         }
 
         const payload = new FormData();
+        payload.append("filterId", filterKeyId);
+        payload.append("bannerFilterId", filterId);
         payload.append("category_key", categoryKey);
-        payload.append("desktop_link", desktopLink);
-        payload.append("mobile_link", mobileLink);
+        payload.append("link", link);
         payload.append("desktop_ratio", desktopRatio);
         payload.append("mobile_ratio", mobileRatio);
         payload.append("is_single", isSingle);
@@ -151,7 +180,7 @@ const AddBanner = () => {
                 payload.append("image_mobile", imageMobile);
             }
         }
-
+    
         const mutation = isEdit ? updateMutation : uploadMutation;
         mutation.mutate(payload, {
             onSuccess: () => {
@@ -166,8 +195,8 @@ const AddBanner = () => {
 
     const handleClear = () => {
         setCategoryKey("");
-        setDesktopLink("");
-        setMobileLink("");
+        setLink("");
+        setLink("");
         setImageDesktop(null);
         setImageMobile(null);
         setExistingDesktopImage(null);
@@ -180,7 +209,8 @@ const AddBanner = () => {
 
 
     return (
-        <div className="max-w-7xl mx-auto m-2 bg-[var(--primary-card-color)] p-2">
+        <>
+        <div className="max-w-7xl mx-auto m-2 bg-[var(--primary-card-color)] p-4 rounded-xl">
             {/* Header */}
             <div className="flex items-center  justify-between mb-3 animate__animated animate__fadeInDown">
                 <div>
@@ -245,33 +275,85 @@ const AddBanner = () => {
                         setCategoryKey={setCategoryKey}
                         disabled={isLoading}
                     /> */}
+                        <label className="text-xs font-semibold text-gray-700 flex items-center gap-1 mb-2">
+                            Category Key
+                            <span className="text-red-500">*</span>
+                        </label>
                     <ComboBox
+                        
                         options={bannerSettingData?.data || []}
                         value={selectedOption}
-                                            onChange={(option) => {
-                                                const value = option?.imageKey || '';
-                                                setCategoryKey(value);
-                                            }}
+                        onChange={(option) => {
+                            const value = option?.imageKey || '';
+                            
+                            setFilterKeyId(option?.filterKey || '');
+                            setCategoryKey(value);
+                        }}
+                        
                         getOptionLabel={(opt) => opt?.imageKey || ''}
                         getOptionValue={(opt) => opt?.imageKey || ''}
-                                            placeholder="Select or type to search..."
-                                            disabled={isLoading}
-                                            searchable={true}
-                                            clearable={true}
-                                            size="md"
-                                            variant="outlined"
-                                            noOptionsText="No categories available"
-                                            autoHighlight={true}
-                                            className="w-full"
-                                            inputClassName="text-sm"
-                                        />
+                        placeholder="Select or type to search..."
+                        disabled={isLoading}
+                        searchable={true}
+                        clearable={true}
+                        size="md"
+                        variant="outlined"
+                        noOptionsText="No categories available"
+                        autoHighlight={true}
+                        className="w-full"
+                        inputClassName="text-sm"
+                    />
                 </div>
+
+                    {/* Category Key */}
+                    <div >
+                        {/* <ImageKeyComboBox
+                        data={bannerSettingData?.data || []}
+                        categoryKey={categoryKey}
+                        setCategoryKey={setCategoryKey}
+                        disabled={isLoading}
+                    /> */}
+                        <label className="text-xs font-semibold text-gray-700 flex items-center gap-1 mb-2">
+                            Filter Key
+                            <span className="text-red-500">*</span>
+                        </label>
+                        <ComboBox
+
+                            options={filterContent || []}
+                            value={filterId}
+                            onChange={(option) => {
+                                console.log(option,'option')
+                                const value = option?.value || '';
+                                if(!value){
+                                    setFilterId('');
+                                }
+                                else{
+                                    setFilterId(value);
+                                }
+                              
+                            }}
+
+                            getOptionLabel={(opt) => opt?.label || ''}
+                            getOptionValue={(opt) => opt?.value || ''}
+                            placeholder="Select or type to search..."
+                            disabled={isLoading || !filterKeyId}
+                            searchable={true}
+                            clearable={true}
+                            size="md"
+                            variant="outlined"
+                            noOptionsText="No categories available"
+                            autoHighlight={true}
+                            className="w-full"
+                            inputClassName="text-sm"
+                            
+                        />
+                    </div>
 
                 {/* Links */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate__animated animate__fadeInUp animate__delay-1s">
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                            Desktop Link
+                             Link
                             <span className="text-red-500">*</span>
                         </label>
                         <div className="relative group">
@@ -282,8 +364,8 @@ const AddBanner = () => {
                                 </svg>
                             </div>
                             <input
-                                value={desktopLink}
-                                onChange={(e) => setDesktopLink(e.target.value)}
+                                value={link}
+                                onChange={(e) => setLink(e.target.value)}
                                 disabled={isLoading}
                                 className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
                                          focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 
@@ -294,31 +376,7 @@ const AddBanner = () => {
                         </div>
                     </div>
 
-                    {!isSingle && (
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                                Mobile Link
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg className="w-4 h-4 text-gray-400 group-focus-within:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <input
-                                    value={mobileLink}
-                                    onChange={(e) => setMobileLink(e.target.value)}
-                                    disabled={isLoading}
-                                    className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
-                                             focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 
-                                             transition-all duration-200 outline-none
-                                             disabled:bg-gray-50 disabled:text-gray-500"
-                                    placeholder="https://example.com/mobile-banner"
-                                />
-                            </div>
-                        </div>
-                    )}
+                   
                 </div>
 
                 {/* Ratios or Row Span */}
@@ -485,6 +543,7 @@ const AddBanner = () => {
                 </div>
             </form>
         </div>
+        </>
     );
 };
 

@@ -9,10 +9,11 @@ import {
 
 
 /* GET ALL */
-export const useGetAllFilterContents = () => {
+export const useGetAllFilterContents = (filter) => {
     return useQuery({
-        queryKey: ["filterContents"],
-        queryFn: getAllFilterContent
+        queryKey: ["filterContents", filter], // ✅ include filter in key
+        queryFn: () => getAllFilterContent({ filter }),
+      
     });
 };
 

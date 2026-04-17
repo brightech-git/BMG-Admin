@@ -505,6 +505,7 @@ const ComboBox = React.memo(({
                     ${variantStyles[variant]}
                     ${disabled ? 'bg-gray-100 pointer-events-none' : ''}
                     ${sizeStyles[size]}
+                    
                 `}
             >
                 {/* Selected Tags (for multiple) */}

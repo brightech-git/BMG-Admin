@@ -13,8 +13,13 @@ import GridBanner from '../../../components/banner/StackBanner';
 const BASE_IMAGE_URL = 'https://app.bmgjewellers.com';
 
 const ManageBanners = () => {
+    
     const navigate = useNavigate();
     const { data: bannersData, isLoading, error, refetch } = useBannersQuery();
+
+ 
+
+    console.log(bannersData ,'bannersData');
    
     
     const { mutate: deleteBudgetBanner } = useDeleteBudgetBannerMutation();
@@ -75,16 +80,11 @@ const ManageBanners = () => {
             imageKey: banner.categoryKey,
             desktopImage: banner.images?.[0]?.desktop?.url || '',
             mobileImage: banner.images?.[0]?.mobile?.url || '',
-            desktopLink: banner.images?.[0]?.desktop?.link || '',
-            mobileLink: banner.images?.[0]?.mobile?.link || '',
-            desktopRatio: banner.images?.[0]?.desktop?.ratio || '',
-            mobileRatio: banner.images?.[0]?.mobile?.ratio || '',
-            backgroundColor: banner.backgroundColor,
-            fullWidth: banner.full ? 'Yes' : 'No',
-            hasGap: banner.gap ? 'Yes' : 'No',
-            rowSpan:banner.rowSpan?? '',
+            link : banner.link || '',
+            desktopRatio: banner.desktopRatio || '',
+            mobileRatio: banner.mobileRatio || '',
             isSingle: banner.isSingle ?? false,
-            // Store full banner object for actions
+
             _bannerData: banner
         }));
     }, [banners]);

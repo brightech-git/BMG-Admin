@@ -12,18 +12,20 @@ export const getProducts = async (filters = {}) => {
 const BASE_URL = "/ecom/filters";
 
 /* GET ALL FILTER SETTINGS */
-export const getAllFilterContent = async ({filter}) => {
+export const getAllFilterContent = async ({ filter }) => {
   try {
-    const response = await axiosInstance.get(`${BASE_URL}`,{
-      params:filter
+    console.log("API Filter Params:", filter);
+
+    const response = await axiosInstance.get(`${BASE_URL}`, {
+      params: filter
     });
+
     return response.data;
   } catch (error) {
     console.error("Error fetching filter settings:", error);
     throw error;
   }
 };
-
 export const getProductsFiltersContent = async() =>{
   try{
     const response = await axiosInstance.get(`${BASE_URL}/grouped`,{

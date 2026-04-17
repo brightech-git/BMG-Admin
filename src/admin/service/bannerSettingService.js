@@ -43,6 +43,7 @@ export const getBannerSettingsByKey = async (imageKey) => {
 // UPDATE BANNER SETTINGS
 export const updateBannerSettings = async (id ,formData) => {
     try{
+        console.log(formData,'formData');
         const response = await axiosInstance.put(`/${baseUrl}/update`, formData ,{
             params: {id}
         });

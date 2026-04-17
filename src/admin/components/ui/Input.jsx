@@ -21,7 +21,7 @@ const ImageKeyInput = ({ form, setForm, isSubmitting }) => {
 
     return (
         <div>
-            <label className="block text-xs font-semibold mb-1">
+            <label className="min-w-[110px] font-semibold text-sm text-[#7C2D12]">
                 Image Key <span className="text-red-500">*</span>
             </label>
             <input

@@ -12,6 +12,9 @@ const ManageBannerSettings = () => {
     const navigate = useNavigate();
 
     const { data: bannersData, isLoading, isError, refetch } = useGetBannerSettings();
+
+    console.log(bannersData,'bannersData');
+
     const { mutate: deleteBanner } = useDeleteBannerSetting();
 
     const [openPreview, setOpenPreview] = useState(null);
@@ -20,7 +23,7 @@ const ManageBannerSettings = () => {
     // Fetch banners for preview
     const { data: previewBanners, isLoading: previewLoading } = useBannersByKey(openPreview?.imageKey);
 
-    console.log(previewBanners,'previewBanners')
+    console.log(previewBanners,'previewBanners');
 
     // Use memo to avoid unnecessary recalculations
     const banners = useMemo(() => {
@@ -189,16 +192,40 @@ const ManageBannerSettings = () => {
         );
     };
 
+
+    const getMobileRowsArray = (mobileRows) => {
+        if (!mobileRows) return [];
+
+        // already array
+        if (Array.isArray(mobileRows)) return mobileRows;
+
+        // string like "0,1"
+        if (typeof mobileRows === "string") {
+            return mobileRows.split(',').filter(Boolean);
+        }
+
+        return [];
+    };
     // Helper function to render mobile rows
     const renderMobileRows = (row) => {
-        if (!row.mobileRows || row.mobileRows.length === 0) {
+        const rows = getMobileRowsArray(row.mobileRows);
+
+        if (rows.length === 0) {
             return <span className="text-gray-400">—</span>;
         }
+
+        console.log(rows, 'mobileRows');
+
         return (
             <div className="flex items-center gap-1 animate__animated animate__fadeIn">
-                <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
-                    {row.mobileRows.join(', ')}
-                </span>
+                {rows.map((item, index) => (
+                    <span
+                        key={index}
+                        className="text-xs bg-gray-100 px-1.5 py-0.5 rounded"
+                    >
+                        {item}
+                    </span>
+                ))}
             </div>
         );
     };
@@ -529,9 +556,27 @@ const ManageBannerSettings = () => {
                                                 const bannerData = previewBanners.data[openPreview.imageKey];
 
                                                 // Parse mobileRows if it's a string
-                                                const parsedMobileRows = typeof bannerData.mobileRows === 'string'
-                                                    ? JSON.parse(bannerData.mobileRows || "[0, 0]")
-                                                    : bannerData.mobileRows || [0, 0];
+                                                const parsedMobileRows = (() => {
+                                                    const value = bannerData.mobileRows;
+
+                                                    if (!value) return [];
+
+                                                    // Already array
+                                                    if (Array.isArray(value)) return value;
+
+                                                    // String case
+                                                    if (typeof value === "string") {
+                                                        try {
+                                                            // Try JSON parse (for "[0,1]")
+                                                            return JSON.parse(value);
+                                                        } catch {
+                                                            // Fallback for "0,1"
+                                                            return value.split(',').map(v => v.trim());
+                                                        }
+                                                    }
+
+                                                    return [];
+                                                })();
 
                                                 // Ensure visibleCount is properly extracted
                                                 const visibleCount = bannerData.visibleCount || {
@@ -751,7 +796,7 @@ const ManageBannerSettings = () => {
                                 </div>
                                 <div className="bg-white p-2 rounded border border-gray-200">
                                     <span className="text-gray-500 block">Mobile Rows</span>
-                                    <span className="font-medium">{openPreview.mobileRows?.join(', ') || 'N/A'}</span>
+                                    <span className="font-medium">{openPreview.mobileRows || 'N/A'}</span>
                                 </div>
                                 {!openPreview.isGrid && (
                                     <>

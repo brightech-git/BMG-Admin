@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect ,useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     useCreateBannerSetting,
@@ -9,6 +9,9 @@ import ImageKeyInput from '../../../components/ui/Input';
 import { Switch } from '../../../components/ui/Switch';
 import { parseLayoutString } from '../../../../utils/banner/ParseLayout';
 import 'animate.css';
+import ComboBox from '../../../components/ui/ComboBox';
+
+import { useGetAllFilterSettings } from '../../../hooks/filter/useFilterSetting';
 
 // Visible Count Input Component with animations
 const VisibleCountInput = ({ value, onChange, device, icon, disabled }) => {
@@ -114,11 +117,11 @@ const ScrollIntervalPreset = ({ value, onChange, disabled }) => {
 const AnimatedCard = ({ children, delay = 0, className = "" }) => (
     <div
         className={`
-            animate__animated animate__fadeInUp animate__faster
+            animate__animated  animate__faster
             bg-gradient-to-br from-white to-[#FFF7ED]/30
             rounded-xl p-2 border-2 border-[#FED7AA]
             hover:shadow-lg hover:shadow-[#F97316]/5
-            transition-all duration-300
+            transition-all duration-300 z-[0]
             ${className}
         `}
         style={{ animationDelay: `${delay}s` }}
@@ -143,6 +146,7 @@ const AddBannerSetting = () => {
         imageKey: "",
         title: "",
         description: "",
+        filterKey:"",
         gap: true,
         mobileGap: false,
         centered: true,
@@ -182,11 +186,48 @@ const AddBannerSetting = () => {
     const createMutation = useCreateBannerSetting();
     const updateMutation = useUpdateBannerSetting();
 
+    const { data: filterSettings } = useGetAllFilterSettings();
+
+    const filterSettingsList = useMemo(() => Array.isArray(filterSettings?.data) ? filterSettings.data : [], [filterSettings?.data]);
+    
+    // Prepare options for ComboBox
+    const filterOptions = useMemo(() => {
+        return filterSettingsList.map(item => ({
+            label: item.filterKey || item.filterLabel || `Key ${item.id}`,
+            value: item.id,
+            isRange:item.isRange,
+            // ...item
+        }));
+    }, [filterSettingsList]);
+
+
+    const handleFilterKeySelect = (option) => {
+
+        if(!option){
+            setForm(prev => ({
+                ...prev,
+                filterKey: ''
+            }))
+        } 
+        else{
+            setForm(prev => ({
+                ...prev,
+                filterKey: option.value
+            }))
+        }
+
+       
+
+    };
+
     useEffect(() => {
         if (mode === "edit" && initialData) {
+
             const parsedMobileRows = initialData?.mobileRows
-                ? JSON.parse(initialData.mobileRows)
+                ? initialData.mobileRows.split(',').map(Number)
                 : [];
+            
+                console.log(parsedMobileRows ,'parsedMobileRows');
 
             // Parse visibleCount if it exists
             let parsedVisibleCount = { desktop: 3, tablet: 2, mobile: 2 };
@@ -205,6 +246,7 @@ const AddBannerSetting = () => {
                 imageKey: initialData.imageKey || "",
                 title: initialData.title || "",
                 description: initialData.description || "",
+                filterKey: initialData.filterKey || "",
                 gap: initialData.gap ?? true,
                 mobileGap: initialData.mobileGap ?? false,
                 centered: initialData.centered ?? true,
@@ -311,6 +353,10 @@ const AddBannerSetting = () => {
             setSnackbar({ open: true, message: "ImageKey is required", type: "error", title: "Error" });
             return;
         }
+        if (!form.filterKey) {
+            setSnackbar({ open: true, message: "FilterKey is required", type: "error", title: "Error" });
+            return;
+        }
 
         // if (!form.title.trim()) {
         //     setSnackbar({ open: true, message: "Title is required", type: "error", title: "Error" });
@@ -323,6 +369,7 @@ const AddBannerSetting = () => {
             imageKey: form.imageKey.trim(),
             title: form.title.trim(),
             description: form.description.trim(),
+            filterKey: form.filterKey,
             gap: form.gap,
             mobileGap: form.mobileGap,
             centered: form.centered,
@@ -347,7 +394,8 @@ const AddBannerSetting = () => {
             mobileLayout: form.mobileLayout,
         };
 
-        console.log(payload,'payload')
+        console.log(payload,'payload');
+        
 
         if (mode === "add") {
             createMutation.mutate(payload, {
@@ -392,6 +440,7 @@ const AddBannerSetting = () => {
             imageKey: "",
             title: "",
             description: "",
+            filterKey:"",
             gap: true,
             mobileGap: false,
             centered: true,
@@ -445,7 +494,8 @@ const AddBannerSetting = () => {
     const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
     return (
-        <div className='mt-4 p-4'>
+      
+        <div className='mt-2'>
             <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-4">
                 {/* Header Card */}
                 <AnimatedCard delay={0}>
@@ -516,7 +566,21 @@ const AddBannerSetting = () => {
 
                                 <div className="space-y-3">
                                     <ImageKeyInput form={form} setForm={setForm} isSubmitting={isSubmitting} />
-
+                                    {/* ComboBox for Filter Key */}
+                                    <div className="flex items-center gap-2">
+                                        <label className="min-w-[120px] font-semibold text-sm text-[#7C2D12]">
+                                            Filter Key <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="flex-1">
+                                            <ComboBox
+                                                value={form.filterKey}
+                                                options={filterOptions}
+                                                onChange={handleFilterKeySelect}
+                                                // disabled={isSubmitting || mode === 'edit'} // Disable in edit mode
+                                                placeholder="Select filter key"
+                                            />
+                                        </div>
+                                    </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         <div className="animate__animated animate__fadeInLeft" style={{ animationDelay: '0.3s' }}>
                                             <label className="block text-[10px] font-semibold text-[#7C2D12] mb-1 flex items-center gap-1">
@@ -529,7 +593,7 @@ const AddBannerSetting = () => {
                                                 onChange={handleChange}
                                                 className="w-full px-3 py-2.5 text-sm border-2 border-[#FED7AA] rounded-xl bg-white focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none transition-all"
                                                 placeholder="Enter banner title"
-                                                required
+                                                // required
                                                 disabled={isSubmitting}
                                             />
                                         </div>
@@ -576,6 +640,8 @@ const AddBannerSetting = () => {
                                             disabled={isSubmitting}
                                         />
                                     </div>
+
+                                  
                                 </div>
                             </div>
                         </AnimatedCard>
@@ -928,7 +994,7 @@ const AddBannerSetting = () => {
                             className={`
                                 flex-1 px-4 py-2.5 bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white text-sm font-medium rounded-xl
                                 flex items-center justify-center gap-2 relative overflow-hidden
-                                transition-all duration-300 transform hover:scale-105
+                                transition-all duration-300 transform hover:scale-105 z-
                                 ${isSubmitting ? 'opacity-90' : 'hover:shadow-lg hover:shadow-[#F97316]/30'}
                             `}
                             disabled={isSubmitting}
@@ -960,6 +1026,7 @@ const AddBannerSetting = () => {
                 persistent={false}
             />
         </div>
+       
     );
 };
 

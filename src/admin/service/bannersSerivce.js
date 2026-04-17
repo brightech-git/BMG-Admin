@@ -135,6 +135,11 @@ export const BudgetBannersService = {
         }
     },
     createBudgetBanner: async(formData) => {
+
+        for(let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+       
         const response = await axiosInstance.post("/budget-categories/upload", formData);
         return response.data;
     },
