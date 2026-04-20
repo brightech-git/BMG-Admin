@@ -14,7 +14,7 @@ const BASE_URL = "/ecom/filters";
 /* GET ALL FILTER SETTINGS */
 export const getAllFilterContent = async ({ filter }) => {
   try {
-    console.log("API Filter Params:", filter);
+  
 
     const response = await axiosInstance.get(`${BASE_URL}`, {
       params: filter

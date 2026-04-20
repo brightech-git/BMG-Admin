@@ -56,8 +56,14 @@ const AddBanner = () => {
      }, [bannerSettingData, categoryKey]);
 
     const { data: filterData } = useGetAllFilterContents(
-        {filterKeyId:filterKeyId}
+        {   
+            filterKeyId:filterKeyId ,
+            isActive:true ,
+            isUsed :true,
+        }
     );
+
+    console.log(filterData,'filterData');
 
     const filterContent = useMemo(() => {
         if (!filterData || !filterData.filters) return [];
@@ -82,8 +88,8 @@ const AddBanner = () => {
         setRowSpan(bannerData.rowSpan || "")
         setDesktopRatio(bannerData.desktopRatio || "");
         setMobileRatio(bannerData.mobileRatio || "");
-        setFilterKeyId(bannerData.bannerFilterId || "");
-        setFilterId(bannerData.filterId || "");
+        setFilterKeyId(bannerData.filterId || "");
+        setFilterId(bannerData.bannerFilterId || "");
         setExistingDesktopImage(firstImage.desktop?.url || null);
         setExistingMobileImage(firstImage.mobile?.url || null);
     }, [isEdit, bannerData]);
@@ -103,9 +109,9 @@ const AddBanner = () => {
 
     const validateFile = (file) => {
         if (!file?.type?.startsWith("image/")) return "Only image files allowed (jpg, png, webp)";
-        if (file.size > 50 * 1024) {
+        if (file.size > 200 * 1024) {
             const sizeInKB = (file.size / 1024).toFixed(1);
-            return `File too large: ${sizeInKB}KB / 50KB maximum`;
+            return `File too large: ${sizeInKB}KB / 200KB maximum`;
         }
         return null;
     };
@@ -135,9 +141,14 @@ const AddBanner = () => {
             return setError("Category key is required");
         }
 
-        if (!link.trim()) {
+        if ( filterContent.length  === 0  && !link.trim()) {
             return setError("Desktop link is required");
         }
+
+        if (filterContent.length > 0 && !filterId) {
+            return setError(" FilterId is required");
+        }
+
 
         if (!isSingle && !link.trim()) {
             return setError("Mobile link is required for dual banner");
@@ -155,7 +166,9 @@ const AddBanner = () => {
 
         const payload = new FormData();
         payload.append("filterId", filterKeyId);
-        payload.append("bannerFilterId", filterId);
+        if(filterContent.length > 0) {
+            payload.append("bannerFilterId", filterId)
+        };
         payload.append("category_key", categoryKey);
         payload.append("link", link);
         payload.append("desktop_ratio", desktopRatio);
@@ -185,7 +198,7 @@ const AddBanner = () => {
         mutation.mutate(payload, {
             onSuccess: () => {
                 setSuccess(`Banner ${isEdit ? 'updated' : 'uploaded'} successfully`);
-                setTimeout(() => navigate("/budgetbanner/manage"), 700);
+                setTimeout(() => navigate("/banner/manage"), 700);
             },
             onError: (err) => {
                 setError(err?.response?.data?.error || err?.message || "Operation failed");
@@ -205,6 +218,8 @@ const AddBanner = () => {
         setSuccess("");
         setRowSpan("");
         setFileErrors({ desktop: "", mobile: "" });
+        setFilterId("");
+        setFilterKeyId("");
     };
 
 
@@ -306,13 +321,9 @@ const AddBanner = () => {
                 </div>
 
                     {/* Category Key */}
+                    { filterContent.length > 0 && 
                     <div >
-                        {/* <ImageKeyComboBox
-                        data={bannerSettingData?.data || []}
-                        categoryKey={categoryKey}
-                        setCategoryKey={setCategoryKey}
-                        disabled={isLoading}
-                    /> */}
+
                         <label className="text-xs font-semibold text-gray-700 flex items-center gap-1 mb-2">
                             Filter Key
                             <span className="text-red-500">*</span>
@@ -347,37 +358,41 @@ const AddBanner = () => {
                             inputClassName="text-sm"
                             
                         />
-                    </div>
+                    </div> 
+                    }
 
                 {/* Links */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate__animated animate__fadeInUp animate__delay-1s">
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                             Link
-                            <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative group">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg className="w-4 h-4 text-gray-400 group-focus-within:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 015.656 0l4 4a4 4 0 01-5.656 5.656l-1.102-1.101" />
-                                </svg>
-                            </div>
-                            <input
-                                value={link}
-                                onChange={(e) => setLink(e.target.value)}
-                                disabled={isLoading}
-                                className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
+                    {filterContent.length === 0 &&
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate__animated animate__fadeInUp animate__delay-1s">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                                    Link
+                                    <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg className="w-4 h-4 text-gray-400 group-focus-within:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 015.656 0l4 4a4 4 0 01-5.656 5.656l-1.102-1.101" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        value={link}
+                                        onChange={(e) => setLink(e.target.value)}
+                                        disabled={isLoading}
+                                        className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
                                          focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 
                                          transition-all duration-200 outline-none
                                          disabled:bg-gray-50 disabled:text-gray-500"
-                                placeholder="https://example.com/desktop-banner"
-                            />
-                        </div>
-                    </div>
+                                        placeholder="https://example.com/desktop-banner"
+                                    />
+                                </div>
+                            </div>
 
-                   
-                </div>
+
+                        </div>
+                    }
+               
 
                 {/* Ratios or Row Span */}
                 {!isGrid ? (
@@ -455,7 +470,7 @@ const AddBanner = () => {
                         onFileSelect={(file) => console.log('Selected:', file)}
                         onFileRemove={() => console.log('Removed')}
                         onValidationError={(error, file) => console.log('Validation:', error)}
-                        maxSizeKB={50}
+                        maxSizeKB={200}
                     />
                     {!isSingle && (
                         <FileUploadArea
@@ -471,7 +486,8 @@ const AddBanner = () => {
                             showProgressBar={true}
                             showSizeBadge={true}
                             showTooltip={true}
-                            hint="JPG, PNG, WEBP • Max 50KB"
+                            hint="JPG, PNG, WEBP • Max 200KB"
+                            maxSizeKB={200}
                         />
                     )}
                 </div>

@@ -19,7 +19,7 @@ import NewAdminHeader from '../../admin/components/head/header';
 
 
 import AddBanner from '../../admin/pages/banner/add/AddBanners';
-import AddCategoryPage from '../../admin/pages/category/add/AddCategoryPage';
+import AddCategoryPage from '../../admin/pages/category/add/AddHeader';
 import ManageCategoriesPage from '../../admin/pages/category/manage/ManageCategoriesPage';
 import AddOccasionBanner from '../../admin/pages/banner/add/AddOccasionBanner';
 import AddOfferBanner from '../../admin/pages/banner/add/AddOfferBanner';
@@ -78,6 +78,7 @@ import ManageFilterSettings from '../../admin/pages/settings/filter/ManageFilter
 
 import AddFilterContent from '../../admin/pages/filter/AddFilter';
 import ManageFilterContent from '../../admin/pages/filter/ManageFilter';
+
 
 
 const AdminRoutes = () => {

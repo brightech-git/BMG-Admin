@@ -34,7 +34,7 @@ const ManageBanners = () => {
         return bannersData.categories;
     }, [bannersData]);
 
-    console.log(banners, 'ManageBanner')
+    console.log(banners, 'ManageBanner');
 
     const handleRefresh = () => {
         refetch();
@@ -83,6 +83,7 @@ const ManageBanners = () => {
             link : banner.link || '',
             desktopRatio: banner.desktopRatio || '',
             mobileRatio: banner.mobileRatio || '',
+            filterKey: banner.filterTitle || banner.filterKey  || '',
             isSingle: banner.isSingle ?? false,
 
             _bannerData: banner
@@ -98,6 +99,7 @@ const ManageBanners = () => {
         { key: 'mobileImage', label: 'Mobile Image' },
         { key: 'desktopRatio', label: 'D. Ratio' },
         { key: 'mobileRatio', label: 'M. Ratio' },
+        { key: 'filterKey', label: 'Filter Key' },
         { key: 'actions', label: 'Actions', align: 'center', width: '200px' },
     ];
 
