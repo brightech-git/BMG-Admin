@@ -79,6 +79,9 @@ import ManageFilterSettings from '../../admin/pages/settings/filter/ManageFilter
 import AddFilterContent from '../../admin/pages/filter/AddFilter';
 import ManageFilterContent from '../../admin/pages/filter/ManageFilter';
 
+import AddHeaderNav from '../../admin/pages/settings/headerNav/AddHeaderNavKey';
+import ManageHeaderNavKey from '../../admin/pages/settings/headerNav/ManageHeaderKey';
+
 
 
 const AdminRoutes = () => {
@@ -226,6 +229,12 @@ const AdminRoutes = () => {
                             <Route path='track/order/:orderId' element={<TrackOrder />} />
 
                             {/*---------------------------SETTINGS------------------------*/}
+
+
+                        {/*---------------------------MANAGE HEADER KEY SETTINGS------------------------*/}
+
+                            <Route path='header/setting/add' element = {<ProtectedRoute allowedRoles={allowedRoles}> <AddHeaderNav /> </ProtectedRoute>} />
+                            <Route path='header/setting/manage' element = {<ProtectedRoute allowedRoles={allowedRoles}> <ManageHeaderNavKey /> </ProtectedRoute>} />
 
                             <Route path="banner/setting/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddBannerSetting /></ProtectedRoute>} />
                             <Route path="filter/setting/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddFilterSetting /></ProtectedRoute>} />

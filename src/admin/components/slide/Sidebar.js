@@ -103,8 +103,12 @@ const menuItems = [
         submenu: [
             { title: 'Add BannerSetting', path: '/admin/banner/setting/add' },
             { title: 'Add FilterSetting', path: '/admin/filter/setting/add' },
+            { title: 'Add HeaderKey', path: '/admin/header/setting/add' },
+
+
             { title: 'Manage BannerSettings', path: '/admin/banner/setting/manage' },
             { title: 'Manage FitlerSettings', path: '/admin/filter/setting/manage' },
+            { title: 'Manage Headerkey', path: '/admin/header/setting/manage' },
         ],
     },
     // {

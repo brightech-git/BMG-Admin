@@ -4,43 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMediaQuery } from 'react-responsive';
 import { useMenu, useUpdateMenuItem, useDeleteMenuItem } from '../../../hooks/navItems/useHeaderNavItems';
 import { getProductImages } from '../../../../utils/mediaUtils/mediaUtils';
-import {
-    Box,
-    Typography,
-    Button,
-    Card,
-    CardContent,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    IconButton,
-    TextField,
-    CircularProgress,
-    Alert,
-    Chip,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    InputAdornment,
-    Tooltip,
-    Paper
-} from '@mui/material';
-import {
-    Add as AddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Save as SaveIcon,
-    Cancel as CancelIcon,
-    Search as SearchIcon,
-    Image as ImageIcon,
-    CloudUpload as UploadIcon
-} from '@mui/icons-material';
 import { MyContext } from '../../../context/themeContext/themeContext';
-import './ManageCategoriesPage.css';
 import BannerTable from '../../../components/banner/manageBannerTable';
 import { FaTrash  , FaEdit } from 'react-icons/fa';
 
@@ -49,6 +13,8 @@ const ManageCategoriesPage = () => {
     const navigate = useNavigate();
 
     const { data: banner, isLoading, refetch } = useMenu();
+
+
     const { mutate: deleteBanner } = useDeleteMenuItem();
 
     console.log(banner,'banner');
@@ -65,12 +31,14 @@ const ManageCategoriesPage = () => {
     const tableData = banner?.map((item, index) => ({
         id: item.id,
         sno: index + 1,
-        LABEL: item.LABEL || "—",
-        KEY: item.MENU_KEY || "—",
-        VALUE: item.VALUE || "—",
-        CATEGORY: item.CATEGORY === "Y" ? 'Yes' : 'No',
-        ACTIVE: item.ACTIVE === "Y" ? 'Yes' : 'No',
-        ORDER: item.DISPLAYORDER || "—",
+        headerKey: item.name || "—",
+        label: item.label || "—",
+        key: item.menu_key || "—",
+        value: item.value || "—",
+        category: item.category === "Y" ? 'Yes' : 'No',
+        active: item.active === "Y" ? 'Yes' : 'No',
+        order: item.displayorder || "—",
+        banner : item
 
     }));
     const handleClick = () => navigate('/category/add')
@@ -78,17 +46,18 @@ const ManageCategoriesPage = () => {
     return (
         <div className="max-w-8xl mx-auto mt-3 p-3 sm:p-4 sm:mt-4">
             <BannerTable
-                title="Manage Banners"
+                title="Manage Header Contents"
                 button= "Add New"
                 onClick={handleClick}
                 headers={[
                     { key: "sno", label: "S.No" },
-                    { key: "LABEL", label: "Label" },
-                    { key: "KEY", label: "Key Name" },
-                    { key: "VALUE", label: "Key Value" },
-                    { key: "CATEGORY", label: "IsCategory" },
-                    { key: "ACTIVE", label: "Active" },
-                    { key: "ORDER", label: "Display Order" },
+                    {key:"headerKey" , label: "Header Key" },
+                    { key: "label", label: "Label" },
+                    { key: "key", label: "Key Name" },
+                    { key: "value", label: "Key Value" },
+                    { key: "category", label: "IsCategory" },
+                    { key: "active", label: "Active" },
+                    { key: "order", label: "Display Order" },
 
                     { key: "actions", label: "Actions", align: "center" },
                 ]}
@@ -100,7 +69,7 @@ const ManageCategoriesPage = () => {
                         return (
                             <div className="flex gap-2 justify-center">
                                 <button
-                                    onClick={() => navigate('/category/add', { state: { rowData: row, mode: 'edit' } })}
+                                    onClick={() => navigate('/category/add', { state: { rowData: row.banner, mode: 'edit' } })}
                                     className="text-blue-600 hover:text-blue-800 transition-colors"
                                     title="Edit"
                                 >
@@ -119,7 +88,7 @@ const ManageCategoriesPage = () => {
                     return row[key];
                 }}
                 loading={isLoading}
-                emptyMessage="No banners found"
+                emptyMessage="No Header Contents found"
             />
         </div>
     );
