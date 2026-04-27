@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useBannersQuery } from '../../../hooks/banners/budgetBanner/useBudgetBannerQuery';
-import { useDeleteBudgetBannerMutation } from '../../../hooks/banners/budgetBanner/useBudgetBanner';
+import { useDeleteBannerMutation } from '../../../hooks/banners/budgetBanner/useBudgetBanner';
 import './ManageBudgetBanner.css';
 import 'animate.css';
 import BannerTable from '../../../components/banner/manageBannerTable';
@@ -22,7 +22,7 @@ const ManageBanners = () => {
     console.log(bannersData ,'bannersData');
    
     
-    const { mutate: deleteBudgetBanner } = useDeleteBudgetBannerMutation();
+    const { mutate: deleteBudgetBanner } = useDeleteBannerMutation();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
@@ -85,6 +85,7 @@ const ManageBanners = () => {
             mobileRatio: banner.mobileRatio || '',
             filterKey: banner.filterTitle || banner.filterKey  || '',
             isSingle: banner.isSingle ?? false,
+            isBothUsed: banner.isBothUsed ?? false,
 
             _bannerData: banner
         }));
@@ -100,6 +101,8 @@ const ManageBanners = () => {
         { key: 'desktopRatio', label: 'D. Ratio' },
         { key: 'mobileRatio', label: 'M. Ratio' },
         { key: 'filterKey', label: 'Filter Key' },
+        { key: 'isBothUsed', label: 'Both Used' },
+        {key:'link' , label: 'Link' },
         { key: 'actions', label: 'Actions', align: 'center', width: '200px' },
     ];
 
@@ -166,6 +169,11 @@ const ManageBanners = () => {
                                     {row[key]}
                                 </span>
                             );
+                        }
+                        if (key === "isBothUsed") {
+                            return row[key] === true
+                                ? <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Yes</span>
+                                : <span className="px-2 py-1 text-xs rounded bg-red-100 text-red-800">No</span>;
                         }
 
                         // Desktop Image column

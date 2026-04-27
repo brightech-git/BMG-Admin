@@ -145,12 +145,13 @@ export const BudgetBannersService = {
     },
 
 
-    updateBudgetBanner: async(formData) => {
+    updateBudgetBanner: async({id,formData}) => {
 
+        console.log(id,'formid');
         for (let [key, value] of formData.entries()) {
             console.log(key, value);
         }
-        const response = await axiosInstance.put("/budget-categories/update", formData);
+        const response = await axiosInstance.put(`/budget-categories/update/${id}`, formData);
         return response.data;
     },
 

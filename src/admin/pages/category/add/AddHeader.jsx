@@ -123,19 +123,35 @@ const AddMenuItemPage = () => {
     const handleChange = (field) => (e) =>
         set(field)(e.target.type === "checkbox" ? e.target.checked : e.target.value);
 
+           console.log(form, 'formvalues');
+
     useEffect(() => {
         if (editingData) {
             setForm({
                 headerKey: String(editingData?.menu_key_id) ?? "",
                 label: editingData?.label ?? "",
-                key: editingData?.key ?? "",
+                key: editingData?.menu_key ?? "",
                 value: editingData?.value ?? "",
                 isCategory: editingData?.category === "Y" || editingData?.category === true,
                 isActive: editingData?.active === "Y" || editingData?.active === true,
                 order: editingData?.displayorder ?? "",
-                selectedFilterIds: editingData?.filterIds ?? [],
+                selectedFilterIds: (() => {
+                    const ids = editingData?.filterids;
+
+                    if (!ids) return [];
+
+                    if (Array.isArray(ids)) return ids.map(Number);
+
+                    if (typeof ids === "string") {
+                        return ids.split(",").map(id => Number(id.trim()));
+                    }
+
+                    return [];
+                })(),
                 filterContentId: String(editingData?.filterContentID) ?? "",
             });
+    
+            
 
             // Set selected header data for edit mode
             if (editingData?.menu_key_id) {
@@ -177,11 +193,12 @@ const AddMenuItemPage = () => {
         }
     };
 
-    const handleFilterKeysChange = (selectedValue) => {
-        // Handle multiple filter IDs selection
+    const handleFilterKeysChange = (selectedOptions) => {
+        const ids = selectedOptions?.map(opt => opt.value) || [];
+
         setForm(prev => ({
             ...prev,
-            selectedFilterIds: selectedValue || []
+            selectedFilterIds: ids // ✅ only numbers stored
         }));
     };
 
@@ -198,9 +215,10 @@ const AddMenuItemPage = () => {
         existingKeys.includes(form.key.toLowerCase()) &&
         (!isEdit || form?.key.toLowerCase() !== editingData?.menu_key?.toLowerCase());
 
+    console.log(selectedHeaderData, 'selectedHeaderData');
     // Determine what to show based on conditions
     const shouldShowKeyValueFields =
-        selectedHeaderData && !form.isCategory && selectedHeaderData.filterId
+        selectedHeaderData && !selectedHeaderData.filterKeyId 
       
 
     const shouldShowFilterKeysSelector =
@@ -212,6 +230,13 @@ const AddMenuItemPage = () => {
         !form.isCategory &&
         selectedHeaderData?.filterKeyId;
 
+    const selectedOptions = useMemo(() => {
+        return filterKeyList.filter(opt =>
+            form.selectedFilterIds?.includes(opt.value)
+        );
+    }, [form.selectedFilterIds, filterKeyList]);
+
+    console.log(selectedOptions,'selectedOptions');
     // ── submit ─────────────────────────────────────────────────
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -269,9 +294,10 @@ const AddMenuItemPage = () => {
 
         console.log('Submitting payload:', payload); // For debugging
 
+
         const mutation = isEdit ? updateMutation : uploadMutation;
         const args = isEdit ? { id: editingData?.id, payload } : payload;
-
+       
         mutation.mutate(args, {
             onSuccess: () => {
                 setSuccess(isEdit ? "Menu updated successfully" : "Menu created successfully");
@@ -381,7 +407,7 @@ const AddMenuItemPage = () => {
                             </label>
                             <div className="flex-1">
                                 <ComboBox
-                                    value={form.selectedFilterIds}
+                                    value={selectedOptions} // ✅ correct format
                                     options={filterKeyList}
                                     onChange={handleFilterKeysChange}
                                     placeholder="Select filter keys"

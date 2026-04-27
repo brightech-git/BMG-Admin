@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BudgetBannersService } from "../../../service/bannersSerivce";
 
-export const useBudgetBanner = () => {
+export const useCreateBanners = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -13,14 +13,14 @@ export const useBudgetBanner = () => {
     });
 };
 
-export const useUpdateBudgetBannerMutation = () => {
+export const useUpdateBannerMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (formData) => {
+        mutationFn: (id,formData) => {
         
 
-            return BudgetBannersService.updateBudgetBanner(formData);
+            return BudgetBannersService.updateBudgetBanner(id,formData);
         },
 
         onSuccess: () => {
@@ -29,7 +29,7 @@ export const useUpdateBudgetBannerMutation = () => {
     });
 };
 
-export const useDeleteBudgetBannerMutation = () => {
+export const useDeleteBannerMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation({

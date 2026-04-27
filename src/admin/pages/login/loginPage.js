@@ -90,6 +90,8 @@ const LoginPage = () => {
                 username: result.user.username,
                 roles: result.user.roles, 
             };
+
+            console.log('resultlogin', userData.roles, result)
             const roles = userData.roles || [];
             if (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_EMPLOYEE' )) {
                 login(token, userData);
