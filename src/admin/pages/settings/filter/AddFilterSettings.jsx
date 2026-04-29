@@ -14,15 +14,74 @@ const AnimatedCard = ({ children, delay = 0, className = "" }) => (
     <div
         className={`
             animate__animated animate__fadeInUp animate__faster
-            bg-gradient-to-br from-white to-[#FFF7ED]/30
-            rounded-xl p-2 border-2 border-[#FED7AA]
-            hover:shadow-lg hover:shadow-[#F97316]/5
+            bg-gradient-to-br from-white to-[var(--background-secondary)]/30
+            rounded-xl p-2 border border-[var(--border-color)]
+            hover:shadow-lg hover:shadow-[var(--primary-color)]/5
             transition-all duration-300
             ${className}
         `}
         style={{ animationDelay: `${delay}s` }}
     >
         {children}
+    </div>
+);
+
+// Section Header Component
+const SectionHeader = ({ icon, title }) => (
+    <div className="flex items-center gap-2 border-b border-[var(--border-color)] pb-3 mb-4">
+        <i className={`fas ${icon} text-[var(--primary-color)] text-sm`}></i>
+        <h3 className="text-sm font-semibold text-[var(--text-primary)] m-0">
+            {title}
+        </h3>
+    </div>
+);
+
+// Field Component
+const FormField = ({ label, icon, name, value, onChange, placeholder, required, disabled, type = "text", helperText }) => (
+    <div className="animate__animated animate__fadeInLeft">
+        <div className="grid grid-cols-[140px_1fr] items-center gap-4">
+            <label className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                <i className={`fas ${icon} text-[var(--primary-color)] w-4`}></i>
+                {label}
+                {required && <span className="text-red-500">*</span>}
+            </label>
+            <input
+                type={type}
+                name={name}
+                value={value}
+                onChange={onChange}
+                className="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-lg 
+                    bg-[var(--background-primary)] focus:border-[var(--primary-color)] 
+                    focus:ring-2 focus:ring-[var(--primary-color)]/20 outline-none 
+                    transition-all h-10 placeholder:text-[var(--text-tertiary)]"
+                placeholder={placeholder}
+                disabled={disabled}
+            />
+        </div>
+       
+    </div>
+);
+
+// Switch Field Component
+const SwitchField = ({ checked, onChange, icon, label, helperText, disabled }) => (
+    <div className="animate__animated animate__fadeInRight">
+        <Switch
+            checked={checked}
+            onChange={onChange}
+            label={
+                <span className="flex text-sm items-center gap-2 text-[var(--text-primary)]">
+                    <i className={`fas ${icon} text-[var(--primary-color)] w-4`}></i>
+                    {label}
+                </span>
+            }
+            disabled={disabled}
+        />
+        {helperText && (
+            <p className="text-xs text-[var(--text-secondary)] mt-1 ml-6 flex items-center gap-2">
+                <i className="fas fa-info-circle"></i>
+                {helperText}
+            </p>
+        )}
     </div>
 );
 
@@ -34,16 +93,17 @@ const AddFilterSetting = () => {
     const mode = stateData.mode || 'add';
     const initialData = stateData.filterData || null;
 
-    console.log(initialData,'initialData')
+    console.log(initialData ,'initialData');
 
     const [form, setForm] = useState({
-        filterKey: "",
         filterLabel: "",
+        filterKey: "",
+        order: "",
         isActive: true,
         isUsed: false,
-        order:"",
-        range:""
-
+        range: false,
+        isHome: false,
+        isDirect: false
     });
 
     const [snackbar, setSnackbar] = useState({
@@ -72,10 +132,12 @@ const AddFilterSetting = () => {
             setForm({
                 filterLabel: initialData.filterLabel || "",
                 filterKey: initialData.filterKey || "",
+                order: initialData.displayOrder || "",
                 isActive: initialData.isActive ?? true,
                 isUsed: initialData.isUsed ?? false,
-                order:initialData.displayOrder||"",
-                range: initialData.isRange ||false
+                range: initialData.isRange ?? false,
+                isHome: initialData.isHomeFitler ?? false,
+                isDirect: initialData.directUse ?? false
             });
         }
     }, [mode, initialData]);
@@ -95,19 +157,11 @@ const AddFilterSetting = () => {
         }));
     };
 
-    const validateForm = useCallback(() => {
 
    
-        if (!form.filterKey?.trim()) {
-            setSnackbar({
-                open: true,
-                message: "Filter key is required",
-                type: "error",
-                title: "Error"
-            });
-            return false;
-        }
 
+
+    const validateForm = useCallback(() => {
         if (!form.filterLabel?.trim()) {
             setSnackbar({
                 open: true,
@@ -118,7 +172,16 @@ const AddFilterSetting = () => {
             return false;
         }
 
-        // Remove spaces from filterKey
+        if (!form.filterKey?.trim()) {
+            setSnackbar({
+                open: true,
+                message: "Filter key is required",
+                type: "error",
+                title: "Error"
+            });
+            return false;
+        }
+
         if (form.filterKey.includes(' ')) {
             setSnackbar({
                 open: true,
@@ -138,7 +201,8 @@ const AddFilterSetting = () => {
             });
             return false;
         }
-        if(!form.order){
+
+        if (!form.order) {
             setSnackbar({
                 open: true,
                 message: "Display order is required",
@@ -149,18 +213,19 @@ const AddFilterSetting = () => {
         }
 
         return true;
-    }, [form.filterKey, form.filterLabel,form.order, isDuplicate]);
+    }, [form.filterKey, form.filterLabel, form.order, isDuplicate]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
         if (!validateForm()) return;
 
-        // Remove spaces from filterKey before submission
         const payload = {
             ...form,
             filterKey: form.filterKey.replace(/\s+/g, '')
         };
+
+        console.log(payload, 'payload')
 
         if (mode === "add") {
             createMutation.mutate(payload, {
@@ -217,8 +282,12 @@ const AddFilterSetting = () => {
         setForm({
             filterLabel: "",
             filterKey: "",
+            order: "",
             isActive: true,
             isUsed: false,
+            range: false,
+            isHome: false,
+            isDirect: false
         });
     };
 
@@ -237,33 +306,37 @@ const AddFilterSetting = () => {
     const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
     return (
-        <div className='mt-4 p-4'>
-            <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
+        <div className='mt-2 p-2'>
+            <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-2">
                 {/* Header Card */}
                 <AnimatedCard delay={0}>
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 m-0">
-                            <div className="w-8 h-8 bg-gradient-to-br from-[#F97316] to-[#EA580C] rounded-xl flex items-center justify-center shadow-lg shadow-[#F97316]/30 animate__animated animate__pulse animate__infinite animate__slower">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 p-1 ">
+                            <div className="w-6 h-6 bg-gradient-to-br from-[var(--primary-color)] to-[var(--primary-color)] 
+                                rounded-xl flex items-center justify-center shadow-lg shadow-[var(--primary-color)]">
                                 <i className="fas fa-filter text-white text-sm"></i>
                             </div>
                             <div>
-                                <h2 className="text-sm sm:text-lg font-bold text-[#7C2D12] flex items-center gap-2 m-0">
+                                <h2 className="text-lg font-bold text-[var(--text-primary)] m-0">
                                     {mode === 'edit' ? 'Edit Filter Setting' : 'Add Filter Setting'}
                                     {mode === 'edit' && (
-                                        <span className="bg-[#FFEDD5] text-[#F97316] text-[8px] px-2 py-1 rounded-full animate__animated animate__fadeIn">
-                                            ID: {initialData?.id}
+                                        <span className="bg-[var(--background-secondary)] text-[var(--primary-color)] 
+                                            text-xs px-3 py-1 rounded-full ml-2 font-medium">
+                                            #{initialData?.id}
                                         </span>
                                     )}
                                 </h2>
-                                <p className="text-xs sm:text-sm text-[#9A3412] m-0 ">
-                                    Configure filter settings
+                                <p className="text-xs text-[var(--text-secondary)] m-0 mt-1">
+                                    Configure filter properties and settings
                                 </p>
                             </div>
                         </div>
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="w-8 h-8 rounded-lg hover:bg-[#FFF7ED] text-[#9A3412] hover:text-[#F97316] transition-all duration-300 hover:rotate-90"
+                            className="w-8 h-8 rounded-lg hover:bg-[var(--background-secondary)] 
+                                text-[var(--text-secondary)] hover:text-[var(--primary-color)] 
+                                transition-all duration-300 hover:rotate-90"
                             aria-label="Close"
                         >
                             <i className="fas fa-times"></i>
@@ -271,139 +344,124 @@ const AddFilterSetting = () => {
                     </div>
                 </AnimatedCard>
 
-                {/* Form Fields */}
-                <AnimatedCard delay={0.2}>
+                {/* General Settings Card */}
+                <AnimatedCard delay={0.1}>
+                    <SectionHeader icon="fa-cog" title="General Settings" />
                     <div className="space-y-2">
-                        <div className="flex items-center gap-2 border-b border-[#FED7AA] pb-2 mb-2">
-                            <i className="fas fa-cog text-[#F97316] text-sm m-0"></i>
-                            <h3 className="text-sm font-semibold text-[#7C2D12] m-0">
-                                Filter Configuration
-                            </h3>
-                        </div>
+                        <FormField
+                            label="Filter Label"
+                            icon="fa-tag"
+                            name="filterLabel"
+                            value={form.filterLabel}
+                            onChange={handleChange}
+                            placeholder="Enter filter label (e.g., Category, Price)"
+                            required
+                            disabled={isSubmitting}
+                            helperText="Display name shown to users in the filter interface"
+                        />
 
-                        <div className="space-y-4">
-                            {/* Label Field */}
-                            <div className="animate__animated animate__fadeInLeft">
-                                <div className="flex items-center" style={{ animationDelay: '0.1s' }}>
-                                    <label className="block text-sm font-semibold text-[#7C2D12] flex items-center gap-1 min-w-[120px]">
-                                        <i className="fas fa-tag text-[#F97316]"></i>
-                                        Filter Label <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        name="filterLabel"
-                                        value={form.filterLabel}
-                                        onChange={handleChange}
-                                        className="w-full px-2 py-2 text-sm border-2 border-[#FED7AA] rounded-xl bg-white focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none transition-all h-10"
-                                        placeholder="Enter filter label (e.g., Category, Price, Brand)"
-                                        disabled={isSubmitting}
-                                    />
-                                </div>
-                                <p className="text-xs text-[var(--primary-text-color)] mt-1 flex items-center gap-2">
-                                    <i className="fas fa-info-circle"></i>
-                                    Display name for the filter in the UI
-                                </p>
-                            </div>
+                        <FormField
+                            label="Filter Key"
+                            icon="fa-key"
+                            name="filterKey"
+                            value={form.filterKey}
+                            onChange={handleChange}
+                            placeholder="Enter filter key (e.g., category, price)"
+                            required
+                            disabled={isSubmitting}
+                            helperText="Unique identifier used in API calls. To enable range filter, use 'min' and 'max' in key naming"
+                        />
 
-                            {/* Key Field */}
-                            <div className="animate__animated animate__fadeInLeft">
-                                <div className="flex items-center" style={{ animationDelay: '0.1s' }}>
-                                    <label className="block text-sm font-semibold text-[#7C2D12] flex items-center gap-1 min-w-[120px]">
-                                        <i className="fas fa-key text-[#F97316]"></i>
-                                        Filter Key <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        name="filterKey"
-                                        value={form.filterKey}
-                                        onChange={handleChange}
-                                        className="w-full px-2 py-2 text-sm border-2 border-[#FED7AA] rounded-xl bg-white focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none transition-all h-10"
-                                        placeholder="Enter filter key (e.g., category, price, brand)"
-                                        disabled={isSubmitting}
-                                    />
-                                </div>
-                                <p className="text-xs text-[var(--primary-text-color)] mt-1 flex items-center gap-2">
-                                    <i className="fas fa-info-circle "></i>
-                                    Unique identifier for the filter. To use range in the label, add the min, max
-                                </p>
-                            </div>
+                        <FormField
+                            label="Display Order"
+                            icon="fa-sort-numeric-down"
+                            name="order"
+                            value={form.order}
+                            onChange={handleChange}
+                            placeholder="Enter display order (e.g., 1, 2, 3)"
+                            required
+                            disabled={isSubmitting}
+                            helperText="Controls the position of this filter in the UI"
+                        />
+                    </div>
+                </AnimatedCard>
 
-                            {/* Active Status Switch */}
-                            <div className="animate__animated animate__fadeInRight" style={{ animationDelay: '0.2s' }}>
-                                <Switch
-                                    checked={form.isActive}
-                                    onChange={(val) => handleSwitchChange('isActive', val)}
-                                    label={
-                                        <span className="flex text-sm items-center gap-2">
-                                            <i className="fas fa-power-off text-[#F97316]"></i>
-                                            Active Status
-                                        </span>
-                                    }
-                                    disabled={isSubmitting}
-                                />
-                                <p className="text-xs text-[var(--primary-text-color)] mt-1 flex items-center gap-2">
-                                    <i className="fas fa-toggle-on "></i>
-                                    {form.isActive ? 'Filter is active and visible' : 'Filter is inactive and hidden'}
-                                </p>
-                            
-                            </div>
+                {/* Layout & Display Settings Card */}
+                <AnimatedCard delay={0.2}>
+                    <SectionHeader icon="fa-sliders-h" title="Layout & Display" />
+                    <div className="space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <SwitchField
+                                checked={form.isActive}
+                                onChange={(val) => handleSwitchChange('isActive', val)}
+                                icon="fa-toggle-on"
+                                label="Active Status"
+                                helperText={form.isActive ? 'Filter is visible to users' : 'Filter is hidden from view'}
+                                disabled={isSubmitting}
+                            />
 
-                            {/* Input Status Switch */}
-                            <div className="animate__animated animate__fadeInRight" style={{ animationDelay: '0.2s' }}>
-                                <Switch
+                         
+                                <SwitchField
                                     checked={form.isUsed}
                                     onChange={(val) => handleSwitchChange('isUsed', val)}
-                                    label={
-                                        <span className="flex text-sm items-center gap-2">
-                                            <i className="fas fa-input-text text-[#F97316]"></i>
-                                            Input Status
-                                        </span>
-                                    }
+                                    icon="fa-keyboard"
+                                    label="Input Field"
+                                    helperText={'select while image upload'}
                                     disabled={isSubmitting}
                                 />
-                                <p className="text-xs text-[var(--primary-text-color)] mt-1 flex items-center gap-2">
-                                    <i className="fas fa-info-circle"></i>
-                                    {form.isUsed ? 'Input field is enabled' : 'Input field is disabled'}
-                                </p>
-                            </div>
+                            
+                                    
+                   
 
-                            <div className="animate__animated animate__fadeInRight" style={{ animationDelay: '0.2s' }}>
-                                <Switch
+                            <SwitchField
+                                checked={form.isHome}
+                                onChange={(val) => handleSwitchChange('isHome', val)}
+                                icon="fa-home"
+                                label="Home Page"
+                                helperText={form.isHome ? 'Filter displayed on homepage' : 'Filter hidden on homepage'}
+                                disabled={isSubmitting}
+                            />
+
+                          
+                                <SwitchField
                                     checked={form.range}
                                     onChange={(val) => handleSwitchChange('range', val)}
-                                    label={
-                                        <span className="flex text-sm items-center gap-2">
-                                            <i className="fas fa-input-text text-[#F97316]"></i>
-                                            Is Range Type
-                                        </span>
-                                    }
+                                    icon="fa-arrows-left-right"
+                                    label="Range Type"
+                                    helperText={form.range ? 'Filter accepts range values (min ,max and range )' : 'Filter uses single value selection'}
                                     disabled={isSubmitting}
                                 />
-                            </div>
+                            
+                            
 
-                            <div className="flex items-center" style={{ animationDelay: '0.1s' }}>
-                                <label className="block text-sm font-semibold text-[#7C2D12] flex items-center gap-1 min-w-[120px]">
-                                    <i className="fas fa-key text-[#F97316]"></i>
-                                    Display Order <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    name="order"
-                                    value={form.order}
-                                    onChange={handleChange}
-                                    className="w-full px-2 py-2 text-sm border-2 border-[#FED7AA] rounded-xl bg-white focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20 outline-none transition-all h-10"
-                                    placeholder="Enter filter key (e.g., category, price, brand)"
+                           
+                     
+
+                          
+                                <SwitchField
+                                    checked={form.isDirect}
+                                    onChange={(val) => handleSwitchChange('isDirect', val)}
+                                    icon="fa-bolt"
+                                    label="Direct Filter"
+                                    helperText={'Directly use the filter key instead of filter Id'}
                                     disabled={isSubmitting}
                                 />
-                            </div>
-                        </div>
+                            
+                           
+                       </div>
                     </div>
                 </AnimatedCard>
 
                 {/* Action Buttons */}
                 <AnimatedCard delay={0.3}>
-                    <div className="flex gap-2 sm:gap-3">
+                    <div className="flex gap-3">
                         <button
                             type="button"
                             onClick={handleCancel}
-                            className="flex-1 p-2 sm:p-3 border-2 border-[#FED7AA] text-[#7C2D12] text-sm font-medium rounded-xl hover:bg-[#FFF7ED] hover:border-[#FDBA74] transition-all duration-300 flex items-center justify-center gap-2 group"
+                            className="flex-1 px-2 py-2 border border-[var(--border-color)] 
+                                text-[var(--text-primary)] text-sm font-medium rounded-lg 
+                                hover:bg-[var(--background-secondary)] transition-all duration-300 
+                                flex items-center justify-center gap-2 group"
                             disabled={isSubmitting}
                         >
                             <i className={`fas ${mode === 'edit' ? 'fa-arrow-left' : 'fa-eraser'} text-sm group-hover:-translate-x-1 transition-transform`}></i>
@@ -412,10 +470,11 @@ const AddFilterSetting = () => {
                         <button
                             type="submit"
                             className={`
-                                flex-1 p-2 sm:p-3 bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white text-sm font-medium rounded-xl
+                                flex-1 px-2 py-2 bg-gradient-to-r from-[var(--primary-color)] to-[var(--primary-color)] 
+                                text-white text-sm font-medium rounded-lg
                                 flex items-center justify-center gap-2 relative overflow-hidden
-                                transition-all duration-300 transform hover:scale-105
-                                ${isSubmitting ? 'opacity-90 cursor-not-allowed' : 'hover:shadow-lg hover:shadow-[#F97316]/30'}
+                                transition-all duration-300 transform hover:scale-[1.02]
+                                ${isSubmitting ? 'opacity-90 cursor-not-allowed' : 'hover:shadow-lg hover:shadow-[var(--primary-color)]'}
                             `}
                             disabled={isSubmitting}
                         >

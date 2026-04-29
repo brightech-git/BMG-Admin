@@ -63,8 +63,6 @@ export const updateMenuItem = async ({ id, payload }) => {
 
 export const deleteMenuItem = async (id) => {
     console.log(id, 'deleteid')
-    const response = await axiosInstance.delete(`/menu/delete`, {
-        params: { id },
-    });
+    const response = await axiosInstance.delete(`/menu/delete/${id}`);
     return response.data;
 };

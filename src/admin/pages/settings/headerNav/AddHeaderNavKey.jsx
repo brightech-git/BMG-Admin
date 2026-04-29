@@ -34,7 +34,7 @@ const AddHeaderNav = () => {
   
     const existingKeys = headerKeys?  headerKeys.map((item) => item.name?.toLowerCase()).filter(Boolean) : [];
 
-    const { data: filterKeys } = useGetAllFilterSettings();
+    const { data: filterKeys } = useGetAllFilterSettings({ isHome: true});
 
     const fitlerContents = useMemo(()=>{
         return Array.isArray(filterKeys?.data) ? filterKeys?.data?.map((item)=>({

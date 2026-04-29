@@ -231,8 +231,11 @@ const AddMenuItemPage = () => {
         selectedHeaderData?.filterKeyId;
 
     const selectedOptions = useMemo(() => {
+
+        console.log(filterKeyList, form.selectedFilterIds,'selectedOptions')
         return filterKeyList.filter(opt =>
-            form.selectedFilterIds?.includes(opt.value)
+            
+            String(form.selectedFilterIds)?.includes(String(opt?.value))
         );
     }, [form.selectedFilterIds, filterKeyList]);
 

@@ -79,6 +79,8 @@ const ManageFilterSettings = () => {
             used:filter.isUsed,
             displayOrder:filter.displayOrder,
             range:filter.isRange,
+            isHomeFitler: filter.isHomeFitler,
+            directUse: filter.directUse,
 
             // Store full banner object for actions
             _filterData: filter
@@ -91,9 +93,14 @@ const ManageFilterSettings = () => {
         { key: 'sno', label: 'S.No', width: '80px' },
         { key: 'filterLabel', label: 'Filter Name',align:'center' },
         { key: 'filterKey', label: 'Filter Key' ,align:'center' },
-        { key: 'active', label: 'IsActive' ,align:'center'},
-        { key: 'used', label: 'IsUsed'  ,align:'center' },
+
+        { key: 'active', label: 'IsActive', align: 'center' },
+        { key: 'used', label: 'IsUsed', align: 'center' },
         { key: 'range', label: 'Is Range', align: 'center' },
+        { key: 'isHomeFitler', label: 'Home to Show', align: 'center' },
+        { key: 'directUse', label: 'Direct Use', align: 'center' },
+
+
         { key: 'displayOrder', label: 'displayOrder', align: 'start' },
         { key: 'actions', label: 'Actions', align: 'center', width: '100px' },
     ];
@@ -180,6 +187,23 @@ const ManageFilterSettings = () => {
                             }
                         }
 
+                        if (key === "isHomeFitler") {
+
+                            if (row[key] === true) {
+                                return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span>
+                            } else {
+                                return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Inactive</span>
+                            }
+                        }
+
+                        if (key === "directUse") {
+
+                            if (row[key] === true) {
+                                return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Active</span>
+                            } else {
+                                return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Inactive</span>
+                            }
+                        }
                        
                         // Actions column
                         if (key === 'actions') {
