@@ -129,7 +129,7 @@ export default function FilterSection() {
     // Apply filters and close modal
     const applyFilters = () => {
         if (tempSelectedItem)
-            updateFilter("itemName", tempSelectedItem.ITEMCTRNAME);
+            updateFilter("itemName", tempSelectedItem.itemName);
         else
             updateFilter("itemName", "");
 
@@ -273,7 +273,7 @@ export default function FilterSection() {
                                 >
                                     {modalStep === 'filters' && 'Advanced Filters'}
                                     {modalStep === 'items' && 'Select Item'}
-                                    {/* {modalStep === 'subitems' && `Select Sub Items - ${selectedItem?.ITEMCTRNAME}`} */}
+                                    {/* {modalStep === 'subitems' && `Select Sub Items - ${selectedItem?.itemName}`} */}
                                 </h4>
                             </div>
                             <button
@@ -380,7 +380,7 @@ export default function FilterSection() {
                                         >
                                             {selectedItem ? (
                                                 <div>
-                                                    <div className="font-medium">{selectedItem.ITEMCTRNAME}</div>
+                                                    <div className="font-medium">{selectedItem.itemName}</div>
                                                     <div
                                                         
                                                         style={{ fontSize: 'var(--font-size-s, 10px)' }}
@@ -502,7 +502,7 @@ export default function FilterSection() {
                                                     }`}
                                                 style={{ fontSize: 'var(--font-size-xs, 14px)', borderRadius: 'var(--border-radius-md, 8px)' }}
                                             >
-                                                {item.ITEMCTRNAME}
+                                                {item.itemName}
                                             </button>
                                         ))
                                     )}

@@ -199,7 +199,7 @@ const UploadFeatureDesign = () => {
                             disabled={isUploading || isUpdating}>
                                 <option value=""  disabled>Select the Item Category</option>
                                 {itemNames.map((item)=>{
-                                    return (<option value={item.ITEMCTRNAME} key={item.ID}>{item.ITEMCTRNAME}</option>)
+                                    return (<option value={item.itemName} key={item.ID}>{item.itemName}</option>)
                                    
                                 })}
                         </select>
@@ -232,8 +232,8 @@ const UploadFeatureDesign = () => {
                         >
                             <option value="">Select item category</option>
                             {itemNames.map((it) => (
-                                <option key={it.ITEMCTRID} value={it.ITEMCTRNAME}>
-                                    {it.ITEMCTRNAME}
+                                <option key={it.ITEMCTRID} value={it.itemName}>
+                                    {it.itemName}
                                 </option>
                             ))}
                         </select>

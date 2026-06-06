@@ -22,7 +22,7 @@ const AddOccasionBanner = () => {
     const itemCategories = useMemo(() => {
         return itemNames.map(item => ({
             id: item.ITEMCTRID?.toString() || '',
-            name: item.ITEMCTRNAME || ''
+            name: item.itemName || ''
         }));
     }, [itemNames]);
 

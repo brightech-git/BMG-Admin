@@ -111,7 +111,7 @@ const AddBreadCrumbBanner = () => {
         //     setError("Please enter a subpages.");
         //     return;
         // }
-        const isAlreadyUsed = banners?.some(b => b?.itemCtrName?.toLowerCase() === itemname?.toLowerCase());
+        const isAlreadyUsed = banners?.some(b => b?.itemName?.toLowerCase() === itemname?.toLowerCase());
 
         if (isAlreadyUsed) {
             setError(`Item category "${itemname}" was already used.`);
@@ -256,8 +256,8 @@ const AddBreadCrumbBanner = () => {
                         >
                             <option value="" diasbled>Select item category</option>
                             {itemNames.map((it) => (
-                                <option key={it.ITEMCTRID} value={it.ITEMCTRNAME}>
-                                    {it.ITEMCTRNAME}
+                                <option key={it.ITEMCTRID} value={it.itemName}>
+                                    {it.itemName}
                                 </option>
                             ))}
                         </select>

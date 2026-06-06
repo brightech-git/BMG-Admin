@@ -33,7 +33,7 @@ const AddCategoryBanner = () => {
     const { data: banners } = useBannersQuery();
     const { items:itemCrtName } =useItemNames();
     const bannerData = useMemo(()=>banners?.data|| [] ,[banners?.data])
-    // const itemNames = itemCrtName.map((items) => items.ITEMCTRNAME) ||  [];
+    // const itemNames = itemCrtName.map((items) => items.itemName) ||  [];
     // console.log(itemNames, 'namesfor item')
 
     // Load existing banner data when editing
@@ -201,7 +201,7 @@ const handleClear = () =>{
                 >
                     <option value="">Select an item category</option>
                     {itemCrtName?.map((b) => (
-                        <option key={b.id} value={b.ITEMCTRNAME} className="text-xs"> {b.ITEMCTRNAME} </option>
+                        <option key={b.id} value={b.itemName} className="text-xs"> {b.itemName} </option>
                     ))}
                 </select>
 

@@ -152,13 +152,14 @@ const AddBannerSetting = () => {
         centered: true,
         full: false,
         backgroundColor: "#ffffff",
-        defaultRatio: "16/9",
-        mobileRatio: "4/3",
+        defaultRatio: "",
+        mobileRatio: "",
         mobileRowsDesktop: "",
         mobileRowsMobile: "",
         desktopColumns: "auto",
         isVisible: true,
         isGrid: false,
+        isCategory :false,
         // Enhanced carousel settings
         autoscroll: false,
         scrollable: false,
@@ -269,6 +270,7 @@ const AddBannerSetting = () => {
                 mobileLayout: parseLayoutString(initialData.mobileLayout),
                 mobileRowsDesktop: parsedMobileRows[0] || "",
                 mobileRowsMobile: parsedMobileRows[1] || "",
+                isCategory :initialData.isCategory || false ,
             }));
 
             setDesktopColumnsText(
@@ -289,6 +291,8 @@ const AddBannerSetting = () => {
         }));
     };
 
+
+    console.log(form,'formChanged');
     const handleVisibleCountChange = (device, value) => {
         setForm(prev => ({
             ...prev,
@@ -305,6 +309,8 @@ const AddBannerSetting = () => {
             .split(",")
             .map((v) => Number(v.trim()))
             .filter((v) => !isNaN(v));
+
+        console.log(columnsArray, value,'desktopLayout');
         setForm((prev) => ({
             ...prev,
             desktopLayout: {
@@ -375,12 +381,16 @@ const AddBannerSetting = () => {
             centered: form.centered,
             full: form.full,
             backgroundColor: form.backgroundColor,
+
             defaultRatio: form.defaultRatio,
+            desktopRatio : form.defaultRatio,
             mobileRatio: form.mobileRatio,
+
             mobileRows: String ([Number(form.mobileRowsDesktop), Number(form.mobileRowsMobile)]),
             desktopColumns: form.desktopColumns,
             isVisible: form.isVisible,
             isGrid: form.isGrid,
+            isCategory : form.isCategory,
 
             // // Enhanced fields
             autoscroll: form.autoscroll,
@@ -394,8 +404,7 @@ const AddBannerSetting = () => {
             mobileLayout: form.mobileLayout,
         };
 
-        console.log(payload,'payload');
-        
+      
 
         if (mode === "add") {
             createMutation.mutate(payload, {
@@ -686,6 +695,12 @@ const AddBannerSetting = () => {
                                         checked={form.isGrid}
                                         onChange={(val) => handleSwitchChange('isGrid', val)}
                                         label="Is Grid"
+                                    />
+
+                                    <Switch
+                                        checked={form.isCategory}
+                                        onChange={(val) => handleSwitchChange('isCategory', val)}
+                                        label="Is Category"
                                     />
                                 </div>
 

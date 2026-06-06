@@ -114,6 +114,7 @@ const ManageBannerSettings = () => {
             scrollInterval: item.scrollInterval || '',
             displayOrder: item.displayOrder || '',
             createdAt: item.createdAt,
+            isCategory:item.isCategory,
             _bannerData: item // Store the full item for actions
         };
     });

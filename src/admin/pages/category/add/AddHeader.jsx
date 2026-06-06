@@ -4,8 +4,8 @@ import { useUploadMenuItem, useUpdateMenuItem, useMenu } from "../../../hooks/na
 import { useHeaderKeys } from "../../../hooks/navItems/useHeaderNavKey";
 import { Switch } from "../../../components/ui/Switch";
 import ComboBox from '../../../components/ui/ComboBox';
-import { useGetAllFilterContents } from "../../../hooks/filter/useFilterContent";
-import { useGetAllFilterSettings } from "../../../hooks/filter/useFilterSetting";
+import { useGetAllFilterContents  } from "../../../hooks/filter/useFilterContent";
+import { useGetAllFilterSettings ,useItemList} from "../../../hooks/filter/useFilterSetting";
 
 const INITIAL_FORM = {
     headerKey: "",
@@ -13,10 +13,12 @@ const INITIAL_FORM = {
     key: "",
     value: "",
     isCategory: false,
+    isItemCategory:false,
     isActive: true,
     order: "",
     selectedFilterIds: [], // For multiple filter keys when category is true
     filterContentId: "", // For single filter content when category is false
+    selectedItemIds:[]
 };
 
 const AddMenuItemPage = () => {
@@ -44,6 +46,7 @@ const AddMenuItemPage = () => {
     const { data: filterContents = [] } = useGetAllFilterContents(
         { filterKeyId: filterKeyId },
     );
+    const {data:itemList} =useItemList();
 
     const filterContentList = useMemo(() => {
         return Array.isArray(filterContents?.filters)
@@ -53,6 +56,14 @@ const AddMenuItemPage = () => {
             }))
             : [];
     }, [filterContents]);
+
+    const itemNameList = useMemo(()=>{
+            return Array.isArray(itemList) ? itemList?.map((item)=>({
+                label: item.ITEMNAME,
+                value: item.ITEMID
+            })) : [];
+        },[itemList])
+        console.log(itemNameList,'itemNameList');
 
     const { data: filterKeyContents = [] } = useGetAllFilterSettings();
 
@@ -81,9 +92,7 @@ const AddMenuItemPage = () => {
     }, [headerKeys]);
     console.log(selectedHeaderData,'selectedHeaderData');
     
-    const isCategoryDisabled = (selectedHeaderData?.isDropdown && !selectedHeaderData?.filterKeyId) ;
    
-
     // Get list of filter keys for selection when category is true
     const filterKeyOptions = useMemo(() => {
         return headerKeys
@@ -125,6 +134,12 @@ const AddMenuItemPage = () => {
 
            console.log(form, 'formvalues');
 
+
+    const isCategoryDisabled = (selectedHeaderData?.isDropdown && !selectedHeaderData?.filterKeyId );
+
+    const isDropDown = selectedHeaderData?.isDropDown;
+
+
     useEffect(() => {
         if (editingData) {
             setForm({
@@ -135,8 +150,22 @@ const AddMenuItemPage = () => {
                 isCategory: editingData?.category === "Y" || editingData?.category === true,
                 isActive: editingData?.active === "Y" || editingData?.active === true,
                 order: editingData?.displayorder ?? "",
+                isItemCategory: editingData?.isItem === "Y" || editingData?.isItem === true,
                 selectedFilterIds: (() => {
                     const ids = editingData?.filterids;
+
+                    if (!ids) return [];
+
+                    if (Array.isArray(ids)) return ids.map(Number);
+
+                    if (typeof ids === "string") {
+                        return ids.split(",").map(id => Number(id.trim()));
+                    }
+
+                    return [];
+                })(),
+                selectedItemIds: (() => {
+                    const ids = editingData?.itemIds;
 
                     if (!ids) return [];
 
@@ -165,6 +194,8 @@ const AddMenuItemPage = () => {
             }
         }
     }, [editingData, headerFilterOptions]);
+
+    console.log(form.selectedItemIds,'selectedItemIds')
 
     const handleHeaderKeySelect = (selectedValue) => {
         if (!selectedValue) {
@@ -209,6 +240,14 @@ const AddMenuItemPage = () => {
         }));
     };
 
+    const handleItemNameChange = (selectedValue) =>{
+        const ids = selectedValue?.map(opt => opt.value) || [];
+        setForm(prev =>({
+            ...prev,
+            selectedItemIds: ids
+        }))
+    }
+
     // key duplicate check (skip own key in edit mode)
     const isDuplicateKey =
         form.key.trim() &&
@@ -218,7 +257,7 @@ const AddMenuItemPage = () => {
     console.log(selectedHeaderData, 'selectedHeaderData');
     // Determine what to show based on conditions
     const shouldShowKeyValueFields =
-        selectedHeaderData && !selectedHeaderData.filterKeyId 
+        selectedHeaderData 
       
 
     const shouldShowFilterKeysSelector =
@@ -228,18 +267,32 @@ const AddMenuItemPage = () => {
     const shouldShowFilterContentSelector =
         selectedHeaderData?.isDropdown &&
         !form.isCategory &&
+        !form.isItemCategory &&
         selectedHeaderData?.filterKeyId;
 
-    const selectedOptions = useMemo(() => {
 
-        console.log(filterKeyList, form.selectedFilterIds,'selectedOptions')
+    // console.log(selectedHeaderData?.isDropdown, form.isCategory ,form. ,'selectedHeaderData')
+    const shouldShowItemsContentSelector = form.isItemCategory 
+    
+    console.log(shouldShowItemsContentSelector,'shouldShowItemsContentSelector');
+
+    const selectedFilterIdOptions = useMemo(() => {
+
         return filterKeyList.filter(opt =>
             
-            String(form.selectedFilterIds)?.includes(String(opt?.value))
+            form.selectedFilterIds?.includes(opt?.value)
         );
     }, [form.selectedFilterIds, filterKeyList]);
 
-    console.log(selectedOptions,'selectedOptions');
+   const selectedItemIdOptions = useMemo(() => {
+    return itemNameList.filter(opt =>
+        form.selectedItemIds?.includes(opt?.value)
+    );
+}, [form.selectedItemIds, itemNameList]);
+
+    console.log(selectedItemIdOptions, form.selectedItemIds,'selectedItemIdOptions')
+
+  
     // ── submit ─────────────────────────────────────────────────
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -252,23 +305,23 @@ const AddMenuItemPage = () => {
         if (!form.label.trim()) return setError("Label is required");
 
         // Conditional validation based on dropdown status
-        if (shouldShowKeyValueFields) {
-            if (!form.key.trim()) return setError("Key is required");
-            if (isDuplicateKey) return setError("This key already exists");
-            if (!form.value.trim()) return setError("Value is required");
-        }
+        // if (shouldShowKeyValueFields) {
+        //     if (!form.key.trim()) return setError("Key is required");
+        //     if (isDuplicateKey) return setError("This key already exists");
+        //     if (!form.value.trim()) return setError("Value is required");
+        // }
 
-        if (shouldShowFilterKeysSelector) {
-            if (!form.selectedFilterIds || form.selectedFilterIds.length === 0) {
-                return setError("Please select at least one filter key");
-            }
-        }
+        // if (shouldShowFilterKeysSelector) {
+        //     if (!form.selectedFilterIds || form.selectedFilterIds.length === 0) {
+        //         return setError("Please select at least one filter key");
+        //     }
+        // }
 
-        if (shouldShowFilterContentSelector) {
-            if (!form.filterContentId) {
-                return setError("Please select a filter content");
-            }
-        }
+        // if (shouldShowFilterContentSelector) {
+        //     if (!form.filterContentId) {
+        //         return setError("Please select a filter content");
+        //     }
+        // }
 
         if (form.order === "") return setError("Order is required");
 
@@ -278,7 +331,9 @@ const AddMenuItemPage = () => {
             isCategory: form.isCategory,
             isActive: form.isActive,
             order: Number(form.order),
-            filterId : selectedHeaderData?.filterKeyId
+            filterId : selectedHeaderData?.filterKeyId,
+            isItem : form.isItemCategory ,
+          
         };
 
         // Add conditional fields to payload
@@ -295,9 +350,15 @@ const AddMenuItemPage = () => {
             payload.filterContentId = Number(form.filterContentId.value);
         }
 
+        console.log(form.selectedItemIds, shouldShowItemsContentSelector,'shouldShowItemsContentSelector')
+
+        if (shouldShowItemsContentSelector) {
+            payload.itemIds = form.selectedItemIds.map(id => Number(id));
+        }
+
         console.log('Submitting payload:', payload); // For debugging
 
-
+     
         const mutation = isEdit ? updateMutation : uploadMutation;
         const args = isEdit ? { id: editingData?.id, payload } : payload;
        
@@ -410,7 +471,7 @@ const AddMenuItemPage = () => {
                             </label>
                             <div className="flex-1">
                                 <ComboBox
-                                    value={selectedOptions} // ✅ correct format
+                                    value={selectedFilterIdOptions} // ✅ correct format
                                     options={filterKeyList}
                                     onChange={handleFilterKeysChange}
                                     placeholder="Select filter keys"
@@ -437,6 +498,25 @@ const AddMenuItemPage = () => {
                                     placeholder="Select filter option"
                                     loading={filterKeyId && filterContentList.length === 0}
                                     loadingText="Loading filter options..."
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {form.isItemCategory && (
+                        <div className="flex items-start gap-2">
+                            <label className="text-xs font-medium text-gray-600 min-w-[90px] pt-0.5">
+                                SELECT ITEMS
+                            </label>
+                            <div className="flex-1">
+                                <ComboBox
+                                    value={selectedItemIdOptions}
+                                    options={itemNameList}
+                                    onChange={handleItemNameChange}
+                                    placeholder="Select itemName"
+                                    loading={filterKeyId && itemNameList.length === 0}
+                                    loadingText="Loading filter options..."
+                                    multiple={true}
                                 />
                             </div>
                         </div>
@@ -471,12 +551,32 @@ const AddMenuItemPage = () => {
                                     setForm(prev => ({
                                         ...prev,
                                         selectedFilterIds: [],
-                                        filterContentId: ''
+                                        filterContentId: '',
+                                        isItemCategory: false
                                     }));
                                 }}
                                 label="Is category"
                             />
                         )}
+                        
+
+                   
+                            <Switch
+                                checked={form.isItemCategory}
+                                onChange={(checked) => {
+                                    set("isItemCategory")(checked);
+                                    // Reset selections when category changes
+                                    setForm(prev => ({
+                                        ...prev,
+                                        selectedFilterIds: [],
+                                        filterContentId: '',
+
+                                    }));
+                                }}
+                                label="Is Item Category"
+                            />
+                        
+                       
                     </div>
 
                     {/* Actions */}

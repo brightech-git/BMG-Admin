@@ -12,15 +12,15 @@ const ManageCategoriesPage = () => {
     
     const navigate = useNavigate();
 
-    const { data: banner, isLoading, refetch } = useMenu();
+    const { data: headerContent, isLoading, refetch } = useMenu();
 
 
     const { mutate: deleteBanner } = useDeleteMenuItem();
 
-    console.log(banner,'banner');
+    console.log(headerContent,'headerContent');
 
     const handleDelete = (id) => {
-        if (window.confirm("Delete this banner?")) {
+        if (window.confirm("Delete this header content?")) {
             deleteBanner(id, {
                 onSuccess: () => refetch(), // Refresh list after deletion
             });
@@ -28,7 +28,7 @@ const ManageCategoriesPage = () => {
     };
 
 
-    const tableData = banner?.map((item, index) => ({
+    const tableData = headerContent?.map((item, index) => ({
         id: item.id,
         sno: index + 1,
         headerKey: item.name || "—",
@@ -38,7 +38,7 @@ const ManageCategoriesPage = () => {
         category: item.category === "Y" ? 'Yes' : 'No',
         active: item.active === "Y" ? 'Yes' : 'No',
         order: item.displayorder || "—",
-        banner : item
+        headerContent : item
 
     }));
     const handleClick = () => navigate('/category/add')
@@ -56,6 +56,9 @@ const ManageCategoriesPage = () => {
                     { key: "key", label: "Key Name" },
                     { key: "value", label: "Key Value" },
                     { key: "category", label: "IsCategory" },
+                    { key: "isItem", label: "Item Category" },
+
+           
                     { key: "active", label: "Active" },
                     { key: "order", label: "Display Order" },
 
@@ -69,7 +72,7 @@ const ManageCategoriesPage = () => {
                         return (
                             <div className="flex gap-2 justify-center">
                                 <button
-                                    onClick={() => navigate('/category/add', { state: { rowData: row.banner, mode: 'edit' } })}
+                                    onClick={() => navigate('/category/add', { state: { rowData: row.headerContent, mode: 'edit' } })}
                                     className="text-blue-600 hover:text-blue-800 transition-colors"
                                     title="Edit"
                                 >

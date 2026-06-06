@@ -3,7 +3,8 @@ import {
     getAllFilterSettings,
     createFilterSetting,
     updateFilterSetting,
-    deleteFilterSetting
+    deleteFilterSetting,
+    getItemsList
 } from "../../service/filterService";
 
 
@@ -58,3 +59,10 @@ export const useDeleteFilterSetting = () => {
         }
     });
 };
+
+export const useItemList = () =>{
+    return useQuery({
+        queryKey: ["itemsList"],
+        queryFn: getItemsList
+    })
+}

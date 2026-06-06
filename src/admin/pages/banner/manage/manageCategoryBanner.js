@@ -275,7 +275,7 @@
 //     {key:'image_path' ,label:'Image'},
 //     {key:'title' , label:'Title'},
 //     {key:'subtitle' ,label:'SubTitle'},
-//     {key:'itemname' ,label:'ItemCtrName'},
+//     {key:'itemname' ,label:'itemName'},
 //     {key:'actions' , label:'Actions' ,align:'center'}
 // ]
 //     const tableData = banners.map((item, index) => ({
@@ -492,10 +492,10 @@
 //                                                             {itemCategories.map((category) => (
 //                                                                 <MenuItem
 //                                                                     key={category.ITEMCTRID}
-//                                                                     value={{ id: category.ITEMCTRID, name: category.ITEMCTRNAME }} // ✅ store both
+//                                                                     value={{ id: category.ITEMCTRID, name: category.itemName }} // ✅ store both
 //                                                                     data-id={category.ITEMCTRID} // ✅ attach the ID as a data attribute
 //                                                                 >
-//                                                                     {category.ITEMCTRNAME} 
+//                                                                     {category.itemName} 
 //                                                                 </MenuItem>
 //                                                             ))}
 //                                                         </TextField>
@@ -771,7 +771,7 @@ const ManageCategoryBanner = () => {
         { key: 'image_path', label: 'Image' },
         { key: 'title', label: 'Title' },
         // { key: 'subtitle', label: 'SubTitle' },
-        { key: 'itemname', label: 'ItemCtrName' },
+        { key: 'itemname', label: 'itemName' },
         { key: 'actions', label: 'Actions', align: 'center' },
     ];
     const handleOnClick = () => {

@@ -64,7 +64,7 @@ const ManageOfferBanner = () => {
         {key:'image_path' ,label:'Image'},
         // {key:'title',label:'Title'},
         // {key:'subtitle',label:'SubTitle'},
-        {key:'itemname',label:'ItemCtrName'},
+        {key:'itemname',label:'itemName'},
         {key:'actions',label:'Actions' , align:'center'},
     ]
 

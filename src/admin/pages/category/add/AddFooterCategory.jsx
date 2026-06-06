@@ -17,7 +17,7 @@ console.log(editId,'state')
     const { items: itemNames = [] } = useItemNames();
 
     // State
-    const [itemCtrName, setItemCtrName] = useState("");
+    const [itemName, setitemName] = useState("");
     const [file, setFile] = useState(null);
     // const [existingFile, setExistingFile] = useState(null);
     const [error, setError] = useState("");
@@ -32,7 +32,7 @@ console.log(footerData ,'footerdata')
     console.log(currentEntry ,'currententery')
     useEffect(() => {
         if (isEdit && currentEntry) {
-            setItemCtrName(currentEntry.itemCtrName);
+            setitemName(currentEntry.itemName);
             // setExistingFile(currentEntry.imageUrl || null);
         }
     }, [isEdit, currentEntry]);
@@ -62,21 +62,21 @@ console.log(footerData ,'footerdata')
         setError("");
         setSuccess("");
 
-        if (!itemCtrName) {
+        if (!itemName) {
             setError("Please select an item category.");
             return;
         }
 
         // Duplicate check for Add
-        if (!isEdit && footerData?.some(f => f.itemCtrName === itemCtrName)) {
+        if (!isEdit && footerData?.some(f => f.itemName === itemName)) {
             setError("This item category already exists.");
             return;
         }
 
         const formData = new FormData();
-        formData.append("itemCtrName", itemCtrName);
-        formData.append("title", itemCtrName.toUpperCase());
-        formData.append("link", `products-page?itemCtrName=${itemCtrName.toUpperCase()}`);
+        formData.append("itemName", itemName);
+        formData.append("title", itemName.toUpperCase());
+        formData.append("link", `products-page?itemName=${itemName.toUpperCase()}`);
         // if (file) formData.append("image", file);
 
         const mutationPayload = isEdit
@@ -119,14 +119,14 @@ console.log(footerData ,'footerdata')
                 <div>
                     <label className="block text-sm font-medium mb-1">Item Category *</label>
                     <select
-                        value={itemCtrName}
-                        onChange={(e) => setItemCtrName(e.target.value)}
+                        value={itemName}
+                        onChange={(e) => setitemName(e.target.value)}
                         className="w-full border px-2 py-1 rounded text-sm"
                     >
                         <option value="">Select item category</option>
                         {itemNames.map((item) => (
-                            <option key={item.ITEMCTRNAME} value={item.ITEMCTRNAME}>
-                                {item.ITEMCTRNAME}
+                            <option key={item.itemName} value={item.itemName}>
+                                {item.itemName}
                             </option>
                         ))}
                     </select>
@@ -156,7 +156,7 @@ console.log(footerData ,'footerdata')
                         type="button"
                         className="px-2 py-1.5 border rounded text-xs"
                         onClick={() => {
-                            setItemCtrName("");
+                            setitemName("");
                             setFile(null);
                             setError("");
                             setSuccess("");
@@ -168,7 +168,7 @@ console.log(footerData ,'footerdata')
                         type="button"
                         className="px-2 py-1.5 border rounded text-xs"
                         onClick={() => {
-                            setItemCtrName("");
+                            setitemName("");
                             setFile(null);
                             setError("");
                             setSuccess("");

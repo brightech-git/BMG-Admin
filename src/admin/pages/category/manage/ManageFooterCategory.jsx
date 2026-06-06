@@ -27,7 +27,7 @@ const FooterCategory = () => {
     const headers = [
         { key: "id", label: "ID" },
         { key: "title", label: "Title" },
-        { key: "itemCtrName", label: "Item Container Name" },
+        { key: "itemName", label: "Item Container Name" },
         { key: "link", label: "Link" },
         { key: "active", label: "Active" },
         { key: "actions", label: "Actions", align: "center" },

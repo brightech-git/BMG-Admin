@@ -240,8 +240,8 @@ const AddOfferBanner = () => {
                         >
                             <option value="" disabled>Select item category</option>
                             {itemNames.map((it) => (
-                                <option key={it.ITEMCTRID} value={it.ITEMCTRNAME}>
-                                    {it.ITEMCTRNAME}
+                                <option key={it.ITEMCTRID} value={it.itemName}>
+                                    {it.itemName}
                                 </option>
                             ))}
                         </select>

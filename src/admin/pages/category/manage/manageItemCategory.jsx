@@ -55,13 +55,13 @@ const ManageItemCategory = () => {
     }, [bannersData]);
 
     const handleDelete = (id) => {
-        if (window.confirm("Delete this banner?")) {
+        if (window.confirm("Delete this Header Content?")) {
             deleteBanner(id, {
                 onSuccess: () => refetch(), // Refresh list after deletion
             });
         }
     };
-    console.log(banners, 'banners')
+    console.log(bannersData, 'bannersData')
     const tableData = banners.map((item, index) => ({
         id: item.id,
         sno: index + 1,
@@ -117,7 +117,7 @@ const ManageItemCategory = () => {
                     return row[key];
                 }}
                 loading={isLoading}
-                emptyMessage="No banners found"
+                emptyMessage="No Header Content found"
             />
         </div>
     );

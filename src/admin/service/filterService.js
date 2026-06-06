@@ -63,3 +63,15 @@ export const deleteFilterSetting = async (id) => {
     throw error;
   }
 };
+
+
+export const getItemsList = async () => {
+  try {
+    const response = await axiosInstance.get('/product/itemNames');
+    return response.data;
+  }
+  catch (err) {
+    console.log("error fetching items list", err);
+    throw err;
+  }
+}

@@ -3,16 +3,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useCreateHeaderKey , useUpdateHeaderKey, useHeaderKeys  } from "../../../hooks/navItems/useHeaderNavKey";
 import { Switch } from "../../../components/ui/Switch";
 import ComboBox from "../../../components/ui/ComboBox";
-import { useGetAllFilterSettings } from '../../../hooks/filter/useFilterSetting';
+import { useGetAllFilterSettings, useItemList } from '../../../hooks/filter/useFilterSetting';
 
 const INITIAL_FORM = {
     name: "",
     active: true,
     order: "",
     dropdown:false,
+    isItem:false,
     linkKey:"",
     linkValue:"",
     fitlerId:"",
+
 
 };
 
@@ -36,6 +38,9 @@ const AddHeaderNav = () => {
 
     const { data: filterKeys } = useGetAllFilterSettings({ isHome: true});
 
+    const { data: itemList } = useItemList();
+
+
     const fitlerContents = useMemo(()=>{
         return Array.isArray(filterKeys?.data) ? filterKeys?.data?.map((item)=>({
             label:item.filterLabel,
@@ -43,8 +48,10 @@ const AddHeaderNav = () => {
         })) : [];
     }, [filterKeys])
 
-    console.log(fitlerContents,'fitlerContents');
-    console.log(existingKeys,'existingKeys');
+    
+
+    // console.log(fitlerContents,'fitlerContents');
+    // console.log(existingKeys,'existingKeys');
 
     const uploadMutation = useCreateHeaderKey();
     const updateMutation = useUpdateHeaderKey();
@@ -216,7 +223,7 @@ const AddHeaderNav = () => {
                                 <input
                                     value={form.linkKey}
                                     onChange={handleChange("linkKey")}
-                                    placeholder="e.g, itemCtrName"
+                                    placeholder="e.g, itemName"
                                     className="mt-1 w-full border rounded px-2.5 py-2.5 text-xs focus:outline focus:outline-[var(--primary-color)]"
                                 />
                             </div>

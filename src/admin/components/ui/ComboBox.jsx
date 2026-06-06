@@ -186,14 +186,19 @@ const ComboBox = React.memo(({
     const filteredOptions = useMemo(() => {
         return filterOptions(options, searchText, getOptionLabel);
     }, [options, searchText, filterOptions, getOptionLabel]);
-    
+
+    // Display value for the input
     const displayValue = useMemo(() => {
         if (multiple) {
             if (selectedOptions.length === 0) return '';
-            return selectedOptions.map(opt => getOptionLabel(opt)).join(', ');
+            // Show count for multiple select when not searching
+            if (!isOpen) {
+                return `${selectedOptions.length} item${selectedOptions.length > 1 ? 's' : ''} selected`;
+            }
+            return '';
         }
 
-        // FIX: Handle string values that don't match objects directly
+        // Single select
         if (!currentValue) return '';
 
         // If currentValue is an object, use getOptionLabel
@@ -208,7 +213,27 @@ const ComboBox = React.memo(({
         );
 
         return matchingOption ? getOptionLabel(matchingOption) : currentValue;
-    }, [currentValue, selectedOptions, multiple, getOptionLabel, options, getOptionValue]);
+    }, [currentValue, selectedOptions, multiple, getOptionLabel, options, getOptionValue, isOpen]);
+
+    // Get the actual value to show in the input (handles single vs multiple)
+    const getInputValue = useMemo(() => {
+        if (multiple) {
+            // In multiple mode, show searchText when open, show nothing when closed
+            return isOpen ? searchText : '';
+        } else {
+            // In single mode, show searchText when open, show displayValue when closed
+            return isOpen ? searchText : displayValue;
+        }
+    }, [multiple, isOpen, searchText, displayValue]);
+
+    // Get placeholder for input
+    const getInputPlaceholder = useMemo(() => {
+        if (multiple) {
+            if (selectedOptions.length > 0 && !isOpen) return '';
+            return placeholder;
+        }
+        return (!multiple && currentValue && !isOpen) ? '' : placeholder;
+    }, [multiple, selectedOptions.length, isOpen, currentValue, placeholder]);
 
     // ---------------------------------------------------------------------
     // Handlers
@@ -234,41 +259,50 @@ const ComboBox = React.memo(({
         }
     }, [isOpen, handleOpen, handleClose]);
 
-   const handleSelect = useCallback((option) => {
-    const optionValue = getOptionValue(option);
-    const isSelected = selectedOptions.some(
-        selected => getOptionValue(selected) === optionValue
-    );
+    const handleSelect = useCallback((option) => {
+        const optionValue = getOptionValue(option);
+        const isSelected = selectedOptions.some(
+            selected => getOptionValue(selected) === optionValue
+        );
 
-    let newValue;
+        let newValue;
 
-    if (multiple) {
-        if (isSelected) {
-            newValue = selectedOptions.filter(
-                selected => getOptionValue(selected) !== optionValue
-            );
+        if (multiple) {
+            if (isSelected) {
+                newValue = selectedOptions.filter(
+                    selected => getOptionValue(selected) !== optionValue
+                );
+            } else {
+                newValue = [...selectedOptions, option];
+            }
+
+            if (!isControlled) {
+                setInternalValue(newValue);
+            }
+            onChange?.(newValue, option);
+
+            // Don't close for multiple select by default
+            if (disableCloseOnSelect) {
+                // Keep open
+            } else {
+                // Keep open for multiple select to allow quick selection
+                // Focus input and clear search
+                setSearchText('');
+                if (combinedInputRef.current) {
+                    combinedInputRef.current.focus();
+                }
+            }
         } else {
-            newValue = [...selectedOptions, option];
+            // Single select
+            newValue = option;
+            if (!isControlled) {
+                setInternalValue(newValue);
+            }
+            onChange?.(newValue, option);
+            setSearchText('');
+            handleClose();
         }
-    } else {
-        newValue = option;
-    }
-
-    if (!isControlled) {
-        setInternalValue(newValue);
-    }
-
-    onChange?.(newValue, option);
-
-    if (!multiple || !disableCloseOnSelect) {
-        handleClose();
-    }
-
-    if (!multiple) {
-        setSearchText(''); // Clear search text after selection
-    }
-}, [multiple, selectedOptions, getOptionValue, isControlled, onChange, handleClose, disableCloseOnSelect]);
-
+    }, [multiple, selectedOptions, getOptionValue, isControlled, onChange, handleClose, disableCloseOnSelect, combinedInputRef]);
 
     const handleClear = useCallback((e) => {
         e?.stopPropagation();
@@ -326,7 +360,7 @@ const ComboBox = React.memo(({
                 e.preventDefault();
                 if (isOpen && highlightedIndex >= 0) {
                     handleSelect(filteredOptions[highlightedIndex]);
-                } else if (autoSelect && filteredOptions.length > 0) {
+                } else if (autoSelect && filteredOptions.length > 0 && !multiple) {
                     handleSelect(filteredOptions[0]);
                 }
                 break;
@@ -423,7 +457,7 @@ const ComboBox = React.memo(({
     const sizeStyles = {
         sm: 'px-3 py-1.5 text-xs',
         md: 'px-4 py-2 text-sm',
-        lg: 'px-6 py-3 text-base',
+        lg: 'px-4 py-2 text-base',
     };
 
     const variantStyles = {
@@ -433,15 +467,6 @@ const ComboBox = React.memo(({
                  focus-within:bg-white focus-within:border-${color}-500`,
         underlined: `border-b-2 ${error ? 'border-red-500' : 'border-gray-200'} bg-transparent rounded-none
                      focus-within:border-${color}-500`,
-    };
-
-    const colorStyles = {
-        primary: 'text-indigo-600',
-        secondary: 'text-purple-600',
-        success: 'text-green-600',
-        error: 'text-red-600',
-        warning: 'text-yellow-600',
-        info: 'text-blue-600',
     };
 
     // ---------------------------------------------------------------------
@@ -465,7 +490,7 @@ const ComboBox = React.memo(({
         return (
             <div className="flex items-center justify-between w-full">
                 <span className="flex-1 truncate">{getOptionLabel(option)}</span>
-                {isSelected && (
+                {multiple && isSelected && (
                     <Icons.Check className="w-4 h-4 text-indigo-600 flex-shrink-0" />
                 )}
             </div>
@@ -505,103 +530,62 @@ const ComboBox = React.memo(({
                     ${variantStyles[variant]}
                     ${disabled ? 'bg-gray-100 pointer-events-none' : ''}
                     ${sizeStyles[size]}
-                    
                 `}
             >
                 {/* Selected Tags (for multiple) */}
-                {multiple && selectedOptions.length > 0 && renderTags ? (
+                {multiple && selectedOptions.length > 0 && renderTags && isOpen && (
                     renderTags(selectedOptions, { handleRemove: handleSelect })
-                ) : multiple && selectedOptions.length > 0 ? (
-                    <div className="flex flex-wrap gap-1 mr-2">
-                        {selectedOptions.map((option, idx) => (
-                            <span
-                                key={getOptionValue(option)}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded-full text-xs"
-                            >
-                                {getOptionLabel(option)}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleSelect(option);
-                                    }}
-                                    className="hover:bg-indigo-200 rounded-full p-0.5"
-                                >
-                                    <Icons.Close className="w-3 h-3" />
-                                </button>
-                            </span>
-                        ))}
-                    </div>
-                ) : null}
+                )}
 
                 {/* Input */}
                 <div className="flex-1 flex items-center">
-                    {searchable ? (
-                        <div className="flex-1 flex items-center">
-                            {searchable ? (
-                                <input
-                                    ref={combinedInputRef}
-                                    id={id}
-                                    type="text"
-                                    name={name}
-                                    // FIX: Show displayValue when not searching, otherwise show searchText
-                                    value={isOpen ? searchText : displayValue}
-                                    onChange={handleInputChange}
-                                    onKeyDown={handleKeyDown}
-                                    onFocus={handleFocus}
-                                    onBlur={handleBlur}
-                                    placeholder={!multiple && currentValue ? '' : placeholder}
-                                    disabled={disabled}
-                                    className={`
-                                                w-full bg-transparent outline-none
-                                                ${disabled ? 'cursor-not-allowed' : ''}
-                                                ${inputClassName}
-            `}
-                                    aria-label={ariaLabel || label || 'combobox'}
-                                    aria-describedby={ariaDescribedBy}
-                                    aria-expanded={isOpen}
-                                    aria-autocomplete="list"
-                                    aria-controls={isOpen ? `${id}-listbox` : undefined}
-                                    aria-activedescendant={
-                                        isOpen && highlightedIndex >= 0
-                                            ? `${id}-option-${highlightedIndex}`
-                                            : undefined
-                                    }
-                                    readOnly={!searchable}
-                                />
-                            ) : (
-                                <div
-                                    className="w-full bg-transparent outline-none cursor-pointer truncate"
-                                    onClick={handleToggle}
-                                >
-                                    {renderValue ? renderValue(currentValue) : displayValue || placeholder}
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div
-                            className="w-full bg-transparent outline-none cursor-pointer truncate"
-                            onClick={handleToggle}
-                        >
-                            {renderValue ? renderValue(currentValue) : displayValue || placeholder}
-                        </div>
-                    )}
+                    <input
+                        ref={combinedInputRef}
+                        id={id}
+                        type="text"
+                        name={name}
+                        value={getInputValue}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        placeholder={getInputPlaceholder}
+                        disabled={disabled}
+                        className={`
+                            w-full bg-transparent outline-none
+                            ${disabled ? 'cursor-not-allowed' : ''}
+                            ${inputClassName}
+                        `}
+                        aria-label={ariaLabel || label || 'combobox'}
+                        aria-describedby={ariaDescribedBy}
+                        aria-expanded={isOpen}
+                        aria-autocomplete="list"
+                        aria-controls={isOpen ? `${id}-listbox` : undefined}
+                        aria-activedescendant={
+                            isOpen && highlightedIndex >= 0
+                                ? `${id}-option-${highlightedIndex}`
+                                : undefined
+                        }
+                        readOnly={!searchable}
+                    />
                 </div>
 
                 {/* Icons */}
                 <div className="flex items-center gap-1 ml-2">
                     {/* Clear button */}
-                    {clearable && !disableClearable && currentValue && (
-                        <button
-                            type="button"
-                            onClick={handleClear}
-                            disabled={disabled}
-                            className="p-1 rounded-full hover:bg-gray-200 transition-colors"
-                            aria-label={clearText}
-                        >
-                            <Icons.Close className="w-4 h-4 text-gray-500" />
-                        </button>
-                    )}
+                    {clearable && !disableClearable && (
+                        ((multiple && selectedOptions.length > 0) || (!multiple && currentValue))
+                    ) && (
+                            <button
+                                type="button"
+                                onClick={handleClear}
+                                disabled={disabled}
+                                className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                                aria-label={clearText}
+                            >
+                                <Icons.Close className="w-4 h-4 text-gray-500" />
+                            </button>
+                        )}
 
                     {/* Loading spinner */}
                     {loading && (
@@ -688,8 +672,13 @@ const ComboBox = React.memo(({
                                         ${isDisabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-gray-50'}
                                         ${optionClassName}
                                     `}
-                                       style={{ zIndex: 50 }}
-                                    onClick={() => !isDisabled && handleOptionClick(option)}
+                                    style={{ zIndex: 50 }}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        if (!isDisabled) {
+                                            handleOptionClick(option);
+                                        }
+                                    }}
                                     onMouseEnter={() => handleOptionMouseEnter(index)}
                                     role="option"
                                     aria-selected={isSelected}
@@ -708,9 +697,6 @@ const ComboBox = React.memo(({
 
 ComboBox.displayName = 'ComboBox';
 
-// -------------------------------------------------------------------------
-// PropTypes
-// -------------------------------------------------------------------------
 ComboBox.propTypes = {
     // Data props
     options: PropTypes.array.isRequired,
