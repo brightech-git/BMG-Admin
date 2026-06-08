@@ -255,9 +255,9 @@ const AddBreadCrumbBanner = () => {
                             disabled={isUploading || isUpdating}
                         >
                             <option value="" diasbled>Select item category</option>
-                            {itemNames.map((it) => (
-                                <option key={it.ITEMCTRID} value={it.itemName}>
-                                    {it.itemName}
+                            {itemNames.map((i) => (
+                                <option key={i.ITEMID} value={i.ITEMNAME}>
+                                    {i.ITEMNAME}
                                 </option>
                             ))}
                         </select>

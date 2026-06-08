@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useFooterEntries, useCreateFooterEntry, useUpdateFooterEntry } from "../../../hooks/footer/useFooter";
 import { useItemNames } from "../../../hooks/itemName/useItemNames";
+import ComboBox from "../../../components/ui/ComboBox";
 
 const AddFooterEntryPage = () => {
     const navigate = useNavigate();
@@ -9,30 +10,39 @@ const AddFooterEntryPage = () => {
     const state = location.state || {};
     const isEdit = state?.mode === "edit";
     const editId = state?.id ?? null;
-console.log(editId,'state')
+
+
     // Queries / mutations
     const { data: footerData } = useFooterEntries();
     const createMutation = useCreateFooterEntry();
     const updateMutation = useUpdateFooterEntry();
     const { items: itemNames = [] } = useItemNames();
 
+    const itemList = useMemo(()=>{
+        return itemNames.map(i=>i.ITEMNAME);
+    },[itemNames])
+
+    console.log(itemNames,'itemNames in footer');
+
     // State
-    const [itemName, setitemName] = useState("");
+    const [itemName, setItemName] = useState("");
     const [file, setFile] = useState(null);
     // const [existingFile, setExistingFile] = useState(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-console.log(footerData ,'footerdata')
+
+
     // Pre-fill if editing
     const currentEntry = useMemo(() => {
         if (!isEdit || !footerData) return null;
         console.log(footerData ,'footerdata')
         return footerData.find((f) => f.id === editId) || null;
     }, [isEdit, editId, footerData]);
-    console.log(currentEntry ,'currententery')
+
+    
     useEffect(() => {
         if (isEdit && currentEntry) {
-            setitemName(currentEntry.itemName);
+            setItemName(currentEntry.itemName);
             // setExistingFile(currentEntry.imageUrl || null);
         }
     }, [isEdit, currentEntry]);
@@ -116,20 +126,28 @@ console.log(footerData ,'footerdata')
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Item Category */}
-                <div>
-                    <label className="block text-sm font-medium mb-1">Item Category *</label>
+                {/* <div>
+                    <label className="block text-sm font-medium mb-1">Item Name *</label>
                     <select
                         value={itemName}
-                        onChange={(e) => setitemName(e.target.value)}
+                        onChange={(e) => setItemName(e.target.value)}
                         className="w-full border px-2 py-1 rounded text-sm"
                     >
                         <option value="">Select item category</option>
                         {itemNames.map((item) => (
-                            <option key={item.itemName} value={item.itemName}>
-                                {item.itemName}
+                            <option key={item.ITEMID} value={item.ITEMNAME}>
+                                {item.ITEMNAME}
                             </option>
                         ))}
                     </select>
+                </div> */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Item Name *</label>
+                    <ComboBox
+                        options={itemList}
+                        value={itemName}
+                        onChange ={(val)=>setItemName(val)}
+                    />
                 </div>
 
                 {/* Image */}
@@ -156,7 +174,7 @@ console.log(footerData ,'footerdata')
                         type="button"
                         className="px-2 py-1.5 border rounded text-xs"
                         onClick={() => {
-                            setitemName("");
+                            setItemName("");
                             setFile(null);
                             setError("");
                             setSuccess("");
@@ -168,7 +186,7 @@ console.log(footerData ,'footerdata')
                         type="button"
                         className="px-2 py-1.5 border rounded text-xs"
                         onClick={() => {
-                            setitemName("");
+                            setItemName("");
                             setFile(null);
                             setError("");
                             setSuccess("");

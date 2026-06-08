@@ -33,6 +33,11 @@ const constructVideoUrls = (videoPath, baseUrl = 'https://app.bmgjewellers.com')
     }
 };
 
+
+
+
+
+
 // Media Display Component for table cells
 const MediaDisplay = ({ product, navigate, themeMode }) => {
     const images = constructImageUrls(product.ImagePath);
@@ -194,6 +199,9 @@ const ManageProduct = () => {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+
+  
 
     // Handle navigation events
     useEffect(() => {

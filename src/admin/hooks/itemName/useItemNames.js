@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { itemService } from "../../service/itemService";
 
-export const useItemNames = (itemctrId = null) => {
+export const useItemNames = (itemId = null) => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -10,9 +10,9 @@ export const useItemNames = (itemctrId = null) => {
         const fetchItems = async () => {
             setLoading(true);
             try {
-                console.log("📦 Fetching item names for:", itemctrId);
-                const data = await itemService.getItemNames(itemctrId);
-                console.log("✅ Item data fetched:", data);
+            
+                const data = await itemService.getItemNames(itemId);
+         
                 setItems(data || []);
             } catch (err) {
                 console.error("❌ Error fetching items:", err);
@@ -23,7 +23,7 @@ export const useItemNames = (itemctrId = null) => {
         };
 
         fetchItems();
-    }, [itemctrId]);
+    }, [itemId]);
 
     return { items, loading, error };
 };

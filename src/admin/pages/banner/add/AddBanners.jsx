@@ -172,6 +172,8 @@ const AddBanner = () => {
         }
         console.log(form, 'form');
 
+      
+
         const payload = new FormData();
         payload.append("filterId", filterKeyId);
         payload.append("category_key", categoryKey);
@@ -193,6 +195,8 @@ const AddBanner = () => {
             payload.append("image_desktop", files.imageDesktop);
             if (!isSingle && files.imageMobile) payload.append("image_mobile", files.imageMobile);
         }
+
+        console.log(payload,'bannerPayload');
 
         const mutation = isEdit ? updateMutation : uploadMutation;
         mutation.mutate(isEdit
@@ -425,7 +429,17 @@ const AddBanner = () => {
                 <div className="animate__animated animate__fadeInUp">
                     <Switch
                         checked={form.isSingle}
-                        onChange={(val) => setField('isSingle', val)}
+                        onChange={(val) => {
+                            setField("isSingle", val);
+
+                            if (val) {
+                                setFiles(prev => ({
+                                    ...prev,
+                                    imageMobile: null,
+                                    existingMobileImage: null,
+                                }));
+                            }
+                        }}
                         label="Single Banner Mode"
                         disabled={isLoading}
                     />

@@ -42,7 +42,7 @@ const VisibleCountInput = ({ value, onChange, device, icon, disabled }) => {
                         transition-all duration-300 outline-none
                     `}
                 >
-                    {[1, 2, 3, 4, 5, 6].map(num => (
+                    {[1, 2, 3, 4, 5, 6 , 8, 10].map(num => (
                         <option key={num} value={num} className="text-sm">
                             {num} {num === 1 ? 'Item' : 'Items'}
                         </option>

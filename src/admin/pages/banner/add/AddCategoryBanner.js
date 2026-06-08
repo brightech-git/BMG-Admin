@@ -31,7 +31,7 @@ const AddCategoryBanner = () => {
     const uploadMutation = useCategoryUploadMutation();
     const updateMutation = useCategoryUpdateMutation();
     const { data: banners } = useBannersQuery();
-    const { items:itemCrtName } =useItemNames();
+    const { items:itemNames } =useItemNames();
     const bannerData = useMemo(()=>banners?.data|| [] ,[banners?.data])
     // const itemNames = itemCrtName.map((items) => items.itemName) ||  [];
     // console.log(itemNames, 'namesfor item')
@@ -200,8 +200,8 @@ const handleClear = () =>{
                     className="w-full text-xs rounded-md border px-2 py-1.5 mb-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-gray-700 dark:border-gray-600"
                 >
                     <option value="">Select an item category</option>
-                    {itemCrtName?.map((b) => (
-                        <option key={b.id} value={b.itemName} className="text-xs"> {b.itemName} </option>
+                    {itemNames?.map((b) => (
+                        <option key={b.ITEMID} value={b.ITEMNAME} className="text-xs"> {b.ITEMNAME} </option>
                     ))}
                 </select>
 

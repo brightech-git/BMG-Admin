@@ -17,7 +17,7 @@ export default function FilterSection() {
     // Fetch all items
     const { items: allItems, loading: loadingItems } = useItemNames(null);
     // Fetch subitems of selected item
-    const { items: subItem, loading: loadingSub } = useItemNames(selectedItem?.ITEMCTRID || null);
+    const { items: subItem, loading: loadingSub } = useItemNames(selectedItem?.ITEMID || null);
     const subItems = subItem?.[0]?.subitems || [];
 
     const [tempSelectedItem, setTempSelectedItem] = useState(selectedItem);
@@ -129,7 +129,7 @@ export default function FilterSection() {
     // Apply filters and close modal
     const applyFilters = () => {
         if (tempSelectedItem)
-            updateFilter("itemName", tempSelectedItem.itemName);
+            updateFilter("itemName", tempSelectedItem.ITEMNAME);
         else
             updateFilter("itemName", "");
 
@@ -494,15 +494,15 @@ export default function FilterSection() {
                                     ) : (
                                         allItems.map(item => (
                                             <button
-                                                key={item.ITEMCTRID}
+                                                key={item.ITEMID}
                                                 onClick={() => setTempSelectedItem(item)}
-                                                className={`w-full px-3 py-2 border rounded-lg text-left transition-all ${tempSelectedItem?.ITEMCTRID === item.ITEMCTRID
+                                                className={`w-full px-3 py-2 border rounded-lg text-left transition-all ${tempSelectedItem?.ITEMID === item.ITEMID
                                                         ? 'bg-blue-600 text-white border-blue-600'
                                                         : 'border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-500'
                                                     }`}
                                                 style={{ fontSize: 'var(--font-size-xs, 14px)', borderRadius: 'var(--border-radius-md, 8px)' }}
                                             >
-                                                {item.itemName}
+                                                {item.ITEMNAME}
                                             </button>
                                         ))
                                     )}

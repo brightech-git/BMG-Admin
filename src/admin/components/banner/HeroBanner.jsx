@@ -225,6 +225,7 @@ const HeroBanner = ({
             onImageClick(imageData, index);
             return;
         }
+        console.log(imageData ,'handleClickdata');
 
         if (!imageData?.link) return;
         navigate(`/products-page?${imageData.link}`);

@@ -5,7 +5,8 @@ import { useHeaderKeys } from "../../../hooks/navItems/useHeaderNavKey";
 import { Switch } from "../../../components/ui/Switch";
 import ComboBox from '../../../components/ui/ComboBox';
 import { useGetAllFilterContents  } from "../../../hooks/filter/useFilterContent";
-import { useGetAllFilterSettings ,useItemList} from "../../../hooks/filter/useFilterSetting";
+import { useGetAllFilterSettings } from "../../../hooks/filter/useFilterSetting";
+import { useItemNames } from "../../../hooks/itemName/useItemNames";
 
 const INITIAL_FORM = {
     headerKey: "",
@@ -46,7 +47,7 @@ const AddMenuItemPage = () => {
     const { data: filterContents = [] } = useGetAllFilterContents(
         { filterKeyId: filterKeyId },
     );
-    const {data:itemList} =useItemList();
+    const { items } = useItemNames();
 
     const filterContentList = useMemo(() => {
         return Array.isArray(filterContents?.filters)
@@ -57,12 +58,14 @@ const AddMenuItemPage = () => {
             : [];
     }, [filterContents]);
 
+    console.log(items,'itemList');
+
     const itemNameList = useMemo(()=>{
-            return Array.isArray(itemList) ? itemList?.map((item)=>({
+        return Array.isArray(items) ? items?.map((item)=>({
                 label: item.ITEMNAME,
                 value: item.ITEMID
             })) : [];
-        },[itemList])
+    }, [items]);
         console.log(itemNameList,'itemNameList');
 
     const { data: filterKeyContents = [] } = useGetAllFilterSettings();

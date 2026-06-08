@@ -117,7 +117,7 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
             >
               {themeMode === 'light' ? <MdDarkMode size={18} /> : <MdOutlineLightMode size={18} />}
             </button> */}
-            <div className="admin-actions-groups">
+            {/* <div className="admin-actions-groups">
               <button
                 className="admin-action-btn"
                 onClick={() => {
@@ -132,7 +132,7 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
                 {buttonText}
               </button>
        
-          </div>
+          </div> */}
 
           {/* User Profile Section */}
           <div className="staradmin-profile-section" ref={profileRef}>
