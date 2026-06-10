@@ -13,11 +13,7 @@ export const getUserById = async (id) => {
     return response.data;
 };
 
-// Get all users (for admin table view)
-export const getAllUsers = async () => {
-    const response = await axiosInstance.get('/auth/user/getAllUserMasterData');
-    return response.data;
-};
+
 
 // Update a user's profile (by ID)
 export const updateUserById = async ({ id, updatedData }) => {
@@ -25,8 +21,3 @@ export const updateUserById = async ({ id, updatedData }) => {
     return response.data;
 };
 
-// Delete user by ID
-export const deleteUserById = async (id) => {
-    const response = await axiosInstance.delete(`/auth/user/deleteUserById/${id}`);
-    return response.data;
-};

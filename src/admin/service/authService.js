@@ -22,21 +22,3 @@ export const logoutUser = () => {
     sessionStorage.removeItem('auth_token');
 };
 
-// ✅ Create new employee
-export const createEmployee = async (values) => {
-
-    const payload = {
-        username: values.username,
-        password: values.password,
-        email: values.email,
-        roles: typeof values.roles === 'string' ? values.roles : values.roles[0],
-        contactNumber: values.contactNumber,
-    };
-
-    const response = await axiosInstance.post(
-        `/admin/create-employee`,
-        payload
-    );
-
-    return response.data;
-};

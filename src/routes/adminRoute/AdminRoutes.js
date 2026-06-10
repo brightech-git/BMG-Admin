@@ -12,8 +12,8 @@ import AddVideos from '../../admin/pages/video/add/addVideo';
 import ManageVideos from '../../admin/pages/video/manage/ManageVideos';
 import AddRates from '../../admin/pages/rate/add/addRates';
 import ManageRates from '../../admin/pages/rate/manage/manageRates';
-import AddEmployee from '../../admin/pages/employee/add/AddEmployee';
-import ManageEmployees from '../../admin/pages/employee/manage/ManageEmployees';
+
+import ManageUserMaster from '../../admin/pages/UserMaster/UserMaster';
 import UserDetails from '../../admin/pages/dashboard/userDetails';
 import NewAdminHeader from '../../admin/components/head/header';
 
@@ -81,7 +81,10 @@ import ManageFilterContent from '../../admin/pages/filter/ManageFilter';
 
 import AddHeaderNav from '../../admin/pages/settings/headerNav/AddHeaderNavKey';
 import ManageHeaderNavKey from '../../admin/pages/settings/headerNav/ManageHeaderKey';
-
+import ManageRoleMaster from '../../admin/pages/RoleMaster/RoleMaster';
+import RoleMapping from '../../admin/pages/RoleMapping/RoleMapping';
+import RoleTransactionPage from '../../admin/pages/RolePermission/RolePermission';
+import RoleTransaction from '../../admin/pages/RoleTransaction/RoleTransaction';
 
 
 const AdminRoutes = () => {
@@ -198,9 +201,14 @@ const AdminRoutes = () => {
 
                             {/*---------------------------EMPLOYEE MANAGEMENT------------------------*/}
 
-                            <Route path="employee/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddEmployee /></ProtectedRoute>} />
-                            <Route path="employee/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageEmployees /></ProtectedRoute>} />
+                            {/* <Route path="employee/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddEmployee /></ProtectedRoute>} />
+                            <Route path="employee/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageEmployees /></ProtectedRoute>} /> */}
 
+                            <Route path="master/user" element={<ManageUserMaster/>} />    
+                            <Route path="master/role" element={<ManageRoleMaster/>} />    
+                            <Route path="role/mapping" element={<RoleMapping />} />    
+                            <Route path="role/permission" element={<RoleTransactionPage />} />
+                            <Route path="role/transaction" element={<RoleTransaction />} />
 
                             {/*---------------------------BANNER MANAGEMENT------------------------*/}
 
@@ -215,10 +223,7 @@ const AdminRoutes = () => {
 
                             <Route path="userDetails" element={<UserDetails />} />
 
-                            {/*---------------------------EMPLOYEE'S DETAIL------------------------*/}
-
-                            <Route path="add/employee" element={<AddEmployee />} />
-                            <Route path="manage/employee" element={<ManageEmployees />} />
+                         
 
                             {/*---------------------------ORDERS TABLE------------------------*/}
 

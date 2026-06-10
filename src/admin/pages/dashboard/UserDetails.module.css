@@ -461,7 +461,7 @@
 
 .emailLink:hover {
     color: var(--primary-color);
-    text-decoration: underline;
+    /* text-decoration: underline; */
 }
 
 .roles {

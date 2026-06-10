@@ -24,13 +24,13 @@ export const useUserById = (id) => {
     });
 };
 
-// ✅ Get all users (admin)
-export const useAllUsers = () => {
-    return useQuery({
-        queryKey: ['allUsers'],
-        queryFn: getAllUsers
-    });
-};
+// // ✅ Get all users (admin)
+// export const useAllUsers = () => {
+//     return useQuery({
+//         queryKey: ['allUsers'],
+//         queryFn: getAllUsers
+//     });
+// };
 
 // ✅ Update a user (admin)
 export const useUpdateUserById = () => {
@@ -45,14 +45,14 @@ export const useUpdateUserById = () => {
     });
 };
 
-// ✅ Delete a user (admin)
-export const useDeleteUserById = () => {
-    const queryClient = useQueryClient();
+// // ✅ Delete a user (admin)
+// export const useDeleteUserById = () => {
+//     const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: deleteUserById,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-        }
-    });
-};
+//     return useMutation({
+//         mutationFn: deleteUserById,
+//         onSuccess: () => {
+//             queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+//         }
+//     });
+// };
