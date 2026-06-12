@@ -13,8 +13,7 @@ const HeroBanner = ({
     centered = false,
     full = false,
     backgroundColor = 'white',
-    mobileRows = null,
-    desktopColumns = 'auto',
+    
     onImageClick,
 
     autoScroll = false,
@@ -41,15 +40,15 @@ const HeroBanner = ({
     const autoplayRef = useRef(null);
     const carouselRef = useRef(null);
 
-    const parsedMobileRows = useMemo(() => {
-        if (!mobileRows) return null;
-        if (Array.isArray(mobileRows)) return mobileRows;
-        try {
-            return JSON.parse(mobileRows);
-        } catch {
-            return null;
-        }
-    }, [mobileRows]);
+    // const parsedMobileRows = useMemo(() => {
+    //     if (!mobileRows) return null;
+    //     if (Array.isArray(mobileRows)) return mobileRows;
+    //     try {
+    //         return JSON.parse(mobileRows);
+    //     } catch {
+    //         return null;
+    //     }
+    // }, [mobileRows]);
 
 
 
@@ -284,44 +283,50 @@ const HeroBanner = ({
 
     // Calculate grid layout
     const getGridLayout = () => {
+        const currentVisibleCount = getCurrentVisibleCount();
+
         if (scrollable) {
             return `repeat(${currentVisibleCount}, 1fr)`;
         }
 
-        if (isMobile && parsedMobileRows) {
-            let result = '';
-            parsedMobileRows.forEach((rowCols, rowIndex) => {
-                if (rowIndex > 0) result += ' ';
-                result += `repeat(${rowCols}, 1fr)`;
-            });
-            return result;
-        } else {
-            if (desktopColumns === 'auto') {
-                const allImagesHaveRatios = images.every(img => {
-                    const imgData = typeof img === 'string' ? null : img;
-                    return imgData && (imgData.ratio || imgData.desktop?.ratio);
-                });
+        // if (isMobile && parsedMobileRows) {
+        //     let result = "";
+        //     console.log(parsedMobileRows,'parsedMobileRowsparsedMobileRows')
 
-                if (allImagesHaveRatios) {
-                    const fractions = images.map((img) => {
-                        const imgData = getImageData(img, 0);
-                        if (imgData.ratio) {
-                            const [width] = imgData.ratio.split('/').map(Number);
-                            return `${width}fr`;
-                        }
-                        return '1fr';
-                    });
-                    return fractions.join(' ');
-                }
+        //     parsedMobileRows.forEach((rowCols, i) => {
+        //         if (i > 0) result += " ";
+        //         result += `repeat(${rowCols}, 1fr)`;
+        //     });
 
-                const gridCols = images.length <= 3 ? images.length : 3;
-                return `repeat(${gridCols}, 1fr)`;
-            } else {
-                return `repeat(${desktopColumns}, 1fr)`;
-            }
-        }
+        //     return result;
+        // }
+
+        // if (desktopColumns === "auto") {
+        //     const allHaveRatios = images.every((img) => {
+        //         const d = typeof img === "string" ? null : img;
+        //         return d && (d.ratio || d.desktop?.ratio);
+        //     });
+
+        //     if (allHaveRatios) {
+        //         return images
+        //             .map((img) => {
+        //                 const d = getImageData(img, 0);
+
+        //                 if (d.ratio) {
+        //                     const [w] = d.ratio.split("/").map(Number);
+        //                     return `${w}fr`;
+        //                 }
+
+        //                 return "1fr";
+        //             })
+        //             .join(" ");
+        //     }
+
+        //     return `repeat(${currentVisibleCount}, 1fr)`;
+        // }
+
+        return `repeat(${currentVisibleCount}, 1fr)`;
     };
-
     // Get visible images for carousel with infinite support
     const getVisibleImages = () => {
         if (!scrollable) return images;
@@ -341,32 +346,19 @@ const HeroBanner = ({
 
     // Split images into rows
     const getRows = () => {
-        if (scrollable) {
-            const visibleImages = getVisibleImages();
-            return isMobile && parsedMobileRows ? [visibleImages] : [visibleImages];
-        }
-
-        if (!isMobile || !parsedMobileRows) {
-            return [images];
-        }
-
+        if (scrollable) return [getVisibleImages()];
+        return [images];
         const rows = [];
-        let imageIndex = 0;
-
-        parsedMobileRows.forEach(rowCols => {
-            const rowImages = images.slice(imageIndex, imageIndex + rowCols);
-            if (rowImages.length > 0) {
-                rows.push(rowImages);
-                imageIndex += rowImages.length;
-            }
-        });
-
-        if (imageIndex < images.length && rows.length > 0) {
-            rows[rows.length - 1] = [...rows[rows.length - 1], ...images.slice(imageIndex)];
-        }
-
+        let idx = 0;
+        // parsedMobileRows.forEach(rowCols => {
+        //     const slice = images.slice(idx, idx + rowCols);
+        //     if (slice.length > 0) { rows.push(slice); idx += slice.length; }
+        // });
+        if (idx < images.length && rows.length > 0)
+            rows[rows.length - 1] = [...rows[rows.length - 1], ...images.slice(idx)];
         return rows;
     };
+
 
     const rows = getRows();
     const visibleImages = scrollable ? getVisibleImages() : images;
@@ -472,9 +464,7 @@ const HeroBanner = ({
                                 ${scrollable ? 'transition-transform duration-300 ease-out' : ''}
                             `}
                                     style={{
-                                        gridTemplateColumns: !scrollable && isMobile && parsedMobileRows
-                                            ? `repeat(${row.length}, 1fr)`
-                                            : gridTemplateStyle,
+                                        gridTemplateColumns: gridTemplateStyle,
                                         transform: scrollable && isDragging ? `translateX(${translateX}px)` : 'none',
                                     }}
                                 >

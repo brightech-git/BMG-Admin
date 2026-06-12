@@ -6,6 +6,8 @@ import { Switch } from '../../../components/ui/Switch';
 import 'animate.css';
 import FileUploadArea from '../../../components/banner/FileUploadArea';
 import ComboBox from '../../../components/ui/ComboBox';
+import InputField from '../../../components/ui/InputField';
+import SelectComboBox from '../../../components/ui/ComboBoxField';
 import { useGetAllFilterContents } from '../../../hooks/filter/useFilterContent';
 
 
@@ -54,6 +56,9 @@ const AddBanner = () => {
     // ── remote data ──────────────────────────────────────────────────────────
     const { data: bannerSettingData } = useGetBannerSettings();
     const bannerKeyContent = bannerSettingData?.data || [];
+
+    console.log(bannerKeyContent,'bannerKeyContent');
+
 
     const uploadMutation = useCreateBanners();
     const updateMutation = useUpdateBannerMutation();
@@ -223,10 +228,10 @@ const AddBanner = () => {
 
     // ── render ────────────────────────────────────────────────────────────────
     return (
-        <div className="max-w-7xl mx-auto m-2 bg-[var(--primary-card-color)] p-4 rounded-xl">
+        <div className="max-w-6xl mx-auto m-1 bg-[var(--primary-card-color)] p-2 rounded-xl">
 
             {/* Header */}
-            <div className="flex items-center justify-between mb-3 animate__animated animate__fadeInDown">
+            <div className="flex items-center justify-between mb-2 animate__animated animate__fadeInDown p-2">
                 <div>
                     <h2 className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         {isEdit ? "✏️ Edit Banner" : "➕ Add Banner"}
@@ -274,7 +279,7 @@ const AddBanner = () => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form onSubmit={handleSubmit} className="space-y-2">
 
                 {/* ── Category Key ── */}
                 <div>
@@ -366,7 +371,7 @@ const AddBanner = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 015.656 0l4 4a4 4 0 01-5.656 5.656l-1.102-1.101" />
                                 </svg>
                             </div>
-                            <input
+                            {/* <input
                                 value={form.link}
                                 onChange={(e) => setField('link', e.target.value)}
                                 disabled={isLoading}
@@ -375,6 +380,19 @@ const AddBanner = () => {
                                            transition-all duration-200 outline-none
                                            disabled:bg-gray-50 disabled:text-gray-500"
                                 placeholder="https://example.com/banner"
+                            /> */}
+
+                            <InputField
+                                value={form.link}
+                                field={"link"}
+                                onChange={setField}
+                                disabled={isLoading}
+                                // className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
+                                //            focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
+                                //            transition-all duration-200 outline-none
+                                //            disabled:bg-gray-50 disabled:text-gray-500"
+                                placeholder="https://example.com/banner"
+                                type='text'
                             />
                         </div>
                     </div>
@@ -385,27 +403,29 @@ const AddBanner = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate__animated animate__fadeInUp">
                         <div className="space-y-1.5">
                             <label className="text-xs font-semibold text-gray-700">Desktop Ratio</label>
-                            <input
+                            <InputField
                                 value={form.desktopRatio}
-                                onChange={(e) => setField('desktopRatio', e.target.value)}
+                                field={"desktopRatio"}
+                                onChange={setField}
                                 disabled={isLoading}
-                                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
-                                           focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
-                                           transition-all duration-200 outline-none"
-                                placeholder="e.g., 16:9"
+                                // className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
+                                //            focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
+                                //            transition-all duration-200 outline-none"
+                                placeholder="e.g., 16 / 9"
                             />
                         </div>
                         {!form.isSingle && (
                             <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-gray-700">Mobile Ratio</label>
-                                <input
+                                <InputField
                                     value={form.mobileRatio}
-                                    onChange={(e) => setField('mobileRatio', e.target.value)}
+                                    field={"mobileRatio"}
+                                    onChange={setField}
                                     disabled={isLoading}
-                                    className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
-                                               focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
-                                               transition-all duration-200 outline-none"
-                                    placeholder="e.g., 4:5"
+                                    // className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
+                                    //            focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
+                                    //            transition-all duration-200 outline-none"
+                                    placeholder="e.g., 4 / 5"
                                 />
                             </div>
                         )}
@@ -413,13 +433,14 @@ const AddBanner = () => {
                 ) : (
                     <div className="space-y-1.5 animate__animated animate__fadeInUp">
                         <label className="text-xs font-semibold text-gray-700">Row Span</label>
-                        <input
+                        <InputField
                             value={form.rowSpan}
-                            onChange={(e) => setField('rowSpan', e.target.value)}
+                            field={"rowSpan"}
+                            onChange={setField}
                             disabled={isLoading}
-                            className="w-full md:w-64 px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
-                                       focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
-                                       transition-all duration-200 outline-none"
+                            // className="w-full md:w-64 px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm
+                            //            focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
+                            //            transition-all duration-200 outline-none"
                             placeholder="Enter row span (e.g., 2)"
                         />
                     </div>
@@ -486,7 +507,7 @@ const AddBanner = () => {
                 </div>
 
                 {/* ── Form Actions ── */}
-                <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100 animate__animated animate__fadeInUp">
+                <div className="flex items-center justify-between pt-2 animate__animated animate__fadeInUp">
                     <div className="flex gap-2">
                         <button
                             type="button"
@@ -505,7 +526,7 @@ const AddBanner = () => {
                             type="button"
                             onClick={() => navigate(-1)}
                             disabled={isLoading}
-                            className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-xs font-medium
+                            className="p-2 rounded-xl border-2 border-gray-200 text-xs font-medium
                                        hover:bg-gray-50 hover:border-gray-300 transition-all duration-200
                                        disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
@@ -519,7 +540,7 @@ const AddBanner = () => {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`px-6 py-2.5 rounded-xl text-white text-sm font-medium
+                        className={`px-2 py-2 rounded-xl text-white text-sm font-medium
                             transition-all duration-300 transform flex items-center gap-2
                             ${isLoading
                                 ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'

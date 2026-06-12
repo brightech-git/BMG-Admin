@@ -84,7 +84,10 @@ export const MENU_CONFIG = [
         title: 'Category',
         icon: <FaTag />,
         children: [
+
+            { id: 'header-add', title: 'Add Header', path: '/admin/header/add' },
             { id: 'header-manage', title: 'Manage Header', path: '/admin/header/manage' },
+            { id: 'footer-add', title: 'Add Footer', path: '/admin/category/footer/add' },
             { id: 'footer-manage', title: 'Manage Footer', path: '/admin/category/footer/manage' },
         ],
     },

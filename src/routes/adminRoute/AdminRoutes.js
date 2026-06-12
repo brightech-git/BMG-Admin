@@ -165,7 +165,7 @@ const AdminRoutes = () => {
                             <Route path="featurebanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><UploadFeatureDesign /></ProtectedRoute>} />
                             <Route path="latestbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><UploadLatestBanner /></ProtectedRoute>} />
                             <Route path="genderbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddGenderBanner /></ProtectedRoute>} />
-                            <Route path="category/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddCategoryPage /></ProtectedRoute>} />
+                            <Route path="header/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddCategoryPage /></ProtectedRoute>} />
                             <Route path="item-category/add" element={<ItemCategory />} />
                             <Route path='category/footer/add' element={<AddFooterEntryPage />} />
 

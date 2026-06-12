@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUsers , useCreateUser } from '../../hooks/userMaster/useUsers';
+//import { useUsers , useCreateUser } from '../../hooks/userMaster/useUsers';
+import { useEmployees } from '../../hooks/employee/useEmployees';
 import * as XLSX from 'sheetjs-style';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -86,8 +87,10 @@ const itemVariants = {
 const ManageUserMaster = () => {
     const { themeMode } = useContext(MyContext);
     const navigate = useNavigate();
-    const { employees, isLoading, isError, refetch, deleteEmployee, isDeleting } = useUsers();
-    const { mutate: createEmployee, isLoading: createUserLoading, isError: createUserError, error, isSuccess } = useCreateUser();
+    const { create, createAsync, creating, createError ,createSuccess,  update, updateAsync, updating , getAll ,refresh:refetch  , getLoading:isLoading} = useEmployees();
+
+    const employees = getAll?.data || [];
+    console.log(employees,'employees');
 
     const [searchText, setSearchText] = useState('');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -98,7 +101,7 @@ const ManageUserMaster = () => {
     const [showError, setShowError] = useState(false);
     const [message, setMessage] = useState('');
     const [showExportMenu, setShowExportMenu] = useState(false);
-    const [sortConfig, setSortConfig] = useState({ key: 'username', direction: 'asc' });
+    const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
 
     const exportMenuRef = useRef(null);
     const tableContainerRef = useRef(null);
@@ -106,18 +109,16 @@ const ManageUserMaster = () => {
     const isDark = themeMode === 'dark';
 
     const filteredEmployees = useMemo(() => {
-        let filtered = employees
-            .filter(emp => emp.roles?.some(role => ['ROLE_EMPLOYEE', 'ROLE_ADMIN'].includes(role)))
-            .filter(emp =>
-                emp.username?.toLowerCase().includes(searchText.toLowerCase()) ||
-                emp.email?.toLowerCase().includes(searchText.toLowerCase()) ||
-                emp.contactNumber?.includes(searchText)
-            );
+        let filtered = employees.filter(emp =>
+            emp.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+            emp.email?.toLowerCase().includes(searchText.toLowerCase()) ||
+            emp.contactNumber?.includes(searchText)
+        );
 
         if (sortConfig.key) {
             filtered.sort((a, b) => {
-                let aVal = sortConfig.key === 'roles' ? a.roles?.join(',') : a[sortConfig.key];
-                let bVal = sortConfig.key === 'roles' ? b.roles?.join(',') : b[sortConfig.key];
+                let aVal = a[sortConfig.key];
+                let bVal = b[sortConfig.key];
                 if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
@@ -126,10 +127,10 @@ const ManageUserMaster = () => {
         return filtered;
     }, [searchText, employees, sortConfig]);
 
+    console.log(filteredEmployees,'filteredEmployees');
+
     const displayedEmployees = filteredEmployees.slice(0, visibleItems);
     const totalEmployees = filteredEmployees.length;
-    const adminCount = filteredEmployees.filter(emp => emp.roles?.some(r => r === 'ROLE_ADMIN')).length;
-    const employeeCount = filteredEmployees.filter(emp => emp.roles?.some(r => r === 'ROLE_EMPLOYEE')).length;
 
     useEffect(() => {
         const el = tableContainerRef.current;
@@ -158,23 +159,23 @@ const ManageUserMaster = () => {
         setShowDeleteModal(true);
     };
 
-    const confirmDelete = () => {
-        deleteEmployee(deleteId, {
-            onSuccess: () => {
-                setMessage('Employee deleted successfully!');
-                setShowSuccess(true);
-                setShowDeleteModal(false);
-                setTimeout(() => setShowSuccess(false), 4000);
-            },
-            onError: (err) => {
-                console.error('Delete error:', err);
-                setMessage('Failed to delete employee.');
-                setShowError(true);
-                setShowDeleteModal(false);
-                setTimeout(() => setShowError(false), 4000);
-            }
-        });
-    };
+    // const confirmDelete = () => {
+    //     deleteEmployee(deleteId, {
+    //         onSuccess: () => {
+    //             setMessage('Employee deleted successfully!');
+    //             setShowSuccess(true);
+    //             setShowDeleteModal(false);
+    //             setTimeout(() => setShowSuccess(false), 4000);
+    //         },
+    //         onError: (err) => {
+    //             console.error('Delete error:', err);
+    //             setMessage('Failed to delete employee.');
+    //             setShowError(true);
+    //             setShowDeleteModal(false);
+    //             setTimeout(() => setShowError(false), 4000);
+    //         }
+    //     });
+    // };
 
     const handleSort = (key) => {
         setSortConfig(cur => ({
@@ -185,22 +186,17 @@ const ManageUserMaster = () => {
 
     const exportToExcel = () => {
         const data = filteredEmployees.map(emp => ({
-            Username: emp.username,
-            Email: emp.email,
-            'Contact Number': emp.contactNumber,
-            Roles: emp.roles
-                .filter(r => ['ROLE_EMPLOYEE', 'ROLE_ADMIN'].includes(r))
-                .map(r => r.replace('ROLE_', ''))
-                .join(', ')
+            Name: emp.name,
+            Active: emp.active,
         }));
         const worksheet = XLSX.utils.json_to_sheet(data);
-        worksheet['!cols'] = [{ wch: 20 }, { wch: 30 }, { wch: 15 }, { wch: 20 }];
+        worksheet['!cols'] = [{ wch: 20 }, { wch: 10 }];
         const headerStyle = {
             fill: { fgColor: { rgb: 'D3D3D3' } },
             font: { bold: true, color: { rgb: '000000' } },
             alignment: { horizontal: 'center' }
         };
-        ['A1', 'B1', 'C1', 'D1'].forEach(cell => {
+        ['A1', 'B1'].forEach(cell => {
             if (worksheet[cell]) worksheet[cell].s = headerStyle;
         });
         const workbook = XLSX.utils.book_new();
@@ -215,17 +211,14 @@ const ManageUserMaster = () => {
     const exportToPDF = () => {
         const doc = new jsPDF();
         const tableRows = filteredEmployees.map(emp => [
-            emp.username,
-            emp.email,
-            emp.contactNumber,
-            emp.roles.filter(r => ['ROLE_EMPLOYEE', 'ROLE_ADMIN'].includes(r))
-                .map(r => r.replace('ROLE_', '')).join(', ')
+            emp.name,
+            emp.active,
         ]);
         doc.setFontSize(18);
         doc.setTextColor(59, 143, 243);
         doc.text('Employee Management Report', 14, 15);
         autoTable(doc, {
-            head: [['Username', 'Email', 'Contact', 'Roles']],
+            head: [['Name', 'Active']],
             body: tableRows,
             startY: 25,
             theme: 'grid',
@@ -258,14 +251,12 @@ const ManageUserMaster = () => {
             <h1>Employee List</h1>
             <p>Generated on ${new Date().toLocaleString()}</p>
             <table>
-                <thead><tr><th>Username</th><th>Email</th><th>Contact</th><th>Roles</th></tr></thead>
+                <thead><tr><th>Name</th><th>Active</th></tr></thead>
                 <tbody>
                     ${filteredEmployees.map(emp => `
                         <tr>
-                            <td>${emp.username}</td>
-                            <td>${emp.email}</td>
-                            <td>${emp.contactNumber}</td>
-                            <td>${emp.roles.filter(r => ['ROLE_EMPLOYEE', 'ROLE_ADMIN'].includes(r)).map(r => r.replace('ROLE_', '')).join(', ')}</td>
+                            <td>${emp.name}</td>
+                            <td>${emp.active}</td>
                         </tr>`).join('')}
                 </tbody>
             </table>
@@ -279,40 +270,41 @@ const ManageUserMaster = () => {
     };
 
     const [formData, setFormData] = useState({
-        username: '',
-        email: '',
+        name: '',
+        // email: '',
         password: '',
-        contactNumber: '',
-        roles: ''
+        // contactNumber: '',
+        // roles: '',
+        active:'Y',
     });
     const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
 
     const validateForm = () => {
         const newErrors = {};
-        if (!formData.username.trim()) {
-            newErrors.username = 'Username is required';
-        } else if (formData.username.length < 3) {
-            newErrors.username = 'Username must be at least 3 characters';
+        if (!formData.name.trim()) {
+            newErrors.name = 'name is required';
+        } else if (formData.name.length < 3) {
+            newErrors.name = 'name must be at least 3 characters';
         }
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Please enter a valid email';
-        }
+        // if (!formData.email.trim()) {
+        //     newErrors.email = 'Email is required';
+        // } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        //     newErrors.email = 'Please enter a valid email';
+        // }
         if (!formData.password) {
             newErrors.password = 'Password is required';
         } else if (formData.password.length < 6) {
             newErrors.password = 'Password must be at least 6 characters';
         }
-        if (!formData.contactNumber.trim()) {
-            newErrors.contactNumber = 'Contact number is required';
-        } else if (!/^\d{10}$/.test(formData.contactNumber)) {
-            newErrors.contactNumber = 'Enter a valid 10-digit phone number';
-        }
-        if (!formData.roles) {
-            newErrors.roles = 'Role is required';
-        }
+        // if (!formData.contactNumber.trim()) {
+        //     newErrors.contactNumber = 'Contact number is required';
+        // } else if (!/^\d{10}$/.test(formData.contactNumber)) {
+        //     newErrors.contactNumber = 'Enter a valid 10-digit phone number';
+        // }
+        // if (!formData.roles) {
+        //     newErrors.roles = 'Role is required';
+        // }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -327,10 +319,9 @@ const ManageUserMaster = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
-            createEmployee(formData, {
+            create(formData, {
                 onSuccess: () => {
-                    setFormData({ username: '', email: '', password: '', contactNumber: '', roles: '' });
-                    setTimeout(() => navigate('/admin/employee/manage'), 2000);
+                    setFormData({ name: '', email: '', password: '', contactNumber: '', roles: '' });
                 },
                 onError: (err) => {
                     console.error('Create employee error:', err);
@@ -341,35 +332,36 @@ const ManageUserMaster = () => {
 
 
     const headers = [
-        { key: 'username', label: 'Username', sortable: true },
-        { key: 'email', label: 'Email', sortable: true },
-        { key: 'contactNumber', label: 'Contact', sortable: true },
+        { key: 'name', label: 'Name', sortable: true },
+        { key: 'active', label: 'Active', sortable: true ,align:'center'},
+        // { key: 'email', label: 'Email', sortable: true },
+        // { key: 'contactNumber', label: 'Contact', sortable: true },
         // { key: 'roles', label: 'Roles', sortable: true },
         { key: 'actions', label: 'Actions', sortable: false }
     ];
 
-    // ── Error state ────────────────────────────────────────────────────────────
-    if (isError) {
-        return (
-            <div className={`p-2 md:p-4  ${isDark ? 'bg-gray-950' : 'bg-orange-50'}`}>
-                <div className={`rounded-xl border p-6 ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
-                    <div className="flex items-center gap-2 text-red-500 mb-3">
-                        <IconUsers className="w-6 h-6" />
-                        <h3 className="text-lg font-semibold">Error loading employees</h3>
-                    </div>
-                    <p className={`mb-4 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Failed to load employees. Please try again.
-                    </p>
-                    <button
-                        onClick={refetch}
-                        className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg transition-colors"
-                    >
-                        Retry
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    // // ── Error state ────────────────────────────────────────────────────────────
+    // if (isError) {
+    //     return (
+    //         <div className={`p-2 md:p-4  ${isDark ? 'bg-gray-950' : 'bg-orange-50'}`}>
+    //             <div className={`rounded-xl border p-6 ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
+    //                 <div className="flex items-center gap-2 text-red-500 mb-3">
+    //                     <IconUsers className="w-6 h-6" />
+    //                     <h3 className="text-lg font-semibold">Error loading employees</h3>
+    //                 </div>
+    //                 <p className={`mb-4 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+    //                     Failed to load employees. Please try again.
+    //                 </p>
+    //                 <button
+    //                     onClick={refetch}
+    //                     className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg transition-colors"
+    //                 >
+    //                     Retry
+    //                 </button>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     // ── Main ──────────────────────────────────────────────────────────────────
     return (
@@ -396,17 +388,18 @@ const ManageUserMaster = () => {
                     <div className="p-2 sm:p-4 flex flex-col gap-4">
 
                         {/* Error Alert */}
-                        {createUserError && (
+                        {createError && (
                             <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
                                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                     <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                                 </svg>
-                                {error?.message || 'Failed to create employee'}
+                                {/* {error?.message || 'Failed to create employee'} */}
+                                {'Failed to create employee'}
                             </div>
                         )}
 
                         {/* Success Alert */}
-                        {isSuccess && (
+                        {createSuccess && (
                             <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-700 rounded-lg px-4 py-3 text-sm">
                                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -415,16 +408,16 @@ const ManageUserMaster = () => {
                             </div>
                         )}
 
-                        {/* Username */}
+                        {/* name */}
                         <InputField
-                            label="Username"
-                            field="username"
-                            value={formData.username}
+                            label="name"
+                            field="name"
+                            value={formData.name}
                             onChange={handleInputChange}
-                            placeholder="Enter username"
+                            placeholder="Enter name"
                             required
                             isDark={isDark}
-                            error={errors.username}
+                            error={errors.name}
                             icon={
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -433,7 +426,7 @@ const ManageUserMaster = () => {
                         />
 
                         {/* Email */}
-                        <InputField
+                        {/* <InputField
                             label="Email"
                             field="email"
                             value={formData.email}
@@ -447,7 +440,7 @@ const ManageUserMaster = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
                             }
-                        />
+                        /> */}
 
                         {/* Password */}
                         <div className="flex flex-col gap-1">
@@ -493,7 +486,7 @@ const ManageUserMaster = () => {
                         </div>
 
                         {/* Contact Number */}
-                        <InputField
+                        {/* <InputField
                             label="Contact number"
                             field="contactNumber"
                             type="number"
@@ -509,6 +502,19 @@ const ManageUserMaster = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                 </svg>
                             }
+                        /> */}
+
+                        <SelectField
+                            label="Active"
+                            field={"active"}
+                            value={formData.active}
+                            onChange={handleInputChange} 
+                            options={[
+                                { value: 'true', label: 'Yes' },
+                                { value: 'false', label: 'No' },
+                            ]}
+                            placeholder="Select active status"
+                            
                         />
 
 
@@ -516,8 +522,7 @@ const ManageUserMaster = () => {
                         <div className="flex gap-3 pt-1">
                             <button
                                 type="button"
-                                onClick={() => navigate('/admin/employee/manage')}
-                                disabled={createUserLoading}
+                                disabled={creating}
                                 className="flex-1 py-2 px-4 text-sm font-medium rounded-lg border border-orange-500 text-orange-500 bg-transparent hover:bg-orange-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 Cancel
@@ -525,10 +530,10 @@ const ManageUserMaster = () => {
                             <button
                                 type="button"
                                 onClick={handleSubmit}
-                                disabled={createUserLoading}
+                                disabled={creating}
                                 className="flex-1 py-2 px-4 text-sm font-medium rounded-lg bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                             >
-                                {createUserLoading ? (
+                                {creating ? (
                                     <>
                                         <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
@@ -614,7 +619,7 @@ const ManageUserMaster = () => {
                                 <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="text"
-                                    placeholder="Search by username, email, or contact..."
+                                    placeholder="Search by name, email, or contact..."
                                     value={searchText}
                                     onChange={(e) => setSearchText(e.target.value)}
                                     className={`w-full pl-9 pr-4 py-2 text-sm rounded-lg border outline-none transition-all
@@ -631,7 +636,7 @@ const ManageUserMaster = () => {
                                 <motion.button
                                     whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                                     onClick={refetch}
-                                    disabled={isLoading}
+                                    // disabled={isLoading}
                                     className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors disabled:opacity-50
                                     ${isDark
                                             ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
@@ -755,7 +760,7 @@ const ManageUserMaster = () => {
                                 <div className="px-6 py-4">
                                     <p className={`text-sm mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                         Are you sure you want to delete{' '}
-                                        <span className="font-semibold text-orange-500">"{deleteTarget?.username}"</span>?
+                                        <span className="font-semibold text-orange-500">"{deleteTarget?.name}"</span>?
                                     </p>
                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                         This action cannot be undone.
@@ -766,7 +771,7 @@ const ManageUserMaster = () => {
                                 <div className={`px-6 py-4 border-t flex justify-end gap-3 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
                                     <button
                                         onClick={() => setShowDeleteModal(false)}
-                                        disabled={isDeleting}
+                                        // disabled={isDeleting}
                                         className={`px-4 py-2 text-sm rounded-lg border transition-colors disabled:opacity-50
                                         ${isDark
                                                 ? 'border-gray-700 text-gray-300 hover:bg-gray-800'
@@ -775,7 +780,7 @@ const ManageUserMaster = () => {
                                     >
                                         Cancel
                                     </button>
-                                    <button
+                                    {/* <button
                                         onClick={confirmDelete}
                                         disabled={isDeleting}
                                         className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
@@ -791,7 +796,7 @@ const ManageUserMaster = () => {
                                                 Delete
                                             </>
                                         )}
-                                    </button>
+                                    </button> */}
                                 </div>
                             </motion.div>
                         </motion.div>

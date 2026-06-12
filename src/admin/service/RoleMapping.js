@@ -3,7 +3,7 @@ import axiosInstance from "../api/axiosInstance";
 export const RoleMappingService = {
     createRole: async (data) => {
         try {
-            const res = await axiosInstance.post("/role/mapping", data);
+            const res = await axiosInstance.post("/rolemapping", data);
             return res.data;
         } catch (err) {
             throw new Error(
@@ -14,7 +14,7 @@ export const RoleMappingService = {
 
     getRoles: async () => {
         try {
-            const res = await axiosInstance.get("/role/mapping");
+            const res = await axiosInstance.get("/rolemapping");
             return res.data;
         } catch (err) {
             throw new Error(
@@ -25,8 +25,9 @@ export const RoleMappingService = {
 
     updateRole: async (id, data) => {
         try {
+            console.log(id, data, "service");
             const res = await axiosInstance.put(
-                `/role/mapping/${id}`,
+                `/rolemapping/${id}`,
                 data
             );
             return res.data;
@@ -40,7 +41,7 @@ export const RoleMappingService = {
     deleteRole: async (id) => {
         try {
             const res = await axiosInstance.delete(
-                `/role/mapping/${id}`
+                `/rolemapping/${id}`
             );
             return res.data;
         } catch (err) {

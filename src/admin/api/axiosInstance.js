@@ -13,8 +13,13 @@ axiosInstance.interceptors.request.use(
     (config) => {
 
         const authtoken = sessionStorage.getItem('auth_token'); // Moved inside so it's fresh
+        const userId = sessionStorage.getItem('user_id');
+
+
         if (authtoken) {
             config.headers.Authorization = `Bearer ${authtoken}`;
+            config.headers['USERID'] = userId;
+
         }
         return config;
     },

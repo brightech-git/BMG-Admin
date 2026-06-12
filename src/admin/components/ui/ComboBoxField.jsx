@@ -174,8 +174,9 @@ const SelectComboBox = ({
 
     // ── What the input shows ─────────────────────────────────────────────────
     // While open: show the live query (what user is typing)
-    // While closed: show the selected option's label (displayValue) or nothing
-    const inputValue = isOpen ? query : (displayValue ?? '');
+    // While closed: derive the label from options using the current value
+    const selectedLabel = options.find(opt => String(opt.value) === String(value))?.label ?? (displayValue ?? '');
+    const inputValue = isOpen ? query : selectedLabel;
 
     // max-height for the dropdown list
     const listMaxHeight = `${maxVisible * 40}px`;

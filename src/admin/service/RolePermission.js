@@ -1,6 +1,6 @@
 import axiosInstance from "../api/axiosInstance";
 
-const base = "/role/permission";
+
 
 const req = async (fn) => {
     try { return (await fn()).data; }
@@ -8,26 +8,57 @@ const req = async (fn) => {
 };
 
 export const ModuleService = {
-    create:  (data)     => req(() => axiosInstance.post(`${base}/module`, data)),
-    getAll:  ()         => req(() => axiosInstance.get(`${base}/module`)),
-    update:  (id, data) => req(() => axiosInstance.put(`${base}/module/${id}`, data)),
-    delete:  (id)       => req(() => axiosInstance.delete(`${base}/module/${id}`)),
+    create:  (data)     => req(() => axiosInstance.post(`/module`, data)),
+    getAll:  ()         => req(() => axiosInstance.get(`/module`)),
+    getAllList: () => req(()=> axiosInstance.get(`/module/list`)),
+    update:  (id, data) => req(() => axiosInstance.put(`/module/${id}`, data)),
+    delete:  (id)       => req(() => axiosInstance.delete(`/module/${id}`)),
 };
 
 export const SubModuleService = {
-    create:  (data)     => req(() => axiosInstance.post(`${base}/sub-module`, data)),
-    getAll:  ()         => req(() => axiosInstance.get(`${base}/sub-module`)),
-    update:  (id, data) => req(() => axiosInstance.put(`${base}/sub-module/${id}`, data)),
-    delete:  (id)       => req(() => axiosInstance.delete(`${base}/sub-module/${id}`)),
+    create: (parentId, data) => req(() => axiosInstance.post(`/submodule/${parentId}`, data)),
+    getAll: (parentId) => req(() => axiosInstance.get(`/submodule/${parentId}`)),
+    update:  (id, data) => req(() => axiosInstance.put(`/submodule/${id}`, data)),
+    delete:  (id)       => req(() => axiosInstance.delete(`/submodule/${id}`)),
 };
 
 export const ContentService = {
-    create:  (data)     => req(() => axiosInstance.post(`${base}/content`, data)),
-    getAll:  ()         => req(() => axiosInstance.get(`${base}/content`)),
-    update:  (id, data) => req(() => axiosInstance.put(`${base}/content/${id}`, data)),
-    delete:  (id)       => req(() => axiosInstance.delete(`${base}/content/${id}`)),
+    create: (subModuleId, data) =>
+        req(() =>{
+            console.log(subModuleId, data,'payloadforcontent');
+            return axiosInstance.post(`/content/submodule/${subModuleId}`, data)
+        }    
+        ),
+
+    createUnderModule: (moduleId, data) =>
+        req(() =>{
+            console.log(moduleId, data, 'payloadforcontent');
+            return axiosInstance.post(`/content/module/${moduleId}`, data)
+        }
+      
+        ),
+
+    getAllBySubModule: (subModuleId) =>
+        req(() =>
+            axiosInstance.get(`/content/submodule/${subModuleId}`)
+        ),
+
+    getAllByModule: (moduleId) =>
+        req(() =>
+            axiosInstance.get(`/content/module/${moduleId}`)
+        ),
+
+    update: (id, data) =>
+        req(() =>
+            axiosInstance.put(`/content/${id}`, data)
+        ),
+
+    delete: (id) =>
+        req(() =>
+            axiosInstance.delete(`/content/${id}`)
+        ),
 };
 
 export const RolePermissionViewService = {
-    getView: () => req(() => axiosInstance.get(`${base}/view`)),
+    getView: () => req(() => axiosInstance.get(`/module/list`)),
 };

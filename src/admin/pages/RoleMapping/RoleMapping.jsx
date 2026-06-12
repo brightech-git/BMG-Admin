@@ -3,12 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Link2, User, Shield, Save, Trash2, Search,
     RefreshCw, CheckCircle2, XCircle, AlertCircle,
-    Users, Loader2,
+    Users, Loader2,Edit
 } from 'lucide-react';
 import { MyContext } from '../../context/themeContext/themeContext';
 import { useRoleMapping } from '../../hooks/RoleMapping/useRoleMapping';
 import { useRoleMaster } from '../../hooks/RoleMaster/useRoleMaster';
 import { useUsers } from '../../hooks/userMaster/useUsers';
+import { useEmployees } from '../../hooks/employee/useEmployees';
 import ComboBox from '../../components/ui/ComboBoxField';
 import AdvancedTable from '../../components/table/ResponsiveTable';
 
@@ -28,7 +29,8 @@ const RoleMapping = () => {
     // ── Data hooks ────────────────────────────────────────────────────────────
     const { createRoleMapping, updateRoleMapping, deleteRoleMapping, getRoleMappings } = useRoleMapping();
     const { getRoles } = useRoleMaster();
-    const { employees, isLoading: usersLoading } = useUsers();
+    const { getAll : employees, getLoading: usersLoading } = useEmployees();
+
 
     const { data: mappings = [], isLoading, isError, refetch } = getRoleMappings;
     const { mutate: saveMapping, isPending: isSaving, isError: saveError, error: saveErr } = createRoleMapping;
@@ -47,14 +49,14 @@ const RoleMapping = () => {
 
     // ── ComboBox options ──────────────────────────────────────────────────────
     const userOptions = useMemo(
-        () => employees.map(u => ({ value: String(u.id), label: u.username })),
+        () => (Array.isArray(employees?.data) ? employees?.data : []).map(u => ({ value: String(u.id), label: u.name })),
         [employees]
     );
 
-    const roleOptions = useMemo(
-        () => (getRoles.data ?? []).map(r => ({ value: String(r.id), label: r.roleName })),
-        [getRoles.data]
-    );
+    const roleOptions = useMemo(() => {
+        const roles = Array.isArray(getRoles.data) ? getRoles.data : (getRoles.data?.data ?? []);
+        return roles.map(r => ({ value: String(r.roleid ?? r.id), label: r.rolename ?? r.roleName }));
+    }, [getRoles.data]);
 
     const selectedUserLabel = userOptions.find(o => o.value === formData.userId)?.label ?? '';
     const selectedRoleLabel = roleOptions.find(o => o.value === formData.roleId)?.label ?? '';
@@ -64,7 +66,7 @@ const RoleMapping = () => {
         if (!searchText.trim()) return mappings;
         const q = searchText.toLowerCase();
         return mappings.filter(m =>
-            m.username?.toLowerCase().includes(q) ||
+            m.userName?.toLowerCase().includes(q) ||
             m.roleName?.toLowerCase().includes(q)
         );
     }, [mappings, searchText]);
@@ -141,9 +143,9 @@ const RoleMapping = () => {
     const isBusy = isSaving || isUpdating;
 
     const headers = [
-        { key: 'username', label: 'User', sortable: true },
+        { key: 'userName', label: 'User', sortable: true },
         { key: 'roleName', label: 'Role', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false },
+        { key: 'ACTIONS', label: 'Actions', sortable: false },
     ];
 
     // ── Error state ───────────────────────────────────────────────────────────
@@ -283,7 +285,7 @@ const RoleMapping = () => {
                     {toast && (
                         <motion.div
                             initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-                            className="fixed top-4 right-4 z-50"
+                            className="fixed top-4 right-4 z-[9999]"
                         >
                             <div className={`border-l-4 p-4 rounded-lg shadow-lg flex items-center gap-2
                                 ${toast.type === 'success' ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}
@@ -373,6 +375,32 @@ const RoleMapping = () => {
                                 isLoading={isLoading}
                                 onRetry={refetch}
                                 rowText="text-sm"
+                                renderCell={(key, row) => {
+                                  
+                                   
+                                    if (key === "ACTIONS") {
+                                        return (
+                                            <div className="flex gap-2 items-center justify-center">
+                                                <button
+                                                    onClick={() => handleEdit(row)}
+                                                    title="Edit"
+                                                    className="p-1 rounded hover:bg-blue-50 text-blue-600 transition-colors"
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteClick(row)}
+                                                    title="Delete"
+                                                    className="p-1 rounded hover:bg-red-50 text-red-600 transition-colors"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        );
+                                    }
+
+                                    return row[key];
+                                }}
                             />
                         )}
 
@@ -417,7 +445,7 @@ const RoleMapping = () => {
                                 <div className="px-6 py-4">
                                     <p className={`text-sm mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                         Delete mapping for{' '}
-                                        <span className="font-semibold text-orange-500">"{deleteTarget?.username}"</span>?
+                                        <span className="font-semibold text-orange-500">"{deleteTarget?.userName}"</span>?
                                     </p>
                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                                         This action cannot be undone.

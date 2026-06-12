@@ -6,8 +6,12 @@ const req = async (fn) => {
 };
 
 export const RoleTransactionService = {
-    create:  (data)     => req(() => axiosInstance.post('/role/transaction', data)),
-    getAll:  ()         => req(() => axiosInstance.get('/role/transaction')),
-    update:  (id, data) => req(() => axiosInstance.put(`/role/transaction/${id}`, data)),
-    delete:  (id)       => req(() => axiosInstance.delete(`/role/transaction/${id}`)),
+    save:               (data)        => req(() => axiosInstance.post('/roletran', data)),
+    saveBulk: (data) => req(() => { console.log(data, 'roletran'); return axiosInstance.post('/roletran/insert', data) } ),
+    getAll:             ()            => req(() => axiosInstance.get('/roletran')),
+    getByRoleId:        (roleId)      => req(() => axiosInstance.get(`/roletran/role/${roleId}`)),
+    getActive:          ()            => req(() => axiosInstance.get('/roletran/active')),
+    getByRoleIdAndActive:(roleId)     => req(() => axiosInstance.get(`/roletran/role/${roleId}/active`)),
+    delete:             (sno)         => req(() => axiosInstance.delete(`/roletran/${sno}`)),
+    toggle:             (sno)         => req(() => axiosInstance.put(`/roletran/${sno}/toggle`)),
 };

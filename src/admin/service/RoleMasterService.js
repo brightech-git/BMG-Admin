@@ -3,7 +3,8 @@ import axiosInstance from "../api/axiosInstance";
 export const RoleMasterService = {
     createRole: async (data) => {
         try {
-            const res = await axiosInstance.post("/roles", data);
+            console.log("data to send", data);
+            const res = await axiosInstance.post("/rolemaster", data);
             return res.data;
         } catch (err) {
             throw new Error(err.response?.data?.message || err.message);
@@ -12,7 +13,7 @@ export const RoleMasterService = {
 
     getRoles: async () => {
         try {
-            const res = await axiosInstance.get("/roles");
+            const res = await axiosInstance.get("/rolemaster");
             return res.data;
         } catch (err) {
             throw new Error(err.response?.data?.message || err.message);
@@ -21,7 +22,7 @@ export const RoleMasterService = {
 
     getRoleById: async (id) => {
         try {
-            const res = await axiosInstance.get(`/roles/${id}`);
+            const res = await axiosInstance.get(`/rolemaster/${id}`);
             return res.data;
         } catch (err) {
             throw new Error(err.response?.data?.message || err.message);
@@ -30,7 +31,7 @@ export const RoleMasterService = {
 
     updateRole: async (id, data) => {
         try {
-            const res = await axiosInstance.put(`/roles/${id}`, data);
+            const res = await axiosInstance.put(`/rolemaster/${id}`, data);
             return res.data;
         } catch (err) {
             throw new Error(err.response?.data?.message || err.message);
@@ -39,7 +40,7 @@ export const RoleMasterService = {
 
     deleteRole: async (id) => {
         try {
-            const res = await axiosInstance.delete(`/roles/${id}`);
+            const res = await axiosInstance.delete(`/rolemaster/${id}`);
             return res.data;
         } catch (err) {
             throw new Error(err.response?.data?.message || err.message);

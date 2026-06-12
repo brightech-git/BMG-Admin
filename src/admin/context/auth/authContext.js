@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = (token, userData) => {
         sessionStorage.setItem('auth_token', token);
+        sessionStorage.setItem('user_id', userData.id);
         setAuthToken(token);
         setUser(userData);
     };

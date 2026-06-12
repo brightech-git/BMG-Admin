@@ -64,21 +64,11 @@ const ManageBannerSettings = () => {
         }
     };
 
-    // Parse mobileRows from JSON string
-    const parseMobileRows = (mobileRowsStr) => {
-        if (!mobileRowsStr) return [];
-        try {
-            return typeof mobileRowsStr === 'string'
-                ? JSON.parse(mobileRowsStr)
-                : mobileRowsStr;
-        } catch (e) {
-            return [];
-        }
-    };
+   
 
     const tableData = banners.map((item, index) => {
         const visibleCountObj = parseVisibleCount(item.visibleCount);
-        const mobileRowsArray = parseMobileRows(item.mobileRows);
+      
 
         return {
             sno: index + 1,
@@ -92,11 +82,7 @@ const ManageBannerSettings = () => {
             full: item.full ?? "",
             backgroundColor: item.backgroundColor || "",
             desktopRatio: item.desktopRatio || item.defaultRatio || "16/9",
-            mobileRatio: item.mobileRatio || "4/3",
-            mobileRows: mobileRowsArray,
-            mobileRowsDesktop: mobileRowsArray[0] || "",
-            mobileRowsMobile: mobileRowsArray[1] || "",
-            desktopColumns: item.desktopColumns || "auto",
+        
             alt: item.alt || "",
             isVisible: item.isVisible,
             isGrid: item.isGrid,
@@ -268,8 +254,6 @@ const ManageBannerSettings = () => {
                     { key: "displayOrder", label: "Order" },
                     { key: "isGrid", label: "IsGrid" },
                     // Layout fields
-                    { key: "desktopColumns", label: "Desktop Cols" },
-                    { key: "mobileRows", label: "Mobile Rows" },
                     { key: "desktopLayout", label: "Desktop Layout" },
                     { key: "mobileLayout", label: "Mobile Layout" },
                     // Boolean fields group
@@ -347,10 +331,7 @@ const ManageBannerSettings = () => {
                         return renderScrollInterval(row.scrollInterval);
                     }
 
-                    // Mobile rows
-                    if (key === "mobileRows") {
-                        return renderMobileRows(row);
-                    }
+                  
 
                     // Desktop/Mobile layout preview
                     if (key === "desktopLayout") {
@@ -376,8 +357,8 @@ const ManageBannerSettings = () => {
                     // Display order
                     if (key === "displayOrder") {
                         return (
-                            <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded-full">
-                                #{row.displayOrder}
+                            <span className="font-mono text-sm bg-gray-100 px-2 py-0.5 rounded-full">
+                                {row.displayOrder}
                             </span>
                         );
                     }
@@ -717,6 +698,8 @@ const ManageBannerSettings = () => {
 
                                                 const deviceProps = getDeviceSpecificProps();
 
+                                                console.log(deviceProps,'deviceProps');
+
                                                 return transformedBanner.isGrid ? (
                                                     <GridBanner
                                                         key={transformedBanner.imageKey}
@@ -741,15 +724,13 @@ const ManageBannerSettings = () => {
                                                         title={transformedBanner.title}
                                                         description={transformedBanner.description}
                                                         images={transformedBanner.images || []}
-                                                        defaultRatio={deviceProps.defaultRatio}
-                                                        mobileRatio={transformedBanner.mobileRatio}
+                            
                                                         gap={deviceProps.gap}
                                                         mobileGap={transformedBanner.mobileGap}
                                                         centered={transformedBanner.centered}
                                                         full={transformedBanner.full}
                                                         backgroundColor={transformedBanner.backgroundColor}
-                                                        mobileRows={previewDevice === 'mobile' ? transformedBanner.mobileRows : null}
-                                                        desktopColumns={transformedBanner.desktopColumns || 'auto'}
+                                                       
                                                         autoScroll={transformedBanner.autoscroll || false}
                                                         scrollable={transformedBanner.scrollable || false}
                                                         visibleCount={deviceProps.visibleCount}
@@ -787,18 +768,8 @@ const ManageBannerSettings = () => {
                                     <span className="text-gray-500 block">Desktop Ratio</span>
                                     <span className="font-medium">{openPreview.desktopRatio}</span>
                                 </div>
-                                <div className="bg-white p-2 rounded border border-gray-200">
-                                    <span className="text-gray-500 block">Mobile Ratio</span>
-                                    <span className="font-medium">{openPreview.mobileRatio}</span>
-                                </div>
-                                <div className="bg-white p-2 rounded border border-gray-200">
-                                    <span className="text-gray-500 block">Desktop Columns</span>
-                                    <span className="font-medium">{openPreview.desktopColumns}</span>
-                                </div>
-                                <div className="bg-white p-2 rounded border border-gray-200">
-                                    <span className="text-gray-500 block">Mobile Rows</span>
-                                    <span className="font-medium">{openPreview.mobileRows || 'N/A'}</span>
-                                </div>
+                               
+                              
                                 {!openPreview.isGrid && (
                                     <>
                                         <div className="bg-white p-2 rounded border border-gray-200">

@@ -6,13 +6,14 @@ export const useUsers = () => {
     const queryClient = useQueryClient();
 
     const {
-        data: employees = [], 
+        data: employees = [],
         isLoading,
         isError,
         refetch,
     } = useQuery({
         queryKey: ['users'],
         queryFn: getAllUsers,
+        select: (data) => Array.isArray(data) ? data : (data?.data ?? data?.content ?? data?.users ?? []),
     });
 
     const deleteMutation = useMutation({

@@ -41,7 +41,7 @@ const ManageCategoriesPage = () => {
         headerContent : item
 
     }));
-    const handleClick = () => navigate('/category/add')
+    const handleClick = () => navigate('/header/add')
 
     return (
         <div className="max-w-8xl mx-auto mt-3 p-3 sm:p-4 sm:mt-4">
@@ -72,7 +72,7 @@ const ManageCategoriesPage = () => {
                         return (
                             <div className="flex gap-2 justify-center">
                                 <button
-                                    onClick={() => navigate('/category/add', { state: { rowData: row.headerContent, mode: 'edit' } })}
+                                    onClick={() => navigate('/header/add', { state: { rowData: row.headerContent, mode: 'edit' } })}
                                     className="text-blue-600 hover:text-blue-800 transition-colors"
                                     title="Edit"
                                 >

@@ -234,13 +234,20 @@ const AddBannerSetting = () => {
             let parsedVisibleCount = { desktop: 3, tablet: 2, mobile: 2 };
             try {
                 if (initialData.visibleCount) {
-                    parsedVisibleCount = typeof initialData.visibleCount === 'string'
+                    let parsed = typeof initialData.visibleCount === 'string'
                         ? JSON.parse(initialData.visibleCount)
                         : initialData.visibleCount;
+                    // Handle double-stringified JSON (saved as JSON.stringify on client, serialized again on server)
+                    if (typeof parsed === 'string') {
+                        parsed = JSON.parse(parsed);
+                    }
+                    parsedVisibleCount = parsed;
                 }
             } catch (e) {
                 console.error('Error parsing visibleCount:', e);
             }
+
+            console.log(parsedVisibleCount, 'parsedVisibleCount');
 
             setForm((prev) => ({
                 ...prev,
@@ -283,6 +290,14 @@ const AddBannerSetting = () => {
         }
     }, [mode, initialData]);
 
+    useEffect(() => {
+        console.log(
+            form.visibleCount,
+            typeof form.visibleCount,
+            "FORM visibleCount"
+        );
+    }, [form.visibleCount]);
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setForm(prev => ({
@@ -293,6 +308,7 @@ const AddBannerSetting = () => {
 
 
     console.log(form,'formChanged');
+
     const handleVisibleCountChange = (device, value) => {
         setForm(prev => ({
             ...prev,
@@ -368,7 +384,7 @@ const AddBannerSetting = () => {
         //     setSnackbar({ open: true, message: "Title is required", type: "error", title: "Error" });
         //     return;
         // }
-    
+       
 
         // Prepare payload with JSON string for visibleCount
         const payload = {
@@ -404,7 +420,7 @@ const AddBannerSetting = () => {
             mobileLayout: form.mobileLayout,
         };
 
-      
+        console.log(form.visibleCount,  'visibleCount');
 
         if (mode === "add") {
             createMutation.mutate(payload, {

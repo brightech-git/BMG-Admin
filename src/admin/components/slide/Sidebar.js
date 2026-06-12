@@ -369,7 +369,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 <div className={`shrink-0 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'} p-2 space-y-1`}>
                     {/* User profile */}
                     <button
-                        onClick={() => navigate('/admin/manage/employee')}
+                        // onClick={() => navigate('/admin/manage/employee')}
                         className={`
                             w-full flex items-center gap-2 p-2 rounded-lg
                             transition-colors text-left
