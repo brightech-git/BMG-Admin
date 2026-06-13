@@ -305,6 +305,14 @@ const ManageUserMaster = () => {
         // if (!formData.roles) {
         //     newErrors.roles = 'Role is required';
         // }
+        const isNameAlreadyExists = employees.some((e) => e.name.toLowerCase() === formData.name.toLowerCase() );
+   
+
+        if(isNameAlreadyExists){
+            newErrors.name = 'UserName already Exisits Please Enter a New Name'
+        }
+
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -319,6 +327,7 @@ const ManageUserMaster = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
+       
             create(formData, {
                 onSuccess: () => {
                     setFormData({ name: '', email: '', password: '', contactNumber: '', roles: '' });

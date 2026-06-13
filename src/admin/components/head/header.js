@@ -7,7 +7,6 @@ import logo from '../../assets/logo/logo.jpg';
 import './NewAdminHeader.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth/authContext';
-import { useUserProfile } from '../../hooks/profile/useUserProfile';
 import { debounce } from 'lodash';
 import "./AppSwitchButton.css";
 
@@ -20,8 +19,11 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
   const [activeButton, setActiveButton] = useState(null);
   const navigate = useNavigate();
   const location =useLocation();
-  const { logout } = useAuth();
-  const { data: user, isLoading } = useUserProfile();
+  const { logout , user } = useAuth();
+
+  console.log(user,'user')
+
+  
   const profileRef = useRef(null);
 
   const isChitApp = location.pathname.startsWith("/app/admin");
@@ -153,7 +155,7 @@ const NewAdminHeader = ({ toggleSidebar, isSidebarOpen }) => {
                 )}
               </div>
               {windowWidth > 768 && (
-                <span className="staradmin-profile-name">{user?.username || 'Admin'}</span>
+                <span className="staradmin-profile-name">{user.name || 'Admin'}</span>
               )}
             </button>
             <AnimatePresence>

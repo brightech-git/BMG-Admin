@@ -33,7 +33,7 @@ const AddBreadCrumbBanner = () => {
     const isBusy = isUploading || isUpdating;
 
     const [pages, setPages] = useState('');
-    const [itemname, setItemname] = useState('');
+    const [itemId, setItemId] = useState('');
     const [file, setFile] = useState(null);
     const [existingImagePath, setExistingImagePath] = useState(null);
     const [error, setError] = useState('');
@@ -47,10 +47,15 @@ const AddBreadCrumbBanner = () => {
     useEffect(() => {
         if (isEdit && currentBanner) {
             setPages(currentBanner.pages ?? '');
-            setItemname(currentBanner.itemName ?? '');
+            setItemId(String(currentBanner.itemId ?? ''));
             setExistingImagePath(currentBanner.image ?? null);
         }
     }, [isEdit, currentBanner]);
+
+    const itemOptions = useMemo(
+        () => itemNames.map((i) => ({ label: i.ITEMNAME, value: String(i.ITEMID) })),
+        [itemNames]
+    );
 
     const onFileChange = (e) => {
         setError('');
@@ -69,7 +74,7 @@ const AddBreadCrumbBanner = () => {
 
     const handleClear = () => {
         setPages('');
-        setItemname('');
+        setItemId('');
         setFile(null);
         setError('');
         setSuccess('');
@@ -81,27 +86,31 @@ const AddBreadCrumbBanner = () => {
         setSuccess('');
 
         if (!pages.trim()) { setError('Please select a page.'); return; }
+        if (!itemId) { setError('Please select an item category.'); return; }
+        if (!isEdit && !file) { setError('Please choose an image for the banner.'); return; }
 
         const isAlreadyUsed = banners?.some(
-            (b) => b?.itemName?.toLowerCase() === itemname?.toLowerCase()
+            (b) => Number(b.itemId) === Number(itemId)
         );
         if (!isEdit && isAlreadyUsed) {
-            setError(`Item category "${itemname}" was already used.`);
+            setError(`Item category was already used.`);
             return;
         }
-
-        if (!isEdit && !file) { setError('Please choose an image for the banner.'); return; }
 
         const payload = new FormData();
         if (isEdit) {
             payload.append('id', editId);
             if (file instanceof File) payload.append('image', file);
             payload.append('pages', pages);
-            payload.append('itemName', itemname);
+            payload.append('itemId', itemId);
+            payload.append('subItemId', '');
+            payload.append('filterId', '');
         } else {
             payload.append('image', file);
             payload.append('pages', pages);
-            payload.append('itemName', itemname);
+            payload.append('itemId', itemId);
+            payload.append('subItemId', '');
+            payload.append('filterId', '');
         }
 
         const mutation = isEdit ? updateMutation : uploadMutation;
@@ -118,11 +127,6 @@ const AddBreadCrumbBanner = () => {
             },
         });
     };
-
-    const itemOptions = useMemo(
-        () => itemNames.map((i) => ({ label: i.ITEMNAME, value: i.ITEMNAME })),
-        [itemNames]
-    );
 
     const previewSrc = file
         ? URL.createObjectURL(file)
@@ -171,16 +175,45 @@ const AddBreadCrumbBanner = () => {
                 {/* Item Category */}
                 <SelectComboBox
                     label="Item Category"
-                    field="itemname"
-                    value={itemname}
-                    displayValue={itemname}
-                    onChange={(_, val) => setItemname(val)}
+                    field="itemId"
+                    value={itemId}
+                    onChange={(_, val) => setItemId(val)}
                     options={itemOptions}
                     placeholder="Search item category…"
                     required
                     disabled={isBusy}
                     clearable
                 />
+
+                {/* Sub Item ID — disabled */}
+                <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-200 mb-1">
+                        Sub Item ID{' '}
+                        <span className="text-slate-400 font-normal">(coming soon)</span>
+                    </label>
+                    <input
+                        type="text"
+                        value=""
+                        disabled
+                        placeholder="Not available yet"
+                        className="w-full px-3 py-2 text-xs rounded-md border bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed"
+                    />
+                </div>
+
+                {/* Filter ID — disabled */}
+                <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-200 mb-1">
+                        Filter ID{' '}
+                        <span className="text-slate-400 font-normal">(coming soon)</span>
+                    </label>
+                    <input
+                        type="text"
+                        value=""
+                        disabled
+                        placeholder="Not available yet"
+                        className="w-full px-3 py-2 text-xs rounded-md border bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed"
+                    />
+                </div>
 
                 {/* Banner Image */}
                 <div>

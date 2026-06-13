@@ -41,6 +41,9 @@ const RoleMapping = () => {
     const initialForm = { userId: '', roleId: '' };
     const [formData, setFormData] = useState(initialForm);
     const [editId, setEditId] = useState(null);
+
+    console.log(editId,'editId')
+
     const [errors, setErrors] = useState({});
     const [searchText, setSearchText] = useState('');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -87,6 +90,12 @@ const RoleMapping = () => {
         const e = {};
         if (!formData.userId) e.userId = 'User is required';
         if (!formData.roleId) e.roleId = 'Role is required';
+
+        const isDuplicate = mappings.some((map) => Number(map.userId) === Number(formData.userId) && Number(formData.userId) !== Number(editId));
+     
+
+        if (isDuplicate) e.userId = "User Already Mapped";
+
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -99,6 +108,8 @@ const RoleMapping = () => {
 
     const handleSubmit = () => {
         if (!validate()) return;
+
+
         if (editId) {
             doUpdate({ id: editId, data: formData }, {
                 onSuccess: () => { resetForm(); showToast('success', 'Role mapping updated!'); },
@@ -220,6 +231,7 @@ const RoleMapping = () => {
                             loading={usersLoading}
                             icon={<User className="w-4 h-4" />}
                             maxVisible={2}
+                            disabled={editId}
                         />
 
                         {/* Role */}
@@ -287,14 +299,14 @@ const RoleMapping = () => {
                             initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
                             className="fixed top-4 right-4 z-[9999]"
                         >
-                            <div className={`border-l-4 p-4 rounded-lg shadow-lg flex items-center gap-2
+                            <div className={`border-l-4 p-2 rounded-lg shadow-lg flex items-center gap-2 m-0
                                 ${toast.type === 'success' ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}
                             >
                                 {toast.type === 'success'
-                                    ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                                    : <XCircle className="h-5 w-5 text-red-500 shrink-0" />
+                                    ? <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 m-0" />
+                                    : <XCircle className="h-5 w-5 text-red-500 shrink-0 m-0" />
                                 }
-                                <p className={`text-sm ${toast.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+                                <p className={`text-sm ${toast.type === 'success' ? 'text-green-700' : 'text-red-700'} m-0`}>
                                     {toast.msg}
                                 </p>
                             </div>

@@ -19,7 +19,7 @@ import image3 from '../../assets/images/login/Login3.png';
 import Logo from '../../assets/logo/logo.jpg';
 
 const LoginPage = () => {
-    const [form, setForm] = useState({ contactOrEmailOrUsername: '', password: '' });
+    const [form, setForm] = useState({ userName: '', password: '' });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -71,7 +71,7 @@ const LoginPage = () => {
     }, []);
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && e.target.name === 'contactOrEmailOrUsername') {
+        if (e.key === 'Enter' && e.target.name === 'userName') {
             passwordInputRef.current?.focus();
         }
     };
@@ -83,18 +83,16 @@ const LoginPage = () => {
 
         try {
             const result = await loginUser(form);
-            const token = result.token;
-            const userData = {
-                id: result.user.id,
-                email: result.user.email,
-                username: result.user.username,
-                roles: result.user.roles, 
-            };
 
-            console.log('resultlogin', userData.roles, result)
-            const roles = userData.roles || [];
-            if (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_EMPLOYEE' )) {
-                login(token, userData);
+            const token = result.user.token;
+            const userData =result.user;
+            const path = result.path;
+
+            console.log('resultlogin', result)
+
+
+            if (result.user.token) {
+                login(userData , path);
                 navigate('/admin');
             } else {
                 setError('Access Denied: Please use the main site for shopping. Contact support for admin access.');
@@ -233,10 +231,10 @@ const LoginPage = () => {
                                     <input
                                         type="text"
                                         className={`form-input ${focusedField === 'username' ? 'focused' : ''}`}
-                                        name="contactOrEmailOrUsername"
+                                        name="userName"
                                         placeholder={isMobile ? 'Enter your admin ID' : 'Enter username or email address'}
-                                        value={form.contactOrEmailOrUsername}
-                                        onChange={(e) => setForm({ ...form, contactOrEmailOrUsername: e.target.value })}
+                                        value={form.userName}
+                                        onChange={(e) => setForm({ ...form, userName: e.target.value })}
                                         onFocus={() => setFocusedField('username')}
                                         onBlur={() => setFocusedField('')}
                                         onKeyDown={handleKeyDown}

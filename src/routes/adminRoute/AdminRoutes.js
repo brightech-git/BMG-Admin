@@ -86,11 +86,12 @@ import RoleMapping from '../../admin/pages/RoleMapping/RoleMapping';
 import RoleTransactionPage from '../../admin/pages/RolePermission/RolePermission';
 import RoleTransaction from '../../admin/pages/RoleTransaction/RoleTransaction';
 
+import AdminLayout from '../adminProtectedRoute/AdminLayout';
+
 
 const AdminRoutes = () => {
     const { isSidebarOpen, setIsSidebarOpen, themeMode } = useContext(MyContext);
-    const { authToken } = useAuth();
-    const allowedRoles = ['ROLE_ADMIN', 'ROLE_EMPLOYEE'];
+    const { authToken , path } = useAuth();
 
     const [isMobile, setIsMobile] = useState(false);
 
@@ -137,128 +138,129 @@ const AdminRoutes = () => {
                
 
                         <Routes>
-                            <Route path="/" element={<ProtectedRoute allowedRoles={allowedRoles}><MainContent /></ProtectedRoute>} />
+                            <Route element={<AdminLayout path={path} />} >
+                                <Route path="/" element={<ProtectedRoute ><MainContent /></ProtectedRoute>} />
 
-                            {/*---------------------------PRODUCT MANAGEMENT------------------------*/}
+                                {/*---------------------------PRODUCT MANAGEMENT------------------------*/}
 
-                            <Route path="product/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddImage /></ProtectedRoute>} />
-                            <Route path="product/manage/single" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageSingleProduct /></ProtectedRoute>} />
-                            <Route path="product/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageProduct /></ProtectedRoute>} />
-
-
-                            {/*---------------------------ADDRESS MANAGEMENT------------------------*/}
-
-                            <Route path="address/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageAddress /></ProtectedRoute>} />
-
-                            {/*---------------------------ADD BANNER MANAGEMENT------------------------*/}
-
-                           
-
-                            <Route path="breadcrumbbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddBreadCrumbBanner /></ProtectedRoute>} />
-                            <Route path="festivalbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddFestivalBanner /></ProtectedRoute>} />
-                            <Route path="categorybanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddCategoryBanner /></ProtectedRoute>} />
-                            <Route path="budgetbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddBugetBanner /></ProtectedRoute>} />
-                            <Route path="occasionbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddOccasionBanner /></ProtectedRoute>} />
-                            <Route path="offerbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddOfferBanner /></ProtectedRoute>} />
-                            <Route path="banner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddBanner /></ProtectedRoute>} />
-                            <Route path="bestbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><UploadBestDesign /></ProtectedRoute>} />
-                            <Route path="featurebanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><UploadFeatureDesign /></ProtectedRoute>} />
-                            <Route path="latestbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><UploadLatestBanner /></ProtectedRoute>} />
-                            <Route path="genderbanner/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddGenderBanner /></ProtectedRoute>} />
-                            <Route path="header/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddCategoryPage /></ProtectedRoute>} />
-                            <Route path="item-category/add" element={<ItemCategory />} />
-                            <Route path='category/footer/add' element={<AddFooterEntryPage />} />
+                                <Route path="product/add" element={<ProtectedRoute ><AddImage /></ProtectedRoute>} />
+                                <Route path="product/manage/single" element={<ProtectedRoute ><ManageSingleProduct /></ProtectedRoute>} />
+                                <Route path="product/manage" element={<ProtectedRoute ><ManageProduct /></ProtectedRoute>} />
 
 
-                            {/*---------------------------BANNER MANAGEMENT------------------------*/}
+                                {/*---------------------------ADDRESS MANAGEMENT------------------------*/}
 
+                                <Route path="address/manage" element={<ProtectedRoute ><ManageAddress /></ProtectedRoute>} />
 
-                            <Route path="genderbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageGenderBanner /></ProtectedRoute>} />
-                            <Route path="manage/featurebanner" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFeaturedBanner /></ProtectedRoute>} />
-                            <Route path="latestbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}> <ManageLatestBanner /> </ProtectedRoute>} />
-                            <Route path="bestbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBestDesignBanner /></ProtectedRoute>} />
-                            <Route path="banner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBanners /></ProtectedRoute>} />
-                            <Route path="occasionbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageOccasionBanner /></ProtectedRoute>} />
-                            <Route path="offerbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageOfferBanner /></ProtectedRoute>} />
-                            <Route path="festivalbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFestivalBanner /></ProtectedRoute>} />
-                            {/* <Route path="banner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBanners /></ProtectedRoute>} /> */}
-                            <Route path="categorybanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageCategoryBanner /></ProtectedRoute>} />
-                            <Route path="breadcrumbbanner/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBreadCrumbBanner /></ProtectedRoute>} />
-                            <Route path="header/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageCategoriesPage /></ProtectedRoute>} />
-                            <Route path="item-category/manage" element={< ManageItemCategory />} />
-                            <Route path='category/footer/manage' element={<FooterCategory />} />
-
-                            {/*---------------------------VIDEO MANAGEMENT------------------------*/}
-
-                            <Route path="video/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddVideos /></ProtectedRoute>} />
-                            <Route path="video/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageVideos /></ProtectedRoute>} />
-
-
-                            {/*---------------------------RATE MANAGEMENT------------------------*/}
-
-                            <Route path="rates/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddRates /></ProtectedRoute>} />
-                            <Route path="rates/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageRates /></ProtectedRoute>} />
-
-                            {/*---------------------------EMPLOYEE MANAGEMENT------------------------*/}
-
-                            {/* <Route path="employee/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddEmployee /></ProtectedRoute>} />
-                            <Route path="employee/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageEmployees /></ProtectedRoute>} /> */}
-
-                            <Route path="master/user" element={<ManageUserMaster/>} />    
-                            <Route path="master/role" element={<ManageRoleMaster/>} />    
-                            <Route path="role/mapping" element={<RoleMapping />} />    
-                            <Route path="role/permission" element={<RoleTransactionPage />} />
-                            <Route path="role/transaction" element={<RoleTransaction />} />
-
-                            {/*---------------------------BANNER MANAGEMENT------------------------*/}
-
-                            <Route path="profile" element={<ProtectedRoute allowedRoles={allowedRoles}><EmployeeProfile /></ProtectedRoute>} />
-
-                            {/*---------------------------NOTIFICATION MANAGEMENT------------------------*/}
-
-                            <Route path="/notification" element={<ProtectedRoute allowedRoles={allowedRoles}><NotificationTemplatePage /></ProtectedRoute>} />
-
-
-                            {/*---------------------------USER'S DETAIL------------------------*/}
-
-                            <Route path="userDetails" element={<UserDetails />} />
-
-                         
-
-                            {/*---------------------------ORDERS TABLE------------------------*/}
-
-                            <Route path="order/today" element={<OrdersByRange />} />
-                            <Route path="AllOrderPage" element={<AllOrders />} />
-                            <Route path='order/status/:orderStatus' element={<AllOrdersByStatus />} />
-                            <Route path='order/refund/status/:orderStatus' element={<RefundOrdersManagement />} />
-                            <Route path='track/order/:orderId' element={<TrackOrder />} />
-
-                            {/*---------------------------SETTINGS------------------------*/}
-
-
-                        {/*---------------------------MANAGE HEADER KEY SETTINGS------------------------*/}
-
-                            <Route path='header/setting/add' element = {<ProtectedRoute allowedRoles={allowedRoles}> <AddHeaderNav /> </ProtectedRoute>} />
-                            <Route path='header/setting/manage' element = {<ProtectedRoute allowedRoles={allowedRoles}> <ManageHeaderNavKey /> </ProtectedRoute>} />
-
-                            <Route path="banner/setting/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddBannerSetting /></ProtectedRoute>} />
-                            <Route path="filter/setting/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddFilterSetting /></ProtectedRoute>} />
-
-
-                            {/*---------------------------MANAGE SETTINGS------------------------*/}
-
-                            <Route path="banner/setting/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageBannerSettings /></ProtectedRoute>} />
-                            <Route path="filter/setting/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFilterSettings /></ProtectedRoute>} />
-
-
-                            {/*---------------------------FILTERS------------------------*/}
-                            <Route path="filter/add" element={<ProtectedRoute allowedRoles={allowedRoles}><AddFilterContent /></ProtectedRoute>} />
-                            <Route path="filter/manage" element={<ProtectedRoute allowedRoles={allowedRoles}><ManageFilterContent /></ProtectedRoute>} />
-
-                            <Route path="*" element={<Navigate to="/admin" replace />} />
+                                {/*---------------------------ADD BANNER MANAGEMENT------------------------*/}
 
 
 
+                                <Route path="breadcrumbbanner/add" element={<ProtectedRoute ><AddBreadCrumbBanner /></ProtectedRoute>} />
+                                <Route path="festivalbanner/add" element={<ProtectedRoute ><AddFestivalBanner /></ProtectedRoute>} />
+                                <Route path="categorybanner/add" element={<ProtectedRoute ><AddCategoryBanner /></ProtectedRoute>} />
+                                <Route path="budgetbanner/add" element={<ProtectedRoute ><AddBugetBanner /></ProtectedRoute>} />
+                                <Route path="occasionbanner/add" element={<ProtectedRoute ><AddOccasionBanner /></ProtectedRoute>} />
+                                <Route path="offerbanner/add" element={<ProtectedRoute ><AddOfferBanner /></ProtectedRoute>} />
+                                <Route path="banner/add" element={<ProtectedRoute ><AddBanner /></ProtectedRoute>} />
+                                <Route path="bestbanner/add" element={<ProtectedRoute ><UploadBestDesign /></ProtectedRoute>} />
+                                <Route path="featurebanner/add" element={<ProtectedRoute ><UploadFeatureDesign /></ProtectedRoute>} />
+                                <Route path="latestbanner/add" element={<ProtectedRoute ><UploadLatestBanner /></ProtectedRoute>} />
+                                <Route path="genderbanner/add" element={<ProtectedRoute ><AddGenderBanner /></ProtectedRoute>} />
+                                <Route path="header/add" element={<ProtectedRoute ><AddCategoryPage /></ProtectedRoute>} />
+                                <Route path="item-category/add" element={<ItemCategory />} />
+                                <Route path='category/footer/add' element={<AddFooterEntryPage />} />
+
+
+                                {/*---------------------------BANNER MANAGEMENT------------------------*/}
+
+
+                                <Route path="genderbanner/manage" element={<ProtectedRoute ><ManageGenderBanner /></ProtectedRoute>} />
+                                <Route path="manage/featurebanner" element={<ProtectedRoute ><ManageFeaturedBanner /></ProtectedRoute>} />
+                                <Route path="latestbanner/manage" element={<ProtectedRoute > <ManageLatestBanner /> </ProtectedRoute>} />
+                                <Route path="bestbanner/manage" element={<ProtectedRoute ><ManageBestDesignBanner /></ProtectedRoute>} />
+                                <Route path="banner/manage" element={<ProtectedRoute ><ManageBanners /></ProtectedRoute>} />
+                                <Route path="occasionbanner/manage" element={<ProtectedRoute ><ManageOccasionBanner /></ProtectedRoute>} />
+                                <Route path="offerbanner/manage" element={<ProtectedRoute ><ManageOfferBanner /></ProtectedRoute>} />
+                                <Route path="festivalbanner/manage" element={<ProtectedRoute ><ManageFestivalBanner /></ProtectedRoute>} />
+                                {/* <Route path="banner/manage" element={<ProtectedRoute ><ManageBanners /></ProtectedRoute>} /> */}
+                                <Route path="categorybanner/manage" element={<ProtectedRoute ><ManageCategoryBanner /></ProtectedRoute>} />
+                                <Route path="breadcrumbbanner/manage" element={<ProtectedRoute ><ManageBreadCrumbBanner /></ProtectedRoute>} />
+                                <Route path="header/manage" element={<ProtectedRoute ><ManageCategoriesPage /></ProtectedRoute>} />
+                                <Route path="item-category/manage" element={< ManageItemCategory />} />
+                                <Route path='category/footer/manage' element={<FooterCategory />} />
+
+                                {/*---------------------------VIDEO MANAGEMENT------------------------*/}
+
+                                <Route path="video/add" element={<ProtectedRoute ><AddVideos /></ProtectedRoute>} />
+                                <Route path="video/manage" element={<ProtectedRoute ><ManageVideos /></ProtectedRoute>} />
+
+
+                                {/*---------------------------RATE MANAGEMENT------------------------*/}
+
+                                <Route path="rates/add" element={<ProtectedRoute ><AddRates /></ProtectedRoute>} />
+                                <Route path="rates/manage" element={<ProtectedRoute ><ManageRates /></ProtectedRoute>} />
+
+                                {/*---------------------------EMPLOYEE MANAGEMENT------------------------*/}
+
+                                {/* <Route path="employee/add" element={<ProtectedRoute ><AddEmployee /></ProtectedRoute>} />
+                                <Route path="employee/manage" element={<ProtectedRoute ><ManageEmployees /></ProtectedRoute>} /> */}
+
+                                <Route path="master/user" element={<ManageUserMaster/>} />    
+                                <Route path="master/role" element={<ManageRoleMaster/>} />    
+                                <Route path="role/mapping" element={<RoleMapping />} />    
+                                <Route path="role/permission" element={<RoleTransactionPage />} />
+                                <Route path="role/transaction" element={<RoleTransaction />} />
+
+                                {/*---------------------------BANNER MANAGEMENT------------------------*/}
+
+                                <Route path="profile" element={<ProtectedRoute ><EmployeeProfile /></ProtectedRoute>} />
+
+                                {/*---------------------------NOTIFICATION MANAGEMENT------------------------*/}
+
+                                <Route path="/notification" element={<ProtectedRoute ><NotificationTemplatePage /></ProtectedRoute>} />
+
+
+                                {/*---------------------------USER'S DETAIL------------------------*/}
+
+                                <Route path="userDetails" element={<UserDetails />} />
+
+                                
+
+                                {/*---------------------------ORDERS TABLE------------------------*/}
+
+                                <Route path="order/today" element={<OrdersByRange />} />
+                                <Route path="AllOrderPage" element={<AllOrders />} />
+                                <Route path='order/status/:orderStatus' element={<AllOrdersByStatus />} />
+                                <Route path='order/refund/status/:orderStatus' element={<RefundOrdersManagement />} />
+                                <Route path='track/order/:orderId' element={<TrackOrder />} />
+
+                                {/*---------------------------SETTINGS------------------------*/}
+
+
+                        {/*-    --------------------------MANAGE HEADER KEY SETTINGS------------------------*/}
+
+                                <Route path='header/setting/add' element = {<ProtectedRoute > <AddHeaderNav /> </ProtectedRoute>} />
+                                <Route path='header/setting/manage' element = {<ProtectedRoute > <ManageHeaderNavKey /> </ProtectedRoute>} />
+
+                                <Route path="banner/setting/add" element={<ProtectedRoute ><AddBannerSetting /></ProtectedRoute>} />
+                                <Route path="filter/setting/add" element={<ProtectedRoute ><AddFilterSetting /></ProtectedRoute>} />
+
+
+                                {/*---------------------------MANAGE SETTINGS------------------------*/}
+
+                                <Route path="banner/setting/manage" element={<ProtectedRoute ><ManageBannerSettings /></ProtectedRoute>} />
+                                <Route path="filter/setting/manage" element={<ProtectedRoute ><ManageFilterSettings /></ProtectedRoute>} />
+
+
+                                {/*---------------------------FILTERS------------------------*/}
+                                <Route path="filter/add" element={<ProtectedRoute ><AddFilterContent /></ProtectedRoute>} />
+                                <Route path="filter/manage" element={<ProtectedRoute ><ManageFilterContent /></ProtectedRoute>} />
+
+                                <Route path="*" element={<Navigate to="/admin" replace />} />
+
+                                    
+                            </Route>
                         </Routes>
                  
                 </main>

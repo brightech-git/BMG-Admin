@@ -9,6 +9,7 @@ import ComboBox from '../../../components/ui/ComboBox';
 import InputField from '../../../components/ui/InputField';
 import SelectComboBox from '../../../components/ui/ComboBoxField';
 import { useGetAllFilterContents } from '../../../hooks/filter/useFilterContent';
+import { useItemNames } from '../../../hooks/itemName/useItemNames';
 
 
 // ─── Initial State ────────────────────────────────────────────────────────────
@@ -23,6 +24,7 @@ const INITIAL_FORM = {
     rowSpan: "",
     isSingle: false,
     isBothUsed: false,
+
    
 };
 
@@ -51,7 +53,19 @@ const AddBanner = () => {
     const bannerData = state?.bannerData || null;
 
 
-    console.log(bannerData,'bannerData');
+
+    const { items } = useItemNames();
+
+    const itemNames = useMemo(() => {
+        if (!items) return [];
+        return items.map(item => ({
+            label: item.ITEMNAME,
+            value: item.ITEMID,
+        }));
+    }, [items]);
+
+
+    console.log(itemNames,'itemNames');
 
     // ── remote data ──────────────────────────────────────────────────────────
     const { data: bannerSettingData } = useGetBannerSettings();
@@ -72,9 +86,36 @@ const AddBanner = () => {
     const [success, setSuccess] = useState("");
     const [isGrid, setIsGrid] = useState(false);
 
+    const [itemId ,setItemId] =useState('');
+
     // convenience setter – merges partial updates like setState in class components
     const setField = (key, value) =>
         setForm(prev => ({ ...prev, [key]: value }));
+
+
+    useEffect(()=>{
+        
+        if (itemId){
+            setField('link', `itemId=${itemId}`)
+        }
+        else{
+            setField('link' , '');
+        }
+    },[itemId])
+
+    useEffect(()=>{
+
+        if(form.link){
+            const val = form.link.split('=')[0];
+            if(val === 'itemId'){
+                const id = form.link.split('=')[1];
+                setItemId(id);
+            }
+
+        }
+
+    },[form.link])
+
 
     // ── derived: selected banner-setting option ───────────────────────────────
     const selectedOption = useMemo(
@@ -209,7 +250,7 @@ const AddBanner = () => {
             : payload , {
             onSuccess: () => {
                 setSuccess(`Banner ${isEdit ? 'updated' : 'uploaded'} successfully`);
-                setTimeout(() => navigate("/banner/manage"), 700);
+                setTimeout(() => navigate("/admin/banner/manage"), 700);
             },
             onError: (err) => {
                 setError(err?.response?.data?.error || err?.message || "Operation failed");
@@ -360,7 +401,7 @@ const AddBanner = () => {
 
                 {/* ── Link input ── */}
                 {showLink && (
-                    <div className="animate__animated animate__fadeIn">
+                    <div>
                         <label className="text-xs font-semibold text-gray-700 flex items-center gap-1 mb-2">
                             Link <span className="text-red-500">*</span>
                         </label>
@@ -393,6 +434,15 @@ const AddBanner = () => {
                                 //            disabled:bg-gray-50 disabled:text-gray-500"
                                 placeholder="https://example.com/banner"
                                 type='text'
+                            />
+                            <SelectComboBox
+                                options={itemNames}
+                                value={itemId}
+                                field="itemId"
+                                onChange={(itemId,val) => {
+                                    console.log(val, 'setValue');
+                                    setItemId(val);
+                                }}
                             />
                         </div>
                     </div>

@@ -49,7 +49,7 @@ const ManageBreadCrumbBanner = () => {
           image_path: getProductImages(item.image),
           // title: item.title || "—",
           // subtitle: item.subtitle || "—",
-          itemname: item.itemName || "—",
+          itemname: item.ITEMNAME || "—",
           page:item.pages
       }));
       const handleOnClick = () =>{

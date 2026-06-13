@@ -5,11 +5,11 @@ import { FaUserCircle, FaSignOutAlt, FaChevronRight } from 'react-icons/fa';
 import { debounce } from 'lodash';
 
 import { MyContext } from '../../context/themeContext/themeContext';
-import { useUserProfile } from '../../hooks/profile/useUserProfile';
+
 import { useAuth } from '../../context/auth/authContext';
 import RoleBasedSection from '../common/RoleBasedSection';
 
-import { MENU_CONFIG, filterMenuByPath, getPageTitle } from './menuConfig';
+import { MENU_CONFIG, filterMenuByIds, getPageTitle } from './menuConfig';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Recursive menu item — handles Tier 1, Tier 2, Tier 3 … any depth
@@ -179,8 +179,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { themeMode } = useContext(MyContext);
-    const { data: user, isLoading } = useUserProfile();
-    const { logout } = useAuth();
+    const {user ,path ,logout } = useAuth();
 
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [expandedMap, setExpandedMap] = useState({});
@@ -197,16 +196,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
     // ── Auto-expand ancestors of the active route ───────────────────────────
     useEffect(() => {
-        const userPaths = user?.allowedPaths ?? [
-            '/admin/dashboard',
-            '/admin/order/today',
-            '/admin/banner/manage',
-        ];
-        console.log(userPaths,'userPaths')
+        // user IDs from login e.g. ['filter-add', 'filter-manage', 'address-manage']
+        const userIds = path ?? []; // ← whatever your login field is called
 
-        const visibleMenu = filterMenuByPath(userPaths);
+        const visibleMenu = filterMenuByIds(userIds);
 
-        console.log(visibleMenu,'visibleMenu')
 
         const findAncestorIds = (nodes, targetPath, trail = []) => {
             for (const node of nodes) {
@@ -228,12 +222,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
         setExpandedMap((prev) => {
             const next = { ...prev };
-            ancestors.forEach((id) => {
-                next[id] = true;
-            });
+            ancestors.forEach((id) => (next[id] = true));
             return next;
         });
-    }, [location.pathname, user]);
+    }, [location.pathname, path]);
 
     // ── Page title ──────────────────────────────────────────────────────────
     useEffect(() => {
@@ -254,17 +246,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         navigate('/admin/login');
     };
 
+    
     // ── Role-filtered menu ──────────────────────────────────────────────────
-    const visibleMenu = useMemo(
-        () => filterMenuByPath(user?.allowedPaths ?? [
-            '/admin/dashboard',
-            '/admin/order/*',
-            '/admin/banner/manage',
-            '/admin/*'
-        ]),
-        [user?.allowedPaths]
-    );
+   
+    const visibleMenu = useMemo(() => filterMenuByIds(path || []), [path]);
 
+    console.log(path, visibleMenu,'visibleMenu' )
     // ── Sidebar animation ───────────────────────────────────────────────────
     const sidebarVariants = {
         open: {
@@ -279,13 +266,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         },
     };
 
-    if (isLoading) {
-        return (
-            <div className={`flex items-center justify-center h-screen w-[70px] ${isDark ? 'bg-gray-900' : 'bg-white'} border-r ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-                <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
+    // if (isLoading) {
+    //     return (
+    //         <div className={`flex items-center justify-center h-screen w-[70px] ${isDark ? 'bg-gray-900' : 'bg-white'} border-r ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+    //             <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+    //         </div>
+    //     );
+    // }
 
     return (
         <>
@@ -388,7 +375,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                     transition={{ duration: 0.15 }}
                                     className="flex-1 min-w-0"
                                 >
-                                    <p className="text-sm font-semibold truncate m-0">{user?.username ?? 'Admin User'}</p>
+                                    <p className="text-sm font-semibold truncate m-0">{user?.name ?? 'Admin User'}</p>
                                     <p className={`text-xs truncate ${isDark ? 'text-gray-500' : 'text-gray-400'} m-0`}>
                                         {user?.role ?? 'Administrator'}
                                     </p>

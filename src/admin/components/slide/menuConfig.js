@@ -19,7 +19,7 @@ export const MENU_CONFIG = [
         id: 'dashboard',
         title: 'Dashboard',
         icon: <FaTachometerAlt />,
-        path: '/admin/dashboard',
+        path: '/admin',
     },
 
     // ── Tier 1 → Tier 2 ─────────────────────────────────────────────────────
@@ -235,29 +235,27 @@ function hasAccess(path, allowed = []) {
     });
 }
 
-export function filterMenuByPath(userPaths = [], items = MENU_CONFIG) {
+export function filterMenuByIds(userIds = [], items = MENU_CONFIG) {
+    // Dashboard is always visible
+    const ids = userIds.includes('dashboard')
+        ? userIds
+        : ['dashboard', ...userIds];
+
     return items
         .map((item) => {
-            // handle children first
             if (item.children) {
-                const filteredChildren = filterMenuByPath(userPaths, item.children);
+                const filteredChildren = filterMenuByIds(ids, item.children);
 
-                const selfAllowed = item.path
-                    ? hasAccess(item.path, userPaths)
-                    : false;
+                // A group node is allowed if any of its children are allowed
+                if (filteredChildren.length === 0) return null;
 
-                if (filteredChildren.length === 0 && !selfAllowed) return null;
-
-                return {
-                    ...item,
-                    children: filteredChildren,
-                };
+                return { ...item, children: filteredChildren };
             }
 
-            // leaf node
-            if (!item.path) return null;
+            // Leaf node — check by ID
+            if (!item.id) return null;
 
-            return hasAccess(item.path, userPaths) ? item : null;
+            return ids.includes(item.id) ? item : null;
         })
         .filter(Boolean);
 }
@@ -280,4 +278,16 @@ export function getTableRows(items = MENU_CONFIG, tier = 1, parentTitle = null) 
     }
 
     return rows;
+}
+
+export function buildPathToIdMap(items = MENU_CONFIG, map = {}) {
+    for (const node of items) {
+        if (node.path && node.id) {
+            map[node.path] = node.id;
+        }
+        if (node.children) {
+            buildPathToIdMap(node.children, map);
+        }
+    }
+    return map;
 }

@@ -3,12 +3,14 @@ import axiosInstance from '../api/axiosInstance';
 
 // ✅ Login user (Admin or Employee)
 export const loginUser = async (credentials) => {
-    const response = await axiosInstance.post(`/auth/user/login`, credentials);
-    const { token, id, email, username, roles } = response.data;
+    const response = await axiosInstance.post(`/employee/login`, credentials);
 
-    sessionStorage.setItem('auth_token', token);
+    console.log('response.data',response.data)
+    const { path , userDetails} = response.data.data;
 
-    return { token, user: { id, email, username, roles } };
+    sessionStorage.setItem('auth_token', userDetails.token);
+
+    return { path , user: userDetails};
 };
 
 // ✅ Fetch user profile using token

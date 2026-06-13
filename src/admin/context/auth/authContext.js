@@ -8,35 +8,45 @@ export const AuthProvider = ({ children }) => {
 
 
     const [authToken, setAuthToken] = useState(sessionStorage.getItem('auth_token'));
-    const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        if (authToken) {
-            fetchUserProfile()
-                .then((data) => setUser(data))
-                .catch(() => {
-                    setUser(null);
-                    setAuthToken(null);
-                    sessionStorage.removeItem('auth_token');
-                });
+    const [user, setUser] = useState(()=>{
+        try {
+            return JSON.parse(sessionStorage.getItem('user')) ?? [];
+        } catch {
+            return [];
         }
-    }, [authToken]);
+    });
+    
+    const [path, setPath] = useState(() => {
+        try {
+            return JSON.parse(sessionStorage.getItem('path')) ?? [];
+        } catch {
+            return [];
+        }
+    });
 
-    const login = (token, userData) => {
-        sessionStorage.setItem('auth_token', token);
-        sessionStorage.setItem('user_id', userData.id);
-        setAuthToken(token);
+    const login = (userData ,path) => {
+
+        sessionStorage.setItem('auth_token', userData.token);
+        sessionStorage.setItem("user", JSON.stringify(userData));
+        sessionStorage.setItem('path', JSON.stringify(path));
+
+        setAuthToken(userData.token);
         setUser(userData);
+        setPath(path);
     };
 
     const logout = () => {
         sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('path');
+
         setAuthToken(null);
         setUser(null);
+        setPath(null);
     };
 
     return (
-        <AuthContext.Provider value={{ authToken, user, login, logout }}>
+        <AuthContext.Provider value={{ authToken, user, path, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
