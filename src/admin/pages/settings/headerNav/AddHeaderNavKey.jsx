@@ -10,9 +10,7 @@ const INITIAL_FORM = {
     active: true,
     order: "",
     dropdown:false,
-    isItem:false,
-    linkKey:"",
-    linkValue:"",
+    link :"",
     fitlerId:"",
 
 
@@ -90,23 +88,21 @@ const AddHeaderNav = () => {
                 active:editingData?.active === "Y" ?? "",
                 order:editingData?.order ?? "",
                 dropdown:editingData?.dropdown === "Y" ?? "",
-                linkKey:editingData?.linkKey ?? "",
-                linkValue:editingData?.linkValue ?? "",
+                link:editingData?.link ?? "",
                 fitlerId: Number(editingData?.filterId) ?? "",
             })
         }
     },[editingData]);
 
 
-    useEffect(() => {
-        if (form.dropdown) {
-            setForm(prev => ({
-                ...prev,
-                linkKey: "",
-                linkValue: "",
-            }));
-        }
-    }, [form.dropdown]);
+    // useEffect(() => {
+    //     if (form.dropdown) {
+    //         setForm(prev => ({
+    //             ...prev,
+    //             link : "",
+    //         }));
+    //     }
+    // }, [form.dropdown]);
 
     // key duplicate check (skip own key in edit mode)
     const isDuplicateKey =
@@ -126,9 +122,7 @@ const AddHeaderNav = () => {
 
         // WHEN dropdown = false → link fields required
         if (!form.dropdown) {
-            if (!form.linkKey.trim()) return setError("Link Key is required");
-            if (!form.linkValue.trim()) return setError("Link Value is required");
-          
+            if (!form.link.trim()) return setError("Link is required");    
         }
         
 
@@ -137,14 +131,10 @@ const AddHeaderNav = () => {
             active: form.active,
             order: Number(form.order),
             dropdown: form.dropdown,
-            filterId:form.fitlerId
+            filterId:form.fitlerId,
+            link:form.link,
         };
 
-        // only send when dropdown = false
-        if (!form.dropdown) {
-            payload.linkKey = form.linkKey;
-            payload.linkValue = form.linkValue;
-        }
 
         console.log(payload,'payload');
        
@@ -154,7 +144,7 @@ const AddHeaderNav = () => {
         mutation.mutate(args, {
             onSuccess: () => {
                 setSuccess(isEdit ? "Updated successfully" : "Created successfully");
-                setTimeout(() => navigate("/header/setting/manage"), 700);
+                setTimeout(() => navigate("/admin/header/setting/manage"), 700);
             },
             onError: (err) => {
                 setError(err?.response?.data?.error || "Operation failed");
@@ -216,32 +206,19 @@ const AddHeaderNav = () => {
                         />
 
                     </div>
-                    {!form.dropdown && (
-                        <>
-                            <div>
-                                <label className="text-xs font-medium text-gray-600">LINK KEY *</label>
-                                <input
-                                    value={form.linkKey}
-                                    onChange={handleChange("linkKey")}
-                                    placeholder="e.g, itemName"
-                                    className="mt-1 w-full border rounded px-2.5 py-2.5 text-xs focus:outline focus:outline-[var(--primary-color)]"
-                                />
-                            </div>
+                
+                        
+                        <div>
+                            <label className="text-xs font-medium text-gray-600">LINK *</label>
+                            <input
+                                value={form.link}
+                                onChange={handleChange("link")}
+                                placeholder="productsPage"
+                                className="mt-1 w-full border rounded px-2.5 py-2.5 text-xs focus:outline focus:outline-[var(--primary-color)]"
+                            />
+                        </div>
 
-                            <div>
-                                <label className="text-xs font-medium text-gray-600">LINK VALUE *</label>
-                                <input
-                                    value={form.linkValue}
-                                    onChange={handleChange("linkValue")}
-                                    placeholder="e.g. RING"
-                                    className="mt-1 w-full border rounded px-2.5 py-2.5 text-xs focus:outline focus:outline-[var(--primary-color)]"
-                                />
-                            </div>
-
-                            
-                        </>
-                    )}
-                    
+                        
                     {form.dropdown && (
 
                     <div className="flex-1 w-full">

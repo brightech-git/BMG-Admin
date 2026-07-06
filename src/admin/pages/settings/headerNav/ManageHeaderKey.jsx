@@ -33,15 +33,14 @@ const ManageHeaderNavKey = () => {
         sno: index + 1,
         name: item.name || "—",
         active: item.active || "—",
-        order: item.display_order || "—",
-        dropdown: item.ISDROPDOWN ,
-        linkKey:item.LINK_KEY,
-        linkValue:item.LINK_VALUE,
-        filterKey: item.filter_label,
-        filterId: item.FILTERID
+        order: item.displayOrder || "—",
+        dropdown: item.isDropdown ,
+        link:item.link,
+        filterKey: item.filterLabel,
+        filterId: item.filterId
 
     })) : [] ;
-    const handleClick = () => navigate('/header/setting/add')
+    const handleClick = () => navigate('/admin/header/setting/add')
 
     return (
         <div className="max-w-8xl mx-auto mt-3 p-3 sm:p-4 sm:mt-4">
@@ -54,8 +53,7 @@ const ManageHeaderNavKey = () => {
                     { key: "name", label: "Key Name" },
                     { key: "dropdown", label: "DropDown" },
                     {key:"filterKey" ,label:"Filter Key" },
-                    { key: "linkKey", label: "Link Key" },
-                    { key: "linkValue", label: "Link Value" },
+                    { key: "link", label: "Link" },
                     { key: "order", label: "Display Order" },
                     { key: "active", label: "Active" },
                     
@@ -77,7 +75,7 @@ const ManageHeaderNavKey = () => {
                         return (
                             <div className="flex gap-2 justify-center">
                                 <button
-                                    onClick={() => navigate('/header/setting/add', { state: { rowData: row, mode: 'edit' } })}
+                                    onClick={() => navigate('/admin/header/setting/add', { state: { rowData: row, mode: 'edit' } })}
                                     className="text-blue-600 hover:text-blue-800 transition-colors"
                                     title="Edit"
                                 >

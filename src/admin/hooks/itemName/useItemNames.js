@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { itemService } from "../../service/itemService";
 
@@ -27,3 +28,14 @@ export const useItemNames = (itemId = null) => {
 
     return { items, loading, error };
 };
+
+
+export const useSubItems = (itemId) =>{
+
+    return useQuery({
+        queryKey : ['subItems'],
+        queryFn : ()=> itemService.getSubItems(itemId),
+        enabled : !!itemId,
+        select : (response) => response.data
+    })
+}

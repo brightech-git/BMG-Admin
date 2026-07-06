@@ -272,7 +272,7 @@ const AddBanner = () => {
         <div className="max-w-6xl mx-auto m-1 bg-[var(--primary-card-color)] p-2 rounded-xl">
 
             {/* Header */}
-            <div className="flex items-center justify-between mb-2 animate__animated animate__fadeInDown p-2">
+            <div className="flex items-center justify-between  animate__animated animate__fadeInDown p-2">
                 <div>
                     <h2 className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         {isEdit ? "✏️ Edit Banner" : "➕ Add Banner"}

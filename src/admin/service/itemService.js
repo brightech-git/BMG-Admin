@@ -13,4 +13,15 @@ export const itemService = {
             throw error;
         }
     },
+
+    getSubItems : async(itemId)=>{
+        try{
+            const response = await axiosInstance.get(`product/subItem/${itemId}`);
+            console.log(response.data,'subitems');
+            return response.data;
+        }
+        catch(err){
+            throw err;
+        }
+    }
 };

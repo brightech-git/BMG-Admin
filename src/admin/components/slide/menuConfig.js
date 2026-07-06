@@ -42,6 +42,7 @@ export const MENU_CONFIG = [
             { id: 'order-cancelled', title: 'Cancelled', path: '/admin/order/status/CANCELLED' },
             { id: 'order-returned', title: 'Returned', path: '/admin/order/status/RETURNED' },
             { id: 'order-refunded', title: 'Refunded', path: '/admin/order/status/REFUNDED' },
+            // { id:'order-track',title:'Order Track', path: '/admin/track/order/:id'}
         ],
     },
 
@@ -85,10 +86,12 @@ export const MENU_CONFIG = [
         icon: <FaTag />,
         children: [
 
-            { id: 'header-add', title: 'Add Header', path: '/admin/header/add' },
-            { id: 'header-manage', title: 'Manage Header', path: '/admin/header/manage' },
-            { id: 'footer-add', title: 'Add Footer', path: '/admin/category/footer/add' },
-            { id: 'footer-manage', title: 'Manage Footer', path: '/admin/category/footer/manage' },
+            // { id: 'header-add', title: 'Add Header', path: '/admin/header/add' },
+            // { id: 'header-manage', title: 'Manage Header', path: '/admin/header/manage' },
+            // { id: 'footer-add', title: 'Add Footer', path: '/admin/category/footer/add' },
+            // { id: 'footer-manage', title: 'Manage Footer', path: '/admin/category/footer/manage' },
+            { id: 'header-manage', title: 'Manage Header', path: '/admin/header/tree/manage' },
+            { id: 'footer-manage', title: 'Manage Footer', path: '/admin/footer/tree/manage' },
         ],
     },
 
@@ -116,14 +119,14 @@ export const MENU_CONFIG = [
                     { id: 'filter-setting-manage', title: 'Manage Filter Settings', path: '/admin/filter/setting/manage' },
                 ],
             },
-            {
-                id: 'settings-header',
-                title: 'Header Key',
-                children: [
-                    { id: 'header-key-add', title: 'Add Header Key', path: '/admin/header/setting/add' },
-                    { id: 'header-key-manage', title: 'Manage Header Keys', path: '/admin/header/setting/manage' },
-                ],
-            },
+            // {
+            //     id: 'settings-header',
+            //     title: 'Header Key',
+            //     children: [
+            //         { id: 'header-key-add', title: 'Add Header Key', path: '/admin/header/setting/add' },
+            //         { id: 'header-key-manage', title: 'Manage Header Keys', path: '/admin/header/setting/manage' },
+            //     ],
+            // },
         ],
     },
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetBannerSettings, useDeleteBannerSetting } from '../../../hooks/banners/bannerSetting/useBannerSettings';
 import BannerTable from "../../../components/banner/manageBannerTable";
@@ -13,8 +13,6 @@ const ManageBannerSettings = () => {
 
     const { data: bannersData, isLoading, isError, refetch } = useGetBannerSettings();
 
-    console.log(bannersData,'bannersData');
-
     const { mutate: deleteBanner } = useDeleteBannerSetting();
 
     const [openPreview, setOpenPreview] = useState(null);
@@ -22,8 +20,6 @@ const ManageBannerSettings = () => {
 
     // Fetch banners for preview
     const { data: previewBanners, isLoading: previewLoading } = useBannersByKey(openPreview?.imageKey);
-
-    console.log(previewBanners,'previewBanners');
 
     // Use memo to avoid unnecessary recalculations
     const banners = useMemo(() => {
@@ -64,16 +60,22 @@ const ManageBannerSettings = () => {
         }
     };
 
-   
+    const getBannerType = (item) => {
+        if (item.isCategory) return "Category";
+        if (item.isGrid) return "Grid";
+        if (item.scrollable || item.autoscroll || item.dots || item.infinite) return "Carousel";
+        return "Normal";
+    };
 
     const tableData = banners.map((item, index) => {
         const visibleCountObj = parseVisibleCount(item.visibleCount);
-      
+        const bannerType = getBannerType(item);
 
         return {
             sno: index + 1,
             id: item.id,
             imageKey: item.imageKey,
+            type: bannerType,
             title: item.title || "",
             description: item.description || "",
             gap: item.gap ?? "",
@@ -101,6 +103,7 @@ const ManageBannerSettings = () => {
             displayOrder: item.displayOrder || '',
             createdAt: item.createdAt,
             isCategory:item.isCategory,
+            status: item.isVisible,
             _bannerData: item // Store the full item for actions
         };
     });
@@ -242,61 +245,105 @@ const ManageBannerSettings = () => {
     };
 
     return (
-        <div className="max-w-8xl mx-auto mt-3 p-3 sm:p-4 sm:mt-4 animate__animated animate__fadeIn">
+        <div className="max-w-7xl mx-auto mt-4 px-4 animate__animated animate__fadeIn">
+            <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
             <BannerTable
-                title="Manage Main Banners"
-                button={"Add Banner Setting"}
+                title="Banner Settings"
+                subtitle={`${tableData.length} banner ${tableData.length === 1 ? "setting" : "settings"} configured`}
+                button={"+ Add Setting"}
                 onClick={handleOnClick}
                 headers={[
-                    { key: "sno", label: "S.No" },
+                    { key: "sno", label: "#", align: "center" },
                     { key: "imageKey", label: "Image Key" },
+                    { key: "type", label: "Type", align: "center" },
                     { key: "title", label: "Title" },
-                    { key: "displayOrder", label: "Order" },
-                    { key: "isGrid", label: "IsGrid" },
-                    // Layout fields
-                    { key: "desktopLayout", label: "Desktop Layout" },
-                    { key: "mobileLayout", label: "Mobile Layout" },
-                    // Boolean fields group
-                    { key: "gap", label: "Gap" },
-                    { key: "mobileGap", label: "M.Gap" },
-                    { key: "centered", label: "Center" },
-                    { key: "full", label: "Full" },
-                    { key: "isVisible", label: "Visible" },
-                    // Carousel settings
-                    { key: "autoscroll", label: "Auto" },
-                    { key: "scrollable", label: "Scroll" },
-                    { key: "infinite", label: "Infinite" },
-                    { key: "dots", label: "Dots" },
-                    { key: "visibleCount", label: "Visible Items" },
-                    { key: "scrollInterval", label: "Interval" },
+                    { key: "display", label: "Display" },
+                    { key: "displayOrder", label: "Order", align: "center" },
+                    { key: "status", label: "Status", align: "center" },
                     { key: "actions", label: "Actions", align: "center" },
                 ]}
                 data={tableData}
                 renderCell={(key, row) => {
+                    if (key === "sno") {
+                        return <span className="text-xs font-medium text-gray-400">{row.sno}</span>;
+                    }
+
+                    if (key === "type") {
+                        const styles = {
+                            Category: "border-amber-200 bg-amber-50 text-amber-700",
+                            Grid: "border-purple-200 bg-purple-50 text-purple-700",
+                            Carousel: "border-blue-200 bg-blue-50 text-blue-700",
+                            Normal: "border-gray-200 bg-gray-50 text-gray-700",
+                        };
+
+                        return (
+                            <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${styles[row.type]}`}>
+                                {row.type}
+                            </span>
+                        );
+                    }
+
+                    if (key === "status") {
+                        const visible = row.status === true || row.status === "true" || row.status === 1 || row.status === "1";
+                        return (
+                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                                visible
+                                    ? "border-green-200 bg-green-50 text-green-700"
+                                    : "border-gray-200 bg-gray-100 text-gray-500"
+                            }`}>
+                                <span className={`h-1.5 w-1.5 rounded-full ${visible ? "bg-green-500" : "bg-gray-400"}`} />
+                                {visible ? "Visible" : "Hidden"}
+                            </span>
+                        );
+                    }
+
+                    if (key === "display") {
+                        if (row.type === "Grid" || row.type === "Category") {
+                            return (
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-1">
+                                        <Lucide.Monitor size={11} className="text-gray-400" />
+                                        {renderLayoutPreview(row.desktopLayout)}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <Lucide.Smartphone size={11} className="text-gray-400" />
+                                        {renderLayoutPreview(row.mobileLayout)}
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        return renderVisibleCount(row);
+                    }
+
+                    if (key === "mobileRows") {
+                        return renderMobileRows(row);
+                    }
+
                     // Actions column
                     if (key === "actions") {
                         return (
                             <div className="flex gap-2 justify-center animate__animated animate__fadeIn">
                                 <button
                                     onClick={() => handleView(row)}
-                                    className="text-blue-600 hover:text-blue-800 transition-all duration-300 hover:scale-110 hover:rotate-12"
+                                    className="rounded-md p-1.5 text-blue-500 transition hover:bg-blue-50 hover:text-blue-700"
                                     title="Preview"
                                 >
-                                    <Lucide.Eye size={16} />
+                                    <Lucide.Eye size={14} />
                                 </button>
                                 <button
                                     onClick={() => handleEdit(row)}
-                                    className="text-blue-600 hover:text-blue-800 transition-all duration-300 hover:scale-110 hover:rotate-12"
+                                    className="rounded-md p-1.5 text-indigo-500 transition hover:bg-indigo-50 hover:text-indigo-700"
                                     title="Edit"
                                 >
-                                    <Lucide.Edit2 size={16} />
+                                    <Lucide.Edit2 size={14} />
                                 </button>
                                 <button
                                     onClick={() => handleDelete(row.id)}
-                                    className="text-red-600 hover:text-red-800 transition-all duration-300 hover:scale-110 hover:-rotate-12"
+                                    className="rounded-md p-1.5 text-red-400 transition hover:bg-red-50 hover:text-red-600"
                                     title="Delete"
                                 >
-                                    <Lucide.Trash2 size={16} />
+                                    <Lucide.Trash2 size={14} />
                                 </button>
                             </div>
                         );
@@ -416,6 +463,7 @@ const ManageBannerSettings = () => {
                 fontSizeHeader="text-[11px]"
                 fontSizeRow="text-[11px]"
             />
+            </div>
 
            
             {openPreview && (

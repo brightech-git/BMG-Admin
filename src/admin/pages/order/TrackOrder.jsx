@@ -37,8 +37,11 @@ function TrackOrder() {
 
         { key: 'productId', label: 'Product ID' },
         { key:'productName' , label: 'Product Name' },
-        {  key:'price' , label: 'Price' },
-        { key:'image_path' , label: 'Image' ,align:'center'},
+        { key: 'image_path', label: 'Image', align: 'center' },
+        { key:'price' , label: 'Price' },
+        { key:'shippingFee',label:'Shipping Fee' ,align:'right'},
+        { key:'totalAmount',label:'Total Amount' ,align:'right'},
+       
 
     ] ;
 
@@ -73,7 +76,7 @@ function TrackOrder() {
             case "price":
                 return (
                     <span className="text-xs">
-                        ₹{Number(item.price).toFixed(2)}
+                        {Number(item.price).toFixed(2)}
                     </span>
                 );
 
@@ -88,7 +91,20 @@ function TrackOrder() {
                     </div>
                    
                 );
+            
+            case 'shippingFee' :
+                return(
+                    <span className="text-xs">
+                        {Number(item.shippingFee).toFixed(2)}
+                    </span>
+                )
 
+            case 'totalAmount':
+                return (
+                    <span className="text-xs">
+                        {Number(item.totalAmount).toFixed(2)}
+                    </span>
+                )
             default:
                 return (
                     <span className="text-xs">

@@ -8,7 +8,10 @@ export const loginUser = async (credentials) => {
     console.log('response.data',response.data)
     const { path , userDetails} = response.data.data;
 
-    sessionStorage.setItem('auth_token', userDetails.token);
+    if (userDetails?.token != undefined && userDetails.token != null){
+        sessionStorage.setItem('auth_token', userDetails.token);
+    }
+    
 
     return { path , user: userDetails};
 };

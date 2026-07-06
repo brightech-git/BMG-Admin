@@ -81,6 +81,8 @@ import ManageFilterContent from '../../admin/pages/filter/ManageFilter';
 
 import AddHeaderNav from '../../admin/pages/settings/headerNav/AddHeaderNavKey';
 import ManageHeaderNavKey from '../../admin/pages/settings/headerNav/ManageHeaderKey';
+import HeaderTreePage from '../../admin/pages/settings/headerNav/HeaderTreePage';
+import FooterTreePage from '../../admin/pages/category/manage/FooterTreePage';
 import ManageRoleMaster from '../../admin/pages/RoleMaster/RoleMaster';
 import RoleMapping from '../../admin/pages/RoleMapping/RoleMapping';
 import RoleTransactionPage from '../../admin/pages/RolePermission/RolePermission';
@@ -242,6 +244,11 @@ const AdminRoutes = () => {
 
                                 <Route path='header/setting/add' element = {<ProtectedRoute > <AddHeaderNav /> </ProtectedRoute>} />
                                 <Route path='header/setting/manage' element = {<ProtectedRoute > <ManageHeaderNavKey /> </ProtectedRoute>} />
+
+                                {/*---------------------------HEADER / FOOTER TREE (nested navigation)------------------------*/}
+
+                                <Route path='header/tree/manage' element = {<ProtectedRoute > <HeaderTreePage /> </ProtectedRoute>} />
+                                <Route path='footer/tree/manage' element = {<ProtectedRoute > <FooterTreePage /> </ProtectedRoute>} />
 
                                 <Route path="banner/setting/add" element={<ProtectedRoute ><AddBannerSetting /></ProtectedRoute>} />
                                 <Route path="filter/setting/add" element={<ProtectedRoute ><AddFilterSetting /></ProtectedRoute>} />

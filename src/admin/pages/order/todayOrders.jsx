@@ -48,7 +48,7 @@ const OrdersByRange = () => {
     };
 
     const handleTrackOrder = (orderId) => {
-        navigate(`/track/order/${orderId}`);
+        navigate(`/admin/track/order/${orderId}`);
     };
 
  

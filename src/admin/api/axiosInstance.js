@@ -11,20 +11,23 @@ const axiosInstance = axios.create({
 // ✅ Dynamically attach token from localStorage on every request
 axiosInstance.interceptors.request.use(
     (config) => {
+        const authToken = sessionStorage.getItem('auth_token');
 
-        const authtoken = sessionStorage.getItem('auth_token'); // Moved inside so it's fresh
-        const user = sessionStorage.getItem('user');
-
-        console.log(JSON.parse(user),'userDetails');
-      
-        const userDetails = JSON.parse(user);
-
-
-        if (authtoken) {
-            config.headers.Authorization = `Bearer ${authtoken}`;
-            config.headers['USERID'] = userDetails.id;
-
+        let userDetails = null;
+        try {
+            userDetails = JSON.parse(sessionStorage.getItem('user'));
+        } catch {
+            userDetails = null;
         }
+
+        if (authToken) {
+            config.headers.Authorization = `Bearer ${authToken}`;
+        }
+
+        if (userDetails?.id) {
+            config.headers['USERID'] = userDetails.id;
+        }
+
         return config;
     },
     (error) => Promise.reject(error)
@@ -33,7 +36,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
     response => response,
     error => {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 || error.response?.status === 403) {
             // Handle unauthorized (redirect to login)
         }
         return Promise.reject(error);

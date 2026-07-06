@@ -291,7 +291,7 @@ const handleDownloadLabel = () => {
     const handleTrackOrder = (order) =>{
         setSelectedOrder(order);
         const OrderId = order.order_id;
-        navigate(`/track/order/${OrderId}`);
+        navigate(`/admin/track/order/${OrderId}`);
 
     }
 
