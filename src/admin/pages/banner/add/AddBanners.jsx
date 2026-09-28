@@ -331,7 +331,9 @@ const AddBanner = () => {
                         options={bannerKeyContent}
                         value={selectedOption}
                         onChange={(option) => {
-                            setForm(prev => ({
+                            setForm(prev => (
+                                console.log(option,'option') ,{
+               
                                 ...prev,
                                 categoryKey: option?.imageKey || '',
                                 imageKeyId: option?.id || '',

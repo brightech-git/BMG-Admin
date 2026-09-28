@@ -119,6 +119,14 @@ export const MENU_CONFIG = [
                     { id: 'filter-setting-manage', title: 'Manage Filter Settings', path: '/admin/filter/setting/manage' },
                 ],
             },
+            {
+                id:'settings-combo',
+                title : 'Combo Products',
+                children : [
+                    {id: 'combo-add' ,title :'Add Combo Products' , path:'/admin/combo/add' },
+                    {id: 'combo-manage' ,title :'Manage Combo Products' , path:'/admin/combo/manage' },
+                ]
+            }
             // {
             //     id: 'settings-header',
             //     title: 'Header Key',

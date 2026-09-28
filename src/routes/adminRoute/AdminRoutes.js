@@ -88,7 +88,10 @@ import RoleMapping from '../../admin/pages/RoleMapping/RoleMapping';
 import RoleTransactionPage from '../../admin/pages/RolePermission/RolePermission';
 import RoleTransaction from '../../admin/pages/RoleTransaction/RoleTransaction';
 
+import AddComboProducts from '../../admin/pages/settings/combo/AddComboProducts';
+
 import AdminLayout from '../adminProtectedRoute/AdminLayout';
+import ManageCombo from '../../admin/pages/settings/combo/ManageComboProducts';
 
 
 const AdminRoutes = () => {
@@ -259,6 +262,11 @@ const AdminRoutes = () => {
                                 <Route path="banner/setting/manage" element={<ProtectedRoute ><ManageBannerSettings /></ProtectedRoute>} />
                                 <Route path="filter/setting/manage" element={<ProtectedRoute ><ManageFilterSettings /></ProtectedRoute>} />
 
+
+                                <Route path='combo/add' element={<AddComboProducts />} />
+                                <Route path='combo/manage' element={<ManageCombo />} />
+
+                                
 
                                 {/*---------------------------FILTERS------------------------*/}
                                 <Route path="filter/add" element={<ProtectedRoute ><AddFilterContent /></ProtectedRoute>} />

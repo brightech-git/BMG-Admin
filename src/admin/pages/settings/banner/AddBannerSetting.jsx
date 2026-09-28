@@ -198,7 +198,7 @@ const AddBannerSetting = () => {
     const isGridType = form.bannerType === "grid" || form.bannerType === "category";
     const isCarouselType = form.bannerType === "carousel";
     const usesVisibleItems = form.bannerType === "normal" || form.bannerType === "carousel";
-    const needsFilterKey = form.bannerType === "category";
+    // const needsFilterKey = form.bannerType === "category";
     const canUseDetailTabs = !!form.bannerType;
 
     const filterOptions = useMemo(() => {
@@ -306,7 +306,7 @@ const AddBannerSetting = () => {
 
         if (!form.bannerType) return showError("Please choose a banner type.");
         if (!form.imageKey.trim()) return showError("Image key is required.");
-        if (needsFilterKey && !form.filterKey) return showError("Filter key is required for category banner.");
+        if ( !form.filterKey) return showError("Filter key is required for category banner.");
         if (isGridType && form.desktopLayout.columns.length === 0) return showError("Desktop layout columns are required for grid banners.");
         if (isGridType && form.mobileLayout.columns.length === 0) return showError("Mobile layout columns are required for grid banners.");
 
@@ -314,7 +314,7 @@ const AddBannerSetting = () => {
             imageKey: form.imageKey.trim(),
             title: form.title.trim(),
             description: form.description.trim(),
-            filterKey: needsFilterKey ? form.filterKey : "",
+            filterKey:  form.filterKey,
             gap: form.gap,
             mobileGap: form.mobileGap,
             centered: form.centered,
@@ -338,6 +338,8 @@ const AddBannerSetting = () => {
             desktopLayout: isGridType ? form.desktopLayout : INITIAL_FORM.desktopLayout,
             mobileLayout: isGridType ? form.mobileLayout : INITIAL_FORM.mobileLayout,
         };
+        console.log(payload,'payloadforsetting');
+        // return;
 
         const mutation = mode === "edit" ? updateMutation : createMutation;
         const mutationPayload = mode === "edit" && initialData
@@ -516,7 +518,7 @@ const AddBannerSetting = () => {
                                 </FieldRow>
                             </div>
 
-                            {needsFilterKey && (
+                         
                                 <div className="md:col-span-2">
                                     <FieldRow label="Filter Key" required>
                                         <ComboBox
@@ -528,7 +530,7 @@ const AddBannerSetting = () => {
                                         />
                                     </FieldRow>
                                 </div>
-                            )}
+                           
                         </div>
 
                         <div className="mt-4 grid gap-3 md:grid-cols-4">
